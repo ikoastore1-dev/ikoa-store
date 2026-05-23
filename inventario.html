@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ikoa & BeKate — Inventario</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--surface3:#252533;
+  --accent:#00e5b0;--accent2:#0099ff;--warn:#e8a020;--danger:#ff4444;
+  --text:#f0f0f5;--muted:#7a7a99;--border:#2a2a3a;--radius:14px;
+}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;letter-spacing:.15em;display:flex;align-items:center;}
+.logo .i{color:var(--accent)}.logo .sep{color:var(--muted);margin:0 8px;font-weight:300}.logo .b{color:var(--text)}
+.badge-admin{background:#1a1a2e;border:1px solid #3a3a5a;border-radius:6px;padding:3px 10px;font-size:11px;color:var(--warn);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:20px}
+.tab{flex:1;padding:10px;border:none;background:transparent;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;border-radius:8px;transition:all .2s}
+.tab.active{background:var(--accent);color:#000}
+.scan-btn{width:100%;padding:18px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:var(--radius);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;transition:transform .15s;box-shadow:0 4px 24px rgba(0,229,176,.2)}
+.scan-btn:active{transform:scale(.97)}
+.scan-btn.stop{background:linear-gradient(135deg,#ff4444,#cc2222);box-shadow:0 4px 24px rgba(255,68,68,.2)}
+#scanner-wrap{display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+#scanner-wrap.active{display:block}
+#scanner-header{padding:12px 18px;background:var(--surface2);display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted)}
+#close-scanner{background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px 14px;font-size:13px;cursor:pointer}
+#reader{width:100%;max-height:300px;overflow:hidden}
+#reader video{width:100%!important;height:auto!important}
+.search-row{display:flex;gap:8px;margin-bottom:16px}
+.search-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 16px;color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;outline:none;transition:border-color .2s}
+.search-input:focus{border-color:var(--accent)}
+.search-input::placeholder{color:var(--muted)}
+.search-btn{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:13px 18px;color:var(--text);font-size:18px;cursor:pointer}
+.product-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;animation:slideUp .3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.pc-header{padding:14px 18px;background:var(--surface2);display:flex;align-items:center;justify-content:space-between}
+.pc-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700}
+.pc-code{font-size:12px;color:var(--muted);letter-spacing:.05em;margin-top:2px}
+.section{padding:16px 18px;border-top:1px solid var(--border)}
+.section-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+.fields-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.field-group{display:flex;flex-direction:column;gap:6px}
+.field-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.field-input{background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.field-input:focus{border-color:var(--accent)}
+.deposito-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.dep-pill{padding:6px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.dep-pill.active{background:#0f2b1a;border-color:var(--accent);color:var(--accent);font-weight:500}
+.tallas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:8px;margin-bottom:16px}
+.talla-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .15s}
+.talla-card:hover{border-color:var(--accent)}
+.talla-card.selected{border-color:var(--accent);background:#0f2b1a}
+.talla-card.agotado{border-color:#3a1a1a;opacity:.6}
+.talla-label{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--text)}
+.talla-stock{font-size:11px;margin-top:2px}
+.talla-stock.ok{color:var(--accent)}.talla-stock.low{color:var(--warn)}.talla-stock.zero{color:var(--danger)}.talla-stock.new{color:var(--muted);font-style:italic}
+.new-talla-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.new-talla-input{flex:1;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;outline:none}
+.new-talla-input:focus{border-color:var(--accent)}
+.add-talla-btn{padding:10px 16px;background:var(--surface3);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;cursor:pointer;white-space:nowrap}
+.edit-panel{background:#0f1f17;border:1px solid #1a3a2a;border-radius:10px;padding:16px;margin-top:4px}
+.edit-title{font-size:13px;color:var(--accent);font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:.08em}
+.edit-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.edit-label{font-size:13px;color:var(--muted);min-width:80px}
+.qty-controls{display:flex;align-items:center;gap:8px}
+.qty-btn{width:40px;height:40px;border:1px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.qty-btn.plus{border-color:var(--accent);color:var(--accent)}
+.qty-btn.minus{border-color:var(--danger);color:var(--danger)}
+.qty-display{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;min-width:50px;text-align:center}
+.op-btns{display:flex;gap:8px;flex-wrap:wrap}
+.op-btn{padding:8px 16px;border-radius:8px;border:1px solid;font-family:'Barlow',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+.op-btn.entrada{background:#0f2b1a;border-color:var(--accent);color:var(--accent)}
+.op-btn.salida{background:#2a1010;border-color:var(--danger);color:var(--danger)}
+.op-btn.ajuste{background:#1a1a10;border-color:var(--warn);color:var(--warn)}
+.save-btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;margin-top:8px;transition:transform .15s}
+.save-btn:active{transform:scale(.97)}
+.save-btn:disabled{opacity:.4;cursor:not-allowed}
+.msg{padding:12px 18px;border-radius:10px;font-size:14px;margin-bottom:12px;display:none;animation:slideUp .3s ease}
+.msg.ok{background:#0f2b1a;border:1px solid #1a4a2a;color:var(--accent);display:flex;align-items:center;gap:8px}
+.msg.err{background:#2a1010;border:1px solid #4a1a1a;color:var(--danger);display:flex;align-items:center;gap:8px}
+.msg.loading{background:var(--surface2);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;gap:8px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease}
+.modal-overlay.hidden{display:none}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal-icon{font-size:36px;text-align:center;margin-bottom:12px}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;text-align:center;margin-bottom:6px;letter-spacing:.03em}
+.modal-subtitle{font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px;line-height:1.5}
+.modal-summary{background:var(--surface2);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:13px;line-height:1.8}
+.modal-summary span{color:var(--accent);font-weight:600}
+.modal-cod-input{width:100%;background:var(--surface3);border:2px solid var(--border);border-radius:10px;padding:14px 18px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;letter-spacing:.2em;text-align:center;outline:none;transition:border-color .2s;margin-bottom:8px}
+.modal-cod-input:focus{border-color:var(--accent)}
+.modal-cod-input::placeholder{font-size:14px;letter-spacing:.05em;font-weight:400;color:var(--muted)}
+.modal-error{font-size:12px;color:var(--danger);text-align:center;min-height:18px;margin-bottom:12px}
+.modal-btns{display:flex;gap:10px}
+.modal-cancel{flex:1;padding:13px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;cursor:pointer;transition:all .2s}
+.modal-cancel:hover{border-color:var(--danger);color:var(--danger)}
+.modal-confirm{flex:2;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:transform .15s}
+.modal-confirm:active{transform:scale(.97)}
+.modal-confirm:disabled{opacity:.4;cursor:not-allowed}
+
+/* HISTORIAL */
+.historial-list{display:flex;flex-direction:column;gap:8px}
+.hist-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px}
+.hist-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.hist-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;letter-spacing:.06em}
+.hist-badge.entrada{background:#0f2b1a;color:var(--accent)}
+.hist-badge.salida{background:#2a1010;color:var(--danger)}
+.hist-badge.ajuste{background:#1a1a10;color:var(--warn)}
+.hist-prod{font-size:14px;font-weight:600;flex:1}
+.hist-qty{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700}
+.hist-qty.pos{color:var(--accent)}.hist-qty.neg{color:var(--danger)}.hist-qty.eq{color:var(--warn)}
+.hist-meta{display:flex;gap:12px;flex-wrap:wrap}
+.hist-chip{background:var(--surface2);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--muted)}
+.hist-chip.usuario{color:var(--warn);border:1px solid #3a2a10}
+.hist-chip.fecha{color:var(--muted)}
+.empty-hist{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+.not-found{background:var(--surface);border:1px solid #6b1a1a;border-radius:var(--radius);padding:24px;text-align:center}
+.not-found p{color:var(--muted);font-size:14px;margin-top:8px}
+.spinner{display:inline-block;animation:spin 1s linear infinite}
+@media(max-width:500px){.tallas-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr))}.fields-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- MODAL CÓDIGO DE USUARIO -->
+<div class="modal-overlay hidden" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-icon">🔐</div>
+    <div class="modal-title">Confirmar Movimiento</div>
+    <div class="modal-subtitle">Ingresa tu código personal para registrar este movimiento en el sistema</div>
+    <div class="modal-summary" id="modal-summary"></div>
+    <input class="modal-cod-input" type="password" id="modal-cod" placeholder="Código de usuario" maxlength="20" onkeydown="if(event.key==='Enter')confirmarModal()">
+    <div class="modal-error" id="modal-error"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="cancelarModal()">Cancelar</button>
+      <button class="modal-confirm" id="modal-confirm-btn" onclick="confirmarModal()">✓ CONFIRMAR</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="logo"><span class="i">IKOA</span><span class="sep">—</span><span class="b">BEKATE</span></div>
+  <div class="badge-admin">⚙ Inventario</div>
+</header>
+
+<main>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('actualizar')">📦 Actualizar Stock</button>
+    <button class="tab" onclick="switchTab('historial')">📋 Historial</button>
+  </div>
+
+  <div id="tab-actualizar">
+    <button class="scan-btn" id="scan-btn" onclick="toggleScanner()">
+      <span style="font-size:24px">⬛</span>
+      <span id="scan-btn-text">Escanear Código QR</span>
+    </button>
+    <div id="scanner-wrap">
+      <div id="scanner-header">
+        <span>📷 Apunta al código QR del producto</span>
+        <button id="close-scanner" onclick="stopScanner()">✕ Cerrar</button>
+      </div>
+      <div id="reader"></div>
+    </div>
+    <div class="search-row">
+      <input class="search-input" type="text" id="search-input" placeholder="Buscar código o nombre..." onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="search-btn" onclick="doSearch()">🔍</button>
+    </div>
+    <div id="msg-area"></div>
+    <div id="product-area"></div>
+  </div>
+
+  <div id="tab-historial" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Movimientos registrados</div>
+      <button onclick="clearHistorial()" style="background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:4px 12px;font-size:12px;cursor:pointer;">Limpiar</button>
+    </div>
+    <div id="historial-list" class="historial-list"></div>
+  </div>
+</main>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyoq7XEjwRkmeKbAODroBvY4dy9jG-0ju21hqQSLKwdSkmjgq92k_E-H52tmh-ggmdNpA/exec';
+const SHEET_ID   = '1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
+const DEPOSITOS  = ['Tienda','Showroom Caracas','Taller','Solicitud Envío USA'];
+const TALLAS_KIDS = ['Kids 2','Kids 4','Kids 6','Kids 8','Kids 10','Kids 12','Kids 14','Kids 16'];
+const TALLAS_ROPA = ['XS','S','M','L','XL','XXL','3XL'];
+const TALLAS_ZAP  = ['30','30½','31','31½','32','32½','33','33½','34','34½','35','35½','36','36½','37','37½','38','38½','39','39½','40','40½','41','41½','42','42½','43','43½','44','44½','45'];
+
+// Códigos de usuario válidos — agrega o cambia según tu equipo
+const USUARIOS_VALIDOS = {
+  '2710': 'Director Johan',
+  'IKOA02': 'Vendedor 1',
+  'IKOA03': 'Vendedor 2',
+  'IKOA04': 'Almacén',
+  'IKOA05': 'Showroom'
+};
+
+let PRODUCTOS = [];
+let STOCK = {};
+let currentProduct = null;
+let selectedTalla = null;
+let selectedColor = '';
+let selectedDeposito = 'Tienda';
+let currentOp = 'entrada';
+let editQty = 1;
+let pendingMovimiento = null;
+let historial = JSON.parse(localStorage.getItem('ikoa_historial_v2') || '[]');
+let html5QrCode = null;
+let scannerActive = false;
+
+const gvizVal = c => (!c || c.v === null || c.v === undefined) ? '' : c.v;
+
+function getFechaHora() {
+  const now = new Date();
+  const DIAS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const dia = DIAS[now.getDay()];
+  const d   = now.getDate();
+  const mes = MESES[now.getMonth()];
+  const yr  = now.getFullYear();
+  let h     = now.getHours();
+  const min = String(now.getMinutes()).padStart(2,'0');
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${dia} ${d} ${mes} ${yr} ${h}:${min} ${ampm}`;
+}
+
+async function loadSheetGviz(sheetName) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&cachebust=${Date.now()}`;
+  const res = await fetch(url);
+  const text = await res.text();
+  const json = JSON.parse(text.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, ''));
+  return json.table;
+}
+
+async function init() {
+  showMsg('loading', '<span class="spinner">↻</span> Cargando productos...');
+  try {
+    const t1 = await loadSheetGviz('CODIGOS');
+    PRODUCTOS = (t1.rows || []).filter(r => r.c && r.c[0] && String(gvizVal(r.c[0])).trim()).map(r => ({
+      codigo: String(gvizVal(r.c[0])).trim(),
+      nombre: String(gvizVal(r.c[1]) || '').trim(),
+      depto:  String(gvizVal(r.c[2]) || '').trim(),
+    }));
+    try {
+      const t3 = await loadSheetGviz('STOCK');
+      (t3.rows || []).forEach(r => {
+        if (!r.c || !r.c[0]) return;
+        const cod = String(gvizVal(r.c[0])).trim();
+        const tal = String(gvizVal(r.c[1])).trim();
+        const stk = parseInt(gvizVal(r.c[2])) || 0;
+        const col = String(gvizVal(r.c[3]) || '').trim();
+        const dep = String(gvizVal(r.c[4]) || '').trim();
+        STOCK[`${cod}||${tal}||${col}||${dep}`] = stk;
+      });
+    } catch(e) {}
+    showMsg('ok', '✓ ' + PRODUCTOS.length + ' productos cargados');
+    setTimeout(() => clearMsg(), 3000);
+  } catch(e) { showMsg('err', '✗ Error: ' + e.message); }
+}
+
+function showMsg(type, html) {
+  const el = document.getElementById('msg-area');
+  el.className = 'msg ' + type;
+  el.innerHTML = html;
+}
+function clearMsg() {
+  const el = document.getElementById('msg-area');
+  el.className = 'msg'; el.innerHTML = '';
+}
+
+function getStockDisplay(cod, tal) {
+  const prefix = `${cod}||${tal}||`;
+  let total = 0, found = false;
+  Object.keys(STOCK).forEach(k => { if (k.startsWith(prefix)) { total += STOCK[k]; found = true; } });
+  return found ? total : null;
+}
+
+function getTallasDefault(depto) {
+  const d = depto.toLowerCase();
+  if (d.includes('zapato') || d.includes('sandalia')) return TALLAS_ZAP;
+  if (d.includes('traje') || d.includes('baño') || d.includes('bkvo')) return TALLAS_ROPA;
+  return [...TALLAS_KIDS, ...TALLAS_ROPA];
+}
+
+function findProduct(q) {
+  const s = q.trim().toLowerCase();
+  return PRODUCTOS.find(p => p.codigo.toLowerCase() === s || p.codigo.toLowerCase().includes(s) || p.nombre.toLowerCase().includes(s));
+}
+
+function doSearch() {
+  const q = document.getElementById('search-input').value;
+  if (!q.trim()) return;
+  const p = findProduct(q);
+  if (p) showProduct(p);
+  else document.getElementById('product-area').innerHTML = `<div class="not-found"><div style="font-size:32px">🔍</div><p>No se encontró <strong style="color:#ff6b6b">"${q}"</strong></p></div>`;
+}
+
+function showProduct(p) {
+  currentProduct = p;
+  selectedTalla = null;
+  editQty = 1;
+  currentOp = 'entrada';
+  const tallasDefault = getTallasDefault(p.depto);
+  const extraTallas = new Set();
+  Object.keys(STOCK).forEach(k => {
+    const parts = k.split('||');
+    if (parts[0]===p.codigo && !tallasDefault.includes(parts[1])) extraTallas.add(parts[1]);
+  });
+  const todasTallas = [...tallasDefault, ...extraTallas];
+  const tallasHTML = todasTallas.map(t => {
+    const s = getStockDisplay(p.codigo, t);
+    const cls = s===null?'new':s===0?'zero':s<=2?'low':'ok';
+    const txt = s===null?'sin reg.':s+' uds';
+    return `<div class="talla-card ${s===0&&s!==null?'agotado':''}" onclick="selectTalla('${t}')" id="tc-${t.replace(/[^a-zA-Z0-9]/g,'_')}">
+      <div class="talla-label">${t}</div>
+      <div class="talla-stock ${cls}">${txt}</div>
+    </div>`;
+  }).join('');
+  const depPills = DEPOSITOS.map(d => `<div class="dep-pill ${d===selectedDeposito?'active':''}" onclick="selectDeposito('${d}')">${d}</div>`).join('');
+  const totalStock = Object.keys(STOCK).filter(k=>k.startsWith(p.codigo+'||')).reduce((a,k)=>a+STOCK[k],0);
+
+  document.getElementById('product-area').innerHTML = `
+    <div class="product-card">
+      <div class="pc-header">
+        <div><div class="pc-name">${p.nombre}</div><div class="pc-code">${p.codigo} · ${p.depto}</div></div>
+        <div style="font-size:11px;color:var(--muted);">${totalStock} uds total</div>
+      </div>
+      <div class="section">
+        <div class="section-title">Color y Ubicación</div>
+        <div class="fields-row">
+          <div class="field-group">
+            <div class="field-label">Color</div>
+            <input class="field-input" type="text" id="color-input" placeholder="Ej: Negro, Rojo..." value="${selectedColor}" oninput="selectedColor=this.value">
+          </div>
+          <div class="field-group">
+            <div class="field-label">Depósito</div>
+            <div class="deposito-pills">${depPills}</div>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Selecciona una talla para editar</div>
+        <div class="tallas-grid">${tallasHTML}</div>
+        <div class="new-talla-row">
+          <input class="new-talla-input" type="text" id="new-talla-input" placeholder="Agregar talla personalizada...">
+          <button class="add-talla-btn" onclick="addCustomTalla()">+ Agregar</button>
+        </div>
+        <div id="edit-panel"></div>
+      </div>
+    </div>`;
+}
+
+function selectDeposito(dep) {
+  selectedDeposito = dep;
+  document.querySelectorAll('.dep-pill').forEach(p => p.classList.toggle('active', p.textContent===dep));
+  if (selectedTalla) selectTalla(selectedTalla);
+}
+
+function selectTalla(talla) {
+  selectedTalla = talla;
+  document.querySelectorAll('.talla-card').forEach(c => c.classList.remove('selected'));
+  const el = document.getElementById('tc-'+talla.replace(/[^a-zA-Z0-9]/g,'_'));
+  if (el) el.classList.add('selected');
+  selectedColor = document.getElementById('color-input')?.value || selectedColor;
+  const key = `${currentProduct.codigo}||${talla}||${selectedColor}||${selectedDeposito}`;
+  const currentStock = STOCK[key] !== undefined ? STOCK[key] : 0;
+  editQty = 1; currentOp = 'entrada';
+  renderEditPanel(talla, currentStock);
+}
+
+function renderEditPanel(talla, currentStock) {
+  const color = document.getElementById('color-input')?.value || '—';
+  document.getElementById('edit-panel').innerHTML = `
+    <div class="edit-panel">
+      <div class="edit-title">✏️ T: ${talla} · Color: ${color} · ${selectedDeposito}</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Stock actual: <span style="color:var(--accent);font-weight:600;">${currentStock} uds</span></div>
+      <div class="edit-row">
+        <span class="edit-label">Operación:</span>
+        <div class="op-btns">
+          <button class="op-btn entrada ${currentOp==='entrada'?'active-op':''}" onclick="setOp('entrada')">+ Entrada</button>
+          <button class="op-btn salida ${currentOp==='salida'?'active-op':''}" onclick="setOp('salida')">− Salida</button>
+          <button class="op-btn ajuste ${currentOp==='ajuste'?'active-op':''}" onclick="setOp('ajuste')">= Ajuste</button>
+        </div>
+      </div>
+      <div class="edit-row">
+        <span class="edit-label">${currentOp==='ajuste'?'Nuevo stock:':'Cantidad:'}</span>
+        <div class="qty-controls">
+          <button class="qty-btn minus" onclick="changeQty(-1)">−</button>
+          <div class="qty-display" id="qty-display">${editQty}</div>
+          <button class="qty-btn plus" onclick="changeQty(1)">+</button>
+        </div>
+        <span id="resultado-preview" style="font-size:13px;color:var(--muted);margin-left:8px;">${getPreview(currentStock)}</span>
+      </div>
+      <button class="save-btn" onclick="solicitarCodigo(${currentStock})">🔐 Guardar Cambio</button>
+    </div>`;
+}
+
+function getPreview(cur) {
+  if (currentOp==='entrada') return `→ ${cur+editQty} uds`;
+  if (currentOp==='salida')  return `→ ${Math.max(0,cur-editQty)} uds`;
+  return `→ ${editQty} uds`;
+}
+
+function setOp(op) {
+  currentOp = op;
+  const color = document.getElementById('color-input')?.value || selectedColor;
+  const key = `${currentProduct.codigo}||${selectedTalla}||${color}||${selectedDeposito}`;
+  renderEditPanel(selectedTalla, STOCK[key]!==undefined ? STOCK[key] : 0);
+}
+
+function changeQty(delta) {
+  editQty = Math.max(0, editQty + delta);
+  document.getElementById('qty-display').textContent = editQty;
+  const color = document.getElementById('color-input')?.value || selectedColor;
+  const key = `${currentProduct.codigo}||${selectedTalla}||${color}||${selectedDeposito}`;
+  const cur = STOCK[key]!==undefined ? STOCK[key] : 0;
+  document.getElementById('resultado-preview').textContent = getPreview(cur);
+}
+
+// ── MODAL ────────────────────────────────────────────────────
+function solicitarCodigo(currentStock) {
+  if (!selectedTalla || !currentProduct) return;
+  const color = document.getElementById('color-input')?.value.trim() || '';
+  if (!color) { showMsg('err', '⚠️ Ingresa el color del producto'); return; }
+
+  let nuevoStock;
+  if (currentOp==='entrada') nuevoStock = currentStock + editQty;
+  else if (currentOp==='salida') nuevoStock = Math.max(0, currentStock - editQty);
+  else nuevoStock = editQty;
+
+  pendingMovimiento = { currentStock, nuevoStock, color };
+
+  const opLabel = currentOp==='entrada' ? '📥 Entrada' : currentOp==='salida' ? '📤 Salida' : '⚖️ Ajuste';
+  document.getElementById('modal-summary').innerHTML = `
+    <b style="color:var(--text)">${currentProduct.nombre}</b><br>
+    Talla: <span>${selectedTalla}</span> &nbsp;·&nbsp; Color: <span>${color}</span><br>
+    Depósito: <span>${selectedDeposito}</span><br>
+    Operación: <span>${opLabel}</span> &nbsp;·&nbsp; ${currentStock} → <span>${nuevoStock} uds</span><br>
+    Fecha: <span>${getFechaHora()}</span>`;
+
+  document.getElementById('modal-cod').value = '';
+  document.getElementById('modal-error').textContent = '';
+  document.getElementById('modal-overlay').classList.remove('hidden');
+  setTimeout(() => document.getElementById('modal-cod').focus(), 100);
+}
+
+function cancelarModal() {
+  document.getElementById('modal-overlay').classList.add('hidden');
+  pendingMovimiento = null;
+}
+
+async function confirmarModal() {
+  const cod = document.getElementById('modal-cod').value.trim().toUpperCase();
+  if (!cod) { document.getElementById('modal-error').textContent = 'Ingresa tu código de usuario'; return; }
+  if (!USUARIOS_VALIDOS[cod]) {
+    document.getElementById('modal-error').textContent = '❌ Código incorrecto — acceso denegado';
+    document.getElementById('modal-cod').value = '';
+    document.getElementById('modal-cod').focus();
+    return;
+  }
+
+  const nombreUsuario = USUARIOS_VALIDOS[cod];
+  const fechaHora = getFechaHora();
+  const { currentStock, nuevoStock, color } = pendingMovimiento;
+
+  document.getElementById('modal-overlay').classList.add('hidden');
+  document.getElementById('modal-confirm-btn').disabled = true;
+  showMsg('loading', '<span class="spinner">↻</span> Guardando en Google Sheets...');
+
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        codigo: currentProduct.codigo,
+        talla: selectedTalla,
+        stock: nuevoStock,
+        color: color,
+        deposito: selectedDeposito,
+        fecha: fechaHora,
+        usuario: `${cod} - ${nombreUsuario}`,
+        operacion: currentOp,
+        nombre: currentProduct.nombre,
+        antes: currentStock
+      })
+    });
+
+    const key = `${currentProduct.codigo}||${selectedTalla}||${color}||${selectedDeposito}`;
+    STOCK[key] = nuevoStock;
+    selectedColor = color;
+
+    historial.unshift({
+      fecha: fechaHora,
+      tipo: currentOp,
+      codigo: currentProduct.codigo,
+      nombre: currentProduct.nombre,
+      talla: selectedTalla,
+      color: color,
+      deposito: selectedDeposito,
+      antes: currentStock,
+      despues: nuevoStock,
+      delta: nuevoStock - currentStock,
+      usuario: nombreUsuario,
+      cod: cod
+    });
+    if (historial.length > 200) historial.pop();
+    localStorage.setItem('ikoa_historial_v2', JSON.stringify(historial));
+
+    showMsg('ok', `✓ Guardado por <b>${nombreUsuario}</b> · ${fechaHora}`);
+    setTimeout(() => clearMsg(), 6000);
+    showProduct(currentProduct);
+  } catch(e) {
+    showMsg('err', '✗ Error al guardar: ' + e.message);
+  }
+  document.getElementById('modal-confirm-btn').disabled = false;
+  pendingMovimiento = null;
+}
+
+function addCustomTalla() {
+  const input = document.getElementById('new-talla-input');
+  const talla = input.value.trim();
+  if (!talla || !currentProduct) return;
+  input.value = '';
+  const key = `${currentProduct.codigo}||${talla}||||${selectedDeposito}`;
+  if (STOCK[key]===undefined) STOCK[key] = 0;
+  showProduct(currentProduct);
+  setTimeout(() => selectTalla(talla), 100);
+}
+
+function toggleScanner() {
+  if (scannerActive) { stopScanner(); return; }
+  document.getElementById('scanner-wrap').classList.add('active');
+  document.getElementById('scan-btn').classList.add('stop');
+  document.getElementById('scan-btn-text').textContent = 'Detener Escáner';
+  scannerActive = true;
+  html5QrCode = new Html5Qrcode('reader');
+  html5QrCode.start({ facingMode:'environment' }, { fps:12, qrbox:{width:240,height:240} },
+    decoded => {
+      document.getElementById('search-input').value = decoded;
+      const p = findProduct(decoded);
+      if (p) showProduct(p);
+      else document.getElementById('product-area').innerHTML = `<div class="not-found"><div style="font-size:32px">🔍</div><p>No encontrado: <strong style="color:#ff6b6b">"${decoded}"</strong></p></div>`;
+      stopScanner();
+    }, ()=>{}
+  ).catch(err => { alert('No se pudo acceder a la cámara: ' + err); stopScanner(); });
+}
+
+function stopScanner() {
+  if (html5QrCode) {
+    html5QrCode.stop().catch(()=>{}).finally(() => {
+      html5QrCode=null; scannerActive=false;
+      document.getElementById('scanner-wrap').classList.remove('active');
+      document.getElementById('scan-btn').classList.remove('stop');
+      document.getElementById('scan-btn-text').textContent='Escanear Código QR';
+    });
+  } else {
+    scannerActive=false;
+    document.getElementById('scanner-wrap').classList.remove('active');
+    document.getElementById('scan-btn').classList.remove('stop');
+    document.getElementById('scan-btn-text').textContent='Escanear Código QR';
+  }
+}
+
+function switchTab(tab) {
+  document.getElementById('tab-actualizar').style.display = tab==='actualizar'?'block':'none';
+  document.getElementById('tab-historial').style.display  = tab==='historial'  ?'block':'none';
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='actualizar')||(i===1&&tab==='historial')));
+  if (tab==='historial') renderHistorial();
+}
+
+function renderHistorial() {
+  const el = document.getElementById('historial-list');
+  if (!historial.length) { el.innerHTML='<div class="empty-hist">📋 Sin movimientos registrados</div>'; return; }
+  el.innerHTML = historial.map(h => {
+    const delta = h.delta>0?'+'+h.delta:h.delta;
+    const cls = h.delta>0?'pos':h.delta<0?'neg':'eq';
+    return `<div class="hist-item">
+      <div class="hist-top">
+        <span class="hist-badge ${h.tipo}">${h.tipo.toUpperCase()}</span>
+        <span class="hist-prod">${h.nombre}</span>
+        <span class="hist-qty ${cls}">${delta}</span>
+      </div>
+      <div class="hist-meta">
+        <span class="hist-chip">T: ${h.talla}</span>
+        <span class="hist-chip">${h.color||'—'}</span>
+        <span class="hist-chip">${h.deposito||'—'}</span>
+        <span class="hist-chip">${h.antes}→${h.despues} uds</span>
+        <span class="hist-chip usuario">👤 ${h.usuario||h.cod}</span>
+        <span class="hist-chip fecha">🕐 ${h.fecha}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function clearHistorial() {
+  if (confirm('¿Limpiar el historial local?')) {
+    historial=[];
+    localStorage.setItem('ikoa_historial_v2','[]');
+    renderHistorial();
+  }
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ikoa & BeKate — Consulta de Precio</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--surface3:#252533;
+  --accent:#00e5b0;--accent2:#0099ff;--text:#f0f0f5;--muted:#7a7a99;
+  --border:#2a2a3a;--nike:#e8441a;--adidas:#0057a8;--puma:#dd1f26;--on:#2d9f5d;--radius:16px;
+}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:.05em;color:var(--accent);text-transform:uppercase}
+.logo span{color:var(--text)}
+.tasa-chip{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 12px;font-size:13px;color:var(--muted)}
+.tasa-chip b{color:var(--accent)}
+#sync-status{font-size:11px;padding:3px 10px;border-radius:20px;margin-left:8px;display:none}
+#sync-status.ok{background:#0f2b1a;color:#00e5b0;display:inline-block}
+#sync-status.err{background:#2a1010;color:#ff6b6b;display:inline-block}
+main{max-width:900px;margin:0 auto;padding:24px 20px 60px}
+.scan-btn{width:100%;padding:22px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:var(--radius);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:14px;box-shadow:0 4px 30px rgba(0,229,176,.25);margin-bottom:20px;transition:transform .15s}
+.scan-btn:active{transform:scale(.97)}
+#scanner-wrap{display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px}
+#scanner-wrap.active{display:block}
+#scanner-header{padding:14px 20px;background:var(--surface2);display:flex;align-items:center;justify-content:space-between}
+#scanner-header span{font-size:14px;color:var(--muted)}
+#close-scanner{background:var(--surface3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:6px 16px;font-size:14px;cursor:pointer;font-family:'Barlow',sans-serif}
+#reader{width:100%;max-height:340px;overflow:hidden}
+#reader video{width:100%!important;height:auto!important}
+.search-row{display:flex;gap:10px;margin-bottom:20px}
+.search-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;color:var(--text);font-family:'Barlow',sans-serif;font-size:17px;outline:none;transition:border-color .2s}
+.search-input:focus{border-color:var(--accent)}
+.search-input::placeholder{color:var(--muted)}
+.search-btn{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 20px;color:var(--text);font-size:20px;cursor:pointer}
+#result-area{display:none}
+#result-area.visible{display:block}
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:slideUp .3s ease;margin-bottom:20px}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-header{padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand-badge{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:5px 14px;border-radius:6px;color:#fff}
+.brand-Nike{background:var(--nike)}.brand-Adidas{background:var(--adidas)}.brand-Puma{background:var(--puma)}.brand-On{background:var(--on)}.brand-default{background:var(--surface3)}
+.product-code{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--muted);letter-spacing:.05em}
+.product-name{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;padding:0 22px 8px;letter-spacing:.02em}
+.price-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border)}
+.price-cell{background:var(--surface);padding:16px 22px}
+.price-cell.highlight{background:var(--surface2)}
+.price-cell.full-width{grid-column:1/-1;background:#0f1f17;border-top:2px solid var(--accent)}
+.price-label{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.price-value{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:600;color:var(--text)}
+.price-value.big{font-size:38px;color:var(--accent)}
+.price-value.blue{color:var(--accent2);font-size:30px}
+.price-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.obs-row{padding:10px 22px;background:var(--surface2);border-top:1px solid var(--border);font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.obs-row span{color:#e8a020;font-weight:500}
+.not-found{background:var(--surface);border:1px solid #6b1a1a;border-radius:var(--radius);padding:30px;text-align:center;animation:slideUp .3s ease}
+.not-found .icon{font-size:40px;margin-bottom:10px}
+.not-found p{color:var(--muted);font-size:15px}
+.not-found strong{color:#ff6b6b}
+.divider{height:1px;background:var(--border);margin:24px 0}
+.list-header{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.filter-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filter-pill{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 16px;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s;font-family:'Barlow',sans-serif}
+.filter-pill.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:500}
+.product-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.product-list-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;cursor:pointer;transition:border-color .2s,background .2s;display:flex;align-items:center;gap:10px}
+.product-list-item:active{background:var(--surface2);border-color:var(--accent)}
+.pli-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pli-info{flex:1;overflow:hidden}
+.pli-name{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pli-code{font-size:11px;color:var(--muted)}
+.pli-price{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;color:var(--accent);white-space:nowrap}
+.loading-box{grid-column:1/-1;text-align:center;padding:50px 0;color:var(--muted)}
+.spinner{font-size:36px;display:inline-block;animation:spin 1s linear infinite;margin-bottom:14px}
+.error-box{grid-column:1/-1;text-align:center;padding:30px;color:#ff6b6b;background:var(--surface);border:1px solid #6b1a1a;border-radius:var(--radius)}
+.retry-btn{margin-top:16px;padding:12px 28px;background:var(--accent);color:#000;border:none;border-radius:10px;font-size:16px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.05em}
+.nav-tab{flex:1;padding:10px;border:none;background:transparent;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;border-radius:8px;transition:all .2s}
+.nav-tab.active{background:var(--accent);color:#000}
+@media(max-width:520px){.product-list{grid-template-columns:1fr}.price-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;gap:0;font-family:'Rajdhani',sans-serif;letter-spacing:.15em;font-size:20px;font-weight:700;text-transform:uppercase;">
+    <span style="color:#00e5b0;">IKOA</span>
+    <span style="color:#7a7a99;margin:0 10px;font-weight:300;">—</span>
+    <span style="color:#f0f0f5;">BeKate</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+    <div style="font-size:13px;color:var(--muted);">Tasa BCV <b id="tasa-bcv" style="color:var(--accent);">—</b></div>
+    <div id="clock-chip" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 12px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;">
+      <span style="color:var(--accent);font-size:13px;">🔄</span>
+      <span style="color:var(--muted);font-size:11px;">Última sync:</span>
+      <span id="clock-date" style="color:var(--text);font-weight:500;">—</span>
+      <span style="color:var(--border);">|</span>
+      <span id="clock-time" style="color:var(--accent);font-weight:600;font-family:'Barlow Condensed',sans-serif;font-size:15px;letter-spacing:.05em;">—</span>
+    </div>
+    <span id="sync-status"></span>
+  </div>
+</header>
+<script>
+function setSyncTimestamp() {
+  const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const DIAS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const now   = new Date();
+  const dia   = DIAS[now.getDay()];
+  const d     = now.getDate();
+  const mes   = MESES[now.getMonth()];
+  const yr    = now.getFullYear();
+  let h       = now.getHours();
+  const min   = String(now.getMinutes()).padStart(2,'0');
+  const ampm  = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  document.getElementById('clock-date').textContent = `${dia} ${d} ${mes} ${yr}`;
+  document.getElementById('clock-time').textContent = `${h}:${min} ${ampm}`;
+}
+</script>
+
+<main>
+
+  <!-- TABS -->
+  <div style="display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:20px;">
+    <button class="nav-tab active" id="tab-btn-precios" onclick="switchMainTab('precios')">💰 Precios</button>
+    <button class="nav-tab" id="tab-btn-inventario" onclick="switchMainTab('inventario')">📦 Inventario</button>
+  </div>
+
+  <!-- TAB PRECIOS -->
+  <div id="tab-precios">
+    <button class="scan-btn" onclick="toggleScanner()">
+      <span style="font-size:28px">⬛</span>
+      <span id="scan-btn-text">Escanear Código QR</span>
+    </button>
+
+    <div id="scanner-wrap">
+      <div id="scanner-header">
+        <span>📷 Apunta la cámara al código QR del producto</span>
+        <button id="close-scanner" onclick="stopScanner()">✕ Cerrar</button>
+      </div>
+      <div id="reader"></div>
+    </div>
+
+    <div class="search-row">
+      <input class="search-input" type="text" id="search-input" placeholder="Buscar por código o nombre..." oninput="onSearchInput()" onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="search-btn" onclick="doSearch()">🔍</button>
+    </div>
+
+    <div id="result-area"></div>
+
+    <div class="divider"></div>
+    <div class="list-header">Catálogo de productos</div>
+    <div class="filter-row" id="filter-row"></div>
+    <div class="product-list" id="product-list"></div>
+  </div>
+
+  <!-- TAB INVENTARIO -->
+  <div id="tab-inventario" style="display:none;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Producto</div>
+        <input id="inv-nombre" class="search-input" type="text" placeholder="Nombre o código..." oninput="buscarInventario()" style="padding:10px 14px;font-size:14px;">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Talla</div>
+        <input id="inv-talla" class="search-input" type="text" placeholder="Ej: 42, XL, Kids 8..." oninput="buscarInventario()" style="padding:10px 14px;font-size:14px;">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Color</div>
+        <input id="inv-color" class="search-input" type="text" placeholder="Ej: Negro, Rojo..." oninput="buscarInventario()" style="padding:10px 14px;font-size:14px;">
+      </div>
+    </div>
+
+    <!-- FILTRO DEPOSITO -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="inv-dep-filters">
+      <button class="filter-pill active" onclick="setDepFilter('Todos')">Todos</button>
+      <button class="filter-pill" onclick="setDepFilter('Tienda')">🟢 Tienda</button>
+      <button class="filter-pill" onclick="setDepFilter('Showroom Caracas')">🔵 Showroom</button>
+      <button class="filter-pill" onclick="setDepFilter('Taller')">🟡 Taller</button>
+      <button class="filter-pill" onclick="setDepFilter('Solicitud Envío USA')">🟣 USA</button>
+    </div>
+
+    <div id="inv-results"></div>
+  </div>
+
+</main>
+
+<script>
+const SHEET_ID = '1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
+const BRAND_COLORS = { Nike:'#e8441a', Adidas:'#0057a8', Puma:'#dd1f26', On:'#2d9f5d' };
+
+let PRODUCTOS = [];
+let TASA_BCV = null;
+let STOCK = {};
+let html5QrCode = null;
+let scannerActive = false;
+let currentFilter = 'Todos';
+
+const fmt_bs  = v => Number(v).toLocaleString('es-VE',{minimumFractionDigits:0,maximumFractionDigits:0}) + ' Bs';
+const fmt_usd = v => '$ ' + Number(v).toFixed(2);
+const getBrand    = p => (p.descripcion || p.codigo.split('-')[0]).trim();
+const brandClass  = b => BRAND_COLORS[b] ? 'brand-' + b : 'brand-default';
+const brandDot    = b => BRAND_COLORS[b] || '#7a7a99';
+const gvizVal     = c => (!c || c.v === null || c.v === undefined) ? '' : c.v;
+
+function setSyncStatus(ok, msg) {
+  const el = document.getElementById('sync-status');
+  el.className = ok ? 'ok' : 'err';
+  el.textContent = msg;
+  if (ok) setTimeout(() => { el.className=''; el.textContent=''; }, 5000);
+}
+
+function showLoadingList() {
+  document.getElementById('filter-row').innerHTML = '';
+  document.getElementById('product-list').innerHTML =
+    '<div class="loading-box"><div class="spinner">↻</div><br>Conectando con Google Sheets...</div>';
+}
+
+function showErrorList(msg) {
+  document.getElementById('product-list').innerHTML =
+    `<div class="error-box">
+       <div style="font-size:26px;margin-bottom:10px">⚠️</div>
+       <div>${msg}</div>
+       <button class="retry-btn" onclick="loadData()">↺ Reintentar</button>
+     </div>`;
+}
+
+async function loadSheetGviz(sheetName) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&cachebust=${Date.now()}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const text = await res.text();
+  const json = JSON.parse(text.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, ''));
+  if (!json.table) throw new Error('Sin datos');
+  return json.table;
+}
+
+async function loadData() {
+  showLoadingList();
+  try {
+    const [t1, t2] = await Promise.all([
+      loadSheetGviz('CODIGOS'),
+      loadSheetGviz('TASA')
+    ]);
+
+    // Tasa BCV — Hoja 2, fila 0, col 0
+    if (t2.rows && t2.rows[0] && t2.rows[0].c) {
+      const v = gvizVal(t2.rows[0].c[0]);
+      if (v) TASA_BCV = parseFloat(v) || null;
+    }
+    document.getElementById('tasa-bcv').textContent = TASA_BCV ? TASA_BCV.toFixed(2) : '—';
+
+    // Productos — Hoja 1
+    PRODUCTOS = (t1.rows || [])
+      .filter(r => r.c && r.c[0] && String(gvizVal(r.c[0])).trim())
+      .map(r => ({
+        codigo:      String(gvizVal(r.c[0])).trim(),
+        nombre:      String(gvizVal(r.c[1]) || '').trim(),
+        descripcion: String(gvizVal(r.c[2]) || '').trim(),
+        base_bs:     parseFloat(gvizVal(r.c[3])) || 0,
+        base_usd:    parseFloat(gvizVal(r.c[4])) || 0,
+        iva_bs:      parseFloat(gvizVal(r.c[5])) || 0,
+        total_bs:    parseFloat(gvizVal(r.c[6])) || 0,
+        total_usd:   parseFloat(gvizVal(r.c[7])) || 0,
+        igtf_bs:     parseFloat(gvizVal(r.c[8])) || 0,
+        ikoa:        parseFloat(gvizVal(r.c[9])) || 0,
+        obs:         String(gvizVal(r.c[10]) || '').trim()
+      }));
+
+    setSyncStatus(true, '✓ Actualizado');
+    setSyncTimestamp();
+
+    // Cargar STOCK
+    try {
+      const t3 = await loadSheetGviz('STOCK');
+      STOCK = {};
+      (t3.rows || []).forEach(r => {
+        if (!r.c || !r.c[0]) return;
+        const cod = String(gvizVal(r.c[0])).trim();
+        const tal = String(gvizVal(r.c[1])).trim();
+        const stk = parseInt(gvizVal(r.c[2])) || 0;
+        const col = String(gvizVal(r.c[3]) || '').trim();
+        const dep = String(gvizVal(r.c[4]) || '').trim();
+        if (!STOCK[cod]) STOCK[cod] = [];
+        STOCK[cod].push({ talla: tal, stock: stk, color: col, deposito: dep });
+      });
+    } catch(e) { STOCK = {}; }
+
+    renderFilters();
+    renderList();
+  } catch(e) {
+    console.error(e);
+    showErrorList('No se pudo conectar a Google Sheets.<br><small>Verifica tu conexión a internet.</small>');
+    setSyncStatus(false, '✗ Sin conexión');
+  }
+}
+
+function showResult(p) {
+  const brand = getBrand(p);
+  const area = document.getElementById('result-area');
+  area.className = 'visible';
+  const tasa = TASA_BCV ? TASA_BCV.toFixed(2) : '—';
+  area.innerHTML = `
+    <div class="result-card">
+      <div class="result-header">
+        <span class="brand-badge ${brandClass(brand)}">${brand}</span>
+        <span class="product-code">${p.codigo}</span>
+      </div>
+      <div class="product-name">${p.nombre}</div>
+      <div class="price-grid">
+        <div class="price-cell full-width">
+          <div class="price-label">💵 Precio Total con IVA — $ BCV</div>
+          <div class="price-value big">${fmt_usd(p.total_usd)}</div>
+          <div class="price-sub">Tasa BCV: ${tasa} Bs/$</div>
+        </div>
+        <div class="price-cell highlight">
+          <div class="price-label">Total con IVA (Bs)</div>
+          <div class="price-value">${fmt_bs(p.total_bs)}</div>
+        </div>
+        <div class="price-cell">
+          <div class="price-label">Base Imponible (Bs)</div>
+          <div class="price-value">${fmt_bs(p.base_bs)}</div>
+          <div class="price-sub">${fmt_usd(p.base_usd)} BCV</div>
+        </div>
+        <div class="price-cell">
+          <div class="price-label">IVA (Bs)</div>
+          <div class="price-value">${fmt_bs(p.iva_bs)}</div>
+        </div>
+        <div class="price-cell">
+          <div class="price-label">IGTF (Bs)</div>
+          <div class="price-value">${fmt_bs(p.igtf_bs)}</div>
+        </div>
+        <div class="price-cell full-width">
+          <div class="price-label">💲 Cupón de Descuento — Divisa Efectivo</div>
+          <div class="price-value blue">$ ${Number(p.ikoa).toFixed(2)}</div>
+        </div>
+      </div>
+      ${p.obs ? `<div class="obs-row">⚠️ <span style="font-size:15px;font-weight:700;letter-spacing:.08em;">${p.obs}</span></div>` : ''}
+      ${renderStockSection(p.codigo)}
+    </div>`;
+  area.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function renderStockSection(codigo) {
+  const items = STOCK[codigo] || [];
+  if (!items.length) return `
+    <div style="padding:14px 22px;border-top:1px solid var(--border);background:var(--surface2);">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">📦 Inventario Disponible</div>
+      <div style="font-size:13px;color:var(--muted);font-style:italic;">Sin stock registrado</div>
+    </div>`;
+
+  // Group by deposito
+  const byDep = {};
+  items.forEach(i => {
+    if (!byDep[i.deposito]) byDep[i.deposito] = [];
+    byDep[i.deposito].push(i);
+  });
+
+  const depColors = {
+    'Tienda': '#00e5b0',
+    'Showroom Caracas': '#0099ff',
+    'Taller': '#e8a020',
+    'Solicitud Envío USA': '#cc44ff'
+  };
+
+  const totalStock = items.reduce((a, i) => a + i.stock, 0);
+  let html = `<div style="padding:14px 22px;border-top:2px solid #1a3a2a;background:#0a1a12;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:600;color:#00e5b0;text-transform:uppercase;letter-spacing:.1em;">📦 Inventario Disponible</div>
+      <div style="font-size:12px;color:var(--muted);">Total: <b style="color:#00e5b0;">${totalStock} uds</b></div>
+    </div>`;
+
+  Object.entries(byDep).forEach(([dep, depItems]) => {
+    const color = depColors[dep] || '#7a7a99';
+    const depTotal = depItems.reduce((a, i) => a + i.stock, 0);
+    html += `<div style="margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:600;color:${color};margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+        <span style="width:6px;height:6px;border-radius:50%;background:${color};display:inline-block;"></span>
+        ${dep} <span style="color:var(--muted);font-weight:400;">(${depTotal} uds)</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+    depItems.filter(i => i.stock > 0).forEach(i => {
+      const stockColor = i.stock <= 2 ? '#e8a020' : '#00e5b0';
+      html += `<div style="background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:12px;">
+        <span style="color:var(--text);font-weight:600;">${i.talla}</span>
+        ${i.color ? `<span style="color:var(--muted);margin:0 4px;">·</span><span style="color:var(--muted);">${i.color}</span>` : ''}
+        <span style="color:var(--muted);margin:0 4px;">·</span>
+        <span style="color:${stockColor};font-weight:600;">${i.stock}</span>
+      </div>`;
+    });
+    const agotados = depItems.filter(i => i.stock === 0);
+    if (agotados.length) {
+      agotados.forEach(i => {
+        html += `<div style="background:var(--surface2);border:1px solid #3a1a1a;border-radius:8px;padding:5px 10px;font-size:12px;opacity:.5;">
+          <span style="color:var(--muted);">${i.talla}${i.color?' · '+i.color:''}</span>
+          <span style="color:#ff4444;margin-left:4px;">agotado</span>
+        </div>`;
+      });
+    }
+    html += `</div></div>`;
+  });
+
+  html += `</div>`;
+  return html;
+}
+
+function showNotFound(code) {
+  const area = document.getElementById('result-area');
+  area.className = 'visible';
+  area.innerHTML = `
+    <div class="not-found">
+      <div class="icon">🔍</div>
+      <p>No se encontró <strong>"${code}"</strong></p>
+      <p style="margin-top:8px;font-size:13px">Verifica el código o usa el buscador</p>
+    </div>`;
+}
+
+function findProduct(q) {
+  const s = q.trim().toLowerCase();
+  return PRODUCTOS.find(p =>
+    p.codigo.toLowerCase() === s ||
+    p.codigo.toLowerCase().includes(s) ||
+    p.nombre.toLowerCase().includes(s)
+  );
+}
+
+function doSearch() {
+  const q = document.getElementById('search-input').value;
+  if (!q.trim()) return;
+  if (!PRODUCTOS.length) { alert('Esperando datos de Google Sheets...'); return; }
+  const p = findProduct(q);
+  if (p) showResult(p); else showNotFound(q);
+}
+
+function onSearchInput() {
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  if (!q) { document.getElementById('result-area').className=''; document.getElementById('result-area').innerHTML=''; return; }
+  const p = PRODUCTOS.find(pr => pr.codigo.toLowerCase() === q);
+  if (p) showResult(p);
+}
+
+function toggleScanner() {
+  if (scannerActive) { stopScanner(); return; }
+  document.getElementById('scanner-wrap').classList.add('active');
+  document.getElementById('scan-btn-text').textContent = 'Detener Escáner';
+  scannerActive = true;
+  html5QrCode = new Html5Qrcode('reader');
+  html5QrCode.start(
+    { facingMode:'environment' },
+    { fps:12, qrbox:{ width:260, height:260 } },
+    decodedText => {
+      document.getElementById('search-input').value = decodedText;
+      const p = findProduct(decodedText);
+      if (p) showResult(p); else showNotFound(decodedText);
+      stopScanner();
+    },
+    () => {}
+  ).catch(err => { alert('No se pudo acceder a la cámara: ' + err); stopScanner(); });
+}
+
+function stopScanner() {
+  if (html5QrCode) {
+    html5QrCode.stop().catch(()=>{}).finally(() => {
+      html5QrCode = null; scannerActive = false;
+      document.getElementById('scanner-wrap').classList.remove('active');
+      document.getElementById('scan-btn-text').textContent = 'Escanear Código QR';
+    });
+  } else {
+    scannerActive = false;
+    document.getElementById('scanner-wrap').classList.remove('active');
+    document.getElementById('scan-btn-text').textContent = 'Escanear Código QR';
+  }
+}
+
+function renderFilters() {
+  const brands = ['Todos', ...new Set(PRODUCTOS.map(p => getBrand(p)))];
+  document.getElementById('filter-row').innerHTML = brands
+    .map(b => `<button class="filter-pill ${b===currentFilter?'active':''}" onclick="setFilter('${b}')">${b}</button>`)
+    .join('');
+}
+
+function setFilter(brand) {
+  currentFilter = brand;
+  renderFilters();
+  renderList();
+}
+
+function renderList() {
+  const filtered = currentFilter === 'Todos' ? PRODUCTOS : PRODUCTOS.filter(p => getBrand(p) === currentFilter);
+  document.getElementById('product-list').innerHTML = filtered.map(p => {
+    const brand = getBrand(p);
+    return `<div class="product-list-item" onclick='showResult(${JSON.stringify(p)})'>
+      <div class="pli-dot" style="background:${brandDot(brand)}"></div>
+      <div class="pli-info">
+        <div class="pli-name">${p.nombre}</div>
+        <div class="pli-code">${p.codigo}</div>
+      </div>
+      <div class="pli-price">${fmt_bs(p.base_bs)}</div>
+    </div>`;
+  }).join('');
+}
+
+let currentDepFilter = 'Todos';
+
+function switchMainTab(tab) {
+  document.getElementById('tab-precios').style.display    = tab==='precios'    ? 'block' : 'none';
+  document.getElementById('tab-inventario').style.display = tab==='inventario' ? 'block' : 'none';
+  document.getElementById('tab-btn-precios').classList.toggle('active',    tab==='precios');
+  document.getElementById('tab-btn-inventario').classList.toggle('active', tab==='inventario');
+  if (tab==='inventario') buscarInventario();
+}
+
+function setDepFilter(dep) {
+  currentDepFilter = dep;
+  document.querySelectorAll('#inv-dep-filters .filter-pill').forEach(b => {
+    b.classList.toggle('active', b.textContent.includes(dep) || (dep==='Todos' && b.textContent==='Todos'));
+  });
+  buscarInventario();
+}
+
+function buscarInventario() {
+  const qNombre = (document.getElementById('inv-nombre').value || '').toLowerCase().trim();
+  const qTalla  = (document.getElementById('inv-talla').value  || '').toLowerCase().trim();
+  const qColor  = (document.getElementById('inv-color').value  || '').toLowerCase().trim();
+  const el = document.getElementById('inv-results');
+
+  // Build flat list of all stock items
+  let items = [];
+  Object.entries(STOCK).forEach(([cod, stockArr]) => {
+    const prod = PRODUCTOS.find(p => p.codigo === cod);
+    const nombre = prod ? prod.nombre : cod;
+    stockArr.forEach(s => {
+      items.push({ cod, nombre, talla: s.talla, color: s.color, deposito: s.deposito, stock: s.stock });
+    });
+  });
+
+  // Filter
+  if (qNombre) items = items.filter(i => i.nombre.toLowerCase().includes(qNombre) || i.cod.toLowerCase().includes(qNombre));
+  if (qTalla)  items = items.filter(i => i.talla.toLowerCase().includes(qTalla));
+  if (qColor)  items = items.filter(i => i.color.toLowerCase().includes(qColor));
+  if (currentDepFilter !== 'Todos') items = items.filter(i => i.deposito === currentDepFilter);
+
+  if (!items.length) {
+    el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px;">
+      ${Object.keys(STOCK).length === 0 ? '⏳ Cargando inventario...' : '🔍 Sin resultados para esta búsqueda'}
+    </div>`;
+    return;
+  }
+
+  const depColors = {'Tienda':'#00e5b0','Showroom Caracas':'#0099ff','Taller':'#e8a020','Solicitud Envío USA':'#cc44ff'};
+  const totalUnits = items.reduce((a,i) => a + i.stock, 0);
+
+  let html = `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${items.length} registros · <b style="color:var(--accent)">${totalUnits} unidades</b> en total</div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
+
+  items.sort((a,b) => b.stock - a.stock).forEach(i => {
+    const dc = depColors[i.deposito] || '#7a7a99';
+    const sc = i.stock === 0 ? '#ff4444' : i.stock <= 2 ? '#e8a020' : '#00e5b0';
+    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="switchMainTab('precios');document.getElementById('search-input').value='${i.cod}';doSearch();">
+      <div style="flex:1;">
+        <div style="font-size:15px;font-weight:600;color:var(--text);">${i.nombre}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;">
+          <span>📏 ${i.talla}</span>
+          ${i.color ? `<span>🎨 ${i.color}</span>` : ''}
+          <span style="color:${dc};">📍 ${i.deposito}</span>
+        </div>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:${sc};">${i.stock} <span style="font-size:12px;font-weight:400;color:var(--muted);">uds</span></div>
+    </div>`;
+  });
+
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+loadData();
+</script>
+</body>
+</html>
