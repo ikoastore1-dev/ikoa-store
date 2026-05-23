@@ -309,6 +309,9 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
                 <option value="ZOOM">ZOOM</option>
                 <option value="TEALCA">TEALCA</option>
                 <option value="TIENDA MCY">TIENDA MCY</option>
+                <option value="SHOWROOM CARACAS">SHOWROOM CARACAS</option>
+                <option value="DELIVERY CARACAS">DELIVERY CARACAS</option>
+                <option value="DELIVERY MARACAY">DELIVERY MARACAY</option>
                 <option value="Otro">Otro</option>
               </select>
             </div>
@@ -320,6 +323,17 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
             <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">📦 Detalles COD</div>
             <div class="field-group"><div class="field-label">Descripción del pedido</div><textarea class="field-input" name="descripcion" placeholder="DESCRIPCIÓN..." rows="3" style="text-transform:uppercase;resize:vertical;"></textarea></div>
             <div class="field-group"><div class="field-label">¿Es urgente?</div><input class="field-input" type="text" name="urgente" placeholder="SÍ / NO / FECHA LÍMITE" style="text-transform:uppercase;"></div>
+            <div class="field-group">
+              <div class="field-label">¿Agregar Arte Digital?</div>
+              <select class="field-input" name="selector_agregar_arte" id="g-arte-cod" onchange="toggleArteCod()">
+                <option value="no">NO</option>
+                <option value="si">SÍ</option>
+              </select>
+            </div>
+            <div id="g-arte-nombre-cod" class="field-group" style="display:none;">
+              <div class="field-label">Nombre del Arte</div>
+              <input class="field-input" type="text" name="nombre_arte" placeholder="NOMBRE DEL ARTE" style="text-transform:uppercase;">
+            </div>
             <div class="field-group">
               <div class="field-label">¿Mismo nombre de envío?</div>
               <select class="field-input" name="diferente_envio" id="g-diferente-envio" onchange="toggleDatosEnvio()">
@@ -898,7 +912,7 @@ function setTipoGestion(tipo){
 function toggleDireccion(){
   const ag=document.getElementById('g-agencia').value;
   const wrap=document.getElementById('g-dir-wrap');
-  wrap.style.display=['MRW','ZOOM','TEALCA'].includes(ag)?'block':'none';
+  wrap.style.display=['MRW','ZOOM','TEALCA','DELIVERY CARACAS','DELIVERY MARACAY'].includes(ag)?'block':'none';
 }
 
 function toggleDatosEnvio(){
@@ -906,9 +920,19 @@ function toggleDatosEnvio(){
   document.getElementById('g-envio-section').style.display=val==='si'?'flex':'none';
 }
 
+function toggleArteCod(){
+  const val=document.getElementById('g-arte-cod').value;
+  document.getElementById('g-arte-nombre-cod').style.display=val==='si'?'block':'none';
+}
+
 function toggleArte(){
   const val=document.getElementById('g-arte').value;
   document.getElementById('g-arte-nombre').style.display=val==='si'?'block':'none';
+}
+
+function toggleArteCod(){
+  const val=document.getElementById('g-arte-cod').value;
+  document.getElementById('g-arte-nombre-cod').style.display=val==='si'?'block':'none';
 }
 
 document.getElementById('gestion-form').addEventListener('submit',async function(e){
