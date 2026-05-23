@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Ikoa & BeKate — Inventario</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -149,12 +150,22 @@ main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
 
 <header>
   <div class="logo"><span class="i">IKOA</span><span class="sep">—</span><span class="b">BEKATE</span></div>
-  <div class="badge-admin">⚙ Inventario</div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+    <div id="clock-chip" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 12px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;">
+      <span style="color:var(--accent);font-size:13px;">🔄</span>
+      <span style="color:var(--muted);font-size:11px;">Última sync:</span>
+      <span id="clock-date" style="color:var(--text);font-weight:500;">—</span>
+      <span style="color:var(--border);">|</span>
+      <span id="clock-time" style="color:var(--accent);font-weight:600;font-family:'Barlow Condensed',sans-serif;font-size:15px;letter-spacing:.05em;">—</span>
+    </div>
+    <div class="badge-admin">⚙ Inventario</div>
+  </div>
 </header>
 
 <main>
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('actualizar')">📦 Actualizar Stock</button>
+    <button class="tab active" onclick="switchTab('actualizar')">📦 Stock</button>
+    <button class="tab" onclick="switchTab('qr')">🏷️ Etiquetas</button>
     <button class="tab" onclick="switchTab('historial')">📋 Historial</button>
   </div>
 
@@ -178,6 +189,65 @@ main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
     <div id="product-area"></div>
   </div>
 
+  <!-- TAB QR -->
+  <div id="tab-qr" style="display:none">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+      <!-- FORMULARIO -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:14px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">📋 Datos del producto</div>
+
+        <div class="field-group">
+          <div class="field-label">Código del producto</div>
+          <input class="field-input" type="text" id="qr-codigo" placeholder="Ej: Nike-Met-01" oninput="autoFillFromCode()">
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Nombre</div>
+          <input class="field-input" type="text" id="qr-nombre" placeholder="Nombre del producto">
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Precio ($ BCV)</div>
+          <input class="field-input" type="text" id="qr-precio" placeholder="Ej: 205.00">
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Foto del producto</div>
+          <div id="foto-drop" style="border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;" onclick="document.getElementById('foto-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondrop="handleDrop(event)">
+            <div id="foto-preview-wrap">
+              <div style="font-size:28px;">📷</div>
+              <div style="font-size:13px;color:var(--muted);margin-top:6px;">Toca para subir foto o arrastra aquí</div>
+            </div>
+          </div>
+          <input type="file" id="foto-input" accept="image/*" style="display:none" onchange="handleFotoChange(event)">
+        </div>
+
+        <button onclick="generarEtiqueta()" style="width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;margin-top:4px;">⚡ Generar Etiqueta</button>
+      </div>
+
+      <!-- PREVIEW -->
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">👁️ Vista previa</div>
+
+        <div id="etiqueta-preview" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;min-height:200px;display:flex;align-items:center;justify-content:center;">
+          <div style="text-align:center;color:var(--muted);font-size:13px;">Completa el formulario y presiona<br>Generar Etiqueta</div>
+        </div>
+
+        <div id="qr-solo-wrap" style="display:none;flex-direction:column;gap:8px;">
+          <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Solo QR</div>
+          <div id="qr-solo" style="background:#fff;border-radius:10px;padding:12px;display:inline-block;"></div>
+        </div>
+
+        <div id="btns-descarga" style="display:none;flex-direction:column;gap:8px;">
+          <button onclick="descargarEtiqueta()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--accent);border-radius:10px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.05em;">⬇️ Descargar Etiqueta PNG</button>
+          <button onclick="descargarQRsolo()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.05em;">⬇️ Descargar Solo QR</button>
+          <button onclick="imprimirEtiqueta()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.05em;">🖨️ Imprimir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="tab-historial" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Movimientos registrados</div>
@@ -188,7 +258,7 @@ main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyoq7XEjwRkmeKbAODroBvY4dy9jG-0ju21hqQSLKwdSkmjgq92k_E-H52tmh-ggmdNpA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxLx7Sdy2QKiUfpDImNz_3ztNnMoR5_N3U2_moaFD9t6zZWseUkmMhpokCgC65GzMyu5Q/exec';
 const SHEET_ID   = '1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const DEPOSITOS  = ['Tienda','Showroom Caracas','Taller','Solicitud Envío USA'];
 const TALLAS_KIDS = ['Kids 2','Kids 4','Kids 6','Kids 8','Kids 10','Kids 12','Kids 14','Kids 16'];
@@ -216,6 +286,22 @@ let pendingMovimiento = null;
 let historial = JSON.parse(localStorage.getItem('ikoa_historial_v2') || '[]');
 let html5QrCode = null;
 let scannerActive = false;
+
+function setSyncTimestamp() {
+  const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const DIAS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const now   = new Date();
+  const dia   = DIAS[now.getDay()];
+  const d     = now.getDate();
+  const mes   = MESES[now.getMonth()];
+  const yr    = now.getFullYear();
+  let h       = now.getHours();
+  const min   = String(now.getMinutes()).padStart(2,'0');
+  const ampm  = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  document.getElementById('clock-date').textContent = `${dia} ${d} ${mes} ${yr}`;
+  document.getElementById('clock-time').textContent = `${h}:${min} ${ampm}`;
+}
 
 const gvizVal = c => (!c || c.v === null || c.v === undefined) ? '' : c.v;
 
@@ -264,6 +350,7 @@ async function init() {
       });
     } catch(e) {}
     showMsg('ok', '✓ ' + PRODUCTOS.length + ' productos cargados');
+    setSyncTimestamp();
     setTimeout(() => clearMsg(), 3000);
   } catch(e) { showMsg('err', '✗ Error: ' + e.message); }
 }
@@ -482,6 +569,7 @@ async function confirmarModal() {
       method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        action: 'updateStock',
         codigo: currentProduct.codigo,
         talla: selectedTalla,
         stock: nuevoStock,
@@ -572,9 +660,12 @@ function stopScanner() {
 }
 
 function switchTab(tab) {
-  document.getElementById('tab-actualizar').style.display = tab==='actualizar'?'block':'none';
-  document.getElementById('tab-historial').style.display  = tab==='historial'  ?'block':'none';
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='actualizar')||(i===1&&tab==='historial')));
+  ['actualizar','qr','historial'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((b,i) => {
+    b.classList.toggle('active', ['actualizar','qr','historial'][i]===tab);
+  });
   if (tab==='historial') renderHistorial();
 }
 
@@ -608,6 +699,178 @@ function clearHistorial() {
     localStorage.setItem('ikoa_historial_v2','[]');
     renderHistorial();
   }
+}
+
+// ── QR GENERATOR ─────────────────────────────────────────────
+let fotoBase64 = null;
+let fotoMime = null;
+let qrCanvas = null;
+
+function autoFillFromCode() {
+  const cod = document.getElementById('qr-codigo').value.trim();
+  const prod = PRODUCTOS.find(p => p.codigo.toLowerCase() === cod.toLowerCase());
+  if (prod) {
+    document.getElementById('qr-nombre').value = prod.nombre;
+  }
+}
+
+function handleFotoChange(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  procesarFoto(file);
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('foto-drop').style.borderColor = 'var(--border)';
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) procesarFoto(file);
+}
+
+function procesarFoto(file) {
+  fotoMime = file.type;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    fotoBase64 = ev.target.result.split(',')[1];
+    document.getElementById('foto-preview-wrap').innerHTML = `
+      <img src="${ev.target.result}" style="max-height:120px;max-width:100%;border-radius:8px;object-fit:contain;">
+      <div style="font-size:11px;color:var(--accent);margin-top:6px;">✓ ${file.name}</div>`;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function generarEtiqueta() {
+  const codigo = document.getElementById('qr-codigo').value.trim();
+  const nombre = document.getElementById('qr-nombre').value.trim();
+  const precio = document.getElementById('qr-precio').value.trim();
+
+  if (!codigo) { alert('Ingresa el código del producto'); return; }
+  if (!nombre) { alert('Ingresa el nombre del producto'); return; }
+
+  // Subir foto a Drive si hay una
+  if (fotoBase64) {
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'uploadFoto',
+          codigo: codigo,
+          base64: fotoBase64,
+          mimeType: fotoMime,
+          filename: `${codigo}.jpg`
+        })
+      });
+    } catch(e) { console.error('Error subiendo foto:', e); }
+  }
+
+  // Generar QR
+  const previewEl = document.getElementById('etiqueta-preview');
+  previewEl.innerHTML = '';
+
+  // Etiqueta completa
+  const etiqueta = document.createElement('div');
+  etiqueta.id = 'etiqueta-render';
+  etiqueta.style.cssText = `background:#fff;border-radius:12px;padding:16px;width:220px;font-family:'Barlow Condensed',sans-serif;text-align:center;color:#111;`;
+  etiqueta.innerHTML = `
+    <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">IKOA & BEKATE</div>
+    <div id="qr-etiqueta-div" style="margin:0 auto 10px;"></div>
+    <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px;">${nombre}</div>
+    <div style="font-size:11px;color:#777;letter-spacing:.08em;margin-bottom:6px;">${codigo}</div>
+    ${precio ? `<div style="font-size:18px;font-weight:700;color:#00a070;">$ ${precio}</div>` : ''}`;
+  previewEl.appendChild(etiqueta);
+
+  // Generar QR dentro de la etiqueta
+  new QRCode(document.getElementById('qr-etiqueta-div'), {
+    text: codigo, width: 130, height: 130,
+    colorDark: '#111', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+
+  // QR solo
+  const qrSoloEl = document.getElementById('qr-solo');
+  qrSoloEl.innerHTML = '';
+  new QRCode(qrSoloEl, {
+    text: codigo, width: 160, height: 160,
+    colorDark: '#000', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+  document.getElementById('qr-solo-wrap').style.display = 'flex';
+  document.getElementById('btns-descarga').style.display = 'flex';
+}
+
+async function descargarEtiqueta() {
+  const el = document.getElementById('etiqueta-render');
+  if (!el) return;
+  // Use html2canvas if available, otherwise just save QR
+  const canvas = document.createElement('canvas');
+  const scale = 3;
+  canvas.width = 220 * scale;
+  canvas.height = el.offsetHeight * scale;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, 220, el.offsetHeight);
+
+  // Get QR image from the etiqueta
+  const qrImg = el.querySelector('img');
+  const codigo = document.getElementById('qr-codigo').value.trim();
+  const nombre = document.getElementById('qr-nombre').value.trim();
+  const precio = document.getElementById('qr-precio').value.trim();
+
+  if (qrImg) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 220, 260);
+      // Header
+      ctx.fillStyle = '#555555';
+      ctx.font = '700 10px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('IKOA & BEKATE', 110, 16);
+      // QR
+      ctx.drawImage(img, 45, 24, 130, 130);
+      // Nombre
+      ctx.fillStyle = '#111111';
+      ctx.font = '700 15px Arial';
+      ctx.fillText(nombre, 110, 172);
+      // Codigo
+      ctx.fillStyle = '#777777';
+      ctx.font = '10px Arial';
+      ctx.fillText(codigo, 110, 188);
+      // Precio
+      if (precio) {
+        ctx.fillStyle = '#00a070';
+        ctx.font = '700 17px Arial';
+        ctx.fillText('$ ' + precio, 110, 210);
+      }
+      const a = document.createElement('a');
+      a.download = `etiqueta-${codigo}.png`;
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    };
+    img.src = qrImg.src;
+  }
+}
+
+function descargarQRsolo() {
+  const qrImg = document.querySelector('#qr-solo img');
+  if (!qrImg) return;
+  const codigo = document.getElementById('qr-codigo').value.trim();
+  const a = document.createElement('a');
+  a.download = `qr-${codigo}.png`;
+  a.href = qrImg.src;
+  a.click();
+}
+
+function imprimirEtiqueta() {
+  const el = document.getElementById('etiqueta-render');
+  if (!el) return;
+  const win = window.open('', '_blank');
+  win.document.write(`<html><body style="margin:0;display:flex;justify-content:center;padding:20px;">${el.outerHTML}</body></html>`);
+  win.document.close();
+  win.print();
 }
 
 init();
