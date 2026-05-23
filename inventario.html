@@ -298,8 +298,24 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
             <div id="g-celular-wrap" class="field-group" style="display:none;"><div class="field-label">N° Celular</div><input class="field-input" type="text" name="celular" placeholder="04XX-XXXXXXX"></div>
           </div>
 
+          <!-- ARTE DIGITAL -->
+          <div id="g-arte-section" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;flex-direction:column;gap:12px;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">🎨 Arte Digital</div>
+            <div class="field-group">
+              <div class="field-label">¿Agregar Arte Digital?</div>
+              <select class="field-input" name="selector_agregar_arte" id="g-arte-cod" onchange="toggleArteCod()">
+                <option value="no">NO</option>
+                <option value="si">SÍ</option>
+              </select>
+            </div>
+            <div id="g-arte-nombre-cod" class="field-group" style="display:none;">
+              <div class="field-label">Nombre del Arte</div>
+              <input class="field-input" type="text" name="nombre_arte" placeholder="NOMBRE DEL ARTE" style="text-transform:uppercase;">
+            </div>
+          </div>
+
           <!-- AGENCIA Y DIRECCIÓN -->
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;display:flex;flex-direction:column;gap:12px;">
+          <div id="g-envio-wrap" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;flex-direction:column;gap:12px;">
             <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">🚚 Envío</div>
             <div class="field-group">
               <div class="field-label">Agencia</div>
@@ -316,24 +332,6 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
               </select>
             </div>
             <div id="g-dir-wrap" class="field-group" style="display:none;"><div class="field-label">Dirección de Agencia</div><input class="field-input" type="text" name="direccion_agencia" placeholder="DIRECCIÓN..." style="text-transform:uppercase;"></div>
-          </div>
-
-          <!-- CAMPOS COD -->
-          <div id="g-cod-section" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;display:none;flex-direction:column;gap:12px;">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">📦 Detalles COD</div>
-            <div class="field-group"><div class="field-label">Descripción del pedido</div><textarea class="field-input" name="descripcion" placeholder="DESCRIPCIÓN..." rows="3" style="text-transform:uppercase;resize:vertical;"></textarea></div>
-            <div class="field-group"><div class="field-label">¿Es urgente?</div><input class="field-input" type="text" name="urgente" placeholder="SÍ / NO / FECHA LÍMITE" style="text-transform:uppercase;"></div>
-            <div class="field-group">
-              <div class="field-label">¿Agregar Arte Digital?</div>
-              <select class="field-input" name="selector_agregar_arte" id="g-arte-cod" onchange="toggleArteCod()">
-                <option value="no">NO</option>
-                <option value="si">SÍ</option>
-              </select>
-            </div>
-            <div id="g-arte-nombre-cod" class="field-group" style="display:none;">
-              <div class="field-label">Nombre del Arte</div>
-              <input class="field-input" type="text" name="nombre_arte" placeholder="NOMBRE DEL ARTE" style="text-transform:uppercase;">
-            </div>
             <div class="field-group">
               <div class="field-label">¿Mismo nombre de envío?</div>
               <select class="field-input" name="diferente_envio" id="g-diferente-envio" onchange="toggleDatosEnvio()">
@@ -345,15 +343,14 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
               <div class="field-group"><div class="field-label">Nombre de Envío</div><input class="field-input" type="text" name="nombre_envio" placeholder="NOMBRE ENVÍO" style="text-transform:uppercase;"></div>
               <div class="field-group"><div class="field-label">C.I. de Envío</div><input class="field-input" type="text" name="ci_envio" placeholder="V-XXXXXXXX" style="text-transform:uppercase;"></div>
               <div class="field-group"><div class="field-label">Celular de Envío</div><input class="field-input" type="text" name="cel_envio" placeholder="04XX-XXXXXXX"></div>
-              <div class="field-group">
-                <div class="field-label">¿Agregar arte?</div>
-                <select class="field-input" name="selector_agregar_arte" id="g-arte" onchange="toggleArte()">
-                  <option value="no">NO</option>
-                  <option value="si">SÍ</option>
-                </select>
-              </div>
-              <div id="g-arte-nombre" class="field-group" style="display:none;"><div class="field-label">Nombre del arte</div><input class="field-input" type="text" name="nombre_arte" placeholder="NOMBRE ARTE" style="text-transform:uppercase;"></div>
             </div>
+          </div>
+
+          <!-- CAMPOS COD -->
+          <div id="g-cod-section" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;flex-direction:column;gap:12px;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">📦 Detalles COD</div>
+            <div class="field-group"><div class="field-label">Descripción del pedido</div><textarea class="field-input" name="descripcion" placeholder="DESCRIPCIÓN..." rows="3" style="text-transform:uppercase;resize:vertical;"></textarea></div>
+            <div class="field-group"><div class="field-label">¿Es urgente?</div><input class="field-input" type="text" name="urgente" placeholder="SÍ / NO / FECHA LÍMITE" style="text-transform:uppercase;"></div>
           </div>
 
           <!-- CAMPOS ENVIADO -->
@@ -893,17 +890,23 @@ function setTipoGestion(tipo){
   // Mostrar/ocultar campos según tipo
   const codSec=document.getElementById('g-cod-section');
   const envSec=document.getElementById('g-enviado-section');
+  const envioWrap=document.getElementById('g-envio-wrap');
+  const arteSection=document.getElementById('g-arte-section');
   const cedWrap=document.getElementById('g-cedula-wrap');
   const celWrap=document.getElementById('g-celular-wrap');
 
   if(tipo==='COD'){
     codSec.style.display='flex';
     envSec.style.display='none';
+    envioWrap.style.display='flex';
+    arteSection.style.display='flex';
     cedWrap.style.display='block';
     celWrap.style.display='block';
   } else {
     codSec.style.display='none';
     envSec.style.display='flex';
+    envioWrap.style.display='flex';
+    arteSection.style.display='none';
     cedWrap.style.display='none';
     celWrap.style.display='none';
   }
