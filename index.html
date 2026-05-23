@@ -197,7 +197,7 @@ let TASA_BCV = null;
 let STOCK = {};
 let html5QrCode = null;
 let scannerActive = false;
-let currentFilter = 'Todos';
+let currentFilter = null;
 
 const fmt_bs  = v => Number(v).toLocaleString('es-VE',{minimumFractionDigits:0,maximumFractionDigits:0}) + ' Bs';
 const fmt_usd = v => '$ ' + Number(v).toFixed(2);
@@ -491,6 +491,14 @@ function setFilter(brand) {
 }
 
 function renderList() {
+  if (!currentFilter) {
+    document.getElementById('product-list').innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--muted);">
+        <div style="font-size:32px;margin-bottom:12px;">👆</div>
+        <div style="font-size:14px;">Selecciona una categoría o busca un producto</div>
+      </div>`;
+    return;
+  }
   const filtered = currentFilter === 'Todos' ? PRODUCTOS : PRODUCTOS.filter(p => getBrand(p) === currentFilter);
   document.getElementById('product-list').innerHTML = filtered.map(p => {
     const brand = getBrand(p);
