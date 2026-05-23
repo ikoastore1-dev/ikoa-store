@@ -18,14 +18,13 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .logo{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;letter-spacing:.15em;display:flex;align-items:center;}
 .logo .i{color:var(--accent)}.logo .sep{color:var(--muted);margin:0 8px;font-weight:300}.logo .b{color:var(--text)}
-.badge-admin{background:#1a1a2e;border:1px solid #3a3a5a;border-radius:6px;padding:3px 10px;font-size:11px;color:var(--warn);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
-main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 .tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:20px}
-.tab{flex:1;padding:10px;border:none;background:transparent;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;border-radius:8px;transition:all .2s}
+.tab{flex:1;padding:10px;border:none;background:transparent;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;border-radius:8px;transition:all .2s}
 .tab.active{background:var(--accent);color:#000}
-.scan-btn{width:100%;padding:18px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:var(--radius);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;transition:transform .15s;box-shadow:0 4px 24px rgba(0,229,176,.2)}
+.scan-btn{width:100%;padding:18px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:var(--radius);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;transition:transform .15s}
 .scan-btn:active{transform:scale(.97)}
-.scan-btn.stop{background:linear-gradient(135deg,#ff4444,#cc2222);box-shadow:0 4px 24px rgba(255,68,68,.2)}
+.scan-btn.stop{background:linear-gradient(135deg,#ff4444,#cc2222)}
 #scanner-wrap{display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
 #scanner-wrap.active{display:block}
 #scanner-header{padding:12px 18px;background:var(--surface2);display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted)}
@@ -67,115 +66,103 @@ main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
 .new-talla-input:focus{border-color:var(--accent)}
 .add-talla-btn{padding:10px 16px;background:var(--surface3);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;cursor:pointer;white-space:nowrap}
 .edit-panel{background:#0f1f17;border:1px solid #1a3a2a;border-radius:10px;padding:16px;margin-top:4px}
-.edit-title{font-size:13px;color:var(--accent);font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:.08em}
 .edit-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .edit-label{font-size:13px;color:var(--muted);min-width:80px}
 .qty-controls{display:flex;align-items:center;gap:8px}
-.qty-btn{width:40px;height:40px;border:1px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.qty-btn{width:40px;height:40px;border:1px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .qty-btn.plus{border-color:var(--accent);color:var(--accent)}
 .qty-btn.minus{border-color:var(--danger);color:var(--danger)}
 .qty-display{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;min-width:50px;text-align:center}
 .op-btns{display:flex;gap:8px;flex-wrap:wrap}
-.op-btn{padding:8px 16px;border-radius:8px;border:1px solid;font-family:'Barlow',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+.op-btn{padding:8px 16px;border-radius:8px;border:1px solid;font-family:'Barlow',sans-serif;font-size:13px;font-weight:500;cursor:pointer}
 .op-btn.entrada{background:#0f2b1a;border-color:var(--accent);color:var(--accent)}
 .op-btn.salida{background:#2a1010;border-color:var(--danger);color:var(--danger)}
 .op-btn.ajuste{background:#1a1a10;border-color:var(--warn);color:var(--warn)}
-.save-btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;margin-top:8px;transition:transform .15s}
-.save-btn:active{transform:scale(.97)}
+.save-btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;margin-top:8px}
 .save-btn:disabled{opacity:.4;cursor:not-allowed}
-.msg{padding:12px 18px;border-radius:10px;font-size:14px;margin-bottom:12px;display:none;animation:slideUp .3s ease}
+.msg{padding:12px 18px;border-radius:10px;font-size:14px;margin-bottom:12px;display:none}
 .msg.ok{background:#0f2b1a;border:1px solid #1a4a2a;color:var(--accent);display:flex;align-items:center;gap:8px}
 .msg.err{background:#2a1010;border:1px solid #4a1a1a;color:var(--danger);display:flex;align-items:center;gap:8px}
 .msg.loading{background:var(--surface2);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;gap:8px}
-
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.hidden{display:none}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
-.modal-icon{font-size:36px;text-align:center;margin-bottom:12px}
-.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;text-align:center;margin-bottom:6px;letter-spacing:.03em}
-.modal-subtitle{font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px;line-height:1.5}
-.modal-summary{background:var(--surface2);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:13px;line-height:1.8}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:26px 22px;width:100%;max-width:400px}
+.modal-icon{font-size:34px;text-align:center;margin-bottom:10px}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;text-align:center;margin-bottom:6px}
+.modal-subtitle{font-size:13px;color:var(--muted);text-align:center;margin-bottom:16px;line-height:1.5}
+.modal-summary{background:var(--surface2);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.8}
 .modal-summary span{color:var(--accent);font-weight:600}
-.modal-cod-input{width:100%;background:var(--surface3);border:2px solid var(--border);border-radius:10px;padding:14px 18px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;letter-spacing:.2em;text-align:center;outline:none;transition:border-color .2s;margin-bottom:8px}
+.modal-cod-input{width:100%;background:var(--surface3);border:2px solid var(--border);border-radius:10px;padding:14px 18px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;letter-spacing:.2em;text-align:center;outline:none;transition:border-color .2s;margin-bottom:6px}
 .modal-cod-input:focus{border-color:var(--accent)}
 .modal-cod-input::placeholder{font-size:14px;letter-spacing:.05em;font-weight:400;color:var(--muted)}
 .modal-error{font-size:12px;color:var(--danger);text-align:center;min-height:18px;margin-bottom:12px}
 .modal-btns{display:flex;gap:10px}
-.modal-cancel{flex:1;padding:13px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;cursor:pointer;transition:all .2s}
-.modal-cancel:hover{border-color:var(--danger);color:var(--danger)}
-.modal-confirm{flex:2;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:transform .15s}
-.modal-confirm:active{transform:scale(.97)}
+.modal-cancel{flex:1;padding:13px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;cursor:pointer}
+.modal-confirm{flex:2;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
 .modal-confirm:disabled{opacity:.4;cursor:not-allowed}
-
-/* HISTORIAL */
+.tasa-btn{background:var(--surface2);border:2px solid var(--border);border-radius:12px;padding:14px 10px;cursor:pointer;transition:all .2s;text-align:center;width:100%}
+.tasa-btn:hover{border-color:var(--accent)}
+.tasa-btn.selected{border-color:var(--accent);background:#0f2b1a}
 .historial-list{display:flex;flex-direction:column;gap:8px}
 .hist-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px}
 .hist-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-.hist-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;letter-spacing:.06em}
+.hist-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
 .hist-badge.entrada{background:#0f2b1a;color:var(--accent)}
 .hist-badge.salida{background:#2a1010;color:var(--danger)}
 .hist-badge.ajuste{background:#1a1a10;color:var(--warn)}
 .hist-prod{font-size:14px;font-weight:600;flex:1}
 .hist-qty{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700}
 .hist-qty.pos{color:var(--accent)}.hist-qty.neg{color:var(--danger)}.hist-qty.eq{color:var(--warn)}
-.hist-meta{display:flex;gap:12px;flex-wrap:wrap}
-.hist-chip{background:var(--surface2);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--muted)}
-.hist-chip.usuario{color:var(--warn);border:1px solid #3a2a10}
-.hist-chip.fecha{color:var(--muted)}
+.hist-meta{display:flex;gap:8px;flex-wrap:wrap}
+.hist-chip{background:var(--surface2);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--muted)}
+.hist-chip.usuario{color:var(--warn)}
 .empty-hist{text-align:center;padding:40px;color:var(--muted);font-size:14px}
 .not-found{background:var(--surface);border:1px solid #6b1a1a;border-radius:var(--radius);padding:24px;text-align:center}
-.not-found p{color:var(--muted);font-size:14px;margin-top:8px}
-.tasa-sel-btn{background:var(--surface2);border:2px solid var(--border);border-radius:12px;padding:14px 10px;cursor:pointer;transition:all .2s;text-align:center;}
-.tasa-sel-btn:hover{border-color:var(--accent);background:var(--surface3);}
-.tasa-sel-btn.selected{border-color:var(--accent);background:#0f2b1a;}
 .spinner{display:inline-block;animation:spin 1s linear infinite}
-@media(max-width:500px){.tallas-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr))}.fields-row{grid-template-columns:1fr}}
+@media(max-width:600px){.fields-row{grid-template-columns:1fr}.tallas-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr))}}
 </style>
 </head>
 <body>
 
-<!-- MODAL SELECCIÓN DE TASA -->
+<!-- MODAL TASA -->
 <div class="modal-overlay hidden" id="modal-tasa">
   <div class="modal">
     <div class="modal-icon">💱</div>
     <div class="modal-title">Seleccionar Tasa</div>
-    <div class="modal-subtitle">¿Con qué tasa se maneja este producto?<br>El precio en Bs se calculará automáticamente.</div>
-    <div id="tasa-resumen" style="background:var(--surface2);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:13px;line-height:1.8;"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;" id="tasa-btns">
-      <button onclick="seleccionarTasa('BCV')"   class="tasa-sel-btn" id="tbtn-BCV">
-        <div style="font-size:18px;font-weight:700;color:var(--accent);" id="val-BCV">—</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Tasa BCV</div>
+    <div class="modal-subtitle">¿Con qué tasa se maneja este producto?</div>
+    <div class="modal-summary" id="tasa-resumen"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+      <button class="tasa-btn" id="tbtn-BCV"     onclick="seleccionarTasa('BCV')">
+        <div style="font-size:17px;font-weight:700;color:var(--accent);"   id="val-BCV">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;">Tasa BCV</div>
       </button>
-      <button onclick="seleccionarTasa('Binance')" class="tasa-sel-btn" id="tbtn-Binance">
-        <div style="font-size:18px;font-weight:700;color:#f7931a;" id="val-Binance">—</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Binance</div>
+      <button class="tasa-btn" id="tbtn-Binance"  onclick="seleccionarTasa('Binance')">
+        <div style="font-size:17px;font-weight:700;color:#f7931a;"         id="val-Binance">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;">Binance</div>
       </button>
-      <button onclick="seleccionarTasa('Venta')"  class="tasa-sel-btn" id="tbtn-Venta">
-        <div style="font-size:18px;font-weight:700;color:#0099ff;" id="val-Venta">—</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Tasa Venta</div>
+      <button class="tasa-btn" id="tbtn-Venta"   onclick="seleccionarTasa('Venta')">
+        <div style="font-size:17px;font-weight:700;color:var(--accent2);"  id="val-Venta">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;">Tasa Venta</div>
       </button>
-      <button onclick="seleccionarTasa('BeKate')" class="tasa-sel-btn" id="tbtn-BeKate">
-        <div style="font-size:18px;font-weight:700;color:#cc44ff;" id="val-BeKate">—</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;">BeKate</div>
+      <button class="tasa-btn" id="tbtn-BeKate"  onclick="seleccionarTasa('BeKate')">
+        <div style="font-size:17px;font-weight:700;color:#cc44ff;"         id="val-BeKate">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;">BeKate</div>
       </button>
     </div>
-    <div id="tasa-preview" style="background:#0f1f17;border:1px solid #1a3a2a;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--muted);text-align:center;margin-bottom:16px;">
-      Selecciona una tasa para ver el cálculo
-    </div>
+    <div id="tasa-preview" style="background:#0f1f17;border:1px solid #1a3a2a;border-radius:10px;padding:12px;font-size:13px;color:var(--muted);text-align:center;margin-bottom:14px;">Selecciona una tasa para ver el cálculo</div>
     <div class="modal-btns">
-      <button class="modal-cancel" onclick="cancelarTasa()">Cancelar</button>
+      <button class="modal-cancel" onclick="document.getElementById('modal-tasa').classList.add('hidden')">Cancelar</button>
       <button class="modal-confirm" id="tasa-confirm-btn" onclick="confirmarTasa()" disabled>✓ CONFIRMAR</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL CÓDIGO DE USUARIO -->
+<!-- MODAL USUARIO -->
 <div class="modal-overlay hidden" id="modal-overlay">
   <div class="modal">
     <div class="modal-icon">🔐</div>
     <div class="modal-title">Confirmar Movimiento</div>
-    <div class="modal-subtitle">Ingresa tu código personal para registrar este movimiento en el sistema</div>
+    <div class="modal-subtitle">Ingresa tu código personal para registrar este movimiento</div>
     <div class="modal-summary" id="modal-summary"></div>
     <input class="modal-cod-input" type="password" id="modal-cod" placeholder="Código de usuario" maxlength="20" onkeydown="if(event.key==='Enter')confirmarModal()">
     <div class="modal-error" id="modal-error"></div>
@@ -190,28 +177,29 @@ main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
   <div class="logo">
     <span class="i">IKOA</span><span class="sep">—</span><span class="b">BEKATE</span>
     <span style="color:#2a2a3a;margin:0 12px;font-weight:300;">|</span>
-    <span style="color:#7a7a99;font-size:13px;font-weight:400;letter-spacing:.08em;text-transform:uppercase;font-family:'Barlow',sans-serif;">Gestión de Inventario</span>
+    <span style="color:#7a7a99;font-size:13px;font-weight:400;letter-spacing:.08em;font-family:'Barlow',sans-serif;">Gestión de Inventario</span>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+  <div style="display:flex;align-items:center;gap:8px;">
     <div id="clock-chip" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 12px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;">
       <span style="color:var(--accent);font-size:13px;">🔄</span>
-      <span style="color:var(--muted);font-size:11px;">Última sync:</span>
+      <span style="font-size:11px;">Última sync:</span>
       <span id="clock-date" style="color:var(--text);font-weight:500;">—</span>
       <span style="color:var(--border);">|</span>
-      <span id="clock-time" style="color:var(--accent);font-weight:600;font-family:'Barlow Condensed',sans-serif;font-size:15px;letter-spacing:.05em;">—</span>
+      <span id="clock-time" style="color:var(--accent);font-weight:600;font-family:'Barlow Condensed',sans-serif;font-size:15px;">—</span>
     </div>
-    <div class="badge-admin">⚙ Inventario</div>
   </div>
 </header>
 
 <main>
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('actualizar')">📦 Stock</button>
-    <button class="tab" onclick="switchTab('qr')">🏷️ Etiquetas</button>
-    <button class="tab" onclick="switchTab('historial')">📋 Historial</button>
+    <button class="tab active" onclick="switchTab('stock')">📦 Stock</button>
+    <button class="tab" onclick="switchTab('etiquetas')">🏷️ Etiquetas</button>
+    <button class="tab" onclick="switchTab('gestion')">📋 Gestión</button>
+    <button class="tab" onclick="switchTab('historial')">🕐 Historial</button>
   </div>
 
-  <div id="tab-actualizar">
+  <!-- TAB STOCK -->
+  <div id="tab-stock">
     <button class="scan-btn" id="scan-btn" onclick="toggleScanner()">
       <span style="font-size:24px">⬛</span>
       <span id="scan-btn-text">Escanear Código QR</span>
@@ -231,32 +219,26 @@ main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
     <div id="product-area"></div>
   </div>
 
-  <!-- TAB QR -->
-  <div id="tab-qr" style="display:none">
+  <!-- TAB ETIQUETAS -->
+  <div id="tab-etiquetas" style="display:none">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-
-      <!-- FORMULARIO -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:14px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">📋 Datos del producto</div>
-
         <div class="field-group">
           <div class="field-label">Código del producto</div>
           <input class="field-input" type="text" id="qr-codigo" placeholder="Ej: Nike-Met-01" oninput="autoFillFromCode()">
         </div>
-
         <div class="field-group">
           <div class="field-label">Nombre</div>
           <input class="field-input" type="text" id="qr-nombre" placeholder="Nombre del producto">
         </div>
-
         <div class="field-group">
-          <div class="field-label">Base Imponible en Divisa ($ BCV)</div>
-          <input class="field-input" type="text" id="qr-precio" placeholder="Ej: 181.43">
+          <div class="field-label">Base Imponible en Divisa ($)</div>
+          <input class="field-input" type="number" id="qr-precio" placeholder="Ej: 125">
         </div>
-
         <div class="field-group">
-          <div class="field-label">Foto del producto</div>
-          <div id="foto-drop" style="border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;" onclick="document.getElementById('foto-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondrop="handleDrop(event)">
+          <div class="field-label">Foto del producto (sube a Drive)</div>
+          <div id="foto-drop" style="border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;" onclick="document.getElementById('foto-input').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
             <div id="foto-preview-wrap">
               <div style="font-size:28px;">📷</div>
               <div style="font-size:13px;color:var(--muted);margin-top:6px;">Toca para subir foto o arrastra aquí</div>
@@ -264,32 +246,121 @@ main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
           </div>
           <input type="file" id="foto-input" accept="image/*" style="display:none" onchange="handleFotoChange(event)">
         </div>
-
-        <button onclick="generarEtiqueta()" style="width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;margin-top:4px;">⚡ Generar Etiqueta</button>
+        <button onclick="generarEtiqueta()" style="width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;">⚡ Generar Etiqueta</button>
       </div>
-
-      <!-- PREVIEW -->
       <div style="display:flex;flex-direction:column;gap:12px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">👁️ Vista previa</div>
-
         <div id="etiqueta-preview" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;min-height:200px;display:flex;align-items:center;justify-content:center;">
-          <div style="text-align:center;color:var(--muted);font-size:13px;">Completa el formulario y presiona<br>Generar Etiqueta</div>
+          <div style="text-align:center;color:var(--muted);font-size:13px;">Completa el formulario y<br>presiona Generar Etiqueta</div>
         </div>
-
         <div id="qr-solo-wrap" style="display:none;flex-direction:column;gap:8px;">
           <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Solo QR</div>
           <div id="qr-solo" style="background:#fff;border-radius:10px;padding:12px;display:inline-block;"></div>
         </div>
-
         <div id="btns-descarga" style="display:none;flex-direction:column;gap:8px;">
-          <button onclick="descargarEtiqueta()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--accent);border-radius:10px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.05em;">⬇️ Descargar Etiqueta PNG</button>
-          <button onclick="descargarQRsolo()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.05em;">⬇️ Descargar Solo QR</button>
-          <button onclick="imprimirEtiqueta()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.05em;">🖨️ Imprimir</button>
+          <button onclick="descargarQRsolo()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--accent);border-radius:10px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">⬇️ Descargar QR</button>
+          <button onclick="imprimirEtiqueta()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">🖨️ Imprimir</button>
         </div>
+        <div id="etq-msg" style="display:none;padding:12px;border-radius:10px;font-size:13px;text-align:center;"></div>
       </div>
     </div>
   </div>
 
+  <!-- TAB GESTIÓN -->
+  <div id="tab-gestion" style="display:none">
+    <div style="max-width:600px;margin:0 auto;">
+
+      <!-- TIPO DE GESTIÓN -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">📋 Tipo de Gestión</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button onclick="setTipoGestion('COD')" id="gbtn-COD" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">
+            📦 COD
+          </button>
+          <button onclick="setTipoGestion('Enviado')" id="gbtn-Enviado" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">
+            🚚 Enviado
+          </button>
+        </div>
+      </div>
+
+      <!-- FORMULARIO DINÁMICO -->
+      <div id="gestion-form-wrap" style="display:none;">
+        <form id="gestion-form">
+          <input type="hidden" name="tipo_operacion" id="g-tipo">
+          <input type="hidden" name="status" id="g-status">
+
+          <!-- CAMPOS COMUNES -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;display:flex;flex-direction:column;gap:12px;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">👤 Datos del Cliente</div>
+            <div class="field-group"><div class="field-label">Nombre y Apellido</div><input class="field-input" type="text" name="nombre" id="g-nombre" placeholder="NOMBRE APELLIDO" style="text-transform:uppercase;" required></div>
+            <div class="field-group"><div class="field-label">Correo electrónico</div><input class="field-input" type="email" name="correo" id="g-correo" placeholder="correo@email.com" required></div>
+            <div id="g-cedula-wrap" class="field-group" style="display:none;"><div class="field-label">Cédula</div><input class="field-input" type="text" name="cedula" placeholder="V-12345678" style="text-transform:uppercase;"></div>
+            <div id="g-celular-wrap" class="field-group" style="display:none;"><div class="field-label">N° Celular</div><input class="field-input" type="text" name="celular" placeholder="04XX-XXXXXXX"></div>
+          </div>
+
+          <!-- AGENCIA Y DIRECCIÓN -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;display:flex;flex-direction:column;gap:12px;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">🚚 Envío</div>
+            <div class="field-group">
+              <div class="field-label">Agencia</div>
+              <select class="field-input" name="agencia" id="g-agencia" onchange="toggleDireccion()" required>
+                <option value="">Seleccionar agencia</option>
+                <option value="MRW">MRW</option>
+                <option value="ZOOM">ZOOM</option>
+                <option value="TEALCA">TEALCA</option>
+                <option value="TIENDA MCY">TIENDA MCY</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div id="g-dir-wrap" class="field-group" style="display:none;"><div class="field-label">Dirección de Agencia</div><input class="field-input" type="text" name="direccion_agencia" placeholder="DIRECCIÓN..." style="text-transform:uppercase;"></div>
+          </div>
+
+          <!-- CAMPOS COD -->
+          <div id="g-cod-section" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;display:none;flex-direction:column;gap:12px;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">📦 Detalles COD</div>
+            <div class="field-group"><div class="field-label">Descripción del pedido</div><textarea class="field-input" name="descripcion" placeholder="DESCRIPCIÓN..." rows="3" style="text-transform:uppercase;resize:vertical;"></textarea></div>
+            <div class="field-group"><div class="field-label">¿Es urgente?</div><input class="field-input" type="text" name="urgente" placeholder="SÍ / NO / FECHA LÍMITE" style="text-transform:uppercase;"></div>
+            <div class="field-group">
+              <div class="field-label">¿Mismo nombre de envío?</div>
+              <select class="field-input" name="diferente_envio" id="g-diferente-envio" onchange="toggleDatosEnvio()">
+                <option value="no">Mismo nombre</option>
+                <option value="si">Diferentes nombres</option>
+              </select>
+            </div>
+            <div id="g-envio-section" style="display:none;flex-direction:column;gap:12px;">
+              <div class="field-group"><div class="field-label">Nombre de Envío</div><input class="field-input" type="text" name="nombre_envio" placeholder="NOMBRE ENVÍO" style="text-transform:uppercase;"></div>
+              <div class="field-group"><div class="field-label">C.I. de Envío</div><input class="field-input" type="text" name="ci_envio" placeholder="V-XXXXXXXX" style="text-transform:uppercase;"></div>
+              <div class="field-group"><div class="field-label">Celular de Envío</div><input class="field-input" type="text" name="cel_envio" placeholder="04XX-XXXXXXX"></div>
+              <div class="field-group">
+                <div class="field-label">¿Agregar arte?</div>
+                <select class="field-input" name="selector_agregar_arte" id="g-arte" onchange="toggleArte()">
+                  <option value="no">NO</option>
+                  <option value="si">SÍ</option>
+                </select>
+              </div>
+              <div id="g-arte-nombre" class="field-group" style="display:none;"><div class="field-label">Nombre del arte</div><input class="field-input" type="text" name="nombre_arte" placeholder="NOMBRE ARTE" style="text-transform:uppercase;"></div>
+            </div>
+          </div>
+
+          <!-- CAMPOS ENVIADO -->
+          <div id="g-enviado-section" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;flex-direction:column;gap:12px;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">🚚 Detalles Enviado</div>
+            <div class="field-group"><div class="field-label">Código COD</div><input class="field-input" type="text" name="codigo" placeholder="CÓDIGO" style="text-transform:uppercase;"></div>
+            <div class="field-group"><div class="field-label">Número de Guía</div><input class="field-input" type="text" name="numero_guia" placeholder="NÚMERO DE GUÍA" style="text-transform:uppercase;"></div>
+          </div>
+
+          <!-- BOTÓN ENVIAR -->
+          <button type="submit" id="g-submit-btn" style="width:100%;padding:16px;background:var(--accent);border:none;border-radius:12px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;margin-top:4px;">
+            📤 ENVIAR GESTIÓN
+          </button>
+
+          <div id="g-msg" style="display:none;padding:14px;border-radius:10px;text-align:center;font-size:14px;font-weight:600;margin-top:12px;"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB HISTORIAL -->
   <div id="tab-historial" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Movimientos registrados</div>
@@ -306,216 +377,188 @@ const DEPOSITOS  = ['Tienda','Showroom Caracas','Taller','Solicitud Envío USA']
 const TALLAS_KIDS = ['Kids 2','Kids 4','Kids 6','Kids 8','Kids 10','Kids 12','Kids 14','Kids 16'];
 const TALLAS_ROPA = ['XS','S','M','L','XL','XXL','3XL'];
 const TALLAS_ZAP  = ['30','30½','31','31½','32','32½','33','33½','34','34½','35','35½','36','36½','37','37½','38','38½','39','39½','40','40½','41','41½','42','42½','43','43½','44','44½','45'];
+const USUARIOS    = {'2710':'Director Johan','IKOA02':'Vendedor 1','IKOA03':'Vendedor 2','IKOA04':'Almacén','IKOA05':'Showroom'};
 
-// Códigos de usuario válidos — agrega o cambia según tu equipo
-const USUARIOS_VALIDOS = {
-  '2710': 'Director Johan',
-  'IKOA02': 'Vendedor 1',
-  'IKOA03': 'Vendedor 2',
-  'IKOA04': 'Almacén',
-  'IKOA05': 'Showroom'
-};
+let PRODUCTOS=[], STOCK={}, TASAS={BCV:null,Binance:null,Venta:null,BeKate:null};
+let currentProduct=null, selectedTalla=null, selectedColor='', selectedDeposito='Tienda';
+let currentOp='entrada', editQty=1, pendingMovimiento=null, pendingEtiqueta=null, selectedTasaName=null;
+let fotoBase64=null, fotoMime=null;
+let historial=JSON.parse(localStorage.getItem('ikoa_hist_v3')||'[]');
+let html5QrCode=null, scannerActive=false;
 
-let PRODUCTOS = [];
-let STOCK = {};
-let currentProduct = null;
-let selectedTalla = null;
-let selectedColor = '';
-let selectedDeposito = 'Tienda';
-let currentOp = 'entrada';
-let editQty = 1;
-let pendingMovimiento = null;
-let historial = JSON.parse(localStorage.getItem('ikoa_historial_v2') || '[]');
-let html5QrCode = null;
-let scannerActive = false;
+const gvizVal = c => (!c||c.v===null||c.v===undefined)?'':c.v;
 
-function setSyncTimestamp() {
-  const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  const DIAS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  const now   = new Date();
-  const dia   = DIAS[now.getDay()];
-  const d     = now.getDate();
-  const mes   = MESES[now.getMonth()];
-  const yr    = now.getFullYear();
-  let h       = now.getHours();
-  const min   = String(now.getMinutes()).padStart(2,'0');
-  const ampm  = h >= 12 ? 'PM' : 'AM';
-  h = h % 12 || 12;
-  document.getElementById('clock-date').textContent = `${dia} ${d} ${mes} ${yr}`;
-  document.getElementById('clock-time').textContent = `${h}:${min} ${ampm}`;
+function setSyncTimestamp(){
+  const M=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const D=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const n=new Date(); let h=n.getHours();
+  const ap=h>=12?'PM':'AM'; h=h%12||12;
+  document.getElementById('clock-date').textContent=`${D[n.getDay()]} ${n.getDate()} ${M[n.getMonth()]} ${n.getFullYear()}`;
+  document.getElementById('clock-time').textContent=`${h}:${String(n.getMinutes()).padStart(2,'0')} ${ap}`;
 }
 
-const gvizVal = c => (!c || c.v === null || c.v === undefined) ? '' : c.v;
-
-function getFechaHora() {
-  const now = new Date();
-  const DIAS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  const dia = DIAS[now.getDay()];
-  const d   = now.getDate();
-  const mes = MESES[now.getMonth()];
-  const yr  = now.getFullYear();
-  let h     = now.getHours();
-  const min = String(now.getMinutes()).padStart(2,'0');
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  h = h % 12 || 12;
-  return `${dia} ${d} ${mes} ${yr} ${h}:${min} ${ampm}`;
+function getFechaHora(){
+  const M=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const D=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const n=new Date(); let h=n.getHours();
+  const ap=h>=12?'PM':'AM'; h=h%12||12;
+  return `${D[n.getDay()]} ${n.getDate()} ${M[n.getMonth()]} ${n.getFullYear()} ${h}:${String(n.getMinutes()).padStart(2,'0')} ${ap}`;
 }
 
-async function loadSheetGviz(sheetName) {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&cachebust=${Date.now()}`;
-  const res = await fetch(url);
-  const text = await res.text();
-  const json = JSON.parse(text.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, ''));
+async function loadSheetGviz(sheetName){
+  const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&cachebust=${Date.now()}`;
+  const res=await fetch(url);
+  const text=await res.text();
+  const json=JSON.parse(text.replace(/^[^(]+\(/,'').replace(/\);\s*$/,''));
   return json.table;
 }
 
-async function init() {
-  showMsg('loading', '<span class="spinner">↻</span> Cargando productos...');
-  try {
-    const t1 = await loadSheetGviz('CODIGOS');
-    PRODUCTOS = (t1.rows || []).filter(r => r.c && r.c[0] && String(gvizVal(r.c[0])).trim()).map(r => ({
-      codigo: String(gvizVal(r.c[0])).trim(),
-      nombre: String(gvizVal(r.c[1]) || '').trim(),
-      depto:  String(gvizVal(r.c[2]) || '').trim(),
-    }));
-    try {
-      const t3 = await loadSheetGviz('STOCK');
-      (t3.rows || []).forEach(r => {
-        if (!r.c || !r.c[0]) return;
-        const cod = String(gvizVal(r.c[0])).trim();
-        const tal = String(gvizVal(r.c[1])).trim();
-        const stk = parseInt(gvizVal(r.c[2])) || 0;
-        const col = String(gvizVal(r.c[3]) || '').trim();
-        const dep = String(gvizVal(r.c[4]) || '').trim();
-        STOCK[`${cod}||${tal}||${col}||${dep}`] = stk;
-      });
-    } catch(e) {}
-    showMsg('ok', '✓ ' + PRODUCTOS.length + ' productos cargados');
-    setSyncTimestamp();
-    await loadTasas();
-    setTimeout(() => clearMsg(), 3000);
-  } catch(e) { showMsg('err', '✗ Error: ' + e.message); }
-}
-
-function showMsg(type, html) {
-  const el = document.getElementById('msg-area');
-  el.className = 'msg ' + type;
-  el.innerHTML = html;
-}
-function clearMsg() {
-  const el = document.getElementById('msg-area');
-  el.className = 'msg'; el.innerHTML = '';
-}
-
-function getStockDisplay(cod, tal) {
-  const prefix = `${cod}||${tal}||`;
-  let total = 0, found = false;
-  Object.keys(STOCK).forEach(k => { if (k.startsWith(prefix)) { total += STOCK[k]; found = true; } });
-  return found ? total : null;
-}
-
-function getTallasDefault(depto) {
-  const d = depto.toLowerCase();
-  if (d.includes('zapato') || d.includes('sandalia')) return TALLAS_ZAP;
-  if (d.includes('traje') || d.includes('baño') || d.includes('bkvo')) return TALLAS_ROPA;
-  return [...TALLAS_KIDS, ...TALLAS_ROPA];
-}
-
-function findProduct(q) {
-  const s = q.trim().toLowerCase();
-  return PRODUCTOS.find(p => p.codigo.toLowerCase() === s || p.codigo.toLowerCase().includes(s) || p.nombre.toLowerCase().includes(s));
-}
-
-function doSearch() {
-  const q = document.getElementById('search-input').value;
-  if (!q.trim()) return;
-  const p = findProduct(q);
-  if (p) showProduct(p);
-  else document.getElementById('product-area').innerHTML = `<div class="not-found"><div style="font-size:32px">🔍</div><p>No se encontró <strong style="color:#ff6b6b">"${q}"</strong></p></div>`;
-}
-
-function showProduct(p) {
-  currentProduct = p;
-  selectedTalla = null;
-  editQty = 1;
-  currentOp = 'entrada';
-  const tallasDefault = getTallasDefault(p.depto);
-  const extraTallas = new Set();
-  Object.keys(STOCK).forEach(k => {
-    const parts = k.split('||');
-    if (parts[0]===p.codigo && !tallasDefault.includes(parts[1])) extraTallas.add(parts[1]);
+// Enviar datos al script usando iframe (evita problema CORS con no-cors)
+function enviarAlScript(data){
+  return new Promise(resolve=>{
+    const form=document.createElement('form');
+    form.method='POST';
+    form.action=SCRIPT_URL;
+    form.target='_script_iframe';
+    form.style.display='none';
+    const input=document.createElement('input');
+    input.type='hidden';
+    input.name='payload';
+    input.value=JSON.stringify(data);
+    form.appendChild(input);
+    document.body.appendChild(form);
+    let iframe=document.getElementById('_script_iframe');
+    if(!iframe){
+      iframe=document.createElement('iframe');
+      iframe.name='_script_iframe';
+      iframe.id='_script_iframe';
+      iframe.style.display='none';
+      document.body.appendChild(iframe);
+    }
+    iframe.onload=()=>{ document.body.removeChild(form); resolve(true); };
+    setTimeout(()=>{ document.body.removeChild(form); resolve(true); }, 8000);
+    form.submit();
   });
-  const todasTallas = [...tallasDefault, ...extraTallas];
-  const tallasHTML = todasTallas.map(t => {
-    const s = getStockDisplay(p.codigo, t);
-    const cls = s===null?'new':s===0?'zero':s<=2?'low':'ok';
-    const txt = s===null?'sin reg.':s+' uds';
-    return `<div class="talla-card ${s===0&&s!==null?'agotado':''}" onclick="selectTalla('${t}')" id="tc-${t.replace(/[^a-zA-Z0-9]/g,'_')}">
-      <div class="talla-label">${t}</div>
-      <div class="talla-stock ${cls}">${txt}</div>
-    </div>`;
-  }).join('');
-  const depPills = DEPOSITOS.map(d => `<div class="dep-pill ${d===selectedDeposito?'active':''}" onclick="selectDeposito('${d}')">${d}</div>`).join('');
-  const totalStock = Object.keys(STOCK).filter(k=>k.startsWith(p.codigo+'||')).reduce((a,k)=>a+STOCK[k],0);
+}
 
-  document.getElementById('product-area').innerHTML = `
+async function init(){
+  showMsg('loading','<span class="spinner">↻</span> Cargando...');
+  try{
+    const [t1,t2,t3]=await Promise.all([
+      loadSheetGviz('CODIGOS'),
+      loadSheetGviz('TASA'),
+      loadSheetGviz('STOCK').catch(()=>null)
+    ]);
+    PRODUCTOS=(t1.rows||[]).filter(r=>r.c&&r.c[0]&&String(gvizVal(r.c[0])).trim()).map(r=>({
+      codigo:String(gvizVal(r.c[0])).trim(),
+      nombre:String(gvizVal(r.c[1])||'').trim(),
+      depto:String(gvizVal(r.c[2])||'').trim(),
+    }));
+    if(t2.rows&&t2.rows[0]&&t2.rows[0].c){
+      TASAS.BCV     =parseFloat(gvizVal(t2.rows[0].c[0]))||null;
+      TASAS.Binance =parseFloat(gvizVal(t2.rows[0].c[1]))||null;
+      TASAS.Venta   =parseFloat(gvizVal(t2.rows[0].c[2]))||null;
+      TASAS.BeKate  =parseFloat(gvizVal(t2.rows[0].c[3]))||null;
+    }
+    if(t3){
+      (t3.rows||[]).forEach(r=>{
+        if(!r.c||!r.c[0])return;
+        const k=`${String(gvizVal(r.c[0])).trim()}||${String(gvizVal(r.c[1])).trim()}||${String(gvizVal(r.c[3])||'').trim()}||${String(gvizVal(r.c[4])||'').trim()}`;
+        STOCK[k]=parseInt(gvizVal(r.c[2]))||0;
+      });
+    }
+    setSyncTimestamp();
+    showMsg('ok','✓ '+PRODUCTOS.length+' productos cargados');
+    setTimeout(()=>clearMsg(),3000);
+  }catch(e){showMsg('err','✗ Error: '+e.message);}
+}
+
+function showMsg(type,html){const el=document.getElementById('msg-area');el.className='msg '+type;el.innerHTML=html;}
+function clearMsg(){const el=document.getElementById('msg-area');el.className='msg';el.innerHTML='';}
+
+function getStockDisplay(cod,tal){
+  const prefix=`${cod}||${tal}||`;
+  let total=0,found=false;
+  Object.keys(STOCK).forEach(k=>{if(k.startsWith(prefix)){total+=STOCK[k];found=true;}});
+  return found?total:null;
+}
+
+function getTallasDefault(depto){
+  const d=depto.toLowerCase();
+  if(d.includes('zapato')||d.includes('sandalia'))return TALLAS_ZAP;
+  if(d.includes('traje')||d.includes('baño')||d.includes('bkvo'))return TALLAS_ROPA;
+  return [...TALLAS_KIDS,...TALLAS_ROPA];
+}
+
+function findProduct(q){
+  const s=q.trim().toLowerCase();
+  return PRODUCTOS.find(p=>p.codigo.toLowerCase()===s||p.codigo.toLowerCase().includes(s)||p.nombre.toLowerCase().includes(s));
+}
+
+function doSearch(){
+  const q=document.getElementById('search-input').value;
+  if(!q.trim())return;
+  const p=findProduct(q);
+  if(p)showProduct(p);
+  else document.getElementById('product-area').innerHTML=`<div class="not-found"><div style="font-size:32px">🔍</div><p style="color:var(--muted);margin-top:8px;">No se encontró "<strong style="color:#ff6b6b">${q}</strong>"</p></div>`;
+}
+
+function showProduct(p){
+  currentProduct=p; selectedTalla=null; editQty=1; currentOp='entrada';
+  const tallasDefault=getTallasDefault(p.depto);
+  const extraTallas=new Set();
+  Object.keys(STOCK).forEach(k=>{const pts=k.split('||');if(pts[0]===p.codigo&&!tallasDefault.includes(pts[1]))extraTallas.add(pts[1]);});
+  const todasTallas=[...tallasDefault,...extraTallas];
+  const tallasHTML=todasTallas.map(t=>{
+    const s=getStockDisplay(p.codigo,t);
+    const cls=s===null?'new':s===0?'zero':s<=2?'low':'ok';
+    const txt=s===null?'sin reg.':s+' uds';
+    return `<div class="talla-card ${s===0&&s!==null?'agotado':''}" onclick="selectTalla('${t}')" id="tc-${t.replace(/[^a-zA-Z0-9]/g,'_')}"><div class="talla-label">${t}</div><div class="talla-stock ${cls}">${txt}</div></div>`;
+  }).join('');
+  const depPills=DEPOSITOS.map(d=>`<div class="dep-pill ${d===selectedDeposito?'active':''}" onclick="selectDeposito('${d}')">${d}</div>`).join('');
+  const totalStock=Object.keys(STOCK).filter(k=>k.startsWith(p.codigo+'||')).reduce((a,k)=>a+STOCK[k],0);
+  document.getElementById('product-area').innerHTML=`
     <div class="product-card">
-      <div class="pc-header">
-        <div><div class="pc-name">${p.nombre}</div><div class="pc-code">${p.codigo} · ${p.depto}</div></div>
-        <div style="font-size:11px;color:var(--muted);">${totalStock} uds total</div>
-      </div>
-      <div class="section">
-        <div class="section-title">Color y Ubicación</div>
+      <div class="pc-header"><div><div class="pc-name">${p.nombre}</div><div class="pc-code">${p.codigo} · ${p.depto}</div></div><div style="font-size:11px;color:var(--muted);">${totalStock} uds total</div></div>
+      <div class="section"><div class="section-title">Color y Ubicación</div>
         <div class="fields-row">
-          <div class="field-group">
-            <div class="field-label">Color</div>
-            <input class="field-input" type="text" id="color-input" placeholder="Ej: Negro, Rojo..." value="${selectedColor}" oninput="selectedColor=this.value">
-          </div>
-          <div class="field-group">
-            <div class="field-label">Depósito</div>
-            <div class="deposito-pills">${depPills}</div>
-          </div>
+          <div class="field-group"><div class="field-label">Color</div><input class="field-input" type="text" id="color-input" placeholder="Ej: Negro, Rojo..." value="${selectedColor}" oninput="selectedColor=this.value"></div>
+          <div class="field-group"><div class="field-label">Depósito</div><div class="deposito-pills">${depPills}</div></div>
         </div>
       </div>
-      <div class="section">
-        <div class="section-title">Selecciona una talla para editar</div>
+      <div class="section"><div class="section-title">Selecciona una talla para editar</div>
         <div class="tallas-grid">${tallasHTML}</div>
-        <div class="new-talla-row">
-          <input class="new-talla-input" type="text" id="new-talla-input" placeholder="Agregar talla personalizada...">
-          <button class="add-talla-btn" onclick="addCustomTalla()">+ Agregar</button>
-        </div>
+        <div class="new-talla-row"><input class="new-talla-input" type="text" id="new-talla-input" placeholder="Agregar talla personalizada..."><button class="add-talla-btn" onclick="addCustomTalla()">+ Agregar</button></div>
         <div id="edit-panel"></div>
       </div>
     </div>`;
 }
 
-function selectDeposito(dep) {
-  selectedDeposito = dep;
-  document.querySelectorAll('.dep-pill').forEach(p => p.classList.toggle('active', p.textContent===dep));
-  if (selectedTalla) selectTalla(selectedTalla);
+function selectDeposito(dep){
+  selectedDeposito=dep;
+  document.querySelectorAll('.dep-pill').forEach(p=>p.classList.toggle('active',p.textContent===dep));
+  if(selectedTalla)selectTalla(selectedTalla);
 }
 
-function selectTalla(talla) {
-  selectedTalla = talla;
-  document.querySelectorAll('.talla-card').forEach(c => c.classList.remove('selected'));
-  const el = document.getElementById('tc-'+talla.replace(/[^a-zA-Z0-9]/g,'_'));
-  if (el) el.classList.add('selected');
-  selectedColor = document.getElementById('color-input')?.value || selectedColor;
-  const key = `${currentProduct.codigo}||${talla}||${selectedColor}||${selectedDeposito}`;
-  const currentStock = STOCK[key] !== undefined ? STOCK[key] : 0;
-  editQty = 1; currentOp = 'entrada';
-  renderEditPanel(talla, currentStock);
+function selectTalla(talla){
+  selectedTalla=talla;
+  document.querySelectorAll('.talla-card').forEach(c=>c.classList.remove('selected'));
+  const el=document.getElementById('tc-'+talla.replace(/[^a-zA-Z0-9]/g,'_'));
+  if(el)el.classList.add('selected');
+  selectedColor=document.getElementById('color-input')?.value||selectedColor;
+  const key=`${currentProduct.codigo}||${talla}||${selectedColor}||${selectedDeposito}`;
+  const currentStock=STOCK[key]!==undefined?STOCK[key]:0;
+  editQty=1; currentOp='entrada';
+  renderEditPanel(talla,currentStock);
 }
 
-function renderEditPanel(talla, currentStock) {
-  const color = document.getElementById('color-input')?.value || '—';
-  document.getElementById('edit-panel').innerHTML = `
+function renderEditPanel(talla,currentStock){
+  const color=document.getElementById('color-input')?.value||'—';
+  document.getElementById('edit-panel').innerHTML=`
     <div class="edit-panel">
-      <div class="edit-title">✏️ T: ${talla} · Color: ${color} · ${selectedDeposito}</div>
+      <div style="font-size:13px;color:var(--accent);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em;">✏️ T:${talla} · ${color} · ${selectedDeposito}</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Stock actual: <span style="color:var(--accent);font-weight:600;">${currentStock} uds</span></div>
-      <div class="edit-row">
-        <span class="edit-label">Operación:</span>
+      <div class="edit-row"><span class="edit-label">Operación:</span>
         <div class="op-btns">
           <button class="op-btn entrada ${currentOp==='entrada'?'active-op':''}" onclick="setOp('entrada')">+ Entrada</button>
           <button class="op-btn salida ${currentOp==='salida'?'active-op':''}" onclick="setOp('salida')">− Salida</button>
@@ -535,481 +578,398 @@ function renderEditPanel(talla, currentStock) {
     </div>`;
 }
 
-function getPreview(cur) {
-  if (currentOp==='entrada') return `→ ${cur+editQty} uds`;
-  if (currentOp==='salida')  return `→ ${Math.max(0,cur-editQty)} uds`;
-  return `→ ${editQty} uds`;
+function getPreview(cur){
+  if(currentOp==='entrada')return`→ ${cur+editQty} uds`;
+  if(currentOp==='salida')return`→ ${Math.max(0,cur-editQty)} uds`;
+  return`→ ${editQty} uds`;
+}
+function setOp(op){
+  currentOp=op;
+  const color=document.getElementById('color-input')?.value||selectedColor;
+  const key=`${currentProduct.codigo}||${selectedTalla}||${color}||${selectedDeposito}`;
+  renderEditPanel(selectedTalla,STOCK[key]!==undefined?STOCK[key]:0);
+}
+function changeQty(delta){
+  editQty=Math.max(0,editQty+delta);
+  document.getElementById('qty-display').textContent=editQty;
+  const color=document.getElementById('color-input')?.value||selectedColor;
+  const key=`${currentProduct.codigo}||${selectedTalla}||${color}||${selectedDeposito}`;
+  document.getElementById('resultado-preview').textContent=getPreview(STOCK[key]!==undefined?STOCK[key]:0);
 }
 
-function setOp(op) {
-  currentOp = op;
-  const color = document.getElementById('color-input')?.value || selectedColor;
-  const key = `${currentProduct.codigo}||${selectedTalla}||${color}||${selectedDeposito}`;
-  renderEditPanel(selectedTalla, STOCK[key]!==undefined ? STOCK[key] : 0);
-}
-
-function changeQty(delta) {
-  editQty = Math.max(0, editQty + delta);
-  document.getElementById('qty-display').textContent = editQty;
-  const color = document.getElementById('color-input')?.value || selectedColor;
-  const key = `${currentProduct.codigo}||${selectedTalla}||${color}||${selectedDeposito}`;
-  const cur = STOCK[key]!==undefined ? STOCK[key] : 0;
-  document.getElementById('resultado-preview').textContent = getPreview(cur);
-}
-
-// ── MODAL ────────────────────────────────────────────────────
-function solicitarCodigo(currentStock) {
-  if (!selectedTalla || !currentProduct) return;
-  const color = document.getElementById('color-input')?.value.trim() || '';
-  if (!color) { showMsg('err', '⚠️ Ingresa el color del producto'); return; }
-
+function solicitarCodigo(currentStock){
+  if(!selectedTalla||!currentProduct)return;
+  const color=document.getElementById('color-input')?.value.trim()||'';
+  if(!color){showMsg('err','⚠️ Ingresa el color del producto');return;}
   let nuevoStock;
-  if (currentOp==='entrada') nuevoStock = currentStock + editQty;
-  else if (currentOp==='salida') nuevoStock = Math.max(0, currentStock - editQty);
-  else nuevoStock = editQty;
-
-  pendingMovimiento = { currentStock, nuevoStock, color };
-
-  const opLabel = currentOp==='entrada' ? '📥 Entrada' : currentOp==='salida' ? '📤 Salida' : '⚖️ Ajuste';
-  document.getElementById('modal-summary').innerHTML = `
+  if(currentOp==='entrada')nuevoStock=currentStock+editQty;
+  else if(currentOp==='salida')nuevoStock=Math.max(0,currentStock-editQty);
+  else nuevoStock=editQty;
+  pendingMovimiento={currentStock,nuevoStock,color};
+  const opLabel=currentOp==='entrada'?'📥 Entrada':currentOp==='salida'?'📤 Salida':'⚖️ Ajuste';
+  document.getElementById('modal-summary').innerHTML=`
     <b style="color:var(--text)">${currentProduct.nombre}</b><br>
-    Talla: <span>${selectedTalla}</span> &nbsp;·&nbsp; Color: <span>${color}</span><br>
+    Talla: <span>${selectedTalla}</span> · Color: <span>${color}</span><br>
     Depósito: <span>${selectedDeposito}</span><br>
-    Operación: <span>${opLabel}</span> &nbsp;·&nbsp; ${currentStock} → <span>${nuevoStock} uds</span><br>
+    Operación: <span>${opLabel}</span> · ${currentStock} → <span>${nuevoStock} uds</span><br>
     Fecha: <span>${getFechaHora()}</span>`;
-
-  document.getElementById('modal-cod').value = '';
-  document.getElementById('modal-error').textContent = '';
+  document.getElementById('modal-cod').value='';
+  document.getElementById('modal-error').textContent='';
   document.getElementById('modal-overlay').classList.remove('hidden');
-  setTimeout(() => document.getElementById('modal-cod').focus(), 100);
+  setTimeout(()=>document.getElementById('modal-cod').focus(),100);
 }
 
-function cancelarModal() {
+function cancelarModal(){
   document.getElementById('modal-overlay').classList.add('hidden');
-  pendingMovimiento = null;
+  pendingMovimiento=null;
 }
 
-async function confirmarModal() {
-  const cod = document.getElementById('modal-cod').value.trim().toUpperCase();
-  if (!cod) { document.getElementById('modal-error').textContent = 'Ingresa tu código de usuario'; return; }
-  if (!USUARIOS_VALIDOS[cod]) {
-    document.getElementById('modal-error').textContent = '❌ Código incorrecto — acceso denegado';
-    document.getElementById('modal-cod').value = '';
+async function confirmarModal(){
+  const cod=document.getElementById('modal-cod').value.trim().toUpperCase();
+  if(!cod){document.getElementById('modal-error').textContent='Ingresa tu código';return;}
+  if(!USUARIOS[cod]){
+    document.getElementById('modal-error').textContent='❌ Código incorrecto';
+    document.getElementById('modal-cod').value='';
     document.getElementById('modal-cod').focus();
     return;
   }
-
-  const nombreUsuario = USUARIOS_VALIDOS[cod];
-  const fechaHora = getFechaHora();
-  const { currentStock, nuevoStock, color } = pendingMovimiento;
-
+  const nombreUsuario=USUARIOS[cod];
+  const fechaHora=getFechaHora();
+  const{currentStock,nuevoStock,color}=pendingMovimiento;
   document.getElementById('modal-overlay').classList.add('hidden');
-  document.getElementById('modal-confirm-btn').disabled = true;
-  showMsg('loading', '<span class="spinner">↻</span> Guardando en Google Sheets...');
-
-  try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'updateStock',
-        codigo: currentProduct.codigo,
-        talla: selectedTalla,
-        stock: nuevoStock,
-        color: color,
-        deposito: selectedDeposito,
-        fecha: fechaHora,
-        usuario: `${cod} - ${nombreUsuario}`,
-        operacion: currentOp,
-        nombre: currentProduct.nombre,
-        antes: currentStock
+  showMsg('loading','<span class="spinner">↻</span> Guardando...');
+  try{
+    await fetch(SCRIPT_URL,{
+      method:'POST',mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        action:'updateStock',
+        codigo:currentProduct.codigo,nombre:currentProduct.nombre,
+        talla:selectedTalla,stock:nuevoStock,color:color,
+        deposito:selectedDeposito,fecha:fechaHora,
+        usuario:`${cod} - ${nombreUsuario}`,operacion:currentOp,antes:currentStock
       })
     });
-
-    const key = `${currentProduct.codigo}||${selectedTalla}||${color}||${selectedDeposito}`;
-    STOCK[key] = nuevoStock;
-    selectedColor = color;
-
-    historial.unshift({
-      fecha: fechaHora,
-      tipo: currentOp,
-      codigo: currentProduct.codigo,
-      nombre: currentProduct.nombre,
-      talla: selectedTalla,
-      color: color,
-      deposito: selectedDeposito,
-      antes: currentStock,
-      despues: nuevoStock,
-      delta: nuevoStock - currentStock,
-      usuario: nombreUsuario,
-      cod: cod
-    });
-    if (historial.length > 200) historial.pop();
-    localStorage.setItem('ikoa_historial_v2', JSON.stringify(historial));
-
-    showMsg('ok', `✓ Guardado por <b>${nombreUsuario}</b> · ${fechaHora}`);
-    setTimeout(() => clearMsg(), 6000);
+    const key=`${currentProduct.codigo}||${selectedTalla}||${color}||${selectedDeposito}`;
+    STOCK[key]=nuevoStock; selectedColor=color;
+    historial.unshift({fecha:fechaHora,tipo:currentOp,codigo:currentProduct.codigo,nombre:currentProduct.nombre,talla:selectedTalla,color,deposito:selectedDeposito,antes:currentStock,despues:nuevoStock,delta:nuevoStock-currentStock,usuario:nombreUsuario,cod});
+    if(historial.length>200)historial.pop();
+    localStorage.setItem('ikoa_hist_v3',JSON.stringify(historial));
+    showMsg('ok',`✓ Guardado por <b>${nombreUsuario}</b> · ${fechaHora}`);
+    setTimeout(()=>clearMsg(),6000);
     showProduct(currentProduct);
-  } catch(e) {
-    showMsg('err', '✗ Error al guardar: ' + e.message);
-  }
-  document.getElementById('modal-confirm-btn').disabled = false;
-  pendingMovimiento = null;
+  }catch(e){showMsg('err','✗ Error: '+e.message);}
+  document.getElementById('modal-confirm-btn').disabled=false;
+  pendingMovimiento=null;
 }
 
-function addCustomTalla() {
-  const input = document.getElementById('new-talla-input');
-  const talla = input.value.trim();
-  if (!talla || !currentProduct) return;
-  input.value = '';
-  const key = `${currentProduct.codigo}||${talla}||||${selectedDeposito}`;
-  if (STOCK[key]===undefined) STOCK[key] = 0;
+function addCustomTalla(){
+  const input=document.getElementById('new-talla-input');
+  const talla=input.value.trim();
+  if(!talla||!currentProduct)return;
+  input.value='';
+  const key=`${currentProduct.codigo}||${talla}||||${selectedDeposito}`;
+  if(STOCK[key]===undefined)STOCK[key]=0;
   showProduct(currentProduct);
-  setTimeout(() => selectTalla(talla), 100);
-}
-
-function toggleScanner() {
-  if (scannerActive) { stopScanner(); return; }
-  document.getElementById('scanner-wrap').classList.add('active');
-  document.getElementById('scan-btn').classList.add('stop');
-  document.getElementById('scan-btn-text').textContent = 'Detener Escáner';
-  scannerActive = true;
-  html5QrCode = new Html5Qrcode('reader');
-  html5QrCode.start({ facingMode:'environment' }, { fps:12, qrbox:{width:240,height:240} },
-    decoded => {
-      document.getElementById('search-input').value = decoded;
-      const p = findProduct(decoded);
-      if (p) showProduct(p);
-      else document.getElementById('product-area').innerHTML = `<div class="not-found"><div style="font-size:32px">🔍</div><p>No encontrado: <strong style="color:#ff6b6b">"${decoded}"</strong></p></div>`;
-      stopScanner();
-    }, ()=>{}
-  ).catch(err => { alert('No se pudo acceder a la cámara: ' + err); stopScanner(); });
-}
-
-function stopScanner() {
-  if (html5QrCode) {
-    html5QrCode.stop().catch(()=>{}).finally(() => {
-      html5QrCode=null; scannerActive=false;
-      document.getElementById('scanner-wrap').classList.remove('active');
-      document.getElementById('scan-btn').classList.remove('stop');
-      document.getElementById('scan-btn-text').textContent='Escanear Código QR';
-    });
-  } else {
-    scannerActive=false;
-    document.getElementById('scanner-wrap').classList.remove('active');
-    document.getElementById('scan-btn').classList.remove('stop');
-    document.getElementById('scan-btn-text').textContent='Escanear Código QR';
-  }
-}
-
-function switchTab(tab) {
-  ['actualizar','qr','historial'].forEach(t => {
-    document.getElementById('tab-'+t).style.display = t===tab ? 'block' : 'none';
-  });
-  document.querySelectorAll('.tab').forEach((b,i) => {
-    b.classList.toggle('active', ['actualizar','qr','historial'][i]===tab);
-  });
-  if (tab==='historial') renderHistorial();
-}
-
-function renderHistorial() {
-  const el = document.getElementById('historial-list');
-  if (!historial.length) { el.innerHTML='<div class="empty-hist">📋 Sin movimientos registrados</div>'; return; }
-  el.innerHTML = historial.map(h => {
-    const delta = h.delta>0?'+'+h.delta:h.delta;
-    const cls = h.delta>0?'pos':h.delta<0?'neg':'eq';
-    return `<div class="hist-item">
-      <div class="hist-top">
-        <span class="hist-badge ${h.tipo}">${h.tipo.toUpperCase()}</span>
-        <span class="hist-prod">${h.nombre}</span>
-        <span class="hist-qty ${cls}">${delta}</span>
-      </div>
-      <div class="hist-meta">
-        <span class="hist-chip">T: ${h.talla}</span>
-        <span class="hist-chip">${h.color||'—'}</span>
-        <span class="hist-chip">${h.deposito||'—'}</span>
-        <span class="hist-chip">${h.antes}→${h.despues} uds</span>
-        <span class="hist-chip usuario">👤 ${h.usuario||h.cod}</span>
-        <span class="hist-chip fecha">🕐 ${h.fecha}</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function clearHistorial() {
-  if (confirm('¿Limpiar el historial local?')) {
-    historial=[];
-    localStorage.setItem('ikoa_historial_v2','[]');
-    renderHistorial();
-  }
+  setTimeout(()=>selectTalla(talla),100);
 }
 
 // ── TASA MODAL ────────────────────────────────────────────────
-let TASAS = { BCV: null, Binance: null, Venta: null, BeKate: null };
-let selectedTasaName = null;
-let pendingEtiqueta = null;
-
-async function loadTasas() {
-  try {
-    const t = await loadSheetGviz('TASA');
-    if (t.rows && t.rows[0] && t.rows[0].c) {
-      TASAS.BCV     = parseFloat(gvizVal(t.rows[0].c[0])) || null;
-      TASAS.Binance = parseFloat(gvizVal(t.rows[0].c[1])) || null;
-      TASAS.Venta   = parseFloat(gvizVal(t.rows[0].c[2])) || null;
-      TASAS.BeKate  = parseFloat(gvizVal(t.rows[0].c[3])) || null;
-    }
-  } catch(e) { console.error('Error cargando tasas:', e); }
-}
-
-function mostrarModalTasa(codigo, nombre, precio) {
-  pendingEtiqueta = { codigo, nombre, precio };
-  selectedTasaName = null;
-
-  // Mostrar valores de tasas
-  document.getElementById('val-BCV').textContent     = TASAS.BCV     ? TASAS.BCV.toFixed(2)     : '—';
-  document.getElementById('val-Binance').textContent = TASAS.Binance ? TASAS.Binance.toFixed(2) : '—';
-  document.getElementById('val-Venta').textContent   = TASAS.Venta   ? TASAS.Venta.toFixed(2)   : '—';
-  document.getElementById('val-BeKate').textContent  = TASAS.BeKate  ? TASAS.BeKate.toFixed(2)  : '—';
-
-  document.getElementById('tasa-resumen').innerHTML = `
-    Producto: <b style="color:var(--text)">${nombre}</b><br>
-    Código: <span style="color:var(--accent)">${codigo}</span><br>
-    Base Imponible: <span style="color:var(--accent)">$ ${parseFloat(precio).toFixed(2)}</span>`;
-
-  // Reset botones
-  document.querySelectorAll('.tasa-sel-btn').forEach(b => b.classList.remove('selected'));
-  document.getElementById('tasa-confirm-btn').disabled = true;
-  document.getElementById('tasa-preview').innerHTML = 'Selecciona una tasa para ver el cálculo';
+function mostrarModalTasa(codigo,nombre,precio){
+  pendingEtiqueta={codigo,nombre,precio};
+  selectedTasaName=null;
+  document.getElementById('val-BCV').textContent    =TASAS.BCV    ?TASAS.BCV.toFixed(2)    :'—';
+  document.getElementById('val-Binance').textContent=TASAS.Binance?TASAS.Binance.toFixed(2):'—';
+  document.getElementById('val-Venta').textContent  =TASAS.Venta  ?TASAS.Venta.toFixed(2)  :'—';
+  document.getElementById('val-BeKate').textContent =TASAS.BeKate ?TASAS.BeKate.toFixed(2) :'—';
+  document.getElementById('tasa-resumen').innerHTML=`Producto: <b style="color:var(--text)">${nombre}</b><br>Código: <span>${codigo}</span><br>Base Imponible: <span>$ ${parseFloat(precio).toFixed(2)}</span>`;
+  document.querySelectorAll('.tasa-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('tasa-confirm-btn').disabled=true;
+  document.getElementById('tasa-preview').innerHTML='Selecciona una tasa para ver el cálculo';
   document.getElementById('modal-tasa').classList.remove('hidden');
 }
 
-function seleccionarTasa(nombre) {
-  selectedTasaName = nombre;
-  document.querySelectorAll('.tasa-sel-btn').forEach(b => b.classList.remove('selected'));
-  document.getElementById('tbtn-' + nombre).classList.add('selected');
-  document.getElementById('tasa-confirm-btn').disabled = false;
-
-  const precio = parseFloat(pendingEtiqueta.precio);
-  const tasa   = TASAS[nombre];
-  if (tasa && precio) {
-    const baseBS  = precio * tasa;
-    const iva     = baseBS * 0.16;
-    const totalBS = baseBS + iva;
-    const totalBCV = totalBS / (TASAS.BCV || tasa);
-    const igtf    = totalBS * 0.03;
-    document.getElementById('tasa-preview').innerHTML = `
+function seleccionarTasa(nombre){
+  selectedTasaName=nombre;
+  document.querySelectorAll('.tasa-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('tbtn-'+nombre).classList.add('selected');
+  document.getElementById('tasa-confirm-btn').disabled=false;
+  const precio=parseFloat(pendingEtiqueta.precio);
+  const tasa=TASAS[nombre];
+  if(tasa&&precio){
+    const baseBS=precio*tasa;
+    const iva=baseBS*0.16;
+    const totalBS=baseBS+iva;
+    const totalBCV=totalBS/(TASAS.BCV||tasa);
+    const igtf=totalBS*0.03;
+    document.getElementById('tasa-preview').innerHTML=`
       <div style="text-align:left;line-height:2;">
-        <span style="color:var(--muted);">Base Imponible Bs:</span> <b style="color:var(--text);">${baseBS.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b><br>
-        <span style="color:var(--muted);">IVA (16%):</span> <b style="color:var(--text);">${iva.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b><br>
-        <span style="color:var(--muted);">Total con IVA Bs:</span> <b style="color:var(--accent);">${totalBS.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b><br>
-        <span style="color:var(--muted);">Total con IVA $ BCV:</span> <b style="color:var(--accent2);">$ ${totalBCV.toFixed(2)}</b><br>
-        <span style="color:var(--muted);">IGTF (3%):</span> <b style="color:var(--text);">${igtf.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b>
+        Base Imponible Bs: <b style="color:var(--text)">${baseBS.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b><br>
+        IVA (16%): <b style="color:var(--text)">${iva.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b><br>
+        Total con IVA Bs: <b style="color:var(--accent)">${totalBS.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b><br>
+        Total con IVA $ BCV: <b style="color:var(--accent2)">$ ${totalBCV.toFixed(2)}</b><br>
+        IGTF (3%): <b style="color:var(--text)">${igtf.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b>
       </div>`;
   }
 }
 
-function cancelarTasa() {
+async function confirmarTasa(){
+  if(!selectedTasaName||!pendingEtiqueta)return;
   document.getElementById('modal-tasa').classList.add('hidden');
-  pendingEtiqueta = null;
-  selectedTasaName = null;
+  await ejecutarGenerarEtiqueta(pendingEtiqueta.codigo,pendingEtiqueta.nombre,pendingEtiqueta.precio,selectedTasaName);
 }
 
-async function confirmarTasa() {
-  if (!selectedTasaName || !pendingEtiqueta) return;
-  document.getElementById('modal-tasa').classList.add('hidden');
-  await ejecutarGenerarEtiqueta(pendingEtiqueta.codigo, pendingEtiqueta.nombre, pendingEtiqueta.precio, selectedTasaName);
+// ── ETIQUETAS ─────────────────────────────────────────────────
+function autoFillFromCode(){
+  const cod=document.getElementById('qr-codigo').value.trim();
+  const prod=PRODUCTOS.find(p=>p.codigo.toLowerCase()===cod.toLowerCase());
+  if(prod)document.getElementById('qr-nombre').value=prod.nombre;
 }
-
-// ── QR GENERATOR ─────────────────────────────────────────────
-let fotoBase64 = null;
-let fotoMime = null;
-let qrCanvas = null;
-
-function autoFillFromCode() {
-  const cod = document.getElementById('qr-codigo').value.trim();
-  const prod = PRODUCTOS.find(p => p.codigo.toLowerCase() === cod.toLowerCase());
-  if (prod) {
-    document.getElementById('qr-nombre').value = prod.nombre;
-  }
-}
-
-function handleFotoChange(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  procesarFoto(file);
-}
-
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('foto-drop').style.borderColor = 'var(--border)';
-  const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith('image/')) procesarFoto(file);
-}
-
-function procesarFoto(file) {
-  fotoMime = file.type;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    fotoBase64 = ev.target.result.split(',')[1];
-    document.getElementById('foto-preview-wrap').innerHTML = `
-      <img src="${ev.target.result}" style="max-height:120px;max-width:100%;border-radius:8px;object-fit:contain;">
-      <div style="font-size:11px;color:var(--accent);margin-top:6px;">✓ ${file.name}</div>`;
+function handleFotoChange(e){const f=e.target.files[0];if(f)procesarFoto(f);}
+function handleDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))procesarFoto(f);}
+function procesarFoto(file){
+  fotoMime=file.type;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    fotoBase64=ev.target.result.split(',')[1];
+    document.getElementById('foto-preview-wrap').innerHTML=`<img src="${ev.target.result}" style="max-height:120px;max-width:100%;border-radius:8px;object-fit:contain;"><div style="font-size:11px;color:var(--accent);margin-top:6px;">✓ ${file.name}</div>`;
   };
   reader.readAsDataURL(file);
 }
 
-async function generarEtiqueta() {
-  const codigo = document.getElementById('qr-codigo').value.trim();
-  const nombre = document.getElementById('qr-nombre').value.trim();
-  const precio = document.getElementById('qr-precio').value.trim();
-
-  if (!codigo) { alert('Ingresa el código del producto'); return; }
-  if (!nombre) { alert('Ingresa el nombre del producto'); return; }
-  if (!precio) { alert('Ingresa el precio base imponible en $'); return; }
-
-  mostrarModalTasa(codigo, nombre, precio);
+function generarEtiqueta(){
+  const codigo=document.getElementById('qr-codigo').value.trim();
+  const nombre=document.getElementById('qr-nombre').value.trim();
+  const precio=document.getElementById('qr-precio').value.trim();
+  if(!codigo){alert('Ingresa el código del producto');return;}
+  if(!nombre){alert('Ingresa el nombre del producto');return;}
+  if(!precio){alert('Ingresa el precio base imponible en $');return;}
+  mostrarModalTasa(codigo,nombre,precio);
 }
 
-async function ejecutarGenerarEtiqueta(codigo, nombre, precio, tasa) {
-  if (fotoBase64) {
-    try {
-      await fetch(SCRIPT_URL, {
-        method: 'POST', mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'uploadFoto',
-          codigo: codigo,
-          base64: fotoBase64,
-          mimeType: fotoMime,
-          filename: `${codigo}.jpg`
-        })
-      });
-    } catch(e) { console.error('Error subiendo foto:', e); }
+async function ejecutarGenerarEtiqueta(codigo,nombre,precio,tasa){
+  const etqMsg=document.getElementById('etq-msg');
+  etqMsg.style.display='block';
+  etqMsg.style.background='var(--surface2)';
+  etqMsg.style.color='var(--muted)';
+  etqMsg.innerHTML='<span class="spinner">↻</span> Guardando en Google Sheets...';
+
+  // Subir foto
+  if(fotoBase64){
+    try{
+      await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'uploadFoto',codigo,base64:fotoBase64,mimeType:fotoMime,filename:`${codigo}.jpg`})});
+    }catch(e){console.error('Foto error:',e);}
   }
 
-  // Guardar precio base imponible en col J (IKOA) y fórmulas con tasa elegida
-  if (precio) {
-    try {
-      await fetch(SCRIPT_URL, {
-        method: 'POST', mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'updatePrecio',
-          codigo: codigo,
-          precio: parseFloat(precio),
-          tasa: tasa
-        })
-      });
-    } catch(e) { console.error('Error guardando precio:', e); }
+  // Guardar precio + fórmulas
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'updatePrecio',codigo,precio:parseFloat(precio),tasa})});
+    etqMsg.style.background='#0f2b1a';
+    etqMsg.style.color='var(--accent)';
+    etqMsg.innerHTML='✓ Guardado en Google Sheets con tasa '+tasa;
+    setTimeout(()=>{etqMsg.style.display='none';},5000);
+  }catch(e){
+    etqMsg.style.background='#2a1010';
+    etqMsg.style.color='var(--danger)';
+    etqMsg.innerHTML='✗ Error al guardar: '+e.message;
   }
 
   // Generar QR
-  const previewEl = document.getElementById('etiqueta-preview');
-  previewEl.innerHTML = '';
-
-  // Etiqueta completa
-  const etiqueta = document.createElement('div');
-  etiqueta.id = 'etiqueta-render';
-  etiqueta.style.cssText = `background:#fff;border-radius:12px;padding:16px;width:220px;font-family:'Barlow Condensed',sans-serif;text-align:center;color:#111;`;
-  etiqueta.innerHTML = `
+  const previewEl=document.getElementById('etiqueta-preview');
+  previewEl.innerHTML='';
+  const etiqueta=document.createElement('div');
+  etiqueta.id='etiqueta-render';
+  etiqueta.style.cssText='background:#fff;border-radius:12px;padding:16px;width:220px;font-family:\'Barlow Condensed\',sans-serif;text-align:center;color:#111;';
+  etiqueta.innerHTML=`
     <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">IKOA & BEKATE</div>
     <div id="qr-etiqueta-div" style="margin:0 auto 10px;"></div>
     <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px;">${nombre}</div>
     <div style="font-size:11px;color:#777;letter-spacing:.08em;margin-bottom:6px;">${codigo}</div>
-    ${precio ? `<div style="font-size:18px;font-weight:700;color:#00a070;">$ ${precio}</div>` : ''}`;
+    <div style="font-size:16px;font-weight:700;color:#111;letter-spacing:.05em;">IKOA${parseFloat(precio).toFixed(0)}</div>`;
   previewEl.appendChild(etiqueta);
-
-  // Generar QR dentro de la etiqueta
-  new QRCode(document.getElementById('qr-etiqueta-div'), {
-    text: codigo, width: 130, height: 130,
-    colorDark: '#111', colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.M
-  });
+  new QRCode(document.getElementById('qr-etiqueta-div'),{text:codigo,width:130,height:130,colorDark:'#111',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
 
   // QR solo
-  const qrSoloEl = document.getElementById('qr-solo');
-  qrSoloEl.innerHTML = '';
-  new QRCode(qrSoloEl, {
-    text: codigo, width: 160, height: 160,
-    colorDark: '#000', colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.H
-  });
-  document.getElementById('qr-solo-wrap').style.display = 'flex';
-  document.getElementById('btns-descarga').style.display = 'flex';
+  const qrSoloEl=document.getElementById('qr-solo');
+  qrSoloEl.innerHTML='';
+  new QRCode(qrSoloEl,{text:codigo,width:160,height:160,colorDark:'#000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  document.getElementById('qr-solo-wrap').style.display='flex';
+  document.getElementById('btns-descarga').style.display='flex';
 }
 
-async function descargarEtiqueta() {
-  const el = document.getElementById('etiqueta-render');
-  if (!el) return;
-  // Use html2canvas if available, otherwise just save QR
-  const canvas = document.createElement('canvas');
-  const scale = 3;
-  canvas.width = 220 * scale;
-  canvas.height = el.offsetHeight * scale;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(scale, scale);
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, 220, el.offsetHeight);
-
-  // Get QR image from the etiqueta
-  const qrImg = el.querySelector('img');
-  const codigo = document.getElementById('qr-codigo').value.trim();
-  const nombre = document.getElementById('qr-nombre').value.trim();
-  const precio = document.getElementById('qr-precio').value.trim();
-
-  if (qrImg) {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = function() {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, 220, 260);
-      // Header
-      ctx.fillStyle = '#555555';
-      ctx.font = '700 10px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('IKOA & BEKATE', 110, 16);
-      // QR
-      ctx.drawImage(img, 45, 24, 130, 130);
-      // Nombre
-      ctx.fillStyle = '#111111';
-      ctx.font = '700 15px Arial';
-      ctx.fillText(nombre, 110, 172);
-      // Codigo
-      ctx.fillStyle = '#777777';
-      ctx.font = '10px Arial';
-      ctx.fillText(codigo, 110, 188);
-      // Precio
-      if (precio) {
-        ctx.fillStyle = '#00a070';
-        ctx.font = '700 17px Arial';
-        ctx.fillText('$ ' + precio, 110, 210);
-      }
-      const a = document.createElement('a');
-      a.download = `etiqueta-${codigo}.png`;
-      a.href = canvas.toDataURL('image/png');
-      a.click();
-    };
-    img.src = qrImg.src;
-  }
-}
-
-function descargarQRsolo() {
-  const qrImg = document.querySelector('#qr-solo img');
-  if (!qrImg) return;
-  const codigo = document.getElementById('qr-codigo').value.trim();
-  const a = document.createElement('a');
-  a.download = `qr-${codigo}.png`;
-  a.href = qrImg.src;
+function descargarQRsolo(){
+  const qrImg=document.querySelector('#qr-solo img');
+  if(!qrImg)return;
+  const codigo=document.getElementById('qr-codigo').value.trim();
+  const a=document.createElement('a');
+  a.download=`qr-${codigo}.png`;
+  a.href=qrImg.src;
   a.click();
 }
 
-function imprimirEtiqueta() {
-  const el = document.getElementById('etiqueta-render');
-  if (!el) return;
-  const win = window.open('', '_blank');
+function imprimirEtiqueta(){
+  const el=document.getElementById('etiqueta-render');
+  if(!el)return;
+  const win=window.open('','_blank');
   win.document.write(`<html><body style="margin:0;display:flex;justify-content:center;padding:20px;">${el.outerHTML}</body></html>`);
   win.document.close();
   win.print();
+}
+
+// ── SCANNER ───────────────────────────────────────────────────
+function toggleScanner(){
+  if(scannerActive){stopScanner();return;}
+  document.getElementById('scanner-wrap').classList.add('active');
+  document.getElementById('scan-btn').classList.add('stop');
+  document.getElementById('scan-btn-text').textContent='Detener Escáner';
+  scannerActive=true;
+  html5QrCode=new Html5Qrcode('reader');
+  html5QrCode.start({facingMode:'environment'},{fps:12,qrbox:{width:240,height:240}},
+    decoded=>{
+      document.getElementById('search-input').value=decoded;
+      const p=findProduct(decoded);
+      if(p)showProduct(p);
+      else document.getElementById('product-area').innerHTML=`<div class="not-found"><div style="font-size:32px">🔍</div><p style="color:var(--muted);margin-top:8px;">No encontrado</p></div>`;
+      stopScanner();
+    },()=>{}
+  ).catch(err=>{alert('No se pudo acceder a la cámara: '+err);stopScanner();});
+}
+function stopScanner(){
+  if(html5QrCode){
+    html5QrCode.stop().catch(()=>{}).finally(()=>{html5QrCode=null;scannerActive=false;document.getElementById('scanner-wrap').classList.remove('active');document.getElementById('scan-btn').classList.remove('stop');document.getElementById('scan-btn-text').textContent='Escanear Código QR';});
+  }else{
+    scannerActive=false;document.getElementById('scanner-wrap').classList.remove('active');document.getElementById('scan-btn').classList.remove('stop');document.getElementById('scan-btn-text').textContent='Escanear Código QR';
+  }
+}
+
+// ── TABS ──────────────────────────────────────────────────────
+function switchTab(tab){
+  ['stock','etiquetas','gestion','historial'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
+  });
+  document.querySelectorAll('.tab').forEach((b,i)=>{
+    b.classList.toggle('active',['stock','etiquetas','gestion','historial'][i]===tab);
+  });
+  if(tab==='historial')renderHistorial();
+}
+
+// ── GESTIÓN ───────────────────────────────────────────────────
+const WEBHOOK_URL='https://hook.us2.make.com/9vb6zab74fbbqkbv46c2coi8i7e4mnqs';
+
+function setTipoGestion(tipo){
+  document.getElementById('g-tipo').value=tipo;
+  document.getElementById('g-status').value=tipo;
+  ['COD','Enviado'].forEach(t=>{
+    const btn=document.getElementById('gbtn-'+t);
+    if(t===tipo){
+      btn.style.borderColor='var(--accent)';
+      btn.style.background='#0f2b1a';
+      btn.style.color='var(--accent)';
+    } else {
+      btn.style.borderColor='var(--border)';
+      btn.style.background='var(--surface2)';
+      btn.style.color='var(--muted)';
+    }
+  });
+
+  document.getElementById('gestion-form-wrap').style.display='block';
+
+  // Mostrar/ocultar campos según tipo
+  const codSec=document.getElementById('g-cod-section');
+  const envSec=document.getElementById('g-enviado-section');
+  const cedWrap=document.getElementById('g-cedula-wrap');
+  const celWrap=document.getElementById('g-celular-wrap');
+
+  if(tipo==='COD'){
+    codSec.style.display='flex';
+    envSec.style.display='none';
+    cedWrap.style.display='block';
+    celWrap.style.display='block';
+  } else {
+    codSec.style.display='none';
+    envSec.style.display='flex';
+    cedWrap.style.display='none';
+    celWrap.style.display='none';
+  }
+}
+
+function toggleDireccion(){
+  const ag=document.getElementById('g-agencia').value;
+  const wrap=document.getElementById('g-dir-wrap');
+  wrap.style.display=['MRW','ZOOM','TEALCA'].includes(ag)?'block':'none';
+}
+
+function toggleDatosEnvio(){
+  const val=document.getElementById('g-diferente-envio').value;
+  document.getElementById('g-envio-section').style.display=val==='si'?'flex':'none';
+}
+
+function toggleArte(){
+  const val=document.getElementById('g-arte').value;
+  document.getElementById('g-arte-nombre').style.display=val==='si'?'block':'none';
+}
+
+document.getElementById('gestion-form').addEventListener('submit',async function(e){
+  e.preventDefault();
+  const btn=document.getElementById('g-submit-btn');
+  const msg=document.getElementById('g-msg');
+  btn.disabled=true;
+  btn.textContent='⏳ Enviando...';
+  msg.style.display='none';
+  try{
+    const formData=new FormData(this);
+    const response=await fetch(WEBHOOK_URL,{method:'POST',body:formData});
+    if(response.ok){
+      msg.style.display='block';
+      msg.style.background='#0f2b1a';
+      msg.style.border='1px solid #1a4a2a';
+      msg.style.color='var(--accent)';
+      msg.textContent='✅ ¡Gestión enviada correctamente!';
+      setTimeout(()=>{
+        this.reset();
+        msg.style.display='none';
+        document.getElementById('gestion-form-wrap').style.display='none';
+        ['COD','Enviado'].forEach(t=>{
+          const btn=document.getElementById('gbtn-'+t);
+          btn.style.borderColor='var(--border)';
+          btn.style.background='var(--surface2)';
+          btn.style.color='var(--muted)';
+        });
+      },2500);
+    } else {
+      throw new Error('Error del servidor');
+    }
+  }catch(err){
+    msg.style.display='block';
+    msg.style.background='#2a1010';
+    msg.style.border='1px solid #4a1a1a';
+    msg.style.color='var(--danger)';
+    msg.textContent='✗ Error al enviar. Intenta de nuevo.';
+  }
+  btn.disabled=false;
+  btn.textContent='📤 ENVIAR GESTIÓN';
+});
+
+// ── HISTORIAL ─────────────────────────────────────────────────
+function renderHistorial(){
+  const el=document.getElementById('historial-list');
+  if(!historial.length){el.innerHTML='<div class="empty-hist">📋 Sin movimientos registrados</div>';return;}
+  el.innerHTML=historial.map(h=>{
+    const delta=h.delta>0?'+'+h.delta:h.delta;
+    const cls=h.delta>0?'pos':h.delta<0?'neg':'eq';
+    return `<div class="hist-item">
+      <div class="hist-top"><span class="hist-badge ${h.tipo}">${h.tipo.toUpperCase()}</span><span class="hist-prod">${h.nombre}</span><span class="hist-qty ${cls}">${delta}</span></div>
+      <div class="hist-meta">
+        <span class="hist-chip">T:${h.talla}</span><span class="hist-chip">${h.color||'—'}</span><span class="hist-chip">${h.deposito||'—'}</span>
+        <span class="hist-chip">${h.antes}→${h.despues} uds</span><span class="hist-chip usuario">👤 ${h.usuario||h.cod}</span><span class="hist-chip">🕐 ${h.fecha}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+function clearHistorial(){
+  if(confirm('¿Limpiar el historial local?')){historial=[];localStorage.setItem('ikoa_hist_v3','[]');renderHistorial();}
 }
 
 init();
