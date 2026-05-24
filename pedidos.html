@@ -316,6 +316,21 @@ function filtrarPorTransportista(trans){
   };
 }
 
+// ── JSONP ─────────────────────────────────────────────────────
+function scriptGETjson(params){
+  return new Promise((resolve,reject)=>{
+    const cb='_cb_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
+    const qs=Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v??'')).join('&');
+    const url=SCRIPT_URL+'?'+qs+'&callback='+cb;
+    const script=document.createElement('script');
+    window[cb]=(data)=>{ delete window[cb]; try{document.body.removeChild(script);}catch(e){} resolve(data); };
+    script.onerror=()=>{ delete window[cb]; try{document.body.removeChild(script);}catch(e){} reject(new Error('Error de red')); };
+    script.src=url;
+    document.body.appendChild(script);
+    setTimeout(()=>{ if(window[cb]){ delete window[cb]; try{document.body.removeChild(script);}catch(e){} reject(new Error('Timeout')); }},10000);
+  });
+}
+
 // ── TOKEN ─────────────────────────────────────────────────────
 async function verificarToken(){
   const bloqueado=document.getElementById('pantalla-bloqueada');
@@ -327,8 +342,7 @@ async function verificarToken(){
     return;
   }
   try{
-    const res=await fetch(SCRIPT_URL+'?action=verificarToken&token='+token);
-    const data=await res.json();
+    const data=await scriptGETjson({action:'verificarToken',token:token});
     if(data.ok){
       tokenActual=token;
       bloqueado.style.display='none';
@@ -356,7 +370,7 @@ function mostrarBloqueo(icon,titulo,texto){
 
 async function marcarTokenUsado(){
   if(!tokenActual)return;
-  try{ await fetch(SCRIPT_URL+'?action=usarToken&token='+tokenActual); }
+  try{ await scriptGETjson({action:'usarToken',token:tokenActual}); }
   catch(e){ console.error('Error marcando token:',e); }
 }
 

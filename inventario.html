@@ -1387,8 +1387,7 @@ document.getElementById('gestion-form').addEventListener('submit',async function
     if(tipo==='COD'){
       btn.textContent='⏳ Leyendo COD...';
       try{
-        const resCod=await fetch(SCRIPT_URL+'?action=leerCOD');
-        const dataCod=await resCod.json();
+        const dataCod=await scriptGETjson({action:'leerCOD'});
         if(dataCod.ok){
           codMake=String(dataCod.codSiguiente);
         }
@@ -1474,6 +1473,21 @@ function clearHistorial(){
   if(confirm('¿Limpiar el historial local?')){historial=[];localStorage.setItem('ikoa_hist_v3','[]');renderHistorial();}
 }
 
+// ── JSONP — para llamadas que necesitan leer la respuesta ─────
+function scriptGETjson(params){
+  return new Promise((resolve,reject)=>{
+    const cb='_cb_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
+    const qs=Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v??'')).join('&');
+    const url=SCRIPT_URL+'?'+qs+'&callback='+cb;
+    const script=document.createElement('script');
+    window[cb]=(data)=>{ delete window[cb]; try{document.body.removeChild(script);}catch(e){} resolve(data); };
+    script.onerror=()=>{ delete window[cb]; try{document.body.removeChild(script);}catch(e){} reject(new Error('Error de red')); };
+    script.src=url;
+    document.body.appendChild(script);
+    setTimeout(()=>{ if(window[cb]){ delete window[cb]; try{document.body.removeChild(script);}catch(e){} reject(new Error('Timeout')); }},10000);
+  });
+}
+
 // ── TOKEN GENERATOR ───────────────────────────────────────────
 const BASE_URL='https://ikoastore1-dev.github.io/ikoa-store/pedidos.html';
 let currentToken='';
@@ -1484,8 +1498,7 @@ async function generarLinkPedido(){
   btn.disabled=true; btn.textContent='⏳ Generando...';
   msg.style.display='none';
   try{
-    const res=await fetch(SCRIPT_URL+'?action=generarToken');
-    const data=await res.json();
+    const data=await scriptGETjson({action:'generarToken'});
     if(data.ok){
       currentToken=data.token;
       const link=`${BASE_URL}?token=${data.token}`;
@@ -1500,7 +1513,7 @@ async function generarLinkPedido(){
     msg.style.background='#2a1010';
     msg.style.border='1px solid #4a1a1a';
     msg.style.color='var(--danger)';
-    msg.textContent='✗ Error al generar el link';
+    msg.textContent='✗ Error al generar el link: '+e.message;
   }
   btn.disabled=false; btn.textContent='⚡ Generar Link';
 }
