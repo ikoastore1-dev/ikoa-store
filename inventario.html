@@ -372,9 +372,13 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
   <!-- TAB COLA PLANIFICACIÓN -->
   <div id="tab-cola" style="display:none">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--warn);text-transform:uppercase;letter-spacing:.08em;">⏳ Cola de Planificación</div>
-      <button onclick="cargarCola()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 14px;font-size:13px;cursor:pointer;">↻ Actualizar</button>
+      <button onclick="cargarCola()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 14px;font-size:13px;cursor:pointer;">↻</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <button class="cola-filter-btn" data-filtro="En Cola" onclick="setFiltroCola('En Cola')" style="flex:1;padding:8px;border:1px solid var(--warn);border-radius:8px;background:#2a1f0a;color:var(--warn);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">⏳ En Cola</button>
+      <button class="cola-filter-btn" data-filtro="Enviado a Producción" onclick="setFiltroCola('Enviado a Producción')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🚀 Enviados</button>
     </div>
     <div id="cola-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
     <div id="cola-list"></div>
@@ -1014,6 +1018,18 @@ function switchTab(tab){
   if(tab==='cola')cargarCola();
 }
 
+let filtroCola='En Cola';
+function setFiltroCola(filtro){
+  filtroCola=filtro;
+  document.querySelectorAll('.cola-filter-btn').forEach(b=>{
+    const act=b.dataset.filtro===filtro;
+    b.style.borderColor=act?'var(--warn)':'var(--border)';
+    b.style.background=act?'#2a1f0a':'var(--surface2)';
+    b.style.color=act?'var(--warn)':'var(--muted)';
+  });
+  cargarCola();
+}
+
 // ── COLA PLANIFICACIÓN ────────────────────────────────────────
 let pendingCola=null;
 
@@ -1022,7 +1038,7 @@ async function cargarCola(){
   listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando cola...</div>`;
   try{
     const t=await loadSheetGviz('COLA_PLANIFICACION');
-    const enCola=(t.rows||[]).filter(r=>r.c&&String(gvizVal(r.c[18])||'').trim()==='En Cola');
+    const enCola=(t.rows||[]).filter(r=>r.c&&r.c.some(c=>String(c?.v||'').trim()===filtroCola));
     if(!enCola.length){
       listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
         <div style="font-size:32px;margin-bottom:10px;">🎉</div>
@@ -1136,8 +1152,18 @@ async function confirmarPlanificacion(){
   pendingCola=null;
 }
 
-// ── APROBACIONES ──────────────────────────────────────────────
-let pendingSolicitud=null;
+function setFiltroApro(filtro){
+  filtroSolicitudes=filtro;
+  document.querySelectorAll('.sol-filter-btn').forEach(b=>{
+    const act=b.dataset.filtro===filtro;
+    const colors={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)'};
+    const bgs={Pendiente:'#2a1f0a',Pagado:'#0f2b1a',Reprobado:'#2a1010'};
+    b.style.borderColor=act?colors[filtro]:'var(--border)';
+    b.style.background=act?bgs[filtro]:'var(--surface2)';
+    b.style.color=act?colors[filtro]:'var(--muted)';
+  });
+  cargarSolicitudes(filtro);
+}
 
 let filtroSolicitudes='Pendiente';
 
@@ -1149,15 +1175,13 @@ async function cargarSolicitudes(filtro){
   listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>`;
   try{
     const t=await loadSheetGviz('SOLICITUDES');
-    // DEBUG temporal — mostrar datos crudos
-    let debugHtml='<div style="background:#1a1a10;border:1px solid var(--warn);border-radius:10px;padding:12px;font-size:11px;margin-bottom:12px;overflow-x:auto;">';
-    debugHtml+=`<b style="color:var(--warn)">DEBUG — Total filas: ${(t.rows||[]).length}</b><br>`;
-    (t.rows||[]).forEach((r,i)=>{
-      const vals=(r.c||[]).map((c,j)=>`[${j}]=${c?String(c.v||''):'∅'}`).join(' ');
-      debugHtml+=`<div>F${i+1}: ${vals.substring(0,300)}</div>`;
+    const statusFiltro=document.getElementById('filtro-aprobaciones')?.value||'Pendiente';
+    const pendientes=(t.rows||[]).filter(r=>{
+      if(!r.c) return false;
+      // Buscar el status en cualquier celda de la fila
+      const statusVal=r.c.map(c=>String(c?.v||'').trim()).find(v=>['Pendiente','Pagado','Reprobado'].includes(v))||'';
+      return statusVal===statusFiltro;
     });
-    debugHtml+='</div>';
-    listEl.innerHTML=debugHtml;
     const rows=t.rows||[];
     const filtradas=rows.filter(r=>{
       if(!r.c) return false;
@@ -1209,72 +1233,7 @@ async function cargarSolicitudes(filtro){
     listEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--danger);">✗ Error: ${e.message}</div>`;
   }
 }
-    const pendientes=(t.rows||[]).filter(r=>{
-      if(!r.c) return false;
-      // gviz corta columnas vacías al final — buscar Pendiente en col 14 o en cualquier columna si hay menos de 15
-      const cells=r.c;
-      const idx=14;
-      if(cells.length>idx){
-        const val=String(cells[idx]?.v||cells[idx]?.f||'').trim();
-        return val==='Pendiente';
-      }
-      // Si la fila tiene menos columnas, buscar en todas
-      return cells.some(c=>String(c?.v||c?.f||'').trim()==='Pendiente');
-    });
-    if(!pendientes.length){
-      listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
-        <div style="font-size:32px;margin-bottom:10px;">🎉</div>
-        <div style="font-size:15px;">No hay solicitudes pendientes</div>
-      </div>`;
-      return;
-    }
-    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${pendientes.length} solicitud(es) esperando aprobación</div>`;
-    pendientes.forEach((r,idx)=>{
-      const v=i=>String(gvizVal(r.c[i])||'').trim();
-      const card=document.createElement('div');
-      card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;animation:slideUp .3s ease;';
-      card.innerHTML=`
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;">${v(2)}</div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
-              <span style="background:#1a2a10;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">${v(0)}</span>
-              <div style="font-size:11px;color:var(--muted);">🕐 ${v(1)}</div>
-            </div>
-          </div>
-          <span style="background:#2a1f0a;border:1px solid var(--warn);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--warn);">PENDIENTE</span>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:12px;">
-          <div><span style="color:var(--muted);">Correo:</span> ${v(3)}</div>
-          <div><span style="color:var(--muted);">Cédula:</span> ${v(4)}</div>
-          <div><span style="color:var(--muted);">Celular:</span> ${v(5)}</div>
-          <div><span style="color:var(--muted);">Agencia:</span> ${v(12)}</div>
-          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Modelo:</span> ${v(6)} ${v(7)} ${v(8)}</div>
-          <div><span style="color:var(--muted);">Tela:</span> ${v(9)}</div>
-          <div><span style="color:var(--muted);">Vinil:</span> ${v(10)}</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:12px;">
-          <span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Piezas</span><br>${v(11).split(' | ').join('<br>')}
-        </div>
-        <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
-          <span style="color:var(--muted);">Retira:</span> ${v(13)}
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(2),cedula:v(4),correo:v(3),fecha:v(1),codigo:v(0)})})'
-            style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">
-            ✅ Aprobar
-          </button>
-          <button onclick='abrirModalReprobar(${JSON.stringify({nombre:v(2),cedula:v(4),correo:v(3),fecha:v(1),codigo:v(0)})})'
-            style="width:100%;padding:13px;background:transparent;border:2px solid var(--danger);border-radius:10px;color:var(--danger);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">
-            ✗ Reprobar
-          </button>
-        </div>`;
-      listEl.appendChild(card);
-    });
-  }catch(e){
-    listEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--danger);">✗ Error cargando solicitudes: ${e.message}</div>`;
-  }
-}
+
 
 function abrirModalReprobar(data){
   pendingSolicitud=data;
@@ -1533,11 +1492,6 @@ function toggleArteCod(){
 function toggleArte(){
   const val=document.getElementById('g-arte').value;
   document.getElementById('g-arte-nombre').style.display=val==='si'?'block':'none';
-}
-
-function toggleArteCod(){
-  const val=document.getElementById('g-arte-cod').value;
-  document.getElementById('g-arte-nombre-cod').style.display=val==='si'?'block':'none';
 }
 
 document.getElementById('gestion-form').addEventListener('submit',async function(e){
