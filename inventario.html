@@ -446,7 +446,13 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNTCcDwgK3gsvazmKo53Ei1fH_AVbzh2MLvhxZZdaprgAWnPS6V7yjfhlTHgCWMy1_/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw0a0yM9jll497T2_atm9D8R5az8AJslHzwNxN6SyJBD_Wm8QE6XReJlSX46NtA6HD9EQ/exec';
+
+// Enviar datos via GET (evita problemas CORS con no-cors)
+function scriptGET(params){
+  const qs=Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v??'')).join('&');
+  return fetch(SCRIPT_URL+'?'+qs,{mode:'no-cors'});
+}
 const SHEET_ID   = '1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const DEPOSITOS  = ['Tienda','Showroom Caracas','Taller','Solicitud Envío USA'];
 const TALLAS_KIDS = ['Kids 2','Kids 4','Kids 6','Kids 8','Kids 10','Kids 12','Kids 14','Kids 16'];
@@ -714,17 +720,13 @@ async function confirmarModal(){
   document.getElementById('modal-overlay').classList.add('hidden');
   showMsg('loading','<span class="spinner">↻</span> Guardando...');
   try{
-    await fetch(SCRIPT_URL,{
-      method:'POST',mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
+    await scriptGET({
         action:'updateStock',
         codigo:currentProduct.codigo,nombre:currentProduct.nombre,
         talla:selectedTalla,stock:nuevoStock,color:color,
         deposito:selectedDeposito,fecha:fechaHora,
         usuario:`${cod} - ${nombreUsuario}`,operacion:currentOp,antes:currentStock
-      })
-    });
+      });
     const key=`${currentProduct.codigo}||${selectedTalla}||${color}||${selectedDeposito}`;
     STOCK[key]=nuevoStock; selectedColor=color;
     historial.unshift({fecha:fechaHora,tipo:currentOp,codigo:currentProduct.codigo,nombre:currentProduct.nombre,talla:selectedTalla,color,deposito:selectedDeposito,antes:currentStock,despues:nuevoStock,delta:nuevoStock-currentStock,usuario:nombreUsuario,cod});
@@ -832,15 +834,13 @@ async function ejecutarGenerarEtiqueta(codigo,nombre,precio,tasa){
   // Subir foto
   if(fotoBase64){
     try{
-      await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'uploadFoto',codigo,base64:fotoBase64,mimeType:fotoMime,filename:`${codigo}.jpg`})});
+      await scriptGET({action:'uploadFoto',codigo,base64:fotoBase64,mimeType:fotoMime,filename:`${codigo}.jpg`});
     }catch(e){console.error('Foto error:',e);}
   }
 
   // Guardar precio + fórmulas
   try{
-    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'updatePrecio',codigo,precio:parseFloat(precio),tasa})});
+    await scriptGET({action:'updatePrecio',codigo,precio:parseFloat(precio),tasa});
     etqMsg.style.background='#0f2b1a';
     etqMsg.style.color='var(--accent)';
     etqMsg.innerHTML='✓ Guardado en Google Sheets con tasa '+tasa;
@@ -1020,10 +1020,7 @@ async function confirmarAprobacion(){
   msgEl.innerHTML='<span class="spinner">↻</span> Registrando aprobación...';
 
   try{
-    await fetch(SCRIPT_URL,{
-      method:'POST',mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
+    await scriptGET({
         action:'aprobarSolicitud',
         nombre:pendingSolicitud.nombre,
         cedula:pendingSolicitud.cedula,
@@ -1031,8 +1028,7 @@ async function confirmarAprobacion(){
         cod_pago:codPago,
         fecha_aprobacion:fechaApro,
         usuario:USUARIOS[unlock]
-      })
-    });
+      });
     msgEl.style.background='#0f2b1a';
     msgEl.style.border='1px solid #1a4a2a';
     msgEl.style.color='var(--accent)';
@@ -1133,10 +1129,33 @@ async function buscarCOD(){
 
 const SIN_GUIA=['TIENDA MCY','SHOWROOM CARACAS','DELIVERY CARACAS','DELIVERY MARACAY'];
 
+const DIRECCIONES_AUTO={
+  'TIENDA MCY':        'C.C. HIPER JUMBO LOCAL PB 39. TIENDA IKOA.',
+  'DELIVERY MARACAY':  'SE EJECUTA DESDE C.C. HIPER JUMBO LOCAL PB 39. TIENDA IKOA.',
+  'SHOWROOM CARACAS':  'LAS MERCEDES, CARACAS.',
+  'DELIVERY CARACAS':  'SE EJECUTA DESDE LAS MERCEDES, CARACAS.'
+};
+
 function toggleDireccion(){
   const ag=document.getElementById('g-agencia').value;
   const wrap=document.getElementById('g-dir-wrap');
-  wrap.style.display=['MRW','ZOOM','TEALCA','DELIVERY CARACAS','DELIVERY MARACAY'].includes(ag)?'block':'none';
+  const dirInput=wrap ? wrap.querySelector('input') : null;
+
+  // Agencias con dirección automática — ocultar campo
+  if(DIRECCIONES_AUTO[ag]){
+    if(wrap) wrap.style.display='none';
+    if(dirInput) dirInput.value=DIRECCIONES_AUTO[ag];
+  }
+  // Agencias que requieren dirección manual
+  else if(['MRW','ZOOM','TEALCA'].includes(ag)){
+    if(wrap){ wrap.style.display='block'; if(dirInput) dirInput.value=''; }
+  }
+  // Resto
+  else {
+    if(wrap){ wrap.style.display='none'; if(dirInput) dirInput.value=''; }
+  }
+
+  // Lógica de guía automática
   const guiaWrap=document.getElementById('g-guia-wrap');
   const guiaInput=document.getElementById('g-numero-guia');
   const codigoInput=document.getElementById('g-codigo-enviado');
@@ -1198,10 +1217,7 @@ document.getElementById('gestion-form').addEventListener('submit',async function
     // Si es COD también guardar en Google Sheets PEDIDOS
     if(tipo==='COD'){
       const guiaInput=document.getElementById('g-numero-guia');
-      await fetch(SCRIPT_URL,{
-        method:'POST', mode:'no-cors',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
+      await scriptGET({
           action:'addPedido',
           nombre:     formData.get('nombre')||'',
           cedula:     formData.get('cedula')||'',
@@ -1216,8 +1232,7 @@ document.getElementById('gestion-form').addEventListener('submit',async function
           nombre_envio:formData.get('nombre_envio')||'',
           cel_envio:  formData.get('cel_envio')||'',
           ci_envio:   formData.get('ci_envio')||''
-        })
-      });
+        });
     }
 
     if(response.ok){
