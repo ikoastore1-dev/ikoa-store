@@ -366,9 +366,10 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <!-- SECCIÓN BUSCAR -->
           <div id="g-buscar-section" style="display:none;flex-direction:column;gap:12px;">
             <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:12px;">
-              <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">🔍 Buscar por COD</div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">🔍 Buscar Pedido</div>
+              <div style="font-size:12px;color:var(--muted);">Busca por COD, nombre, correo o cédula</div>
               <div style="display:flex;gap:8px;">
-                <input class="field-input" type="text" id="g-buscar-input" placeholder="Ingresa el número COD..." style="flex:1;font-size:16px;" onkeydown="if(event.key==='Enter')buscarCOD()">
+                <input class="field-input" type="text" id="g-buscar-input" placeholder="COD, nombre, correo o cédula..." style="flex:1;font-size:16px;" onkeydown="if(event.key==='Enter')buscarCOD()">
                 <button onclick="buscarCOD()" style="padding:10px 20px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;white-space:nowrap;">Buscar</button>
               </div>
             </div>
@@ -919,22 +920,23 @@ function setTipoGestion(tipo){
 }
 
 async function buscarCOD(){
-  const cod=document.getElementById('g-buscar-input').value.trim();
-  if(!cod){alert('Ingresa un número COD');return;}
+  const q=document.getElementById('g-buscar-input').value.trim().toLowerCase();
+  if(!q){alert('Ingresa un valor para buscar');return;}
   const resultsEl=document.getElementById('g-buscar-results');
   resultsEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted);"><span class="spinner">↻</span> Buscando...</div>`;
   try{
     const t=await loadSheetGviz('PEDIDOS');
     const rows=(t.rows||[]).filter(r=>{
-      if(!r.c||!r.c[3])return false;
-      return String(gvizVal(r.c[3])).trim().includes(cod);
+      if(!r.c)return false;
+      // Buscar en: NOMBRE(0), CEDULA(1), CORREO(2), COD(3)
+      return [0,1,2,3].some(i=>String(gvizVal(r.c[i])||'').toLowerCase().includes(q));
     });
     if(!rows.length){
-      resultsEl.innerHTML=`<div style="background:var(--surface);border:1px solid #6b1a1a;border-radius:var(--radius);padding:24px;text-align:center;color:var(--muted);">🔍 No se encontraron registros para COD <b style="color:#ff6b6b">${cod}</b></div>`;
+      resultsEl.innerHTML=`<div style="background:var(--surface);border:1px solid #6b1a1a;border-radius:var(--radius);padding:24px;text-align:center;color:var(--muted);">🔍 No se encontraron registros para <b style="color:#ff6b6b">"${q}"</b></div>`;
       return;
     }
     const sc={'COD':'var(--warn)','Enviado':'var(--accent)'};
-    let html=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${rows.length} registro(s) para COD <b style="color:var(--accent)">${cod}</b></div>`;
+    let html=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${rows.length} registro(s) encontrado(s)</div>`;
     rows.forEach(r=>{
       const v=i=>String(gvizVal(r.c[i])||'').trim();
       const status=v(6); const c=sc[status]||'var(--muted)';
