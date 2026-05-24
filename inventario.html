@@ -157,7 +157,44 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </div>
 </div>
 
-<!-- MODAL USUARIO -->
+<!-- MODAL APROBACIÓN -->
+<div class="modal-overlay hidden" id="modal-aprobacion">
+  <div class="modal">
+    <div class="modal-icon">✅</div>
+    <div class="modal-title">Aprobar Pago</div>
+    <div class="modal-subtitle">Completa los datos del pago y tu código para confirmar</div>
+    <div class="modal-summary" id="apro-resumen"></div>
+    <div class="field-group" style="margin-bottom:12px;">
+      <div class="field-label">Banco / Método de pago</div>
+      <select class="field-input" id="apro-banco" style="background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;">
+        <option value="">Seleccionar</option>
+        <option>Banesco</option>
+        <option>Mercantil</option>
+        <option>Provincial</option>
+        <option>BDV</option>
+        <option>Bicentenario</option>
+        <option>BOD</option>
+        <option>Pago Móvil</option>
+        <option>Dólares Efectivo</option>
+        <option>Zelle</option>
+        <option>PayPal</option>
+        <option>Otro</option>
+      </select>
+    </div>
+    <div class="field-group" style="margin-bottom:12px;">
+      <div class="field-label">Código / Referencia de pago</div>
+      <input class="field-input" type="text" id="apro-cod" placeholder="N° de referencia o confirmación" style="background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;width:100%;">
+    </div>
+    <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de desbloqueo</div>
+    <input class="modal-cod-input" type="password" id="apro-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarAprobacion()">
+    <div class="modal-error" id="apro-error"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="document.getElementById('modal-aprobacion').classList.add('hidden')">Cancelar</button>
+      <button class="modal-confirm" onclick="confirmarAprobacion()">✓ APROBAR</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay hidden" id="modal-overlay">
   <div class="modal">
     <div class="modal-icon">🔐</div>
@@ -194,6 +231,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   <div class="tabs">
     <button class="tab active" onclick="switchTab('stock')">📦 Stock</button>
     <button class="tab" onclick="switchTab('etiquetas')">🏷️ Etiquetas</button>
+    <button class="tab" onclick="switchTab('aprobaciones')">✅ Aprobaciones</button>
     <button class="tab" onclick="switchTab('gestion')">📋 Gestión</button>
     <button class="tab" onclick="switchTab('historial')">🕐 Historial</button>
   </div>
@@ -264,6 +302,16 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div id="etq-msg" style="display:none;padding:12px;border-radius:10px;font-size:13px;text-align:center;"></div>
       </div>
     </div>
+  </div>
+
+  <!-- TAB APROBACIONES -->
+  <div id="tab-aprobaciones" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">✅ Solicitudes Pendientes</div>
+      <button onclick="cargarSolicitudes()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 14px;font-size:13px;cursor:pointer;">↻ Actualizar</button>
+    </div>
+    <div id="apro-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
+    <div id="solicitudes-list"></div>
   </div>
 
   <!-- TAB GESTIÓN -->
@@ -398,7 +446,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_NhjWbNcQ0XLCBqRNVQ7-B8OUom3oocUxfFuC350hhF7ybPs_5YuEjUxB2ZmgBu2jBw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNTCcDwgK3gsvazmKo53Ei1fH_AVbzh2MLvhxZZdaprgAWnPS6V7yjfhlTHgCWMy1_/exec';
 const SHEET_ID   = '1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const DEPOSITOS  = ['Tienda','Showroom Caracas','Taller','Solicitud Envío USA'];
 const TALLAS_KIDS = ['Kids 2','Kids 4','Kids 6','Kids 8','Kids 10','Kids 12','Kids 14','Kids 16'];
@@ -873,13 +921,130 @@ function stopScanner(){
 
 // ── TABS ──────────────────────────────────────────────────────
 function switchTab(tab){
-  ['stock','etiquetas','gestion','historial'].forEach(t=>{
+  ['stock','etiquetas','aprobaciones','gestion','historial'].forEach(t=>{
     document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
   });
   document.querySelectorAll('.tab').forEach((b,i)=>{
-    b.classList.toggle('active',['stock','etiquetas','gestion','historial'][i]===tab);
+    b.classList.toggle('active',['stock','etiquetas','aprobaciones','gestion','historial'][i]===tab);
   });
   if(tab==='historial')renderHistorial();
+  if(tab==='aprobaciones')cargarSolicitudes();
+}
+
+// ── APROBACIONES ──────────────────────────────────────────────
+let pendingSolicitud=null;
+
+async function cargarSolicitudes(){
+  const listEl=document.getElementById('solicitudes-list');
+  const msgEl=document.getElementById('apro-msg');
+  listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando solicitudes...</div>`;
+  try{
+    const t=await loadSheetGviz('SOLICITUDES');
+    const pendientes=(t.rows||[]).filter(r=>r.c&&String(gvizVal(r.c[13])||'').trim()==='Pendiente');
+    if(!pendientes.length){
+      listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
+        <div style="font-size:32px;margin-bottom:10px;">🎉</div>
+        <div style="font-size:15px;">No hay solicitudes pendientes</div>
+      </div>`;
+      return;
+    }
+    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${pendientes.length} solicitud(es) esperando aprobación</div>`;
+    pendientes.forEach((r,idx)=>{
+      const v=i=>String(gvizVal(r.c[i])||'').trim();
+      const card=document.createElement('div');
+      card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;animation:slideUp .3s ease;';
+      card.innerHTML=`
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div style="font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:700;">${v(1)}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">🕐 ${v(0)}</div>
+          </div>
+          <span style="background:#2a1f0a;border:1px solid var(--warn);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--warn);">PENDIENTE</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:12px;">
+          <div><span style="color:var(--muted);">Correo:</span> ${v(2)}</div>
+          <div><span style="color:var(--muted);">Cédula:</span> ${v(3)}</div>
+          <div><span style="color:var(--muted);">Celular:</span> ${v(4)}</div>
+          <div><span style="color:var(--muted);">Agencia:</span> ${v(11)}</div>
+          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Modelo:</span> ${v(5)} ${v(6)} ${v(7)}</div>
+          <div><span style="color:var(--muted);">Tela:</span> ${v(8)}</div>
+          <div><span style="color:var(--muted);">Vinil:</span> ${v(9)}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:12px;">
+          <span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Piezas</span><br>${v(10).split(' | ').join('<br>')}
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
+          <span style="color:var(--muted);">Retira:</span> ${v(12)}
+        </div>
+        <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(1),cedula:v(3),correo:v(2),fecha:v(0)})})' 
+          style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:\'Barlow Condensed\',sans-serif;font-size:17px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">
+          ✅ Aprobar Pago
+        </button>`;
+      listEl.appendChild(card);
+    });
+  }catch(e){
+    listEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--danger);">✗ Error cargando solicitudes: ${e.message}</div>`;
+  }
+}
+
+function abrirModalAprobacion(data){
+  pendingSolicitud=data;
+  document.getElementById('apro-resumen').innerHTML=`
+    <b style="color:var(--text)">${data.nombre}</b><br>
+    Cédula: <span>${data.cedula}</span> · Correo: <span>${data.correo}</span><br>
+    Solicitud: <span>${data.fecha}</span>`;
+  document.getElementById('apro-banco').value='';
+  document.getElementById('apro-cod').value='';
+  document.getElementById('apro-unlock').value='';
+  document.getElementById('apro-error').textContent='';
+  document.getElementById('modal-aprobacion').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('apro-banco').focus(),100);
+}
+
+async function confirmarAprobacion(){
+  const banco=document.getElementById('apro-banco').value;
+  const codPago=document.getElementById('apro-cod').value.trim();
+  const unlock=document.getElementById('apro-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('apro-error');
+  if(!banco){errEl.textContent='Selecciona el banco / método de pago';return;}
+  if(!codPago){errEl.textContent='Ingresa el código de referencia';return;}
+  if(!USUARIOS[unlock]){errEl.textContent='❌ Código incorrecto — acceso denegado';document.getElementById('apro-unlock').value='';return;}
+
+  document.getElementById('modal-aprobacion').classList.add('hidden');
+  const fechaApro=getFechaHora();
+  const msgEl=document.getElementById('apro-msg');
+  msgEl.style.display='block';
+  msgEl.style.background='var(--surface2)';
+  msgEl.style.border='1px solid var(--border)';
+  msgEl.style.color='var(--muted)';
+  msgEl.innerHTML='<span class="spinner">↻</span> Registrando aprobación...';
+
+  try{
+    await fetch(SCRIPT_URL,{
+      method:'POST',mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        action:'aprobarSolicitud',
+        nombre:pendingSolicitud.nombre,
+        cedula:pendingSolicitud.cedula,
+        banco:banco,
+        cod_pago:codPago,
+        fecha_aprobacion:fechaApro,
+        usuario:USUARIOS[unlock]
+      })
+    });
+    msgEl.style.background='#0f2b1a';
+    msgEl.style.border='1px solid #1a4a2a';
+    msgEl.style.color='var(--accent)';
+    msgEl.innerHTML=`✅ Pago aprobado · ${USUARIOS[unlock]} · ${fechaApro}`;
+    setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},4000);
+  }catch(e){
+    msgEl.style.background='#2a1010';
+    msgEl.style.border='1px solid #4a1a1a';
+    msgEl.style.color='var(--danger)';
+    msgEl.innerHTML='✗ Error al aprobar: '+e.message;
+  }
+  pendingSolicitud=null;
 }
 
 // ── GESTIÓN ───────────────────────────────────────────────────
