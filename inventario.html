@@ -382,7 +382,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyTp0q-WZjTxQyB-e2jrLCMZlvXFkt9aBBcFCxXlKE66xE0O3ZW8pD5rn5xSkIFe0svgg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_NhjWbNcQ0XLCBqRNVQ7-B8OUom3oocUxfFuC350hhF7ybPs_5YuEjUxB2ZmgBu2jBw/exec';
 const SHEET_ID   = '1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const DEPOSITOS  = ['Tienda','Showroom Caracas','Taller','Solicitud Envío USA'];
 const TALLAS_KIDS = ['Kids 2','Kids 4','Kids 6','Kids 8','Kids 10','Kids 12','Kids 14','Kids 16'];
@@ -970,7 +970,37 @@ document.getElementById('gestion-form').addEventListener('submit',async function
   msg.style.display='none';
   try{
     const formData=new FormData(this);
+    const tipo=document.getElementById('g-tipo').value;
+    const fecha=getFechaHora();
+
+    // Enviar al webhook de Make
     const response=await fetch(WEBHOOK_URL,{method:'POST',body:formData});
+
+    // Si es COD también guardar en Google Sheets PEDIDOS
+    if(tipo==='COD'){
+      const guiaInput=document.getElementById('g-numero-guia');
+      await fetch(SCRIPT_URL,{
+        method:'POST', mode:'no-cors',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          action:'addPedido',
+          nombre:     formData.get('nombre')||'',
+          cedula:     formData.get('cedula')||'',
+          correo:     formData.get('correo')||'',
+          codigo:     formData.get('codigo')||'',
+          numero_guia:guiaInput?guiaInput.value:'',
+          agencia:    formData.get('agencia')||'',
+          status:     'COD',
+          celular:    formData.get('celular')||'',
+          fecha:      fecha,
+          descripcion:formData.get('descripcion')||'',
+          nombre_envio:formData.get('nombre_envio')||'',
+          cel_envio:  formData.get('cel_envio')||'',
+          ci_envio:   formData.get('ci_envio')||''
+        })
+      });
+    }
+
     if(response.ok){
       msg.style.display='block';
       msg.style.background='#0f2b1a';
