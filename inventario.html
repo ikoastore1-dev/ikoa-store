@@ -1138,7 +1138,15 @@ async function cargarSolicitudes(){
   listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando solicitudes...</div>`;
   try{
     const t=await loadSheetGviz('SOLICITUDES');
-    const pendientes=(t.rows||[]).filter(r=>r.c&&String(gvizVal(r.c[14])||'').trim()==='Pendiente');
+    const allRows=(t.rows||[]).filter(r=>r.c&&r.c[0]);
+    const pendientes=allRows.filter(r=>{
+      // Buscar 'Pendiente' en cualquier columna entre 13 y 15 por si hay desplazamiento
+      for(let i=13;i<=15;i++){
+        const val=String(gvizVal(r.c[i])||'').trim().toLowerCase();
+        if(val==='pendiente') return true;
+      }
+      return false;
+    });
     if(!pendientes.length){
       listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
         <div style="font-size:32px;margin-bottom:10px;">🎉</div>
