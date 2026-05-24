@@ -1174,29 +1174,20 @@ async function cargarSolicitudes(filtro){
   document.querySelectorAll('.sol-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filtro===filtroSolicitudes));
   listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>`;
   try{
-    const t=await loadSheetGviz('SOLICITUDES');
-    const statusFiltro=document.getElementById('filtro-aprobaciones')?.value||'Pendiente';
-    const pendientes=(t.rows||[]).filter(r=>{
-      if(!r.c) return false;
-      // Buscar el status en cualquier celda de la fila
-      const statusVal=r.c.map(c=>String(c?.v||'').trim()).find(v=>['Pendiente','Pagado','Reprobado'].includes(v))||'';
-      return statusVal===statusFiltro;
-    });
-    const rows=t.rows||[];
-    const filtradas=rows.filter(r=>{
-      if(!r.c) return false;
-      return r.c.some(c=>c&&String(c.v||c.f||'').trim()===filtroSolicitudes);
-    });
+    // Leer via Apps Script para garantizar todas las filas
+    const res=await fetch(SCRIPT_URL+'?action=leerSolicitudes&filtro='+encodeURIComponent(filtro));
+    const data=await res.json();
+    const filtradas=data.rows||[];
     if(!filtradas.length){
       listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);"><div style="font-size:32px;margin-bottom:10px;">${filtroSolicitudes==='Pendiente'?'🎉':'📋'}</div><div style="font-size:15px;">No hay solicitudes ${filtroSolicitudes.toLowerCase()}</div></div>`;
       return;
     }
     const sc={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)'};
     const sb={Pendiente:'#2a1f0a',Pagado:'#0f2b1a',Reprobado:'#2a1010'};
-    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${filtradas.length} solicitud(es) · ${filtroSolicitudes}</div>`;
+    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${filtradas.length} solicitud(es) · ${filtro==='Pendiente'?'esperando aprobación':filtro==='Pagado'?'aprobadas':'reprobadas'}</div>`;
     filtradas.forEach(r=>{
-      const v=i=>(!r.c||!r.c[i])?'':String(r.c[i].v||r.c[i].f||'').trim();
-      const statusVal=filtroSolicitudes;
+      // r es array: [CodigoS, FechaSol, Nombre, Correo, Cedula, Celular, Modelo, Manga, Capucha, Tela, Vinil, Piezas, Agencia, Retira, Status, ...]
+      const v=i=>String(r[i]||'').trim();
       const card=document.createElement('div');
       card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;animation:slideUp .3s ease;';
       card.innerHTML=`
@@ -1208,20 +1199,20 @@ async function cargarSolicitudes(filtro){
               <div style="font-size:11px;color:var(--muted);">🕐 ${v(1)}</div>
             </div>
           </div>
-          <span style="background:${sb[statusVal]||'var(--surface2)'};border:1px solid ${sc[statusVal]||'var(--border)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:${sc[statusVal]||'var(--muted)'};">${statusVal.toUpperCase()}</span>
+          <span style="background:${sb[filtro]||'var(--surface2)'};border:1px solid ${sc[filtro]||'var(--border)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:${sc[filtro]||'var(--muted)'};">${filtro.toUpperCase()}</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:12px;">
           <div><span style="color:var(--muted);">Correo:</span> ${v(3)}</div>
           <div><span style="color:var(--muted);">Cédula:</span> ${v(4)}</div>
           <div><span style="color:var(--muted);">Celular:</span> ${v(5)}</div>
           <div><span style="color:var(--muted);">Agencia:</span> ${v(12)}</div>
-          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Modelo:</span> ${v(6)} ${v(7)} ${v(8)}</div>
+          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Modelo:</span> ${v(6)}</div>
           <div><span style="color:var(--muted);">Tela:</span> ${v(9)}</div>
           <div><span style="color:var(--muted);">Vinil:</span> ${v(10)}</div>
         </div>
         ${v(11)?`<div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:12px;"><span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Piezas</span><br>${v(11).split(' | ').join('<br>')}</div>`:''}
         <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;"><span style="color:var(--muted);">Retira:</span> ${v(13)}</div>
-        ${filtroSolicitudes==='Pendiente'?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        ${filtro==='Pendiente'?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(2),cedula:v(4),correo:v(3),fecha:v(1),codigo:v(0)})})'
             style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✅ Aprobar</button>
           <button onclick='abrirModalReprobar(${JSON.stringify({nombre:v(2),cedula:v(4),correo:v(3),fecha:v(1),codigo:v(0)})})'
