@@ -166,24 +166,35 @@ select.field-input option{background:var(--surface3);color:var(--text);}
       <div class="step-title">Datos de entrega</div>
     </div>
     <div class="card">
-      <div class="card-title">Agencia de envío</div>
-      <div class="card-note">📦 Envío cobro en destino por agencias MRW, TEALCA y ZOOM, al igual que los servicios de delivery.</div>
+      <div class="card-title">Tipo de entrega</div>
+      <div class="card-note">📦 Envío cobro en destino por MRW, TEALCA y ZOOM. Los servicios de delivery y retiro en tienda no tienen costo de envío.</div>
+      <div class="option-grid cols2" id="tipo-entrega-grid">
+        <button class="opt-btn" onclick="selectTipoEntrega(this,'MRW')">MRW</button>
+        <button class="opt-btn" onclick="selectTipoEntrega(this,'TEALCA')">TEALCA</button>
+        <button class="opt-btn" onclick="selectTipoEntrega(this,'ZOOM')">ZOOM</button>
+        <button class="opt-btn" onclick="selectTipoEntrega(this,'Tienda MCY')">🏪 Retirar en<br>Tienda Maracay</button>
+        <button class="opt-btn" onclick="selectTipoEntrega(this,'Delivery Maracay')">🛵 Delivery desde<br>Maracay</button>
+        <button class="opt-btn" onclick="selectTipoEntrega(this,'Showroom Caracas')">🏪 Retirar en<br>Showroom Caracas</button>
+        <button class="opt-btn" style="grid-column:1/-1" onclick="selectTipoEntrega(this,'Delivery Caracas')">🛵 Delivery desde<br>Caracas</button>
+      </div>
+    </div>
 
+    <!-- Solo se muestra si elige agencia de envío -->
+    <div class="card" id="card-agencia" style="display:none">
+      <div class="card-title">Selecciona tu agencia</div>
       <div class="field-group">
         <div class="field-label">Estado</div>
         <select class="field-input" id="sel-estado" onchange="filtrarAgencias()">
           <option value="">Selecciona tu estado...</option>
         </select>
       </div>
-
       <div class="field-group" id="agencia-wrap" style="display:none;">
         <div class="field-label">Agencia</div>
         <select class="field-input" id="sel-agencia" onchange="pedido.agencia=this.value">
           <option value="">Selecciona la agencia...</option>
         </select>
       </div>
-
-      <div id="agencias-loading" style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">
+      <div id="agencias-loading" style="text-align:center;padding:16px;color:var(--muted);font-size:13px;display:none;">
         <span class="spinner">↻</span> Cargando agencias...
       </div>
     </div>
@@ -243,7 +254,67 @@ let tokenActual='';
 
 const TALLAS_KIDS=['1','2','4','6','8','10','12','14','16'];
 const TALLAS_ADULTO=['XS','S','M','L','XL','2XL','3XL'];
-const OPCIONES_DIRECTAS=['Tienda MCY','Delivery Caracas','Delivery Maracay','Showroom Caracas'];
+const AGENCIAS_ENVIO=['MRW','TEALCA','ZOOM'];
+const ENTREGA_DIRECTA={
+  'Tienda MCY':       'Retirar en Tienda Maracay — C.C. HIPER JUMBO LOCAL PB 39. TIENDA IKOA.',
+  'Delivery Maracay': 'Delivery desde Maracay — SE EJECUTA DESDE C.C. HIPER JUMBO LOCAL PB 39. TIENDA IKOA.',
+  'Showroom Caracas': 'Retirar en Showroom Caracas — LAS MERCEDES, CARACAS.',
+  'Delivery Caracas': 'Delivery desde Caracas — SE EJECUTA DESDE LAS MERCEDES, CARACAS.'
+};
+
+function selectTipoEntrega(btn,tipo){
+  document.querySelectorAll('#tipo-entrega-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  pedido.agencia='';
+  const cardAgencia=document.getElementById('card-agencia');
+  if(AGENCIAS_ENVIO.includes(tipo)){
+    // Mostrar selector de estado/agencia
+    cardAgencia.style.display='block';
+    // Filtrar solo agencias del transportista seleccionado
+    filtrarPorTransportista(tipo);
+    pedido.tipoEntrega=tipo;
+  } else {
+    // Entrega directa — ocultar selector
+    cardAgencia.style.display='none';
+    pedido.agencia=ENTREGA_DIRECTA[tipo]||tipo;
+    pedido.tipoEntrega=tipo;
+  }
+}
+
+function filtrarPorTransportista(trans){
+  const selEstado=document.getElementById('sel-estado');
+  const wrap=document.getElementById('agencia-wrap');
+  wrap.style.display='none';
+  pedido.agencia='';
+  // Filtrar estados que tienen esa transportista
+  const estadosFiltrados=[...new Set(
+    AGENCIAS_DATA.filter(a=>a.transportista===trans).map(a=>a.estado)
+  )].sort();
+  selEstado.innerHTML='<option value="">Selecciona tu estado...</option>';
+  estadosFiltrados.forEach(e=>{
+    const opt=document.createElement('option');
+    opt.value=e; opt.textContent=e;
+    selEstado.appendChild(opt);
+  });
+  // Override filtrarAgencias para solo mostrar la transportista seleccionada
+  selEstado.onchange=()=>{
+    const estado=selEstado.value;
+    wrap.style.display='none';
+    pedido.agencia='';
+    if(!estado)return;
+    const filtradas=AGENCIAS_DATA.filter(a=>a.estado===estado&&a.transportista===trans);
+    const sel=document.getElementById('sel-agencia');
+    sel.innerHTML='<option value="">Selecciona la agencia...</option>';
+    filtradas.forEach(a=>{
+      const opt=document.createElement('option');
+      opt.value=a.nombre+' ('+a.ciudad+')';
+      opt.textContent=a.nombre+' · '+a.ciudad;
+      sel.appendChild(opt);
+    });
+    sel.onchange=()=>{pedido.agencia=pedido.tipoEntrega+' — '+sel.value;};
+    wrap.style.display='block';
+  };
+}
 
 // ── TOKEN ─────────────────────────────────────────────────────
 async function verificarToken(){
@@ -301,63 +372,11 @@ async function cargarAgencias(){
       nombre:String(r.c[2]?.v||'').trim(),
       ciudad:String(r.c[3]?.v||'').trim()
     }));
-    const estados=[...new Set(AGENCIAS_DATA.map(a=>a.estado))].sort();
-    const sel=document.getElementById('sel-estado');
-    sel.innerHTML='<option value="">Selecciona tu estado...</option>';
-    estados.forEach(e=>{
-      const opt=document.createElement('option');
-      opt.value=e; opt.textContent=e;
-      sel.appendChild(opt);
-    });
-    // Separador + opciones directas
-    const div=document.createElement('option');
-    div.disabled=true; div.textContent='── Entrega directa ──';
-    sel.appendChild(div);
-    OPCIONES_DIRECTAS.forEach(op=>{
-      const opt=document.createElement('option');
-      opt.value='__directo__'+op;
-      opt.textContent='📍 '+op;
-      sel.appendChild(opt);
-    });
-    document.getElementById('agencias-loading').style.display='none';
   }catch(e){
-    document.getElementById('agencias-loading').innerHTML='⚠️ Error cargando agencias. Intenta de nuevo.';
+    console.error('Error cargando agencias:',e);
   }
 }
 
-function filtrarAgencias(){
-  const val=document.getElementById('sel-estado').value;
-  const wrap=document.getElementById('agencia-wrap');
-  const sel=document.getElementById('sel-agencia');
-  pedido.agencia='';
-  // Opción directa
-  if(val.startsWith('__directo__')){
-    pedido.agencia=val.replace('__directo__','');
-    wrap.style.display='none';
-    return;
-  }
-  if(!val){wrap.style.display='none';return;}
-  const filtradas=AGENCIAS_DATA.filter(a=>a.estado===val);
-  sel.innerHTML='<option value="">Selecciona la agencia...</option>';
-  const grupos={};
-  filtradas.forEach(a=>{
-    if(!grupos[a.transportista])grupos[a.transportista]=[];
-    grupos[a.transportista].push(a);
-  });
-  Object.entries(grupos).forEach(([trans,items])=>{
-    const og=document.createElement('optgroup');
-    og.label='── '+trans+' ──';
-    items.forEach(a=>{
-      const opt=document.createElement('option');
-      opt.value=a.nombre+' ('+a.ciudad+')';
-      opt.textContent=a.nombre+' · '+a.ciudad;
-      og.appendChild(opt);
-    });
-    sel.appendChild(og);
-  });
-  sel.onchange=()=>{pedido.agencia=sel.value;};
-  wrap.style.display='block';
-}
 
 function goStep(n){
   if(!validateStep(currentStep))return;
@@ -466,6 +485,10 @@ function addPieza(){
     <div class="field-group" style="margin-bottom:0">
       <div class="field-label">Nombre en la prenda</div>
       <div class="field-note">Nombre en manga derecha · Sin iniciales ni logos</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;margin-top:4px;">
+        <input type="checkbox" id="pz-sinombre-${id}" onchange="toggleNombrePrenda(${id})" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+        <label for="pz-sinombre-${id}" style="font-size:13px;color:var(--muted);cursor:pointer;">Sin nombre en manga derecha</label>
+      </div>
       <input class="field-input" type="text" id="pz-nombre-${id}" placeholder="Ej: María, Carlos, Sofía...">
     </div>`;
   document.getElementById('piezas-container').appendChild(div);
@@ -480,6 +503,18 @@ function updateTallas(id){
 
 function removePieza(id){
   document.getElementById('pieza-'+id).remove();
+}
+
+function toggleNombrePrenda(id){
+  const check=document.getElementById('pz-sinombre-'+id);
+  const input=document.getElementById('pz-nombre-'+id);
+  if(check.checked){
+    input.style.display='none';
+    input.value='SIN NOMBRE EN MANGA';
+  } else {
+    input.style.display='block';
+    input.value='';
+  }
 }
 
 function savePiezas(){
