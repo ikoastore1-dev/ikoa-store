@@ -273,12 +273,15 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <!-- TIPO DE GESTIÓN -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">📋 Tipo de Gestión</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
           <button onclick="setTipoGestion('COD')" id="gbtn-COD" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">
             📦 COD
           </button>
           <button onclick="setTipoGestion('Enviado')" id="gbtn-Enviado" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">
             🚚 Enviado
+          </button>
+          <button onclick="setTipoGestion('Buscar')" id="gbtn-Buscar" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">
+            🔍 Buscar
           </button>
         </div>
       </div>
@@ -358,6 +361,18 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
             <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">🚚 Detalles Enviado</div>
             <div class="field-group"><div class="field-label">Código COD</div><input class="field-input" type="text" name="codigo" id="g-codigo-enviado" placeholder="CÓDIGO" style="text-transform:uppercase;" oninput="autoGuia()"></div>
             <div id="g-guia-wrap" class="field-group"><div class="field-label">Número de Guía</div><input class="field-input" type="text" name="numero_guia" id="g-numero-guia" placeholder="NÚMERO DE GUÍA" style="text-transform:uppercase;"></div>
+          </div>
+
+          <!-- SECCIÓN BUSCAR -->
+          <div id="g-buscar-section" style="display:none;flex-direction:column;gap:12px;">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:12px;">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">🔍 Buscar por COD</div>
+              <div style="display:flex;gap:8px;">
+                <input class="field-input" type="text" id="g-buscar-input" placeholder="Ingresa el número COD..." style="flex:1;font-size:16px;" onkeydown="if(event.key==='Enter')buscarCOD()">
+                <button onclick="buscarCOD()" style="padding:10px 20px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;white-space:nowrap;">Buscar</button>
+              </div>
+            </div>
+            <div id="g-buscar-results"></div>
           </div>
 
           <!-- BOTÓN ENVIAR -->
@@ -872,43 +887,78 @@ const WEBHOOK_URL='https://hook.us2.make.com/9vb6zab74fbbqkbv46c2coi8i7e4mnqs';
 function setTipoGestion(tipo){
   document.getElementById('g-tipo').value=tipo;
   document.getElementById('g-status').value=tipo;
-  ['COD','Enviado'].forEach(t=>{
+  ['COD','Enviado','Buscar'].forEach(t=>{
     const btn=document.getElementById('gbtn-'+t);
     if(t===tipo){
-      btn.style.borderColor='var(--accent)';
-      btn.style.background='#0f2b1a';
-      btn.style.color='var(--accent)';
+      btn.style.borderColor='var(--accent)';btn.style.background='#0f2b1a';btn.style.color='var(--accent)';
     } else {
-      btn.style.borderColor='var(--border)';
-      btn.style.background='var(--surface2)';
-      btn.style.color='var(--muted)';
+      btn.style.borderColor='var(--border)';btn.style.background='var(--surface2)';btn.style.color='var(--muted)';
     }
   });
-
   document.getElementById('gestion-form-wrap').style.display='block';
-
-  // Mostrar/ocultar campos según tipo
   const codSec=document.getElementById('g-cod-section');
   const envSec=document.getElementById('g-enviado-section');
   const envioWrap=document.getElementById('g-envio-wrap');
   const arteSection=document.getElementById('g-arte-section');
   const cedWrap=document.getElementById('g-cedula-wrap');
   const celWrap=document.getElementById('g-celular-wrap');
-
+  const buscarSec=document.getElementById('g-buscar-section');
+  const submitBtn=document.getElementById('g-submit-btn');
+  codSec.style.display='none'; envSec.style.display='none';
+  envioWrap.style.display='none'; arteSection.style.display='none';
+  buscarSec.style.display='none'; cedWrap.style.display='none'; celWrap.style.display='none';
+  submitBtn.style.display='block';
   if(tipo==='COD'){
-    codSec.style.display='flex';
-    envSec.style.display='none';
-    envioWrap.style.display='flex';
-    arteSection.style.display='flex';
-    cedWrap.style.display='block';
-    celWrap.style.display='block';
-  } else {
-    codSec.style.display='none';
-    envSec.style.display='flex';
-    envioWrap.style.display='flex';
-    arteSection.style.display='none';
-    cedWrap.style.display='none';
-    celWrap.style.display='none';
+    codSec.style.display='flex'; envioWrap.style.display='flex';
+    arteSection.style.display='flex'; cedWrap.style.display='block'; celWrap.style.display='block';
+  } else if(tipo==='Enviado'){
+    envSec.style.display='flex'; envioWrap.style.display='flex';
+  } else if(tipo==='Buscar'){
+    buscarSec.style.display='flex'; submitBtn.style.display='none';
+  }
+}
+
+async function buscarCOD(){
+  const cod=document.getElementById('g-buscar-input').value.trim();
+  if(!cod){alert('Ingresa un número COD');return;}
+  const resultsEl=document.getElementById('g-buscar-results');
+  resultsEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted);"><span class="spinner">↻</span> Buscando...</div>`;
+  try{
+    const t=await loadSheetGviz('PEDIDOS');
+    const rows=(t.rows||[]).filter(r=>{
+      if(!r.c||!r.c[3])return false;
+      return String(gvizVal(r.c[3])).trim().includes(cod);
+    });
+    if(!rows.length){
+      resultsEl.innerHTML=`<div style="background:var(--surface);border:1px solid #6b1a1a;border-radius:var(--radius);padding:24px;text-align:center;color:var(--muted);">🔍 No se encontraron registros para COD <b style="color:#ff6b6b">${cod}</b></div>`;
+      return;
+    }
+    const sc={'COD':'var(--warn)','Enviado':'var(--accent)'};
+    let html=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${rows.length} registro(s) para COD <b style="color:var(--accent)">${cod}</b></div>`;
+    rows.forEach(r=>{
+      const v=i=>String(gvizVal(r.c[i])||'').trim();
+      const status=v(6); const c=sc[status]||'var(--muted)';
+      html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;animation:slideUp .3s ease;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;">${v(0)}</div>
+          <span style="background:${c}22;border:1px solid ${c};border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:${c};letter-spacing:.08em;">${status}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+          <div><span style="color:var(--muted);">COD:</span> <b style="color:var(--accent);">${v(3)}</b></div>
+          <div><span style="color:var(--muted);">N° Guía:</span> <b>${v(4)||'—'}</b></div>
+          <div><span style="color:var(--muted);">Cédula:</span> ${v(1)||'—'}</div>
+          <div><span style="color:var(--muted);">Celular:</span> ${v(7)||'—'}</div>
+          <div><span style="color:var(--muted);">Agencia:</span> ${v(5)||'—'}</div>
+          <div><span style="color:var(--muted);">Fecha:</span> ${v(8)||'—'}</div>
+          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Correo:</span> ${v(2)||'—'}</div>
+          ${v(9)?`<div style="grid-column:1/-1;background:var(--surface2);border-radius:8px;padding:8px 10px;margin-top:4px;"><span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Descripción</span><div style="margin-top:4px;font-size:12px;line-height:1.6;">${v(9)}</div></div>`:''}
+          ${v(10)?`<div style="grid-column:1/-1;"><span style="color:var(--muted);">Envío a:</span> ${v(10)} ${v(11)?'· '+v(11):''} ${v(12)?'· '+v(12):''}</div>`:''}
+        </div>
+      </div>`;
+    });
+    resultsEl.innerHTML=html;
+  }catch(err){
+    resultsEl.innerHTML=`<div style="background:var(--surface);border:1px solid #6b1a1a;border-radius:var(--radius);padding:20px;text-align:center;color:var(--danger);">✗ Error: ${err.message}</div>`;
   }
 }
 
