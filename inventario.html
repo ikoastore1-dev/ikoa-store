@@ -1138,18 +1138,17 @@ async function cargarSolicitudes(){
   listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando solicitudes...</div>`;
   try{
     const t=await loadSheetGviz('SOLICITUDES');
-    console.log('SOLICITUDES filas totales:', (t.rows||[]).length);
-    (t.rows||[]).forEach((r,i)=>{ 
-      const vals=r.c?r.c.map(c=>c?String(c.v||''):'null').join(' | '):'sin celdas';
-      console.log(`Fila ${i+1}:`, vals.substring(0,150));
-    });
-    const allRows=(t.rows||[]).filter(r=>Array.isArray(r.c)&&r.c.length>0);
-    const pendientes=allRows.filter(r=>{
-      return r.c.some(c=>{
-        if(!c) return false;
-        const val=String(c.v||c.f||'').trim().toLowerCase();
-        return val==='pendiente';
-      });
+    const pendientes=(t.rows||[]).filter(r=>{
+      if(!r.c) return false;
+      // gviz corta columnas vacías al final — buscar Pendiente en col 14 o en cualquier columna si hay menos de 15
+      const cells=r.c;
+      const idx=14;
+      if(cells.length>idx){
+        const val=String(cells[idx]?.v||cells[idx]?.f||'').trim();
+        return val==='Pendiente';
+      }
+      // Si la fila tiene menos columnas, buscar en todas
+      return cells.some(c=>String(c?.v||c?.f||'').trim()==='Pendiente');
     });
     if(!pendientes.length){
       listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
