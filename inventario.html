@@ -318,6 +318,22 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   <div id="tab-gestion" style="display:none">
     <div style="max-width:600px;margin:0 auto;">
 
+      <!-- GENERAR LINK -->
+      <div id="g-token-section" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">🔗 Generar Link de Pedido</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Genera un link único que expira en <b style="color:var(--warn);">4 horas</b> y solo puede usarse <b style="color:var(--warn);">una vez</b>. Cópialo y envíaselo al cliente por WhatsApp.</div>
+        <button onclick="generarLinkPedido()" id="btn-generar-link" style="width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;">⚡ Generar Link</button>
+        <div id="link-result" style="display:none;margin-top:14px;">
+          <div style="background:#0f2b1a;border:1px solid #1a4a2a;border-radius:10px;padding:12px 14px;">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Link generado — válido por 4 horas</div>
+            <div id="link-text" style="font-size:13px;color:var(--accent);word-break:break-all;margin-bottom:10px;"></div>
+            <button onclick="copiarLink()" style="width:100%;padding:10px;background:var(--surface3);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">📋 Copiar Link</button>
+            <button onclick="enviarLinkWhatsApp()" style="width:100%;padding:10px;background:linear-gradient(135deg,#25d366,#128c7e);border:none;border-radius:8px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;">💬 Enviar por WhatsApp</button>
+          </div>
+        </div>
+        <div id="link-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:10px;"></div>
+      </div>
+
       <!-- TIPO DE GESTIÓN -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">📋 Tipo de Gestión</div>
@@ -446,7 +462,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw0a0yM9jll497T2_atm9D8R5az8AJslHzwNxN6SyJBD_Wm8QE6XReJlSX46NtA6HD9EQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxbCvar06ndpydEPfQlZlUKY9wnumYietAMUt5EKq4mYydjhuZrsVWVLjvdkmFk6d4bJg/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1284,6 +1300,52 @@ function renderHistorial(){
 }
 function clearHistorial(){
   if(confirm('¿Limpiar el historial local?')){historial=[];localStorage.setItem('ikoa_hist_v3','[]');renderHistorial();}
+}
+
+// ── TOKEN GENERATOR ───────────────────────────────────────────
+const BASE_URL='https://ikoastore1-dev.github.io/ikoa-store/pedidos.html';
+let currentToken='';
+
+async function generarLinkPedido(){
+  const btn=document.getElementById('btn-generar-link');
+  const msg=document.getElementById('link-msg');
+  btn.disabled=true; btn.textContent='⏳ Generando...';
+  msg.style.display='none';
+  try{
+    const res=await fetch(SCRIPT_URL+'?action=generarToken');
+    const data=await res.json();
+    if(data.ok){
+      currentToken=data.token;
+      const link=`${BASE_URL}?token=${data.token}`;
+      document.getElementById('link-text').textContent=link;
+      document.getElementById('link-result').style.display='block';
+      msg.style.display='none';
+    } else {
+      throw new Error('No se pudo generar');
+    }
+  }catch(e){
+    msg.style.display='block';
+    msg.style.background='#2a1010';
+    msg.style.border='1px solid #4a1a1a';
+    msg.style.color='var(--danger)';
+    msg.textContent='✗ Error al generar el link';
+  }
+  btn.disabled=false; btn.textContent='⚡ Generar Link';
+}
+
+function copiarLink(){
+  const link=document.getElementById('link-text').textContent;
+  navigator.clipboard.writeText(link).then(()=>{
+    const btn=event.target;
+    btn.textContent='✓ Copiado!';
+    setTimeout(()=>btn.textContent='📋 Copiar Link',2000);
+  });
+}
+
+function enviarLinkWhatsApp(){
+  const link=document.getElementById('link-text').textContent;
+  const msg=encodeURIComponent(`🛍️ *IKOA & BEKATE — Formulario de Pedido*\n\nHola, aquí tienes tu link personalizado para realizar tu pedido:\n\n${link}\n\n⏰ Este link es válido por *4 horas* y solo puede usarse *una vez*.\n\n_IKOA & BEKATE_`);
+  window.open(`https://wa.me/?text=${msg}`,'_blank');
 }
 
 init();

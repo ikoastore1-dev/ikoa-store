@@ -66,7 +66,15 @@ select.field-input option{background:var(--surface3);color:var(--text);}
 </style>
 </head>
 <body>
-<header>
+<!-- PANTALLA BLOQUEADA -->
+<div id="pantalla-bloqueada" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;">
+  <div style="font-size:56px;margin-bottom:20px;" id="bloqueo-icon">🔒</div>
+  <div style="font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--text);margin-bottom:10px;" id="bloqueo-titulo">Verificando acceso...</div>
+  <div style="font-size:15px;color:var(--muted);line-height:1.7;max-width:320px;" id="bloqueo-texto">Por favor espera un momento.</div>
+  <div style="margin-top:24px;font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;letter-spacing:.15em;"><span style="color:var(--accent);">IKOA</span><span style="color:var(--muted);margin:0 8px;">—</span><span style="color:var(--text);">BEKATE</span></div>
+</div>
+
+
   <div class="logo"><span class="i">IKOA</span><span class="sep">—</span><span class="b">BEKATE</span></div>
   <div class="tagline">✨ Formulario de Pedido · 5 días hábiles de entrega</div>
 </header>
@@ -218,7 +226,7 @@ select.field-input option{background:var(--surface3);color:var(--text);}
 </main>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbw0a0yM9jll497T2_atm9D8R5az8AJslHzwNxN6SyJBD_Wm8QE6XReJlSX46NtA6HD9EQ/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbxbCvar06ndpydEPfQlZlUKY9wnumYietAMUt5EKq4mYydjhuZrsVWVLjvdkmFk6d4bJg/exec';
 const WHATSAPP_NUM='584149450742';
 
 function scriptGET(params){
@@ -231,10 +239,55 @@ let currentStep=1;
 let pedido={nombre:'',correo:'',cedula:'',celular:'',modelo:'',manga:'',capucha:'',tela:'',vinil:'',piezas:[],agencia:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:''};
 let piezaCount=0;
 let AGENCIAS_DATA=[];
+let tokenActual='';
 
 const TALLAS_KIDS=['1','2','4','6','8','10','12','14','16'];
 const TALLAS_ADULTO=['XS','S','M','L','XL','2XL','3XL'];
 const OPCIONES_DIRECTAS=['Tienda MCY','Delivery Caracas','Delivery Maracay','Showroom Caracas'];
+
+// ── TOKEN ─────────────────────────────────────────────────────
+async function verificarToken(){
+  const bloqueado=document.getElementById('pantalla-bloqueada');
+  bloqueado.style.display='flex';
+  const params=new URLSearchParams(window.location.search);
+  const token=params.get('token');
+  if(!token){
+    mostrarBloqueo('🚫','Link inválido','Este link no es válido. Solicita uno nuevo a IKOA & BEKATE.');
+    return;
+  }
+  try{
+    const res=await fetch(SCRIPT_URL+'?action=verificarToken&token='+token);
+    const data=await res.json();
+    if(data.ok){
+      tokenActual=token;
+      bloqueado.style.display='none';
+      cargarAgencias();
+    } else {
+      const msgs={
+        'usado':   ['✅','Link ya utilizado','Este link ya fue usado para realizar un pedido. Solicita uno nuevo si necesitas hacer otro.'],
+        'expirado':['⏰','Link expirado','Este link venció. Los links tienen una validez de 4 horas. Solicita uno nuevo a IKOA & BEKATE.'],
+        'invalido':['🚫','Link inválido','Este link no es válido. Solicita uno nuevo a IKOA & BEKATE.']
+      };
+      const [icon,titulo,texto]=msgs[data.error]||msgs['invalido'];
+      mostrarBloqueo(icon,titulo,texto);
+    }
+  }catch(e){
+    mostrarBloqueo('⚠️','Error de conexión','No se pudo verificar el link. Verifica tu conexión e intenta de nuevo.');
+  }
+}
+
+function mostrarBloqueo(icon,titulo,texto){
+  document.getElementById('bloqueo-icon').textContent=icon;
+  document.getElementById('bloqueo-titulo').textContent=titulo;
+  document.getElementById('bloqueo-texto').textContent=texto;
+  document.getElementById('pantalla-bloqueada').style.display='flex';
+}
+
+async function marcarTokenUsado(){
+  if(!tokenActual)return;
+  try{ await fetch(SCRIPT_URL+'?action=usarToken&token='+tokenActual); }
+  catch(e){ console.error('Error marcando token:',e); }
+}
 
 async function cargarAgencias(){
   try{
@@ -501,9 +554,8 @@ async function enviarWhatsApp(){
   const note=document.getElementById('sending-note');
   btn.disabled=true;
   btn.innerHTML='<span class="spinner">↻</span> Enviando...';
-  // Guardar en Sheets silenciosamente
   await guardarEnSheets();
-  // Abrir WhatsApp
+  await marcarTokenUsado();
   const msg=encodeURIComponent(buildMensaje());
   window.open(`https://wa.me/${WHATSAPP_NUM}?text=${msg}`,'_blank');
   btn.disabled=false;
@@ -511,6 +563,8 @@ async function enviarWhatsApp(){
   note.textContent='✓ Tu pedido fue registrado. Te contactaremos pronto para confirmar.';
   note.style.color='var(--accent)';
 }
+
+verificarToken();
 </script>
 </body>
 </html>
