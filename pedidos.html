@@ -7,11 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--surface3:#252533;
-  --accent:#00e5b0;--accent2:#0099ff;--warn:#e8a020;--danger:#ff4444;
-  --text:#f0f0f5;--muted:#7a7a99;--border:#2a2a3a;--radius:14px;
-}
+:root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--surface3:#252533;--accent:#00e5b0;--accent2:#0099ff;--warn:#e8a020;--danger:#ff4444;--text:#f0f0f5;--muted:#7a7a99;--border:#2a2a3a;--radius:14px;}
 body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 20px;text-align:center;}
 .logo{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;letter-spacing:.15em;}
@@ -38,10 +34,15 @@ main{max-width:640px;margin:0 auto;padding:20px 16px 60px;}
 .field-input{background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:border-color .2s;width:100%;}
 .field-input:focus{border-color:var(--accent);}
 .field-input::placeholder{color:var(--muted);}
+.field-input.error{border-color:var(--danger);}
 select.field-input option{background:var(--surface3);color:var(--text);}
+.input-row{display:flex;gap:8px;}
+.input-row select{flex:0 0 90px;}
+.input-row input{flex:1;}
 .option-grid{display:grid;gap:10px;margin-bottom:14px;}
 .option-grid.cols2{grid-template-columns:1fr 1fr;}
 .option-grid.cols3{grid-template-columns:1fr 1fr 1fr;}
+.option-grid.cols4{grid-template-columns:1fr 1fr 1fr 1fr;}
 .opt-btn{padding:14px 10px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;letter-spacing:.03em;width:100%;}
 .opt-btn:hover{border-color:var(--accent);}
 .opt-btn.selected{border-color:var(--accent);background:#0f2b1a;color:var(--accent);}
@@ -51,8 +52,8 @@ select.field-input option{background:var(--surface3);color:var(--text);}
 .pieza-num{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;}
 .pieza-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .remove-btn{position:absolute;top:12px;right:12px;background:transparent;border:1px solid #3a1a1a;border-radius:6px;color:var(--danger);padding:4px 10px;font-size:12px;cursor:pointer;}
-.add-pieza-btn{width:100%;padding:12px;background:transparent;border:2px dashed var(--border);border-radius:12px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:4px;}
-.add-pieza-btn:hover{border-color:var(--accent);color:var(--accent);}
+.copy-btn{width:100%;padding:8px;background:transparent;border:1px dashed var(--accent);border-radius:8px;color:var(--accent);font-family:'Barlow',sans-serif;font-size:13px;cursor:pointer;margin-top:8px;transition:all .2s;}
+.copy-btn:hover{background:#0f2b1a;}
 .nav-row{display:flex;gap:10px;margin-top:20px;}
 .btn-back{flex:1;padding:14px;background:transparent;border:1px solid var(--border);border-radius:12px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:600;cursor:pointer;}
 .btn-next{flex:2;padding:14px;background:var(--accent);border:none;border-radius:12px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:transform .15s;}
@@ -63,18 +64,21 @@ select.field-input option{background:var(--surface3);color:var(--text);}
 .nota{background:#1a1a10;border:1px solid #3a3a10;border-radius:10px;padding:12px 14px;font-size:13px;color:var(--warn);line-height:1.6;margin-top:12px;}
 .alerta-min{background:#2a1010;border:1px solid var(--danger);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--danger);text-align:center;margin-bottom:10px;display:none;}
 .spinner{display:inline-block;animation:spin 1s linear infinite;}
+.err-msg{font-size:12px;color:var(--danger);margin-top:4px;display:none;}
+/* BLOQUEADA */
+#pantalla-bloqueada{position:fixed;inset:0;background:var(--bg);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;}
 </style>
 </head>
 <body>
-<!-- PANTALLA BLOQUEADA -->
-<div id="pantalla-bloqueada" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;">
-  <div style="font-size:56px;margin-bottom:20px;" id="bloqueo-icon">🔒</div>
+
+<div id="pantalla-bloqueada" style="display:flex;">
+  <div style="font-size:56px;margin-bottom:20px;" id="bloqueo-icon">⏳</div>
   <div style="font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--text);margin-bottom:10px;" id="bloqueo-titulo">Verificando acceso...</div>
   <div style="font-size:15px;color:var(--muted);line-height:1.7;max-width:320px;" id="bloqueo-texto">Por favor espera un momento.</div>
   <div style="margin-top:24px;font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;letter-spacing:.15em;"><span style="color:var(--accent);">IKOA</span><span style="color:var(--muted);margin:0 8px;">—</span><span style="color:var(--text);">BEKATE</span></div>
 </div>
 
-
+<header>
   <div class="logo"><span class="i">IKOA</span><span class="sep">—</span><span class="b">BEKATE</span></div>
   <div class="tagline">✨ Formulario de Pedido · 5 días hábiles de entrega</div>
 </header>
@@ -86,40 +90,92 @@ select.field-input option{background:var(--surface3);color:var(--text);}
     <div class="prog-dot" id="pd3"></div>
     <div class="prog-dot" id="pd4"></div>
     <div class="prog-dot" id="pd5"></div>
+    <div class="prog-dot" id="pd6"></div>
   </div>
 
   <!-- STEP 1: DATOS PERSONALES -->
   <div class="step active" id="step1">
-    <div class="step-header">
-      <div class="step-num">Paso 1 de 5</div>
-      <div class="step-title">Tus datos personales</div>
-    </div>
+    <div class="step-header"><div class="step-num">Paso 1 de 6</div><div class="step-title">Tus datos personales</div></div>
     <div class="card">
-      <div class="field-group"><div class="field-label">Nombre y Apellido *</div><input class="field-input" type="text" id="p-nombre" placeholder="Nombre Apellido"></div>
-      <div class="field-group"><div class="field-label">Correo electrónico *</div><input class="field-input" type="email" id="p-correo" placeholder="correo@email.com"></div>
-      <div class="field-group"><div class="field-label">N° de Cédula *</div><input class="field-input" type="text" id="p-cedula" placeholder="V-12345678"></div>
-      <div class="field-group" style="margin-bottom:0"><div class="field-label">N° de Celular *</div><input class="field-input" type="tel" id="p-celular" placeholder="0414-1234567"></div>
+      <div class="field-group">
+        <div class="field-label">Nombre y Apellido *</div>
+        <input class="field-input" type="text" id="p-nombre" placeholder="Nombre Apellido">
+        <div class="err-msg" id="err-nombre">Ingresa tu nombre y apellido</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Correo electrónico *</div>
+        <input class="field-input" type="email" id="p-correo" placeholder="ejemplo@correo.com">
+        <div class="err-msg" id="err-correo">Ingresa un correo válido (ej: nombre@gmail.com)</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Cédula / RIF *</div>
+        <div class="input-row">
+          <select class="field-input" id="p-cedula-tipo">
+            <option value="V-">V-</option>
+            <option value="E-">E-</option>
+            <option value="J-">J-</option>
+          </select>
+          <input class="field-input" type="text" id="p-cedula-num" placeholder="12345678" inputmode="numeric">
+        </div>
+        <div class="err-msg" id="err-cedula">Ingresa tu número de cédula</div>
+      </div>
+      <div class="field-group" style="margin-bottom:0">
+        <div class="field-label">WhatsApp *</div>
+        <div class="input-row">
+          <select class="field-input" id="p-cel-pais" style="flex:0 0 110px;">
+            <option value="+58">🇻🇪 +58</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+57">🇨🇴 +57</option>
+            <option value="+51">🇵🇪 +51</option>
+            <option value="+52">🇲🇽 +52</option>
+            <option value="+34">🇪🇸 +34</option>
+            <option value="+1">🇨🇦 +1</option>
+          </select>
+          <input class="field-input" type="tel" id="p-celular-num" placeholder="4141234567" inputmode="numeric">
+        </div>
+        <div class="field-note">📱 Preferiblemente número de WhatsApp</div>
+        <div class="err-msg" id="err-celular">Ingresa un número de celular válido</div>
+      </div>
     </div>
     <div class="nav-row"><button class="btn-next" onclick="goStep(2)">Siguiente →</button></div>
   </div>
 
-  <!-- STEP 2: PRODUCTO -->
+  <!-- STEP 2: CANTIDAD DE PACK -->
   <div class="step" id="step2">
-    <div class="step-header">
-      <div class="step-num">Paso 2 de 5</div>
-      <div class="step-title">¿Qué modelo deseas?</div>
+    <div class="step-header"><div class="step-num">Paso 2 de 6</div><div class="step-title">¿Cuántas franelas deseas?</div></div>
+    <div class="card">
+      <div class="card-title">Selecciona tu pack</div>
+      <div class="card-note">Cada pack incluye franelas del mismo color de tela y vinil.</div>
+      <div class="option-grid cols3" id="pack-grid">
+        <button class="opt-btn" onclick="selectPack(this,2)">2 PACK<span class="sub">2 franelas</span></button>
+        <button class="opt-btn" onclick="selectPack(this,3)">3 PACK<span class="sub">3 franelas</span></button>
+        <button class="opt-btn" onclick="selectPack(this,4)">4 PACK<span class="sub">4 franelas</span></button>
+        <button class="opt-btn" onclick="selectPack(this,5)">5 PACK<span class="sub">5 franelas</span></button>
+        <button class="opt-btn" onclick="selectPack(this,6)">6 PACK<span class="sub">6 franelas</span></button>
+        <button class="opt-btn" onclick="selectPack(this,7)">7 PACK<span class="sub">7 franelas</span></button>
+      </div>
+      <div class="field-group" style="margin-bottom:0">
+        <div class="field-label">¿O deseas otra cantidad?</div>
+        <input class="field-input" type="number" id="pack-custom" placeholder="Ej: 8, 10, 12..." min="2" max="50" oninput="setCustomPack(this.value)">
+      </div>
     </div>
+    <div id="pack-seleccionado" style="display:none;background:#0f2b1a;border:1px solid var(--accent);border-radius:10px;padding:12px 16px;text-align:center;margin-bottom:12px;">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="pack-label">—</span>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goStep(1)">← Atrás</button>
+      <button class="btn-next" onclick="goStep(3)">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: MODELO -->
+  <div class="step" id="step3">
+    <div class="step-header"><div class="step-num">Paso 3 de 6</div><div class="step-title">¿Qué modelo deseas?</div></div>
     <div class="card">
       <div class="card-title">Modelo</div>
       <div class="option-grid cols2">
-        <button class="opt-btn" onclick="selectOpt(this,'modelo','Comfy')">
-          COMFY
-          <span class="sub">Tela microfibra viscosa</span>
-        </button>
-        <button class="opt-btn" onclick="selectOpt(this,'modelo','Licra')">
-          LICRA
-          <span class="sub">Licra Protec</span>
-        </button>
+        <button class="opt-btn" onclick="selectOpt(this,'modelo','Comfy')">COMFY<span class="sub">Tela microfibra viscosa</span></button>
+        <button class="opt-btn" onclick="selectOpt(this,'modelo','Licra')">LICRA<span class="sub">Licra Protec</span></button>
       </div>
       <div class="card-title" style="margin-top:4px;">Manga</div>
       <div class="option-grid cols2">
@@ -138,36 +194,29 @@ select.field-input option{background:var(--surface3);color:var(--text);}
       <div class="field-group" style="margin-bottom:0"><div class="field-label">Color del vinil</div><input class="field-input" type="text" id="p-vinil" placeholder="Ej: Blanco, Gris, Dorado..."></div>
     </div>
     <div class="nav-row">
-      <button class="btn-back" onclick="goStep(1)">← Atrás</button>
-      <button class="btn-next" onclick="goStep(3)">Siguiente →</button>
-    </div>
-  </div>
-
-  <!-- STEP 3: PIEZAS -->
-  <div class="step" id="step3">
-    <div class="step-header">
-      <div class="step-num">Paso 3 de 5</div>
-      <div class="step-title">Tallas y nombres</div>
-    </div>
-    <div class="nota" style="margin-bottom:14px;">📌 El nombre en la prenda va en <b>manga derecha</b>, sin iniciales ni logos. Mínimo <b>2 prendas</b> por pedido.</div>
-    <div class="alerta-min" id="alerta-min">⚠️ Debes agregar mínimo 2 prendas para continuar</div>
-    <div id="piezas-container"></div>
-    <button class="add-pieza-btn" onclick="addPieza()">+ Agregar prenda</button>
-    <div class="nav-row">
       <button class="btn-back" onclick="goStep(2)">← Atrás</button>
       <button class="btn-next" onclick="goStep(4)">Siguiente →</button>
     </div>
   </div>
 
-  <!-- STEP 4: ENTREGA -->
+  <!-- STEP 4: PIEZAS -->
   <div class="step" id="step4">
-    <div class="step-header">
-      <div class="step-num">Paso 4 de 5</div>
-      <div class="step-title">Datos de entrega</div>
+    <div class="step-header"><div class="step-num">Paso 4 de 6</div><div class="step-title">Tallas y nombres</div></div>
+    <div class="nota" style="margin-bottom:14px;">📌 Nombre en <b>manga derecha</b>, sin iniciales ni logos.<br>Debes completar las <b id="pack-total-lbl">—</b> franelas de tu pack.</div>
+    <div class="alerta-min" id="alerta-min"></div>
+    <div id="piezas-container"></div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goStep(3)">← Atrás</button>
+      <button class="btn-next" onclick="goStep(5)">Siguiente →</button>
     </div>
+  </div>
+
+  <!-- STEP 5: ENTREGA -->
+  <div class="step" id="step5">
+    <div class="step-header"><div class="step-num">Paso 5 de 6</div><div class="step-title">Datos de entrega</div></div>
     <div class="card">
       <div class="card-title">Tipo de entrega</div>
-      <div class="card-note">📦 Envío cobro en destino por MRW, TEALCA y ZOOM. Los servicios de delivery y retiro en tienda no tienen costo de envío.</div>
+      <div class="card-note">📦 Envío cobro en destino por MRW, TEALCA y ZOOM, al igual que los servicios de delivery.</div>
       <div class="option-grid cols2" id="tipo-entrega-grid">
         <button class="opt-btn" onclick="selectTipoEntrega(this,'MRW')">MRW</button>
         <button class="opt-btn" onclick="selectTipoEntrega(this,'TEALCA')">TEALCA</button>
@@ -178,29 +227,26 @@ select.field-input option{background:var(--surface3);color:var(--text);}
         <button class="opt-btn" style="grid-column:1/-1" onclick="selectTipoEntrega(this,'Delivery Caracas')">🛵 Delivery desde<br>Caracas</button>
       </div>
     </div>
-
-    <!-- Solo se muestra si elige agencia de envío -->
     <div class="card" id="card-agencia" style="display:none">
       <div class="card-title">Selecciona tu agencia</div>
       <div class="field-group">
         <div class="field-label">Estado</div>
-        <select class="field-input" id="sel-estado" onchange="filtrarAgencias()">
+        <select class="field-input" id="sel-estado" onchange="filtrarPorEstado()">
           <option value="">Selecciona tu estado...</option>
         </select>
       </div>
       <div class="field-group" id="agencia-wrap" style="display:none;">
         <div class="field-label">Agencia</div>
-        <select class="field-input" id="sel-agencia" onchange="pedido.agencia=this.value">
+        <select class="field-input" id="sel-agencia">
           <option value="">Selecciona la agencia...</option>
         </select>
       </div>
-      <div id="agencias-loading" style="text-align:center;padding:16px;color:var(--muted);font-size:13px;display:none;">
-        <span class="spinner">↻</span> Cargando agencias...
-      </div>
+      <div id="agencias-loading" style="text-align:center;padding:16px;color:var(--muted);font-size:13px;display:none;"><span class="spinner">↻</span> Cargando...</div>
     </div>
     <div class="card">
       <div class="card-title">Persona que retira</div>
-      <div class="field-group"><div class="field-label">¿Es la misma persona del pedido?</div>
+      <div class="field-group">
+        <div class="field-label">¿Es la misma persona del pedido?</div>
         <div class="option-grid cols2" style="margin-bottom:0">
           <button class="opt-btn selected" id="mismo-si" onclick="setMismoEnvio(true)">SÍ, soy yo</button>
           <button class="opt-btn" id="mismo-no" onclick="setMismoEnvio(false)">NO, es otra persona</button>
@@ -213,17 +259,14 @@ select.field-input option{background:var(--surface3);color:var(--text);}
       </div>
     </div>
     <div class="nav-row">
-      <button class="btn-back" onclick="goStep(3)">← Atrás</button>
-      <button class="btn-next" onclick="goStep(5)">Siguiente →</button>
+      <button class="btn-back" onclick="goStep(4)">← Atrás</button>
+      <button class="btn-next" onclick="goStep(6)">Siguiente →</button>
     </div>
   </div>
 
-  <!-- STEP 5: RESUMEN Y ENVÍO -->
-  <div class="step" id="step5">
-    <div class="step-header">
-      <div class="step-num">Paso 5 de 5</div>
-      <div class="step-title">Resumen del pedido</div>
-    </div>
+  <!-- STEP 6: RESUMEN -->
+  <div class="step" id="step6">
+    <div class="step-header"><div class="step-num">Paso 6 de 6</div><div class="step-title">Resumen del pedido</div></div>
     <div id="resumen-container"></div>
     <div class="nota">⏱️ <b>Tiempo de entrega:</b> 5 días hábiles desde la confirmación.<br>📞 Ante cualquier duda, consúltanos sin compromiso. <b>Estamos para ayudarte.</b></div>
     <button class="btn-send" id="btn-whatsapp" onclick="enviarWhatsApp()">
@@ -231,23 +274,18 @@ select.field-input option{background:var(--surface3);color:var(--text);}
     </button>
     <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px;" id="sending-note"></div>
     <div class="nav-row" style="margin-top:12px;">
-      <button class="btn-back" onclick="goStep(4)">← Editar pedido</button>
+      <button class="btn-back" onclick="goStep(5)">← Editar pedido</button>
     </div>
   </div>
 </main>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzufjSmioFjh_DplHUNVINHGcQA1_Q3eFOkpvUPKjWpdwrOmwuBuydQKx4DzSP0jhugFA/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzrE0DS9vyrdhm5S1oOwnBJHpLy7_uckBwxRav2iFnpN6KJ8HdauCUQq1-b-pT3icP3cw/exec';
 const WHATSAPP_NUM='584149450742';
-
-function scriptGET(params){
-  const qs=Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v??'')).join('&');
-  return fetch(SCRIPT_URL+'?'+qs,{mode:'no-cors'});
-}
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
-const TOTAL_STEPS=5;
+const TOTAL_STEPS=6;
 let currentStep=1;
-let pedido={nombre:'',correo:'',cedula:'',celular:'',modelo:'',manga:'',capucha:'',tela:'',vinil:'',piezas:[],agencia:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:''};
+let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:0,modelo:'',manga:'',capucha:'',tela:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:''};
 let piezaCount=0;
 let AGENCIAS_DATA=[];
 let tokenActual='';
@@ -256,79 +294,28 @@ const TALLAS_KIDS=['1','2','4','6','8','10','12','14','16'];
 const TALLAS_ADULTO=['XS','S','M','L','XL','2XL','3XL'];
 const AGENCIAS_ENVIO=['MRW','TEALCA','ZOOM'];
 const ENTREGA_DIRECTA={
-  'Tienda MCY':       'Retirar en Tienda Maracay — C.C. HIPER JUMBO LOCAL PB 39. TIENDA IKOA.',
-  'Delivery Maracay': 'Delivery desde Maracay — SE EJECUTA DESDE C.C. HIPER JUMBO LOCAL PB 39. TIENDA IKOA.',
-  'Showroom Caracas': 'Retirar en Showroom Caracas — LAS MERCEDES, CARACAS.',
-  'Delivery Caracas': 'Delivery desde Caracas — SE EJECUTA DESDE LAS MERCEDES, CARACAS.'
+  'Tienda MCY':'Retirar en Tienda Maracay — C.C. HIPER JUMBO LOCAL PB 39. TIENDA IKOA.',
+  'Delivery Maracay':'Delivery desde Maracay — SE EJECUTA DESDE C.C. HIPER JUMBO LOCAL PB 39. TIENDA IKOA.',
+  'Showroom Caracas':'Retirar en Showroom Caracas — LAS MERCEDES, CARACAS.',
+  'Delivery Caracas':'Delivery desde Caracas — SE EJECUTA DESDE LAS MERCEDES, CARACAS.'
 };
-
-function selectTipoEntrega(btn,tipo){
-  document.querySelectorAll('#tipo-entrega-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
-  pedido.agencia='';
-  const cardAgencia=document.getElementById('card-agencia');
-  if(AGENCIAS_ENVIO.includes(tipo)){
-    // Mostrar selector de estado/agencia
-    cardAgencia.style.display='block';
-    // Filtrar solo agencias del transportista seleccionado
-    filtrarPorTransportista(tipo);
-    pedido.tipoEntrega=tipo;
-  } else {
-    // Entrega directa — ocultar selector
-    cardAgencia.style.display='none';
-    pedido.agencia=ENTREGA_DIRECTA[tipo]||tipo;
-    pedido.tipoEntrega=tipo;
-  }
-}
-
-function filtrarPorTransportista(trans){
-  const selEstado=document.getElementById('sel-estado');
-  const wrap=document.getElementById('agencia-wrap');
-  wrap.style.display='none';
-  pedido.agencia='';
-  // Filtrar estados que tienen esa transportista
-  const estadosFiltrados=[...new Set(
-    AGENCIAS_DATA.filter(a=>a.transportista===trans).map(a=>a.estado)
-  )].sort();
-  selEstado.innerHTML='<option value="">Selecciona tu estado...</option>';
-  estadosFiltrados.forEach(e=>{
-    const opt=document.createElement('option');
-    opt.value=e; opt.textContent=e;
-    selEstado.appendChild(opt);
-  });
-  // Override filtrarAgencias para solo mostrar la transportista seleccionada
-  selEstado.onchange=()=>{
-    const estado=selEstado.value;
-    wrap.style.display='none';
-    pedido.agencia='';
-    if(!estado)return;
-    const filtradas=AGENCIAS_DATA.filter(a=>a.estado===estado&&a.transportista===trans);
-    const sel=document.getElementById('sel-agencia');
-    sel.innerHTML='<option value="">Selecciona la agencia...</option>';
-    filtradas.forEach(a=>{
-      const opt=document.createElement('option');
-      opt.value=a.nombre+' ('+a.ciudad+')';
-      opt.textContent=a.nombre+' · '+a.ciudad;
-      sel.appendChild(opt);
-    });
-    sel.onchange=()=>{pedido.agencia=pedido.tipoEntrega+' — '+sel.value;};
-    wrap.style.display='block';
-  };
-}
 
 // ── JSONP ─────────────────────────────────────────────────────
 function scriptGETjson(params){
   return new Promise((resolve,reject)=>{
     const cb='_cb_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
     const qs=Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v??'')).join('&');
-    const url=SCRIPT_URL+'?'+qs+'&callback='+cb;
     const script=document.createElement('script');
     window[cb]=(data)=>{ delete window[cb]; try{document.body.removeChild(script);}catch(e){} resolve(data); };
     script.onerror=()=>{ delete window[cb]; try{document.body.removeChild(script);}catch(e){} reject(new Error('Error de red')); };
-    script.src=url;
+    script.src=SCRIPT_URL+'?'+qs+'&callback='+cb;
     document.body.appendChild(script);
     setTimeout(()=>{ if(window[cb]){ delete window[cb]; try{document.body.removeChild(script);}catch(e){} reject(new Error('Timeout')); }},10000);
   });
+}
+function scriptGET(params){
+  const qs=Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v??'')).join('&');
+  return fetch(SCRIPT_URL+'?'+qs,{mode:'no-cors'});
 }
 
 // ── TOKEN ─────────────────────────────────────────────────────
@@ -337,43 +324,29 @@ async function verificarToken(){
   bloqueado.style.display='flex';
   const params=new URLSearchParams(window.location.search);
   const token=params.get('token');
-  if(!token){
-    mostrarBloqueo('🚫','Link inválido','Este link no es válido. Solicita uno nuevo a IKOA & BEKATE.');
-    return;
-  }
+  if(!token){ mostrarBloqueo('🚫','Link inválido','Este link no es válido. Solicita uno nuevo a IKOA & BEKATE.'); return; }
   try{
     const data=await scriptGETjson({action:'verificarToken',token:token});
-    if(data.ok){
-      tokenActual=token;
-      bloqueado.style.display='none';
-      cargarAgencias();
-    } else {
-      const msgs={
-        'usado':   ['✅','Link ya utilizado','Este link ya fue usado para realizar un pedido. Solicita uno nuevo si necesitas hacer otro.'],
-        'expirado':['⏰','Link expirado','Este link venció. Los links tienen una validez de 4 horas. Solicita uno nuevo a IKOA & BEKATE.'],
-        'invalido':['🚫','Link inválido','Este link no es válido. Solicita uno nuevo a IKOA & BEKATE.']
-      };
+    if(data.ok){ tokenActual=token; bloqueado.style.display='none'; cargarAgencias(); }
+    else{
+      const msgs={'usado':['✅','Link ya utilizado','Este link ya fue usado. Solicita uno nuevo.'],'expirado':['⏰','Link expirado','Este link venció (4 horas). Solicita uno nuevo.'],'invalido':['🚫','Link inválido','Este link no es válido. Solicita uno nuevo.']};
       const [icon,titulo,texto]=msgs[data.error]||msgs['invalido'];
       mostrarBloqueo(icon,titulo,texto);
     }
-  }catch(e){
-    mostrarBloqueo('⚠️','Error de conexión','No se pudo verificar el link. Verifica tu conexión e intenta de nuevo.');
-  }
+  }catch(e){ mostrarBloqueo('⚠️','Error de conexión','No se pudo verificar. Verifica tu conexión.'); }
 }
-
 function mostrarBloqueo(icon,titulo,texto){
   document.getElementById('bloqueo-icon').textContent=icon;
   document.getElementById('bloqueo-titulo').textContent=titulo;
   document.getElementById('bloqueo-texto').textContent=texto;
   document.getElementById('pantalla-bloqueada').style.display='flex';
 }
-
 async function marcarTokenUsado(){
   if(!tokenActual)return;
-  try{ await scriptGETjson({action:'usarToken',token:tokenActual}); }
-  catch(e){ console.error('Error marcando token:',e); }
+  try{ await scriptGETjson({action:'usarToken',token:tokenActual}); }catch(e){}
 }
 
+// ── AGENCIAS ──────────────────────────────────────────────────
 async function cargarAgencias(){
   try{
     const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=AGENCIAS&cachebust=${Date.now()}`;
@@ -381,25 +354,68 @@ async function cargarAgencias(){
     const text=await res.text();
     const json=JSON.parse(text.replace(/^[^(]+\(/,'').replace(/\);\s*$/,''));
     AGENCIAS_DATA=(json.table.rows||[]).filter(r=>r.c&&r.c[0]).map(r=>({
-      estado:String(r.c[0]?.v||'').trim(),
-      transportista:String(r.c[1]?.v||'').trim(),
-      nombre:String(r.c[2]?.v||'').trim(),
-      ciudad:String(r.c[3]?.v||'').trim()
+      estado:String(r.c[0]?.v||'').trim(),transportista:String(r.c[1]?.v||'').trim(),
+      nombre:String(r.c[2]?.v||'').trim(),ciudad:String(r.c[3]?.v||'').trim()
     }));
-  }catch(e){
-    console.error('Error cargando agencias:',e);
+  }catch(e){ console.error('Error cargando agencias:',e); }
+}
+
+function selectTipoEntrega(btn,tipo){
+  document.querySelectorAll('#tipo-entrega-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  pedido.tipoEntrega=tipo; pedido.agencia='';
+  const cardAgencia=document.getElementById('card-agencia');
+  if(AGENCIAS_ENVIO.includes(tipo)){
+    cardAgencia.style.display='block';
+    poblarEstados(tipo);
+  } else {
+    cardAgencia.style.display='none';
+    pedido.agencia=ENTREGA_DIRECTA[tipo]||tipo;
   }
 }
 
+function poblarEstados(trans){
+  const sel=document.getElementById('sel-estado');
+  const wrap=document.getElementById('agencia-wrap');
+  wrap.style.display='none'; pedido.agencia='';
+  const estados=[...new Set(AGENCIAS_DATA.filter(a=>a.transportista===trans).map(a=>a.estado))].sort();
+  sel.innerHTML='<option value="">Selecciona tu estado...</option>';
+  estados.forEach(e=>{ const o=document.createElement('option'); o.value=e; o.textContent=e; sel.appendChild(o); });
+  sel.onchange=()=>filtrarPorEstado(trans);
+}
 
+function filtrarPorEstado(trans){
+  const trans2=trans||pedido.tipoEntrega;
+  const estado=document.getElementById('sel-estado').value;
+  const wrap=document.getElementById('agencia-wrap');
+  const sel=document.getElementById('sel-agencia');
+  pedido.agencia='';
+  if(!estado){ wrap.style.display='none'; return; }
+  const filtradas=AGENCIAS_DATA.filter(a=>a.estado===estado&&a.transportista===trans2);
+  sel.innerHTML='<option value="">Selecciona la agencia...</option>';
+  filtradas.forEach(a=>{ const o=document.createElement('option'); o.value=a.nombre+' ('+a.ciudad+')'; o.textContent=a.nombre+' · '+a.ciudad; sel.appendChild(o); });
+  sel.onchange=()=>{ pedido.agencia=pedido.tipoEntrega+' — '+sel.value; };
+  wrap.style.display='block';
+}
+
+// ── NAVEGACIÓN ────────────────────────────────────────────────
 function goStep(n){
+  // Atrás siempre funciona sin validar
+  if(n < currentStep){
+    document.getElementById('step'+currentStep).classList.remove('active');
+    currentStep=n;
+    document.getElementById('step'+currentStep).classList.add('active');
+    updateProgress();
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
   if(!validateStep(currentStep))return;
   document.getElementById('step'+currentStep).classList.remove('active');
   currentStep=n;
   document.getElementById('step'+currentStep).classList.add('active');
   updateProgress();
-  if(n===3&&piezaCount===0){addPieza();addPieza();}
-  if(n===5)buildResumen();
+  if(n===4) inicializarPiezas();
+  if(n===6) buildResumen();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -412,57 +428,89 @@ function updateProgress(){
   }
 }
 
+function showErr(id,show){ const el=document.getElementById(id); if(el) el.style.display=show?'block':'none'; }
+function clearErrs(){ document.querySelectorAll('.err-msg').forEach(e=>e.style.display='none'); document.querySelectorAll('.field-input').forEach(e=>e.classList.remove('error')); }
+
+function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function isValidCel(c){ return c.replace(/\D/g,'').length>=7; }
+
 function validateStep(n){
+  clearErrs();
   if(n===1){
-    if(!document.getElementById('p-nombre').value.trim()){alert('Ingresa tu nombre y apellido');return false;}
-    if(!document.getElementById('p-correo').value.trim()){alert('Ingresa tu correo electrónico');return false;}
-    if(!document.getElementById('p-cedula').value.trim()){alert('Ingresa tu número de cédula');return false;}
-    if(!document.getElementById('p-celular').value.trim()){alert('Ingresa tu número de celular');return false;}
+    let ok=true;
+    if(!document.getElementById('p-nombre').value.trim()){ showErr('err-nombre',true); document.getElementById('p-nombre').classList.add('error'); ok=false; }
+    const correo=document.getElementById('p-correo').value.trim();
+    if(!isValidEmail(correo)){ showErr('err-correo',true); document.getElementById('p-correo').classList.add('error'); ok=false; }
+    if(!document.getElementById('p-cedula-num').value.trim()){ showErr('err-cedula',true); ok=false; }
+    if(!isValidCel(document.getElementById('p-celular-num').value)){ showErr('err-celular',true); ok=false; }
+    if(!ok)return false;
     pedido.nombre=document.getElementById('p-nombre').value.trim();
-    pedido.correo=document.getElementById('p-correo').value.trim();
-    pedido.cedula=document.getElementById('p-cedula').value.trim();
-    pedido.celular=document.getElementById('p-celular').value.trim();
+    pedido.correo=correo;
+    pedido.cedula=document.getElementById('p-cedula-tipo').value+document.getElementById('p-cedula-num').value.trim();
+    pedido.celular=document.getElementById('p-cel-pais').value+document.getElementById('p-celular-num').value.trim();
+    return true;
   }
   if(n===2){
-    if(!pedido.modelo){alert('Selecciona el modelo (Comfy o Licra)');return false;}
-    if(!pedido.manga){alert('Selecciona el tipo de manga');return false;}
-    if(!pedido.capucha){alert('Selecciona si deseas capucha o no');return false;}
-    if(!document.getElementById('p-tela').value.trim()){alert('Ingresa el color de tela');return false;}
-    if(!document.getElementById('p-vinil').value.trim()){alert('Ingresa el color del vinil');return false;}
-    pedido.tela=document.getElementById('p-tela').value.trim();
-    pedido.vinil=document.getElementById('p-vinil').value.trim();
+    if(!pedido.pack||pedido.pack<2){ alert('Selecciona la cantidad de franelas'); return false; }
+    return true;
   }
   if(n===3){
-    savePiezas();
-    const alerta=document.getElementById('alerta-min');
-    if(pedido.piezas.length<2){alerta.style.display='block';return false;}
-    alerta.style.display='none';
-    for(let p of pedido.piezas){
-      if(!p.genero||!p.talla||!p.nombre){alert('Completa todos los campos de cada prenda (género, talla y nombre)');return false;}
-    }
+    if(!pedido.modelo){ alert('Selecciona el modelo (Comfy o Licra)'); return false; }
+    if(!pedido.manga){ alert('Selecciona el tipo de manga'); return false; }
+    if(!pedido.capucha){ alert('Selecciona si deseas capucha'); return false; }
+    if(!document.getElementById('p-tela').value.trim()){ alert('Ingresa el color de tela'); return false; }
+    if(!document.getElementById('p-vinil').value.trim()){ alert('Ingresa el color del vinil'); return false; }
+    pedido.tela=document.getElementById('p-tela').value.trim();
+    pedido.vinil=document.getElementById('p-vinil').value.trim();
+    return true;
   }
   if(n===4){
-    if(!pedido.agencia){alert('Selecciona la agencia de entrega');return false;}
+    savePiezas();
+    const alerta=document.getElementById('alerta-min');
+    if(pedido.piezas.length<pedido.pack){
+      alerta.style.display='block';
+      alerta.textContent=`⚠️ Debes completar las ${pedido.pack} franelas de tu ${pedido.pack}PACK (faltan ${pedido.pack-pedido.piezas.length})`;
+      return false;
+    }
+    alerta.style.display='none';
+    for(let p of pedido.piezas){
+      if(!p.genero||!p.talla||(!p.nombre&&!p.sinNombre)){ alert('Completa todos los campos de cada prenda'); return false; }
+    }
+    return true;
+  }
+  if(n===5){
+    if(!pedido.agencia){ alert('Selecciona la agencia de entrega'); return false; }
     if(!pedido.mismoEnvio){
       pedido.eNombre=document.getElementById('e-nombre').value.trim();
       pedido.eCi=document.getElementById('e-ci').value.trim();
       pedido.eCel=document.getElementById('e-cel').value.trim();
-      if(!pedido.eNombre||!pedido.eCi||!pedido.eCel){alert('Completa los datos de quien retira');return false;}
+      if(!pedido.eNombre||!pedido.eCi||!pedido.eCel){ alert('Completa los datos de quien retira'); return false; }
     }
+    return true;
   }
   return true;
 }
 
-// Cargar agencias al inicio
-cargarAgencias();
+// ── PACK ──────────────────────────────────────────────────────
+function selectPack(btn,n){
+  document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  pedido.pack=n;
+  document.getElementById('pack-custom').value='';
+  document.getElementById('pack-seleccionado').style.display='block';
+  document.getElementById('pack-label').textContent=n+'PACK — '+n+' franelas';
+}
+function setCustomPack(val){
+  const n=parseInt(val);
+  if(n>=2){ pedido.pack=n; document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected')); document.getElementById('pack-seleccionado').style.display='block'; document.getElementById('pack-label').textContent=n+'PACK — '+n+' franelas'; }
+}
 
+// ── OPCIONES ──────────────────────────────────────────────────
 function selectOpt(btn,field,val){
   const parent=btn.closest('.option-grid');
   parent.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
-  pedido[field]=val;
+  btn.classList.add('selected'); pedido[field]=val;
 }
-
 function setMismoEnvio(val){
   pedido.mismoEnvio=val;
   document.getElementById('mismo-si').classList.toggle('selected',val);
@@ -470,23 +518,39 @@ function setMismoEnvio(val){
   document.getElementById('envio-diferente').style.display=val?'none':'block';
 }
 
-function addPieza(){
+// ── PIEZAS ────────────────────────────────────────────────────
+function inicializarPiezas(){
+  document.getElementById('pack-total-lbl').textContent=pedido.pack+' franelas de tu '+pedido.pack+'PACK';
+  const container=document.getElementById('piezas-container');
+  // Si ya hay piezas del pack actual, no reiniciar
+  const actual=container.querySelectorAll('.pieza-card').length;
+  if(actual===0){ piezaCount=0; for(let i=0;i<pedido.pack;i++) addPieza(); }
+  else if(actual<pedido.pack){ for(let i=actual;i<pedido.pack;i++) addPieza(); }
+}
+
+function addPieza(copiarDe=null){
   piezaCount++;
   const id=piezaCount;
+  const total=document.getElementById('piezas-container').querySelectorAll('.pieza-card').length+1;
   const div=document.createElement('div');
-  div.className='pieza-card';
-  div.id='pieza-'+id;
+  div.className='pieza-card'; div.id='pieza-'+id;
+
+  const genCopy=copiarDe?document.getElementById('pz-genero-'+copiarDe)?.value:'';
+  const talCopy=copiarDe?document.getElementById('pz-talla-'+copiarDe)?.value:'';
+  const nomCopy=copiarDe?document.getElementById('pz-nombre-'+copiarDe)?.value:'';
+  const sinCopy=copiarDe?document.getElementById('pz-sinombre-'+copiarDe)?.checked:false;
+
   div.innerHTML=`
-    <div class="pieza-num">Prenda #${id}</div>
-    ${id>2?`<button class="remove-btn" onclick="removePieza(${id})">✕ Quitar</button>`:''}
+    <div class="pieza-num">Franela #${id}</div>
+    ${total>pedido.pack?`<button class="remove-btn" onclick="removePieza(${id})">✕</button>`:''}
     <div class="pieza-grid">
       <div class="field-group">
         <div class="field-label">Género</div>
         <select class="field-input" id="pz-genero-${id}" onchange="updateTallas(${id})">
           <option value="">Seleccionar</option>
-          <option value="Kids">Kids</option>
-          <option value="Dama">Dama</option>
-          <option value="Caballero">Caballero</option>
+          <option value="Kids"${genCopy==='Kids'?' selected':''}>Kids</option>
+          <option value="Dama"${genCopy==='Dama'?' selected':''}>Dama</option>
+          <option value="Caballero"${genCopy==='Caballero'?' selected':''}>Caballero</option>
         </select>
       </div>
       <div class="field-group">
@@ -496,39 +560,43 @@ function addPieza(){
         </select>
       </div>
     </div>
-    <div class="field-group" style="margin-bottom:0">
+    <div class="field-group" style="margin-bottom:4px">
       <div class="field-label">Nombre en la prenda</div>
-      <div class="field-note">Nombre en manga derecha · Sin iniciales ni logos</div>
+      <div class="field-note">Manga derecha · Sin iniciales ni logos</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;margin-top:4px;">
-        <input type="checkbox" id="pz-sinombre-${id}" onchange="toggleNombrePrenda(${id})" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+        <input type="checkbox" id="pz-sinombre-${id}" onchange="toggleNombrePrenda(${id})" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);"${sinCopy?' checked':''}>
         <label for="pz-sinombre-${id}" style="font-size:13px;color:var(--muted);cursor:pointer;">Sin nombre en manga derecha</label>
       </div>
-      <input class="field-input" type="text" id="pz-nombre-${id}" placeholder="Ej: María, Carlos, Sofía...">
-    </div>`;
+      <input class="field-input" type="text" id="pz-nombre-${id}" placeholder="Ej: María, Carlos..." value="${nomCopy}" style="${sinCopy?'display:none':''}">
+    </div>
+    <button class="copy-btn" onclick="copiarPieza(${id})">📋 Agregar otra igual a esta</button>`;
   document.getElementById('piezas-container').appendChild(div);
+
+  // Si tiene género copiado, actualizar tallas
+  if(genCopy){ updateTallas(id,talCopy); }
 }
 
-function updateTallas(id){
+function updateTallas(id,seleccionar=null){
   const genero=document.getElementById('pz-genero-'+id).value;
   const tallaSelect=document.getElementById('pz-talla-'+id);
   const tallas=genero==='Kids'?TALLAS_KIDS:TALLAS_ADULTO;
-  tallaSelect.innerHTML='<option value="">Seleccionar</option>'+tallas.map(t=>`<option value="${t}">${t}</option>`).join('');
-}
-
-function removePieza(id){
-  document.getElementById('pieza-'+id).remove();
+  tallaSelect.innerHTML='<option value="">Seleccionar</option>'+tallas.map(t=>`<option value="${t}"${t===seleccionar?' selected':''}>${t}</option>`).join('');
 }
 
 function toggleNombrePrenda(id){
   const check=document.getElementById('pz-sinombre-'+id);
   const input=document.getElementById('pz-nombre-'+id);
-  if(check.checked){
-    input.style.display='none';
-    input.value='SIN NOMBRE EN MANGA';
-  } else {
-    input.style.display='block';
-    input.value='';
-  }
+  if(check.checked){ input.style.display='none'; input.value='SIN NOMBRE EN MANGA'; }
+  else{ input.style.display='block'; input.value=''; }
+}
+
+function copiarPieza(id){ addPieza(id); }
+
+function removePieza(id){
+  const card=document.getElementById('pieza-'+id);
+  const total=document.getElementById('piezas-container').querySelectorAll('.pieza-card').length;
+  if(total<=pedido.pack){ alert(`Necesitas al menos ${pedido.pack} franelas para tu ${pedido.pack}PACK`); return; }
+  card.remove();
 }
 
 function savePiezas(){
@@ -537,21 +605,25 @@ function savePiezas(){
     const id=card.id.replace('pieza-','');
     const g=document.getElementById('pz-genero-'+id)?.value||'';
     const t=document.getElementById('pz-talla-'+id)?.value||'';
-    const n=document.getElementById('pz-nombre-'+id)?.value.trim()||'';
-    if(g||t||n)pedido.piezas.push({genero:g,talla:t,nombre:n});
+    const sinNombre=document.getElementById('pz-sinombre-'+id)?.checked||false;
+    const n=sinNombre?'SIN NOMBRE EN MANGA':(document.getElementById('pz-nombre-'+id)?.value.trim()||'');
+    pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre});
   });
 }
 
+// ── RESUMEN ───────────────────────────────────────────────────
 function buildResumen(){
-  const piezasHtml=pedido.piezas.map((p,i)=>`<b>Prenda ${i+1}:</b> ${p.genero} Talla ${p.talla} — ${p.nombre}`).join('<br>');
+  const piezasHtml=pedido.piezas.map((p,i)=>`<b>Franela ${i+1}:</b> ${p.genero} Talla ${p.talla} — ${p.nombre}`).join('<br>');
   const retiraText=pedido.mismoEnvio?`${pedido.nombre} · ${pedido.cedula} · ${pedido.celular}`:`${pedido.eNombre} · ${pedido.eCi} · ${pedido.eCel}`;
   document.getElementById('resumen-container').innerHTML=`
     <div class="card">
       <div class="resumen-label">👤 Cliente</div>
-      <div class="resumen-block"><b>Nombre:</b> ${pedido.nombre}<br><b>Correo:</b> ${pedido.correo}<br><b>Cédula:</b> ${pedido.cedula}<br><b>Celular:</b> ${pedido.celular}</div>
+      <div class="resumen-block"><b>Nombre:</b> ${pedido.nombre}<br><b>Correo:</b> ${pedido.correo}<br><b>Cédula:</b> ${pedido.cedula}<br><b>WhatsApp:</b> ${pedido.celular}</div>
+      <div class="resumen-label">📦 Pack</div>
+      <div class="resumen-block"><b>${pedido.pack}PACK</b> — ${pedido.pack} franelas</div>
       <div class="resumen-label">👕 Producto</div>
       <div class="resumen-block"><b>Modelo:</b> ${pedido.modelo} ${pedido.manga} ${pedido.capucha}<br><b>Color de tela:</b> ${pedido.tela}<br><b>Color del vinil:</b> ${pedido.vinil}</div>
-      <div class="resumen-label">📏 Prendas (${pedido.piezas.length})</div>
+      <div class="resumen-label">📏 Franelas (${pedido.piezas.length})</div>
       <div class="resumen-block">${piezasHtml}</div>
       <div class="resumen-label">🚚 Entrega</div>
       <div class="resumen-block"><b>Agencia:</b> ${pedido.agencia}<br><b>Retira:</b> ${retiraText}</div>
@@ -560,28 +632,30 @@ function buildResumen(){
 
 function buildMensaje(){
   const piezasText=pedido.piezas.map((p,i)=>`  • ${p.genero} talla ${p.talla} — ${p.nombre}`).join('\n');
-  const retiraText=pedido.mismoEnvio?'Mismo titular del pedido':`${pedido.eNombre} | C.I: ${pedido.eCi} | Cel: ${pedido.eCel}`;
+  const retiraText=pedido.mismoEnvio?'Mismo titular':''+pedido.eNombre+' | C.I: '+pedido.eCi+' | Cel: '+pedido.eCel;
   return `🛍️ *PEDIDO IKOA & BEKATE*
 
 👤 *Datos del cliente*
 Nombre: ${pedido.nombre}
 Correo: ${pedido.correo}
 Cédula: ${pedido.cedula}
-Celular: ${pedido.celular}
+WhatsApp: ${pedido.celular}
+
+📦 *${pedido.pack}PACK — ${pedido.pack} franelas*
 
 👕 *Producto*
 Modelo: ${pedido.modelo} ${pedido.manga} ${pedido.capucha}
 Color de tela: ${pedido.tela}
 Color del vinil: ${pedido.vinil}
 
-📏 *Prendas (${pedido.piezas.length})*
+📏 *Franelas (${pedido.piezas.length})*
 ${piezasText}
 
 🚚 *Entrega*
 Agencia: ${pedido.agencia}
 Retira: ${retiraText}
 
-_Pedido enviado vía formulario IKOA · 5 días hábiles de entrega_`;
+_Pedido enviado vía formulario IKOA · 5 días hábiles_`;
 }
 
 async function guardarEnSheets(){
@@ -590,12 +664,12 @@ async function guardarEnSheets(){
   const fecha=new Date().toLocaleString('es-VE');
   try{
     await scriptGET({
-      action:'addSolicitud',
-      fecha,nombre:pedido.nombre,correo:pedido.correo,cedula:pedido.cedula,celular:pedido.celular,
-      modelo:pedido.modelo,manga:pedido.manga,capucha:pedido.capucha,tela:pedido.tela,vinil:pedido.vinil,
+      action:'addSolicitud',fecha,nombre:pedido.nombre,correo:pedido.correo,cedula:pedido.cedula,celular:pedido.celular,
+      modelo:`${pedido.pack}PACK ${pedido.modelo} ${pedido.manga} ${pedido.capucha}`,
+      manga:pedido.manga,capucha:pedido.capucha,tela:pedido.tela,vinil:pedido.vinil,
       piezas:piezasText,agencia:pedido.agencia,retira:retiraText
     });
-  }catch(e){console.error('Sheets error:',e);}
+  }catch(e){ console.error('Sheets error:',e); }
 }
 
 async function enviarWhatsApp(){
@@ -609,7 +683,7 @@ async function enviarWhatsApp(){
   window.open(`https://wa.me/${WHATSAPP_NUM}?text=${msg}`,'_blank');
   btn.disabled=false;
   btn.innerHTML='<span style="font-size:22px;">💬</span> Enviar pedido por WhatsApp';
-  note.textContent='✓ Tu pedido fue registrado. Te contactaremos pronto para confirmar.';
+  note.textContent='✓ Tu pedido fue registrado. Te contactaremos pronto.';
   note.style.color='var(--accent)';
 }
 

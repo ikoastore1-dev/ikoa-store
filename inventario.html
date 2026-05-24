@@ -124,6 +124,37 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </head>
 <body>
 
+<!-- MODAL REPROBAR -->
+<div class="modal-overlay hidden" id="modal-reprobar">
+  <div class="modal">
+    <div class="modal-icon">🚫</div>
+    <div class="modal-title" style="color:var(--danger);">Reprobar Solicitud</div>
+    <div class="modal-subtitle">Indica el motivo para que quede registrado</div>
+    <div class="modal-summary" id="repro-resumen"></div>
+    <div style="margin-bottom:12px;">
+      <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Motivo</div>
+      <select id="repro-motivo" style="width:100%;background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;outline:none;margin-bottom:10px;">
+        <option value="">Seleccionar motivo...</option>
+        <option>Cliente postergó la compra</option>
+        <option>Cliente canceló el pedido</option>
+        <option>Pago no confirmado</option>
+        <option>Datos incorrectos</option>
+        <option>Cliente no responde</option>
+        <option>Otro</option>
+      </select>
+      <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Detalle (opcional)</div>
+      <input type="text" id="repro-detalle" placeholder="Información adicional..." style="width:100%;background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;outline:none;">
+    </div>
+    <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div>
+    <input class="modal-cod-input" type="password" id="repro-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarReprobar()">
+    <div class="modal-error" id="repro-error"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="document.getElementById('modal-reprobar').classList.add('hidden')">Cancelar</button>
+      <button style="flex:2;padding:13px;background:var(--danger);border:none;border-radius:10px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;" onclick="confirmarReprobar()">✗ REPROBAR</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL TASA -->
 <div class="modal-overlay hidden" id="modal-tasa">
   <div class="modal">
@@ -490,7 +521,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzufjSmioFjh_DplHUNVINHGcQA1_Q3eFOkpvUPKjWpdwrOmwuBuydQKx4DzSP0jhugFA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzrE0DS9vyrdhm5S1oOwnBJHpLy7_uckBwxRav2iFnpN6KJ8HdauCUQq1-b-pT3icP3cw/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1146,10 +1177,16 @@ async function cargarSolicitudes(){
         <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
           <span style="color:var(--muted);">Retira:</span> ${v(13)}
         </div>
-        <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(2),cedula:v(4),correo:v(3),fecha:v(1),codigo:v(0)})})'
-          style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">
-          ✅ Aprobar Pago
-        </button>`;
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(2),cedula:v(4),correo:v(3),fecha:v(1),codigo:v(0)})})'
+            style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">
+            ✅ Aprobar
+          </button>
+          <button onclick='abrirModalReprobar(${JSON.stringify({nombre:v(2),cedula:v(4),correo:v(3),fecha:v(1),codigo:v(0)})})'
+            style="width:100%;padding:13px;background:transparent;border:2px solid var(--danger);border-radius:10px;color:var(--danger);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">
+            ✗ Reprobar
+          </button>
+        </div>`;
       listEl.appendChild(card);
     });
   }catch(e){
@@ -1157,7 +1194,57 @@ async function cargarSolicitudes(){
   }
 }
 
-function abrirModalAprobacion(data){
+function abrirModalReprobar(data){
+  pendingSolicitud=data;
+  document.getElementById('repro-resumen').innerHTML=`
+    <b style="color:var(--text)">${data.nombre}</b><br>
+    <span style="color:var(--accent);font-weight:700;">${data.codigo||''}</span><br>
+    Cédula: <span>${data.cedula}</span><br>
+    Solicitud: <span>${data.fecha}</span>`;
+  document.getElementById('repro-motivo').value='';
+  document.getElementById('repro-detalle').value='';
+  document.getElementById('repro-unlock').value='';
+  document.getElementById('repro-error').textContent='';
+  document.getElementById('modal-reprobar').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('repro-motivo').focus(),100);
+}
+
+async function confirmarReprobar(){
+  const motivo=document.getElementById('repro-motivo').value;
+  const detalle=document.getElementById('repro-detalle').value.trim();
+  const unlock=document.getElementById('repro-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('repro-error');
+  if(!motivo){errEl.textContent='Selecciona un motivo';return;}
+  if(!USUARIOS[unlock]){errEl.textContent='❌ Código incorrecto — acceso denegado';document.getElementById('repro-unlock').value='';return;}
+
+  document.getElementById('modal-reprobar').classList.add('hidden');
+  const msgEl=document.getElementById('apro-msg');
+  msgEl.style.display='block';
+  msgEl.style.background='var(--surface2)';
+  msgEl.style.color='var(--muted)';
+  msgEl.innerHTML='<span class="spinner">↻</span> Registrando...';
+
+  try{
+    await scriptGET({
+      action:'reprobarSolicitud',
+      nombre:pendingSolicitud.nombre,
+      cedula:pendingSolicitud.cedula,
+      motivo:motivo+(detalle?' — '+detalle:''),
+      fecha_reprobacion:getFechaHora(),
+      usuario:USUARIOS[unlock]
+    });
+    msgEl.style.background='#2a1010';
+    msgEl.style.border='1px solid #4a1a1a';
+    msgEl.style.color='var(--danger)';
+    msgEl.innerHTML=`✗ Solicitud reprobada · <b>${motivo}</b> · ${USUARIOS[unlock]}`;
+    setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},4000);
+  }catch(e){
+    msgEl.style.background='#2a1010';
+    msgEl.style.color='var(--danger)';
+    msgEl.innerHTML='✗ Error: '+e.message;
+  }
+  pendingSolicitud=null;
+}
   pendingSolicitud=data;
   document.getElementById('apro-resumen').innerHTML=`
     <b style="color:var(--text)">${data.nombre}</b><br>
