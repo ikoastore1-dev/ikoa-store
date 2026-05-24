@@ -1253,6 +1253,8 @@ async function confirmarReprobar(){
   }
   pendingSolicitud=null;
 }
+
+function abrirModalAprobacion(data){
   pendingSolicitud=data;
   document.getElementById('apro-resumen').innerHTML=`
     <b style="color:var(--text)">${data.nombre}</b><br>
