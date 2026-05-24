@@ -103,6 +103,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 .tasa-btn{background:var(--surface2);border:2px solid var(--border);border-radius:12px;padding:14px 10px;cursor:pointer;transition:all .2s;text-align:center;width:100%}
 .tasa-btn:hover{border-color:var(--accent)}
 .tasa-btn.selected{border-color:var(--accent);background:#0f2b1a}
+.sol-filter-btn.active{border-color:var(--accent)!important;background:#0f2b1a!important;color:var(--accent)!important;}
 .historial-list{display:flex;flex-direction:column;gap:8px}
 .hist-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px}
 .hist-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
@@ -356,8 +357,14 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   <!-- TAB APROBACIONES -->
   <div id="tab-aprobaciones" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">✅ Solicitudes Pendientes</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">✅ Solicitudes</div>
       <button onclick="cargarSolicitudes()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 14px;font-size:13px;cursor:pointer;">↻ Actualizar</button>
+    </div>
+    <!-- FILTROS -->
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <button class="sol-filter-btn active" data-filtro="Pendiente" onclick="cargarSolicitudes('Pendiente')" style="flex:1;padding:8px;border:1px solid var(--warn);border-radius:8px;background:#2a1f0a;color:var(--warn);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">⏳ Pendientes</button>
+      <button class="sol-filter-btn" data-filtro="Pagado" onclick="cargarSolicitudes('Pagado')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✅ Aprobadas</button>
+      <button class="sol-filter-btn" data-filtro="Reprobado" onclick="cargarSolicitudes('Reprobado')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✗ Reprobadas</button>
     </div>
     <div id="apro-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
     <div id="solicitudes-list"></div>
@@ -1132,12 +1139,76 @@ async function confirmarPlanificacion(){
 // ── APROBACIONES ──────────────────────────────────────────────
 let pendingSolicitud=null;
 
-async function cargarSolicitudes(){
+let filtroSolicitudes='Pendiente';
+
+async function cargarSolicitudes(filtro){
+  if(filtro!==undefined) filtroSolicitudes=filtro;
   const listEl=document.getElementById('solicitudes-list');
   const msgEl=document.getElementById('apro-msg');
-  listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando solicitudes...</div>`;
+  document.querySelectorAll('.sol-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filtro===filtroSolicitudes));
+  listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>`;
   try{
     const t=await loadSheetGviz('SOLICITUDES');
+    // DEBUG temporal — mostrar datos crudos
+    let debugHtml='<div style="background:#1a1a10;border:1px solid var(--warn);border-radius:10px;padding:12px;font-size:11px;margin-bottom:12px;overflow-x:auto;">';
+    debugHtml+=`<b style="color:var(--warn)">DEBUG — Total filas: ${(t.rows||[]).length}</b><br>`;
+    (t.rows||[]).forEach((r,i)=>{
+      const vals=(r.c||[]).map((c,j)=>`[${j}]=${c?String(c.v||''):'∅'}`).join(' ');
+      debugHtml+=`<div>F${i+1}: ${vals.substring(0,300)}</div>`;
+    });
+    debugHtml+='</div>';
+    listEl.innerHTML=debugHtml;
+    const rows=t.rows||[];
+    const filtradas=rows.filter(r=>{
+      if(!r.c) return false;
+      return r.c.some(c=>c&&String(c.v||c.f||'').trim()===filtroSolicitudes);
+    });
+    if(!filtradas.length){
+      listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);"><div style="font-size:32px;margin-bottom:10px;">${filtroSolicitudes==='Pendiente'?'🎉':'📋'}</div><div style="font-size:15px;">No hay solicitudes ${filtroSolicitudes.toLowerCase()}</div></div>`;
+      return;
+    }
+    const sc={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)'};
+    const sb={Pendiente:'#2a1f0a',Pagado:'#0f2b1a',Reprobado:'#2a1010'};
+    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${filtradas.length} solicitud(es) · ${filtroSolicitudes}</div>`;
+    filtradas.forEach(r=>{
+      const v=i=>(!r.c||!r.c[i])?'':String(r.c[i].v||r.c[i].f||'').trim();
+      const statusVal=filtroSolicitudes;
+      const card=document.createElement('div');
+      card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;animation:slideUp .3s ease;';
+      card.innerHTML=`
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;">${v(2)}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+              <span style="background:#1a2a10;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">${v(0)||'—'}</span>
+              <div style="font-size:11px;color:var(--muted);">🕐 ${v(1)}</div>
+            </div>
+          </div>
+          <span style="background:${sb[statusVal]||'var(--surface2)'};border:1px solid ${sc[statusVal]||'var(--border)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:${sc[statusVal]||'var(--muted)'};">${statusVal.toUpperCase()}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:12px;">
+          <div><span style="color:var(--muted);">Correo:</span> ${v(3)}</div>
+          <div><span style="color:var(--muted);">Cédula:</span> ${v(4)}</div>
+          <div><span style="color:var(--muted);">Celular:</span> ${v(5)}</div>
+          <div><span style="color:var(--muted);">Agencia:</span> ${v(12)}</div>
+          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Modelo:</span> ${v(6)} ${v(7)} ${v(8)}</div>
+          <div><span style="color:var(--muted);">Tela:</span> ${v(9)}</div>
+          <div><span style="color:var(--muted);">Vinil:</span> ${v(10)}</div>
+        </div>
+        ${v(11)?`<div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:12px;"><span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Piezas</span><br>${v(11).split(' | ').join('<br>')}</div>`:''}
+        <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;"><span style="color:var(--muted);">Retira:</span> ${v(13)}</div>
+        ${filtroSolicitudes==='Pendiente'?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(2),cedula:v(4),correo:v(3),fecha:v(1),codigo:v(0)})})'
+            style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✅ Aprobar</button>
+          <button onclick='abrirModalReprobar(${JSON.stringify({nombre:v(2),cedula:v(4),correo:v(3),fecha:v(1),codigo:v(0)})})'
+            style="width:100%;padding:13px;background:transparent;border:2px solid var(--danger);border-radius:10px;color:var(--danger);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✗ Reprobar</button>
+        </div>`:''}`;
+      listEl.appendChild(card);
+    });
+  }catch(e){
+    listEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--danger);">✗ Error: ${e.message}</div>`;
+  }
+}
     const pendientes=(t.rows||[]).filter(r=>{
       if(!r.c) return false;
       // gviz corta columnas vacías al final — buscar Pendiente en col 14 o en cualquier columna si hay menos de 15
