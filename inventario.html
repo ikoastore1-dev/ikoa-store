@@ -293,7 +293,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <input type="hidden" name="status" id="g-status">
 
           <!-- CAMPOS COMUNES -->
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;display:flex;flex-direction:column;gap:12px;">
+          <div id="g-cliente-section" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;display:flex;flex-direction:column;gap:12px;">
             <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">👤 Datos del Cliente</div>
             <div class="field-group"><div class="field-label">Nombre y Apellido</div><input class="field-input" type="text" name="nombre" id="g-nombre" placeholder="NOMBRE APELLIDO" style="text-transform:uppercase;" required></div>
             <div class="field-group"><div class="field-label">Correo electrónico</div><input class="field-input" type="email" name="correo" id="g-correo" placeholder="correo@email.com" required></div>
@@ -905,10 +905,11 @@ function setTipoGestion(tipo){
   const celWrap=document.getElementById('g-celular-wrap');
   const buscarSec=document.getElementById('g-buscar-section');
   const submitBtn=document.getElementById('g-submit-btn');
+  const clienteSec=document.getElementById('g-cliente-section');
   codSec.style.display='none'; envSec.style.display='none';
   envioWrap.style.display='none'; arteSection.style.display='none';
   buscarSec.style.display='none'; cedWrap.style.display='none'; celWrap.style.display='none';
-  submitBtn.style.display='block';
+  submitBtn.style.display='block'; clienteSec.style.display='flex';
   if(tipo==='COD'){
     codSec.style.display='flex'; envioWrap.style.display='flex';
     arteSection.style.display='flex'; cedWrap.style.display='block'; celWrap.style.display='block';
@@ -916,6 +917,7 @@ function setTipoGestion(tipo){
     envSec.style.display='flex'; envioWrap.style.display='flex';
   } else if(tipo==='Buscar'){
     buscarSec.style.display='flex'; submitBtn.style.display='none';
+    clienteSec.style.display='none';
   }
 }
 
