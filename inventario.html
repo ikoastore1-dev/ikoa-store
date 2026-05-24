@@ -157,7 +157,24 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </div>
 </div>
 
-<!-- MODAL APROBACIÓN -->
+<!-- MODAL PLANIFICACIÓN -->
+<div class="modal-overlay hidden" id="modal-planificacion">
+  <div class="modal">
+    <div class="modal-icon">🚀</div>
+    <div class="modal-title">Enviar a Producción</div>
+    <div class="modal-subtitle">Confirma con tu código para enviar este pedido a planificación y producción</div>
+    <div class="modal-summary" id="plan-resumen"></div>
+    <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div>
+    <input class="modal-cod-input" type="password" id="plan-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarPlanificacion()">
+    <div class="modal-error" id="plan-error"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="document.getElementById('modal-planificacion').classList.add('hidden')">Cancelar</button>
+      <button class="modal-confirm" onclick="confirmarPlanificacion()">🚀 ENVIAR</button>
+    </div>
+  </div>
+</div>
+
+
 <div class="modal-overlay hidden" id="modal-aprobacion">
   <div class="modal">
     <div class="modal-icon">✅</div>
@@ -232,6 +249,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <button class="tab active" onclick="switchTab('stock')">📦 Stock</button>
     <button class="tab" onclick="switchTab('etiquetas')">🏷️ Etiquetas</button>
     <button class="tab" onclick="switchTab('aprobaciones')">✅ Aprobaciones</button>
+    <button class="tab" onclick="switchTab('cola')">⏳ Cola</button>
     <button class="tab" onclick="switchTab('gestion')">📋 Gestión</button>
     <button class="tab" onclick="switchTab('historial')">🕐 Historial</button>
   </div>
@@ -312,6 +330,16 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     </div>
     <div id="apro-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
     <div id="solicitudes-list"></div>
+  </div>
+
+  <!-- TAB COLA PLANIFICACIÓN -->
+  <div id="tab-cola" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--warn);text-transform:uppercase;letter-spacing:.08em;">⏳ Cola de Planificación</div>
+      <button onclick="cargarCola()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 14px;font-size:13px;cursor:pointer;">↻ Actualizar</button>
+    </div>
+    <div id="cola-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
+    <div id="cola-list"></div>
   </div>
 
   <!-- TAB GESTIÓN -->
@@ -462,7 +490,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxbCvar06ndpydEPfQlZlUKY9wnumYietAMUt5EKq4mYydjhuZrsVWVLjvdkmFk6d4bJg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw8wEIsU3kqHE612gNId7h8b1sjQGG5E09J6-W8kTxASOBzvTKzkj_E_ro0BVHzokHOcQ/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -937,14 +965,137 @@ function stopScanner(){
 
 // ── TABS ──────────────────────────────────────────────────────
 function switchTab(tab){
-  ['stock','etiquetas','aprobaciones','gestion','historial'].forEach(t=>{
+  ['stock','etiquetas','aprobaciones','cola','gestion','historial'].forEach(t=>{
     document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
   });
   document.querySelectorAll('.tab').forEach((b,i)=>{
-    b.classList.toggle('active',['stock','etiquetas','aprobaciones','gestion','historial'][i]===tab);
+    b.classList.toggle('active',['stock','etiquetas','aprobaciones','cola','gestion','historial'][i]===tab);
   });
   if(tab==='historial')renderHistorial();
   if(tab==='aprobaciones')cargarSolicitudes();
+  if(tab==='cola')cargarCola();
+}
+
+// ── COLA PLANIFICACIÓN ────────────────────────────────────────
+let pendingCola=null;
+
+async function cargarCola(){
+  const listEl=document.getElementById('cola-list');
+  listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando cola...</div>`;
+  try{
+    const t=await loadSheetGviz('COLA_PLANIFICACION');
+    const enCola=(t.rows||[]).filter(r=>r.c&&String(gvizVal(r.c[18])||'').trim()==='En Cola');
+    if(!enCola.length){
+      listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
+        <div style="font-size:32px;margin-bottom:10px;">🎉</div>
+        <div style="font-size:15px;">No hay pedidos en cola de planificación</div>
+      </div>`;
+      return;
+    }
+    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${enCola.length} pedido(s) esperando envío a producción</div>`;
+    enCola.forEach(r=>{
+      const v=i=>String(gvizVal(r.c[i])||'').trim();
+      const card=document.createElement('div');
+      card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;animation:slideUp .3s ease;';
+      card.innerHTML=`
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;">${v(3)}</div>
+            <div style="display:flex;gap:8px;margin-top:4px;">
+              <span style="background:#1a2a10;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">${v(0)}</span>
+              <span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">← ${v(1)}</span>
+            </div>
+          </div>
+          <span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--warn);">EN COLA</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:10px;">
+          <div><span style="color:var(--muted);">Correo:</span> ${v(4)}</div>
+          <div><span style="color:var(--muted);">Cédula:</span> ${v(5)}</div>
+          <div><span style="color:var(--muted);">Celular:</span> ${v(6)}</div>
+          <div><span style="color:var(--muted);">Agencia:</span> ${v(13)}</div>
+          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Modelo:</span> ${v(7)} ${v(8)} ${v(9)}</div>
+          <div><span style="color:var(--muted);">Tela:</span> ${v(10)}</div>
+          <div><span style="color:var(--muted);">Vinil:</span> ${v(11)}</div>
+          <div><span style="color:var(--muted);">Banco:</span> ${v(15)}</div>
+          <div><span style="color:var(--muted);">Ref. Pago:</span> ${v(16)}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:12px;">
+          <span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Piezas</span><br>${v(12).split(' | ').join('<br>')}
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
+          <span style="color:var(--muted);">Retira:</span> ${v(14)}
+        </div>
+        <button onclick='abrirModalPlanificacion(${JSON.stringify({codigoCola:v(0),codigoSol:v(1),nombre:v(3),cedula:v(5),modelo:v(7)+' '+v(8)+' '+v(9),piezas:v(12),agencia:v(13)})})'
+          style="width:100%;padding:13px;background:linear-gradient(135deg,var(--warn),#c07010);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">
+          🚀 Enviar a Producción
+        </button>`;
+      listEl.appendChild(card);
+    });
+  }catch(e){
+    listEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--danger);">✗ Error: ${e.message}</div>`;
+  }
+}
+
+function abrirModalPlanificacion(data){
+  pendingCola=data;
+  document.getElementById('plan-resumen').innerHTML=`
+    <b style="color:var(--text)">${data.nombre}</b><br>
+    <span style="color:var(--accent);">${data.codigoCola}</span> ← <span style="color:var(--warn);">${data.codigoSol}</span><br>
+    Modelo: <span>${data.modelo}</span><br>
+    Agencia: <span>${data.agencia}</span>`;
+  document.getElementById('plan-unlock').value='';
+  document.getElementById('plan-error').textContent='';
+  document.getElementById('modal-planificacion').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('plan-unlock').focus(),100);
+}
+
+async function confirmarPlanificacion(){
+  const unlock=document.getElementById('plan-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('plan-error');
+  if(!USUARIOS[unlock]){errEl.textContent='❌ Código incorrecto — acceso denegado';document.getElementById('plan-unlock').value='';return;}
+
+  document.getElementById('modal-planificacion').classList.add('hidden');
+  const msgEl=document.getElementById('cola-msg');
+  msgEl.style.display='block';
+  msgEl.style.background='var(--surface2)';
+  msgEl.style.color='var(--muted)';
+  msgEl.innerHTML='<span class="spinner">↻</span> Enviando a producción...';
+
+  try{
+    // 1. Registrar en REGISTRO_PLANIFICACION y actualizar COLA
+    const res=await fetch(SCRIPT_URL+'?action=enviarPlanificacion&codigoCola='+pendingCola.codigoCola);
+    const data=await res.json();
+
+    if(data.ok){
+      // 2. Enviar a Make webhook
+      const formData=new FormData();
+      formData.append('tipo_operacion','Planificacion');
+      formData.append('codigo_cola',pendingCola.codigoCola);
+      formData.append('codigo_sol',pendingCola.codigoSol);
+      formData.append('codigo_prod',data.codigoProd);
+      formData.append('nombre',pendingCola.nombre);
+      formData.append('modelo',pendingCola.modelo);
+      formData.append('piezas',pendingCola.piezas);
+      formData.append('agencia',pendingCola.agencia);
+      formData.append('usuario',USUARIOS[unlock]);
+      formData.append('fecha',getFechaHora());
+      await fetch('https://hook.us2.make.com/9vb6zab74fbbqkbv46c2coi8i7e4mnqs',{method:'POST',body:formData}).catch(()=>{});
+
+      msgEl.style.background='#0f2b1a';
+      msgEl.style.border='1px solid #1a4a2a';
+      msgEl.style.color='var(--accent)';
+      msgEl.innerHTML=`✅ Enviado a producción · <b>${data.codigoProd}</b> · ${USUARIOS[unlock]}`;
+      setTimeout(()=>{msgEl.style.display='none';cargarCola();},5000);
+    } else {
+      throw new Error(data.error||'Error desconocido');
+    }
+  }catch(e){
+    msgEl.style.background='#2a1010';
+    msgEl.style.border='1px solid #4a1a1a';
+    msgEl.style.color='var(--danger)';
+    msgEl.innerHTML='✗ Error: '+e.message;
+  }
+  pendingCola=null;
 }
 
 // ── APROBACIONES ──────────────────────────────────────────────
@@ -956,7 +1107,7 @@ async function cargarSolicitudes(){
   listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando solicitudes...</div>`;
   try{
     const t=await loadSheetGviz('SOLICITUDES');
-    const pendientes=(t.rows||[]).filter(r=>r.c&&String(gvizVal(r.c[13])||'').trim()==='Pendiente');
+    const pendientes=(t.rows||[]).filter(r=>r.c&&String(gvizVal(r.c[14])||'').trim()==='Pendiente');
     if(!pendientes.length){
       listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
         <div style="font-size:32px;margin-bottom:10px;">🎉</div>
@@ -972,28 +1123,31 @@ async function cargarSolicitudes(){
       card.innerHTML=`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div>
-            <div style="font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:700;">${v(1)}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px;">🕐 ${v(0)}</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;">${v(2)}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+              <span style="background:#1a2a10;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">${v(0)}</span>
+              <div style="font-size:11px;color:var(--muted);">🕐 ${v(1)}</div>
+            </div>
           </div>
           <span style="background:#2a1f0a;border:1px solid var(--warn);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--warn);">PENDIENTE</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:12px;">
-          <div><span style="color:var(--muted);">Correo:</span> ${v(2)}</div>
-          <div><span style="color:var(--muted);">Cédula:</span> ${v(3)}</div>
-          <div><span style="color:var(--muted);">Celular:</span> ${v(4)}</div>
-          <div><span style="color:var(--muted);">Agencia:</span> ${v(11)}</div>
-          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Modelo:</span> ${v(5)} ${v(6)} ${v(7)}</div>
-          <div><span style="color:var(--muted);">Tela:</span> ${v(8)}</div>
-          <div><span style="color:var(--muted);">Vinil:</span> ${v(9)}</div>
+          <div><span style="color:var(--muted);">Correo:</span> ${v(3)}</div>
+          <div><span style="color:var(--muted);">Cédula:</span> ${v(4)}</div>
+          <div><span style="color:var(--muted);">Celular:</span> ${v(5)}</div>
+          <div><span style="color:var(--muted);">Agencia:</span> ${v(12)}</div>
+          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Modelo:</span> ${v(6)} ${v(7)} ${v(8)}</div>
+          <div><span style="color:var(--muted);">Tela:</span> ${v(9)}</div>
+          <div><span style="color:var(--muted);">Vinil:</span> ${v(10)}</div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:12px;">
-          <span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Piezas</span><br>${v(10).split(' | ').join('<br>')}
+          <span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Piezas</span><br>${v(11).split(' | ').join('<br>')}
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
-          <span style="color:var(--muted);">Retira:</span> ${v(12)}
+          <span style="color:var(--muted);">Retira:</span> ${v(13)}
         </div>
-        <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(1),cedula:v(3),correo:v(2),fecha:v(0)})})' 
-          style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:\'Barlow Condensed\',sans-serif;font-size:17px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">
+        <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(2),cedula:v(4),correo:v(3),fecha:v(1),codigo:v(0)})})'
+          style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">
           ✅ Aprobar Pago
         </button>`;
       listEl.appendChild(card);
@@ -1007,6 +1161,7 @@ function abrirModalAprobacion(data){
   pendingSolicitud=data;
   document.getElementById('apro-resumen').innerHTML=`
     <b style="color:var(--text)">${data.nombre}</b><br>
+    <span style="color:var(--accent);font-weight:700;">${data.codigo||''}</span><br>
     Cédula: <span>${data.cedula}</span> · Correo: <span>${data.correo}</span><br>
     Solicitud: <span>${data.fecha}</span>`;
   document.getElementById('apro-banco').value='';
@@ -1042,8 +1197,7 @@ async function confirmarAprobacion(){
         cedula:pendingSolicitud.cedula,
         banco:banco,
         cod_pago:codPago,
-        fecha_aprobacion:fechaApro,
-        usuario:USUARIOS[unlock]
+        fecha_aprobacion:fechaApro
       });
     msgEl.style.background='#0f2b1a';
     msgEl.style.border='1px solid #1a4a2a';
