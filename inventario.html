@@ -490,7 +490,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw8wEIsU3kqHE612gNId7h8b1sjQGG5E09J6-W8kTxASOBzvTKzkj_E_ro0BVHzokHOcQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx4lcHmGbU-mEf7O-w_lLEF_plfAKjE3z08HoB_wXByu0LUIaA8pTfTeQXSN-Z2Pd_W5Q/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1374,35 +1374,53 @@ document.getElementById('gestion-form').addEventListener('submit',async function
   const btn=document.getElementById('g-submit-btn');
   const msg=document.getElementById('g-msg');
   btn.disabled=true;
-  btn.textContent='⏳ Enviando...';
+  btn.textContent='⏳ Procesando...';
   msg.style.display='none';
+
+  const formData=new FormData(this);
+  const tipo=document.getElementById('g-tipo').value;
+  const fecha=getFechaHora();
+
   try{
-    const formData=new FormData(this);
-    const tipo=document.getElementById('g-tipo').value;
-    const fecha=getFechaHora();
+    let codMake='';
+    // Si es COD → leer número de Make antes de enviar
+    if(tipo==='COD'){
+      btn.textContent='⏳ Leyendo COD...';
+      try{
+        const resCod=await fetch(SCRIPT_URL+'?action=leerCOD');
+        const dataCod=await resCod.json();
+        if(dataCod.ok){
+          codMake=String(dataCod.codSiguiente);
+        }
+      }catch(e){ console.error('No se pudo leer COD:',e); }
+    }
+
+    btn.textContent='⏳ Enviando...';
 
     // Enviar al webhook de Make
+    if(codMake) formData.append('cod_make', codMake);
+    formData.append('fecha', fecha);
     const response=await fetch(WEBHOOK_URL,{method:'POST',body:formData});
 
     // Si es COD también guardar en Google Sheets PEDIDOS
     if(tipo==='COD'){
       const guiaInput=document.getElementById('g-numero-guia');
       await scriptGET({
-          action:'addPedido',
-          nombre:     formData.get('nombre')||'',
-          cedula:     formData.get('cedula')||'',
-          correo:     formData.get('correo')||'',
-          codigo:     formData.get('codigo')||'',
-          numero_guia:guiaInput?guiaInput.value:'',
-          agencia:    formData.get('agencia')||'',
-          status:     'COD',
-          celular:    formData.get('celular')||'',
-          fecha:      fecha,
-          descripcion:formData.get('descripcion')||'',
-          nombre_envio:formData.get('nombre_envio')||'',
-          cel_envio:  formData.get('cel_envio')||'',
-          ci_envio:   formData.get('ci_envio')||''
-        });
+        action:'addPedido',
+        nombre:     formData.get('nombre')||'',
+        cedula:     formData.get('cedula')||'',
+        correo:     formData.get('correo')||'',
+        codigo_cod: codMake,
+        numero_guia:guiaInput?guiaInput.value:'',
+        agencia:    formData.get('agencia')||'',
+        status:     'COD',
+        celular:    formData.get('celular')||'',
+        fecha:      fecha,
+        descripcion:formData.get('descripcion')||'',
+        nombre_envio:formData.get('nombre_envio')||'',
+        cel_envio:  formData.get('cel_envio')||'',
+        ci_envio:   formData.get('ci_envio')||''
+      });
     }
 
     if(response.ok){
@@ -1410,18 +1428,18 @@ document.getElementById('gestion-form').addEventListener('submit',async function
       msg.style.background='#0f2b1a';
       msg.style.border='1px solid #1a4a2a';
       msg.style.color='var(--accent)';
-      msg.textContent='✅ ¡Gestión enviada correctamente!';
+      msg.innerHTML=tipo==='COD'&&codMake
+        ? `✅ Gestión enviada · COD asignado: <b style="color:var(--accent);font-size:16px;">${codMake}</b>`
+        : '✅ ¡Gestión enviada correctamente!';
       setTimeout(()=>{
         this.reset();
         msg.style.display='none';
         document.getElementById('gestion-form-wrap').style.display='none';
-        ['COD','Enviado'].forEach(t=>{
-          const btn=document.getElementById('gbtn-'+t);
-          btn.style.borderColor='var(--border)';
-          btn.style.background='var(--surface2)';
-          btn.style.color='var(--muted)';
+        ['COD','Enviado','Buscar'].forEach(t=>{
+          const b=document.getElementById('gbtn-'+t);
+          if(b){b.style.borderColor='var(--border)';b.style.background='var(--surface2)';b.style.color='var(--muted)';}
         });
-      },2500);
+      },4000);
     } else {
       throw new Error('Error del servidor');
     }
@@ -1430,7 +1448,7 @@ document.getElementById('gestion-form').addEventListener('submit',async function
     msg.style.background='#2a1010';
     msg.style.border='1px solid #4a1a1a';
     msg.style.color='var(--danger)';
-    msg.textContent='✗ Error al enviar. Intenta de nuevo.';
+    msg.innerHTML='✗ Error al enviar. Intenta de nuevo.';
   }
   btn.disabled=false;
   btn.textContent='📤 ENVIAR GESTIÓN';
