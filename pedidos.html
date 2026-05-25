@@ -315,7 +315,7 @@ select.field-input option{background:var(--surface3);color:var(--text);}
 </main>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwZcTkPNlp8AWspdinKBjvh4OqVYEiE2pxOOH0npYMMsZP05a0m4DHSCImkUhqBQTNWKg/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyjxruL0g45vz8pAF0lakglFu3VbRmzYIjqpFKB8_0Vrgxj3dKAh4fbzgXZu8KsuZ2SPA/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=6;
@@ -749,17 +749,25 @@ function buildMensaje(){
 
 async function guardarEnSheets(){
   const piezasText=pedido.piezas.map(p=>`${p.genero} ${p.talla} - ${p.nombre}`).join(' | ');
-  // Quien retira — campos separados
   const retiraNombre=pedido.mismoEnvio?pedido.nombre:pedido.eNombre;
   const retiraCi=pedido.mismoEnvio?pedido.cedula:pedido.eCi;
   const retiraCel=pedido.mismoEnvio?pedido.celular:pedido.eCel;
   try{
     await scriptGET({
-      action:'addSolicitud',fecha:new Date().toLocaleString('es-VE'),
-      nombre:pedido.nombre,correo:pedido.correo,cedula:pedido.cedula,celular:pedido.celular,
-      modelo:`${pedido.pack}PACK ${pedido.modelo} ${pedido.manga} ${pedido.capucha}`,
-      manga:pedido.manga,capucha:pedido.capucha,tela:pedido.tela,vinil:pedido.vinil,
-      piezas:piezasText,agencia:pedido.agencia,
+      action:'addSolicitud',
+      fecha:new Date().toLocaleString('es-VE'),
+      nombre:pedido.nombre,
+      correo:pedido.correo,
+      cedula:pedido.cedula,
+      celular:pedido.celular,
+      modelo:pedido.modelo,
+      manga:pedido.manga,
+      capucha:pedido.capucha,
+      pack:`${pedido.pack}PACK`,
+      tela:pedido.tela,
+      vinil:pedido.vinil,
+      piezas:piezasText,
+      agencia:pedido.agencia,
       retira_nombre:retiraNombre,
       retira_ci:retiraCi,
       retira_cel:retiraCel

@@ -377,8 +377,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <button onclick="cargarCola()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 14px;font-size:13px;cursor:pointer;">↻</button>
     </div>
     <div style="display:flex;gap:6px;margin-bottom:14px;">
-      <button class="cola-filter-btn" data-filtro="En Cola" onclick="setFiltroCola('En Cola')" style="flex:1;padding:8px;border:1px solid var(--warn);border-radius:8px;background:#2a1f0a;color:var(--warn);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">⏳ En Cola</button>
-      <button class="cola-filter-btn" data-filtro="Enviado a Producción" onclick="setFiltroCola('Enviado a Producción')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🚀 Enviados</button>
+      <button class="cola-filter-btn" data-filtro="Pagado" onclick="setFiltroCola('Pagado')" style="flex:1;padding:8px;border:1px solid var(--warn);border-radius:8px;background:#2a1f0a;color:var(--warn);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">⏳ En Cola</button>
+      <button class="cola-filter-btn" data-filtro="En Producción" onclick="setFiltroCola('En Producción')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🚀 Enviados</button>
     </div>
     <div id="cola-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
     <div id="cola-list"></div>
@@ -532,7 +532,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZcTkPNlp8AWspdinKBjvh4OqVYEiE2pxOOH0npYMMsZP05a0m4DHSCImkUhqBQTNWKg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjxruL0g45vz8pAF0lakglFu3VbRmzYIjqpFKB8_0Vrgxj3dKAh4fbzgXZu8KsuZ2SPA/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1018,7 +1018,7 @@ function switchTab(tab){
   if(tab==='cola')cargarCola();
 }
 
-let filtroCola='En Cola';
+let filtroCola='Pagado';
 function setFiltroCola(filtro){
   filtroCola=filtro;
   document.querySelectorAll('.cola-filter-btn').forEach(b=>{
@@ -1041,8 +1041,8 @@ async function cargarCola(){
     const enCola=data.rows||[];
     if(!enCola.length){
       listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
-        <div style="font-size:32px;margin-bottom:10px;">${filtroCola==='En Cola'?'🎉':'📋'}</div>
-        <div style="font-size:15px;">No hay pedidos ${filtroCola==='En Cola'?'en cola':'enviados a producción'}</div>
+        <div style="font-size:32px;margin-bottom:10px;">${filtroCola==='Pagado'?'🎉':'📋'}</div>
+        <div style="font-size:15px;">No hay pedidos ${filtroCola==='Pagado'?'en cola':'enviados a producción'}</div>
       </div>`;
       return;
     }
@@ -1054,35 +1054,35 @@ async function cargarCola(){
       card.innerHTML=`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;">${v(3)}</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;">${v(7)}</div>
             <div style="display:flex;gap:8px;margin-top:4px;">
-              <span style="background:#1a2a10;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">${v(0)}</span>
-              <span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">← ${v(1)}</span>
+              <span style="background:#1a2a10;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">${v(1)}</span>
+              <span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">← ${v(0)}</span>
             </div>
           </div>
-          <span style="background:${filtroCola==='En Cola'?'#1a1a10':'#0f2b1a'};border:1px solid ${filtroCola==='En Cola'?'var(--warn)':'var(--accent)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:${filtroCola==='En Cola'?'var(--warn)':'var(--accent)'};">${filtroCola==='En Cola'?'EN COLA':'ENVIADO A PRODUCCIÓN'}</span>
+          <span style="background:${filtroCola==='Pagado'?'#2a1f0a':'#0f2b1a'};border:1px solid ${filtroCola==='Pagado'?'var(--warn)':'var(--accent)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:${filtroCola==='Pagado'?'var(--warn)':'var(--accent)'};">${filtroCola==='Pagado'?'EN COLA':'EN PRODUCCIÓN'}</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:10px;">
-          <div><span style="color:var(--muted);">Correo:</span> ${v(4)}</div>
-          <div><span style="color:var(--muted);">Cédula:</span> ${v(5)}</div>
-          <div><span style="color:var(--muted);">Celular:</span> ${v(6)}</div>
-          <div><span style="color:var(--muted);">Agencia:</span> ${v(13)}</div>
-          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Modelo:</span> ${v(7)} ${v(8)} ${v(9)}</div>
-          <div><span style="color:var(--muted);">Tela:</span> ${v(10)}</div>
-          <div><span style="color:var(--muted);">Vinil:</span> ${v(11)}</div>
-          <div><span style="color:var(--muted);">Banco:</span> ${v(15)}</div>
-          <div><span style="color:var(--muted);">Ref. Pago:</span> ${v(16)}</div>
+          <div><span style="color:var(--muted);">Correo:</span> ${v(8)}</div>
+          <div><span style="color:var(--muted);">Cédula:</span> ${v(9)}</div>
+          <div><span style="color:var(--muted);">Celular:</span> ${v(10)}</div>
+          <div><span style="color:var(--muted);">Agencia:</span> ${v(18)}</div>
+          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Modelo:</span> ${v(11)} ${v(12)} ${v(13)} · ${v(14)}</div>
+          <div><span style="color:var(--muted);">Tela:</span> ${v(15)}</div>
+          <div><span style="color:var(--muted);">Vinil:</span> ${v(16)}</div>
+          <div><span style="color:var(--muted);">Banco:</span> ${v(22)}</div>
+          <div><span style="color:var(--muted);">Ref:</span> ${v(23)}</div>
         </div>
-        <div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:12px;">
-          <span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Piezas</span><br>${v(12).split(' | ').join('<br>')}
-        </div>
+        ${v(17)?`<div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:12px;"><span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Piezas</span><br>${v(17).split(' | ').join('<br>')}</div>`:''}
         <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
-          <span style="color:var(--muted);">Retira:</span> ${v(14)}
+          <span style="color:var(--muted);">Retira:</span> ${v(19)}
+          ${v(20)?` · C.I: ${v(20)}`:''}
+          ${v(21)?` · Cel: ${v(21)}`:''}
         </div>
-        ${filtroCola==='En Cola'?`<button onclick='abrirModalPlanificacion(${JSON.stringify({codigoCola:v(0),codigoSol:v(1),nombre:v(3),cedula:v(5),modelo:v(7)+' '+v(8)+' '+v(9),piezas:v(12),agencia:v(13),tela:v(10),vinil:v(11),celular:v(6),correo:v(4),retira:v(14),banco:v(15),codpago:v(16)})})'
+        ${filtroCola==='Pagado'?`<button onclick='abrirModalPlanificacion(${JSON.stringify({codigoS:v(0),codigoC:v(1),nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),modelo:v(11)+' '+v(12)+' '+v(13),pack:v(14),tela:v(15),vinil:v(16),piezas:v(17),agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),banco:v(22),codpago:v(23)})})'
           style="width:100%;padding:13px;background:linear-gradient(135deg,var(--warn),#c07010);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">
           🚀 Enviar a Producción
-        </button>`:''}`;
+        </button>`:''}`; 
       listEl.appendChild(card);
     });
   }catch(e){
@@ -1094,7 +1094,7 @@ function abrirModalPlanificacion(data){
   pendingCola=data;
   document.getElementById('plan-resumen').innerHTML=`
     <b style="color:var(--text)">${data.nombre}</b><br>
-    <span style="color:var(--accent);">${data.codigoCola}</span> ← <span style="color:var(--warn);">${data.codigoSol}</span><br>
+    <span style="color:var(--accent);">${data.codigoC}</span> ← <span style="color:var(--warn);">${data.codigoS}</span><br>
     Modelo: <span>${data.modelo}</span><br>
     Agencia: <span>${data.agencia}</span>`;
   document.getElementById('plan-unlock').value='';
@@ -1113,33 +1113,49 @@ async function confirmarPlanificacion(){
   msgEl.style.display='block';
   msgEl.style.background='var(--surface2)';
   msgEl.style.color='var(--muted)';
-  msgEl.innerHTML='<span class="spinner">↻</span> Enviando a producción...';
+  msgEl.innerHTML='<span class="spinner">↻</span> Leyendo COD...';
 
   try{
-    // 1. Registrar en REGISTRO_PLANIFICACION y actualizar COLA via JSONP
-    const data=await scriptGETjson({action:'enviarPlanificacion',codigoCola:pendingCola.codigoCola});
+    // 1. Leer COD de Make
+    const codData=await scriptGETjson({action:'leerCOD'});
+    const codMake=codData.ok?String(codData.codSiguiente):'';
+
+    msgEl.innerHTML='<span class="spinner">↻</span> Enviando a producción...';
+
+    // 2. Registrar en R.COLA.P y borrar de COLA.P
+    const fechaProd=getFechaHora();
+    const data=await scriptGETjson({
+      action:'enviarProduccion',
+      codigoC:pendingCola.codigoC,
+      fecha_produccion:fechaProd,
+      usuario:USUARIOS[unlock],
+      cod_make:codMake
+    });
 
     if(data.ok){
-      // 2. Enviar a Make webhook con todos los datos
+      // 3. Enviar webhook Make SIN el COD (Make lo maneja solo)
       const makeParams=new URLSearchParams({
         tipo_operacion:'Planificacion',
-        codigo_prod:data.codigoProd||'',
-        codigo_cola:pendingCola.codigoCola||'',
-        codigo_sol:pendingCola.codigoSol||'',
+        codigo_prod:data.codigoP||'',
+        codigo_cola:pendingCola.codigoC||'',
+        codigo_sol:pendingCola.codigoS||'',
         nombre:pendingCola.nombre||'',
         correo:pendingCola.correo||'',
         cedula:pendingCola.cedula||'',
         celular:pendingCola.celular||'',
         modelo:pendingCola.modelo||'',
+        pack:pendingCola.pack||'',
         tela:pendingCola.tela||'',
         vinil:pendingCola.vinil||'',
         piezas:pendingCola.piezas||'',
         agencia:pendingCola.agencia||'',
         retira:pendingCola.retira||'',
+        retira_ci:pendingCola.retiraCi||'',
+        retira_cel:pendingCola.retiraCel||'',
         banco:pendingCola.banco||'',
         cod_pago:pendingCola.codpago||'',
         usuario:USUARIOS[unlock],
-        fecha:getFechaHora()
+        fecha:fechaProd
       });
       try{
         await fetch('https://hook.us2.make.com/9vb6zab74fbbqkbv46c2coi8i7e4mnqs?'+makeParams.toString(),{method:'GET',mode:'no-cors'});
@@ -1148,7 +1164,7 @@ async function confirmarPlanificacion(){
       msgEl.style.background='#0f2b1a';
       msgEl.style.border='1px solid #1a4a2a';
       msgEl.style.color='var(--accent)';
-      msgEl.innerHTML=`✅ Enviado a producción · <b>${data.codigoProd}</b> · ${USUARIOS[unlock]}`;
+      msgEl.innerHTML=`✅ Enviado a producción · <b>${data.codigoP}</b> · COD registrado: ${codMake} · ${USUARIOS[unlock]}`;
       setTimeout(()=>{msgEl.style.display='none';cargarCola();},5000);
     } else {
       throw new Error(data.error||'Error desconocido');
@@ -1161,6 +1177,7 @@ async function confirmarPlanificacion(){
   }
   pendingCola=null;
 }
+
 
 function setFiltroApro(filtro){
   filtroSolicitudes=filtro;
@@ -1180,12 +1197,10 @@ let filtroSolicitudes='Pendiente';
 async function cargarSolicitudes(filtro){
   if(filtro!==undefined) filtroSolicitudes=filtro;
   const listEl=document.getElementById('solicitudes-list');
-  const msgEl=document.getElementById('apro-msg');
   document.querySelectorAll('.sol-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filtro===filtroSolicitudes));
   listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>`;
   try{
-    // Leer via Apps Script JSONP para garantizar todas las filas
-    const data=await scriptGETjson({action:'leerSolicitudes',filtro:filtro});
+    const data=await scriptGETjson({action:'leerAprobaciones',filtro:filtroSolicitudes});
     const filtradas=data.rows||[];
     if(!filtradas.length){
       listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);"><div style="font-size:32px;margin-bottom:10px;">${filtroSolicitudes==='Pendiente'?'🎉':'📋'}</div><div style="font-size:15px;">No hay solicitudes ${filtroSolicitudes.toLowerCase()}</div></div>`;
@@ -1193,42 +1208,51 @@ async function cargarSolicitudes(filtro){
     }
     const sc={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)'};
     const sb={Pendiente:'#2a1f0a',Pagado:'#0f2b1a',Reprobado:'#2a1010'};
-    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${filtradas.length} solicitud(es) · ${filtro==='Pendiente'?'esperando aprobación':filtro==='Pagado'?'aprobadas':'reprobadas'}</div>`;
+    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${filtradas.length} solicitud(es) · ${filtroSolicitudes==='Pendiente'?'esperando aprobación':filtroSolicitudes==='Pagado'?'aprobadas':'reprobadas'}</div>`;
     filtradas.forEach(r=>{
-      // r es array: [CodigoS, FechaSol, Nombre, Correo, Cedula, Celular, Modelo, Manga, Capucha, Tela, Vinil, Piezas, Agencia, Retira, Status, ...]
+      // Nueva estructura APROBACIONES 28 cols:
+      // A(0)=CodigoS, B(1)=CodigoC, C(2)=CodigoP, D(3)=COD_Make
+      // E(4)=FechaSol, F(5)=FechaApro, G(6)=FechaProd
+      // H(7)=Nombre, I(8)=Correo, J(9)=Cedula, K(10)=Celular
+      // L(11)=Modelo, M(12)=Manga, N(13)=Capucha, O(14)=Pack
+      // P(15)=Tela, Q(16)=Vinil, R(17)=Piezas
+      // S(18)=Agencia, T(19)=NombreRetira, U(20)=CedulaRetira, V(21)=CelularRetira
+      // W(22)=Banco, X(23)=Ref, Y(24)=UsuarioAprobo, Z(25)=UsuarioProd
+      // AA(26)=Status, AB(27)=Motivo
       const v=i=>String(r[i]||'').trim();
       const card=document.createElement('div');
       card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;animation:slideUp .3s ease;';
       card.innerHTML=`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;">${v(2)}</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;">${v(7)}</div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
               <span style="background:#1a2a10;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">${v(0)||'—'}</span>
-              <div style="font-size:11px;color:var(--muted);">🕐 ${v(1)}</div>
+              <div style="font-size:11px;color:var(--muted);">🕐 ${v(4)}</div>
             </div>
           </div>
-          <span style="background:${sb[filtro]||'var(--surface2)'};border:1px solid ${sc[filtro]||'var(--border)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:${sc[filtro]||'var(--muted)'};">${filtro.toUpperCase()}</span>
+          <span style="background:${sb[filtroSolicitudes]||'var(--surface2)'};border:1px solid ${sc[filtroSolicitudes]||'var(--border)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:${sc[filtroSolicitudes]||'var(--muted)'};">${filtroSolicitudes.toUpperCase()}</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:12px;">
-          <div><span style="color:var(--muted);">Correo:</span> ${v(3)}</div>
-          <div><span style="color:var(--muted);">Cédula:</span> ${v(4)}</div>
-          <div><span style="color:var(--muted);">Celular:</span> ${v(5)}</div>
-          <div><span style="color:var(--muted);">Agencia:</span> ${v(12)}</div>
-          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Modelo:</span> ${v(6)}</div>
-          <div><span style="color:var(--muted);">Tela:</span> ${v(9)}</div>
-          <div><span style="color:var(--muted);">Vinil:</span> ${v(10)}</div>
+          <div><span style="color:var(--muted);">Correo:</span> ${v(8)}</div>
+          <div><span style="color:var(--muted);">Cédula:</span> ${v(9)}</div>
+          <div><span style="color:var(--muted);">Celular:</span> ${v(10)}</div>
+          <div><span style="color:var(--muted);">Agencia:</span> ${v(18)}</div>
+          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Modelo:</span> ${v(11)} ${v(12)} ${v(13)} · ${v(14)}</div>
+          <div><span style="color:var(--muted);">Tela:</span> ${v(15)}</div>
+          <div><span style="color:var(--muted);">Vinil:</span> ${v(16)}</div>
         </div>
-        ${v(11)?`<div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:12px;"><span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Piezas</span><br>${v(11).split(' | ').join('<br>')}</div>`:''}
+        ${v(17)?`<div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:12px;"><span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Piezas</span><br>${v(17).split(' | ').join('<br>')}</div>`:''}
         <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
-          <span style="color:var(--muted);">Retira:</span> ${v(13)}
-          ${v(18)?` · <span style="color:var(--muted);">C.I:</span> ${v(18)}`:''}
-          ${v(19)?` · <span style="color:var(--muted);">Cel:</span> ${v(19)}`:''}
+          <span style="color:var(--muted);">Retira:</span> ${v(19)}
+          ${v(20)?` · <span style="color:var(--muted);">C.I:</span> ${v(20)}`:''}
+          ${v(21)?` · <span style="color:var(--muted);">Cel:</span> ${v(21)}`:''}
         </div>
-        ${filtro==='Pendiente'?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(2),cedula:v(4),correo:v(3),fecha:v(1),codigo:v(0)})})'
+        ${filtroSolicitudes==='Reprobado'?`<div style="background:#2a1010;border:1px solid #4a1a1a;border-radius:8px;padding:8px 10px;font-size:12px;"><span style="color:var(--danger);">Motivo:</span> ${v(27)}</div>`:''}
+        ${filtroSolicitudes==='Pendiente'?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+          <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigo:v(0)})})'
             style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✅ Aprobar</button>
-          <button onclick='abrirModalReprobar(${JSON.stringify({nombre:v(2),cedula:v(4),correo:v(3),fecha:v(1),codigo:v(0)})})'
+          <button onclick='abrirModalReprobar(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigo:v(0)})})'
             style="width:100%;padding:13px;background:transparent;border:2px solid var(--danger);border-radius:10px;color:var(--danger);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✗ Reprobar</button>
         </div>`:''}`;
       listEl.appendChild(card);
@@ -1270,7 +1294,7 @@ async function confirmarReprobar(){
   msgEl.innerHTML='<span class="spinner">↻</span> Registrando...';
 
   try{
-    await scriptGET({
+    const data=await scriptGETjson({
       action:'reprobarSolicitud',
       nombre:pendingSolicitud.nombre,
       cedula:pendingSolicitud.cedula,
@@ -1278,11 +1302,15 @@ async function confirmarReprobar(){
       fecha_reprobacion:getFechaHora(),
       usuario:USUARIOS[unlock]
     });
-    msgEl.style.background='#2a1010';
-    msgEl.style.border='1px solid #4a1a1a';
-    msgEl.style.color='var(--danger)';
-    msgEl.innerHTML=`✗ Solicitud reprobada · <b>${motivo}</b> · ${USUARIOS[unlock]}`;
-    setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},4000);
+    if(data.ok){
+      msgEl.style.background='#2a1010';
+      msgEl.style.border='1px solid #4a1a1a';
+      msgEl.style.color='var(--danger)';
+      msgEl.innerHTML=`✗ Solicitud reprobada · <b>${motivo}</b> · ${USUARIOS[unlock]}`;
+      setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},4000);
+    } else {
+      throw new Error(data.error||'Error desconocido');
+    }
   }catch(e){
     msgEl.style.background='#2a1010';
     msgEl.style.color='var(--danger)';
@@ -1325,19 +1353,24 @@ async function confirmarAprobacion(){
   msgEl.innerHTML='<span class="spinner">↻</span> Registrando aprobación...';
 
   try{
-    await scriptGET({
-        action:'aprobarSolicitud',
-        nombre:pendingSolicitud.nombre,
-        cedula:pendingSolicitud.cedula,
-        banco:banco,
-        cod_pago:codPago,
-        fecha_aprobacion:fechaApro
-      });
-    msgEl.style.background='#0f2b1a';
-    msgEl.style.border='1px solid #1a4a2a';
-    msgEl.style.color='var(--accent)';
-    msgEl.innerHTML=`✅ Pago aprobado · ${USUARIOS[unlock]} · ${fechaApro}`;
-    setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},4000);
+    const data=await scriptGETjson({
+      action:'aprobarSolicitud',
+      nombre:pendingSolicitud.nombre,
+      cedula:pendingSolicitud.cedula,
+      banco:banco,
+      cod_pago:codPago,
+      fecha_aprobacion:fechaApro,
+      usuario:USUARIOS[unlock]
+    });
+    if(data.ok){
+      msgEl.style.background='#0f2b1a';
+      msgEl.style.border='1px solid #1a4a2a';
+      msgEl.style.color='var(--accent)';
+      msgEl.innerHTML=`✅ Pago aprobado · <b>${data.codigoC||''}</b> en cola · ${USUARIOS[unlock]} · ${fechaApro}`;
+      setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},4000);
+    } else {
+      throw new Error(data.error||'Error desconocido');
+    }
   }catch(e){
     msgEl.style.background='#2a1010';
     msgEl.style.border='1px solid #4a1a1a';
