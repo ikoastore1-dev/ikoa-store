@@ -1174,9 +1174,8 @@ async function cargarSolicitudes(filtro){
   document.querySelectorAll('.sol-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filtro===filtroSolicitudes));
   listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>`;
   try{
-    // Leer via Apps Script para garantizar todas las filas
-    const res=await fetch(SCRIPT_URL+'?action=leerSolicitudes&filtro='+encodeURIComponent(filtro));
-    const data=await res.json();
+    // Leer via Apps Script JSONP para garantizar todas las filas
+    const data=await scriptGETjson({action:'leerSolicitudes',filtro:filtro});
     const filtradas=data.rows||[];
     if(!filtradas.length){
       listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);"><div style="font-size:32px;margin-bottom:10px;">${filtroSolicitudes==='Pendiente'?'🎉':'📋'}</div><div style="font-size:15px;">No hay solicitudes ${filtroSolicitudes.toLowerCase()}</div></div>`;
