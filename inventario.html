@@ -532,7 +532,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby1MndKaQ3Zij3MLP48SAbasEAvJMdQAPusaJgjp9PFIomfaGAI7tpF95r3I_8oL_vI-g/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwbiUMGyxIbg-ABj_lsjjLMGTxwRfTzdh4k7CfxIGpNdzqlfpJROcPPW95qlEfUClI_Eg/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1210,7 +1210,11 @@ async function cargarSolicitudes(filtro){
           <div><span style="color:var(--muted);">Vinil:</span> ${v(10)}</div>
         </div>
         ${v(11)?`<div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:12px;"><span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Piezas</span><br>${v(11).split(' | ').join('<br>')}</div>`:''}
-        <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;"><span style="color:var(--muted);">Retira:</span> ${v(13)}</div>
+        <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
+          <span style="color:var(--muted);">Retira:</span> ${v(13)}
+          ${v(18)?` · <span style="color:var(--muted);">C.I:</span> ${v(18)}`:''}
+          ${v(19)?` · <span style="color:var(--muted);">Cel:</span> ${v(19)}`:''}
+        </div>
         ${filtro==='Pendiente'?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(2),cedula:v(4),correo:v(3),fecha:v(1),codigo:v(0)})})'
             style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✅ Aprobar</button>

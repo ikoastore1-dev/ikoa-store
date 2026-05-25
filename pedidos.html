@@ -315,7 +315,7 @@ select.field-input option{background:var(--surface3);color:var(--text);}
 </main>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycby1MndKaQ3Zij3MLP48SAbasEAvJMdQAPusaJgjp9PFIomfaGAI7tpF95r3I_8oL_vI-g/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwbiUMGyxIbg-ABj_lsjjLMGTxwRfTzdh4k7CfxIGpNdzqlfpJROcPPW95qlEfUClI_Eg/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=6;
@@ -749,14 +749,20 @@ function buildMensaje(){
 
 async function guardarEnSheets(){
   const piezasText=pedido.piezas.map(p=>`${p.genero} ${p.talla} - ${p.nombre}`).join(' | ');
-  const retiraText=pedido.mismoEnvio?`${pedido.nombre} | ${pedido.cedula} | ${pedido.celular}`:`${pedido.eNombre} | ${pedido.eCi} | ${pedido.eCel}`;
+  // Quien retira — campos separados
+  const retiraNombre=pedido.mismoEnvio?pedido.nombre:pedido.eNombre;
+  const retiraCi=pedido.mismoEnvio?pedido.cedula:pedido.eCi;
+  const retiraCel=pedido.mismoEnvio?pedido.celular:pedido.eCel;
   try{
     await scriptGET({
       action:'addSolicitud',fecha:new Date().toLocaleString('es-VE'),
       nombre:pedido.nombre,correo:pedido.correo,cedula:pedido.cedula,celular:pedido.celular,
       modelo:`${pedido.pack}PACK ${pedido.modelo} ${pedido.manga} ${pedido.capucha}`,
       manga:pedido.manga,capucha:pedido.capucha,tela:pedido.tela,vinil:pedido.vinil,
-      piezas:piezasText,agencia:pedido.agencia,retira:retiraText
+      piezas:piezasText,agencia:pedido.agencia,
+      retira_nombre:retiraNombre,
+      retira_ci:retiraCi,
+      retira_cel:retiraCel
     });
   }catch(e){ console.error(e); }
 }
