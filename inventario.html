@@ -1060,7 +1060,7 @@ async function cargarCola(){
               <span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">← ${v(1)}</span>
             </div>
           </div>
-          <span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--warn);">EN COLA</span>
+          <span style="background:${filtroCola==='En Cola'?'#1a1a10':'#0f2b1a'};border:1px solid ${filtroCola==='En Cola'?'var(--warn)':'var(--accent)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:${filtroCola==='En Cola'?'var(--warn)':'var(--accent)'};">${filtroCola==='En Cola'?'EN COLA':'ENVIADO A PRODUCCIÓN'}</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:10px;">
           <div><span style="color:var(--muted);">Correo:</span> ${v(4)}</div>
@@ -1079,10 +1079,10 @@ async function cargarCola(){
         <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
           <span style="color:var(--muted);">Retira:</span> ${v(14)}
         </div>
-        <button onclick='abrirModalPlanificacion(${JSON.stringify({codigoCola:v(0),codigoSol:v(1),nombre:v(3),cedula:v(5),modelo:v(7)+' '+v(8)+' '+v(9),piezas:v(12),agencia:v(13)})})'
+        ${filtroCola==='En Cola'?`<button onclick='abrirModalPlanificacion(${JSON.stringify({codigoCola:v(0),codigoSol:v(1),nombre:v(3),cedula:v(5),modelo:v(7)+' '+v(8)+' '+v(9),piezas:v(12),agencia:v(13),tela:v(10),vinil:v(11),celular:v(6),correo:v(4),retira:v(14),banco:v(15),codpago:v(16)})})'
           style="width:100%;padding:13px;background:linear-gradient(135deg,var(--warn),#c07010);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">
           🚀 Enviar a Producción
-        </button>`;
+        </button>`:''}`;
       listEl.appendChild(card);
     });
   }catch(e){
@@ -1120,19 +1120,30 @@ async function confirmarPlanificacion(){
     const data=await scriptGETjson({action:'enviarPlanificacion',codigoCola:pendingCola.codigoCola});
 
     if(data.ok){
-      // 2. Enviar a Make webhook
-      const formData=new FormData();
-      formData.append('tipo_operacion','Planificacion');
-      formData.append('codigo_cola',pendingCola.codigoCola);
-      formData.append('codigo_sol',pendingCola.codigoSol);
-      formData.append('codigo_prod',data.codigoProd);
-      formData.append('nombre',pendingCola.nombre);
-      formData.append('modelo',pendingCola.modelo);
-      formData.append('piezas',pendingCola.piezas);
-      formData.append('agencia',pendingCola.agencia);
-      formData.append('usuario',USUARIOS[unlock]);
-      formData.append('fecha',getFechaHora());
-      await fetch('https://hook.us2.make.com/9vb6zab74fbbqkbv46c2coi8i7e4mnqs',{method:'POST',body:formData}).catch(()=>{});
+      // 2. Enviar a Make webhook con todos los datos
+      const makeParams=new URLSearchParams({
+        tipo_operacion:'Planificacion',
+        codigo_prod:data.codigoProd||'',
+        codigo_cola:pendingCola.codigoCola||'',
+        codigo_sol:pendingCola.codigoSol||'',
+        nombre:pendingCola.nombre||'',
+        correo:pendingCola.correo||'',
+        cedula:pendingCola.cedula||'',
+        celular:pendingCola.celular||'',
+        modelo:pendingCola.modelo||'',
+        tela:pendingCola.tela||'',
+        vinil:pendingCola.vinil||'',
+        piezas:pendingCola.piezas||'',
+        agencia:pendingCola.agencia||'',
+        retira:pendingCola.retira||'',
+        banco:pendingCola.banco||'',
+        cod_pago:pendingCola.codpago||'',
+        usuario:USUARIOS[unlock],
+        fecha:getFechaHora()
+      });
+      try{
+        await fetch('https://hook.us2.make.com/9vb6zab74fbbqkbv46c2coi8i7e4mnqs?'+makeParams.toString(),{method:'GET',mode:'no-cors'});
+      }catch(err){ console.error('Make error:',err); }
 
       msgEl.style.background='#0f2b1a';
       msgEl.style.border='1px solid #1a4a2a';
