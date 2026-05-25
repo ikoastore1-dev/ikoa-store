@@ -532,7 +532,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwbiUMGyxIbg-ABj_lsjjLMGTxwRfTzdh4k7CfxIGpNdzqlfpJROcPPW95qlEfUClI_Eg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZcTkPNlp8AWspdinKBjvh4OqVYEiE2pxOOH0npYMMsZP05a0m4DHSCImkUhqBQTNWKg/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1037,18 +1037,18 @@ async function cargarCola(){
   const listEl=document.getElementById('cola-list');
   listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando cola...</div>`;
   try{
-    const t=await loadSheetGviz('COLA_PLANIFICACION');
-    const enCola=(t.rows||[]).filter(r=>r.c&&r.c.some(c=>String(c?.v||'').trim()===filtroCola));
+    const data=await scriptGETjson({action:'leerCola',filtro:filtroCola});
+    const enCola=data.rows||[];
     if(!enCola.length){
       listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
-        <div style="font-size:32px;margin-bottom:10px;">🎉</div>
-        <div style="font-size:15px;">No hay pedidos en cola de planificación</div>
+        <div style="font-size:32px;margin-bottom:10px;">${filtroCola==='En Cola'?'🎉':'📋'}</div>
+        <div style="font-size:15px;">No hay pedidos ${filtroCola==='En Cola'?'en cola':'enviados a producción'}</div>
       </div>`;
       return;
     }
-    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${enCola.length} pedido(s) esperando envío a producción</div>`;
+    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${enCola.length} pedido(s) · ${filtroCola}</div>`;
     enCola.forEach(r=>{
-      const v=i=>String(gvizVal(r.c[i])||'').trim();
+      const v=i=>String(r[i]||'').trim();
       const card=document.createElement('div');
       card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;animation:slideUp .3s ease;';
       card.innerHTML=`
@@ -1116,9 +1116,8 @@ async function confirmarPlanificacion(){
   msgEl.innerHTML='<span class="spinner">↻</span> Enviando a producción...';
 
   try{
-    // 1. Registrar en REGISTRO_PLANIFICACION y actualizar COLA
-    const res=await fetch(SCRIPT_URL+'?action=enviarPlanificacion&codigoCola='+pendingCola.codigoCola);
-    const data=await res.json();
+    // 1. Registrar en REGISTRO_PLANIFICACION y actualizar COLA via JSONP
+    const data=await scriptGETjson({action:'enviarPlanificacion',codigoCola:pendingCola.codigoCola});
 
     if(data.ok){
       // 2. Enviar a Make webhook
