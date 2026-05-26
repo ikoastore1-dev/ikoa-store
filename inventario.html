@@ -1432,17 +1432,34 @@ async function confirmarAprobacion(){
 // ── GESTIÓN ───────────────────────────────────────────────────
 const WEBHOOK_URL='https://hook.us2.make.com/9vb6zab74fbbqkbv46c2coi8i7e4mnqs';
 
+function resetGestionBtns(){
+  // Deselecciona los 3 botones principales
+  ['COD','Enviado','Buscar'].forEach(t=>{
+    const b=document.getElementById('gbtn-'+t);
+    if(b){ b.style.borderColor='var(--border)'; b.style.background='var(--surface2)'; b.style.color='var(--muted)'; }
+  });
+  // Oculta sub-modos enviado
+  const modos=document.getElementById('envio-modos');
+  if(modos) modos.style.display='none';
+  // Oculta envio por seleccion
+  document.getElementById('envio-seleccion-wrap').style.display='none';
+  // Oculta formulario
+  document.getElementById('gestion-form-wrap').style.display='none';
+}
+
 function setTipoGestion(tipo){
+  // Resetear todo primero
+  resetGestionBtns();
+
   document.getElementById('g-tipo').value=tipo;
   document.getElementById('g-status').value=tipo;
-  ['COD','Enviado','Buscar'].forEach(t=>{
-    const btn=document.getElementById('gbtn-'+t);
-    if(t===tipo){
-      btn.style.borderColor='var(--accent)';btn.style.background='#0f2b1a';btn.style.color='var(--accent)';
-    } else {
-      btn.style.borderColor='var(--border)';btn.style.background='var(--surface2)';btn.style.color='var(--muted)';
-    }
-  });
+
+  // Activar botón principal correcto
+  const mainBtn=tipo==='Enviado'?'Enviado':tipo;
+  const btn=document.getElementById('gbtn-'+mainBtn);
+  if(btn){ btn.style.borderColor='var(--accent)'; btn.style.background='#0f2b1a'; btn.style.color='var(--accent)'; }
+
+  // Mostrar form
   document.getElementById('gestion-form-wrap').style.display='block';
   const codSec=document.getElementById('g-cod-section');
   const envSec=document.getElementById('g-enviado-section');
@@ -1452,20 +1469,45 @@ function setTipoGestion(tipo){
   const celWrap=document.getElementById('g-celular-wrap');
   const buscarSec=document.getElementById('g-buscar-section');
   const submitBtn=document.getElementById('g-submit-btn');
+  const authSec=document.getElementById('g-auth-section');
   const clienteSec=document.getElementById('g-cliente-section');
   codSec.style.display='none'; envSec.style.display='none';
   envioWrap.style.display='none'; arteSection.style.display='none';
   buscarSec.style.display='none'; cedWrap.style.display='none'; celWrap.style.display='none';
   submitBtn.style.display='block'; clienteSec.style.display='flex';
+  if(authSec) authSec.style.display='block';
   if(tipo==='COD'){
     codSec.style.display='flex'; envioWrap.style.display='flex';
     arteSection.style.display='flex'; cedWrap.style.display='block'; celWrap.style.display='block';
   } else if(tipo==='Enviado'){
     envSec.style.display='flex'; envioWrap.style.display='flex';
+    // Activar sub-botón manual
+    const bManual=document.getElementById('gbtn-EnviadoManual');
+    if(bManual){ bManual.style.borderColor='var(--accent)'; bManual.style.background='#0f2b1a'; bManual.style.color='var(--accent)'; }
+    const bSel=document.getElementById('gbtn-EnviadoSel');
+    if(bSel){ bSel.style.borderColor='var(--border)'; bSel.style.background='var(--surface2)'; bSel.style.color='var(--muted)'; }
   } else if(tipo==='Buscar'){
     buscarSec.style.display='flex'; submitBtn.style.display='none';
     clienteSec.style.display='none';
+    if(authSec) authSec.style.display='none';
   }
+}
+
+function toggleEnvioModos(){
+  // Al tocar "Enviado" — deseleccionar COD y Buscar, mostrar sub-modos
+  resetGestionBtns();
+  const btn=document.getElementById('gbtn-Enviado');
+  btn.style.borderColor='var(--accent)'; btn.style.background='#0f2b1a'; btn.style.color='var(--accent)';
+  const modos=document.getElementById('envio-modos');
+  modos.style.display='grid';
+  // Ocultar form hasta que elijan sub-modo
+  document.getElementById('gestion-form-wrap').style.display='none';
+  document.getElementById('envio-seleccion-wrap').style.display='none';
+  // Resetear sub-botones
+  ['gbtn-EnviadoManual','gbtn-EnviadoSel'].forEach(id=>{
+    const b=document.getElementById(id);
+    if(b){ b.style.borderColor='var(--border)'; b.style.background='var(--surface2)'; b.style.color='var(--muted)'; }
+  });
 }
 
 async function buscarCOD(){
@@ -1701,19 +1743,6 @@ function clearHistorial(){
 // ── ENVÍO POR SELECCIÓN ───────────────────────────────────────
 let pedidoEncontrado=null;
 
-function toggleEnvioModos(){
-  const modos=document.getElementById('envio-modos');
-  const btn=document.getElementById('gbtn-Enviado');
-  const visible=modos.style.display==='grid';
-  modos.style.display=visible?'none':'grid';
-  btn.style.borderColor=visible?'var(--border)':'var(--accent)';
-  btn.style.color=visible?'var(--muted)':'var(--accent)';
-  btn.style.background=visible?'var(--surface2)':'#0f2b1a';
-  if(visible){
-    document.getElementById('gestion-form-wrap').style.display='none';
-    document.getElementById('envio-seleccion-wrap').style.display='none';
-  }
-}
 
 function abrirEnvioSeleccion(){
   document.getElementById('envio-seleccion-wrap').style.display='block';
@@ -1723,13 +1752,11 @@ function abrirEnvioSeleccion(){
   document.getElementById('es-error').style.display='none';
   document.getElementById('es-buscando').style.display='none';
   pedidoEncontrado=null;
-  // Highlight button
-  document.getElementById('gbtn-EnviadoSel').style.borderColor='var(--accent)';
-  document.getElementById('gbtn-EnviadoSel').style.color='var(--accent)';
-  document.getElementById('gbtn-EnviadoSel').style.background='#0f2b1a';
-  document.getElementById('gbtn-EnviadoManual').style.borderColor='var(--border)';
-  document.getElementById('gbtn-EnviadoManual').style.color='var(--muted)';
-  document.getElementById('gbtn-EnviadoManual').style.background='var(--surface2)';
+  // Activar sub-botón selección, desactivar manual
+  const bSel=document.getElementById('gbtn-EnviadoSel');
+  const bMan=document.getElementById('gbtn-EnviadoManual');
+  if(bSel){ bSel.style.borderColor='var(--accent)'; bSel.style.color='var(--accent)'; bSel.style.background='#0f2b1a'; }
+  if(bMan){ bMan.style.borderColor='var(--border)'; bMan.style.color='var(--muted)'; bMan.style.background='var(--surface2)'; }
   setTimeout(()=>document.getElementById('es-cod-input').focus(),100);
 }
 
