@@ -549,6 +549,16 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
             <div id="g-buscar-results"></div>
           </div>
 
+          <!-- CÓDIGO DE AUTORIZACIÓN -->
+          <div id="g-auth-section" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;margin-top:4px;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">🔐 Autorización</div>
+            <div class="field-group" style="margin-bottom:0">
+              <div class="field-label">Código de acceso *</div>
+              <input class="field-input" type="password" id="g-auth-code" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')document.getElementById('g-submit-btn').click()">
+              <div id="g-auth-error" style="font-size:12px;color:var(--danger);margin-top:4px;display:none;">❌ Código incorrecto</div>
+            </div>
+          </div>
+
           <!-- BOTÓN ENVIAR -->
           <button type="submit" id="g-submit-btn" style="width:100%;padding:16px;background:var(--accent);border:none;border-radius:12px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;margin-top:4px;">
             📤 ENVIAR GESTIÓN
@@ -571,7 +581,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIBpH5yi0SZS204fL1Meug7tvF1GfWwS5HkjbBOsA04-DWA9CocXBsJuM_3nqVILvbLA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlNNqhGJ3TPipYwji792T0KFryDQAqqVOwlXBmKEgjdk9zXqpBR5X2i1xAnY6w8tIqjA/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1506,9 +1516,9 @@ async function buscarCOD(){
 const SIN_GUIA=['TIENDA MCY','SHOWROOM CARACAS','DELIVERY CARACAS','DELIVERY MARACAY'];
 
 const DIRECCIONES_AUTO={
-  'TIENDA MCY':        'C.C. HIPER JUMBO LOCAL PB 39. TIENDA IKOA.',
+  'TIENDA MCY':        'SU PAQUETE SE RETIRA POR TIENDA MARACAY — C.C. HIPER JUMBO LOCAL PB 39. TIENDA IKOA.',
   'DELIVERY MARACAY':  'SE EJECUTA DESDE C.C. HIPER JUMBO LOCAL PB 39. TIENDA IKOA.',
-  'SHOWROOM CARACAS':  'LAS MERCEDES, CARACAS.',
+  'SHOWROOM CARACAS':  'RETIRAR EN SHOWROOM CARACAS — LAS MERCEDES, CARACAS.',
   'DELIVERY CARACAS':  'SE EJECUTA DESDE LAS MERCEDES, CARACAS.'
 };
 
@@ -1574,52 +1584,65 @@ document.getElementById('gestion-form').addEventListener('submit',async function
   e.preventDefault();
   const btn=document.getElementById('g-submit-btn');
   const msg=document.getElementById('g-msg');
+  const authCode=document.getElementById('g-auth-code').value.trim().toUpperCase();
+  const authErr=document.getElementById('g-auth-error');
+
+  // Validar código
+  if(!USUARIOS[authCode]){
+    authErr.style.display='block';
+    document.getElementById('g-auth-code').value='';
+    return;
+  }
+  authErr.style.display='none';
+  const nombreUsuario=USUARIOS[authCode];
+
   btn.disabled=true;
-  btn.textContent='⏳ Procesando...';
   msg.style.display='none';
 
   const formData=new FormData(this);
   const tipo=document.getElementById('g-tipo').value;
   const fecha=getFechaHora();
+  let codMake='';
 
   try{
-    let codMake='';
-    // Si es COD → leer número de Make antes de enviar
     if(tipo==='COD'){
       btn.textContent='⏳ Leyendo COD...';
       try{
         const dataCod=await scriptGETjson({action:'leerCOD'});
-        if(dataCod.ok){
-          codMake=String(dataCod.codSiguiente);
-        }
+        if(dataCod.ok) codMake=String(dataCod.codSiguiente);
       }catch(e){ console.error('No se pudo leer COD:',e); }
     }
 
     btn.textContent='⏳ Enviando...';
 
-    // Enviar al webhook de Make
-    if(codMake) formData.append('cod_make', codMake);
+    // Agregar usuario y fecha al formData
+    formData.append('usuario', nombreUsuario);
     formData.append('fecha', fecha);
+    if(codMake) formData.append('cod_make', codMake);
+
+    // Enviar al webhook de Make
     const response=await fetch(WEBHOOK_URL,{method:'POST',body:formData});
 
-    // Si es COD también guardar en Google Sheets PEDIDOS
-    if(tipo==='COD'){
+    // Guardar en Google Sheets PEDIDOS
+    if(tipo==='COD'||tipo==='Enviado'){
       const guiaInput=document.getElementById('g-numero-guia');
+      const dirInput=document.querySelector('[name="direccion_agencia"]');
       await scriptGET({
         action:'addPedido',
         nombre:     formData.get('nombre')||'',
         cedula:     formData.get('cedula')||'',
         correo:     formData.get('correo')||'',
-        codigo_cod: codMake,
+        cod:        tipo==='COD'?codMake:(formData.get('codigo')||''),
         numero_guia:guiaInput?guiaInput.value:'',
         agencia:    formData.get('agencia')||'',
-        status:     'COD',
+        status:     tipo,
         celular:    formData.get('celular')||'',
         fecha:      fecha,
         descripcion:formData.get('descripcion')||'',
         nombre_envio:formData.get('nombre_envio')||'',
         cel_envio:  formData.get('cel_envio')||'',
-        ci_envio:   formData.get('ci_envio')||''
+        ci_envio:   formData.get('ci_envio')||'',
+        direccion:  dirInput?dirInput.value:''
       });
     }
 
@@ -1629,10 +1652,11 @@ document.getElementById('gestion-form').addEventListener('submit',async function
       msg.style.border='1px solid #1a4a2a';
       msg.style.color='var(--accent)';
       msg.innerHTML=tipo==='COD'&&codMake
-        ? `✅ Gestión enviada · COD asignado: <b style="color:var(--accent);font-size:16px;">${codMake}</b>`
-        : '✅ ¡Gestión enviada correctamente!';
+        ? `✅ Gestión enviada · COD: <b>${codMake}</b> · ${nombreUsuario}`
+        : `✅ Gestión enviada · ${nombreUsuario}`;
       setTimeout(()=>{
         this.reset();
+        document.getElementById('g-auth-code').value='';
         msg.style.display='none';
         document.getElementById('gestion-form-wrap').style.display='none';
         ['COD','Enviado','Buscar'].forEach(t=>{
@@ -1718,6 +1742,26 @@ function cancelarEnvioSeleccion(){
   pedidoEncontrado=null;
 }
 
+function toggleEditDireccion(){
+  const texto=document.getElementById('es-dir-texto');
+  const input=document.getElementById('es-dir-input');
+  const editando=input.style.display==='block';
+  if(editando){
+    // Guardar
+    const nuevaDir=input.value.trim().toUpperCase();
+    pedidoEncontrado.direccion=nuevaDir;
+    texto.textContent=nuevaDir||'Sin dirección';
+    input.style.display='none';
+    texto.style.display='block';
+  } else {
+    // Editar
+    input.value=pedidoEncontrado.direccion||'';
+    input.style.display='block';
+    texto.style.display='none';
+    setTimeout(()=>input.focus(),100);
+  }
+}
+
 async function buscarPedidoCOD(){
   const cod=document.getElementById('es-cod-input').value.trim().toUpperCase();
   const errEl=document.getElementById('es-error');
@@ -1732,10 +1776,22 @@ async function buscarPedidoCOD(){
     busEl.style.display='none';
     if(!data.ok){ errEl.style.display='block'; errEl.textContent='❌ '+data.error; return; }
     pedidoEncontrado=data;
+    // Si no tiene dirección guardada y es agencia directa, auto-completar
+    if(!data.direccion){
+      const agUpper=data.agencia.toUpperCase();
+      const autoDir=DIRECCIONES_AUTO[agUpper]||'';
+      if(autoDir) pedidoEncontrado.direccion=autoDir;
+    }
     // Mostrar datos
     const esMismo=data.esMismo;
     const agenciasEnvio=['MRW','TEALCA','ZOOM'];
     const necesitaCupon=agenciasEnvio.some(a=>data.agencia.toUpperCase().includes(a));
+    // Auto-guía para agencias directas
+    if(!necesitaCupon){
+      document.getElementById('es-cupon').value='GUIA-'+data.cod;
+    } else {
+      document.getElementById('es-cupon').value='';
+    }
     document.getElementById('es-datos-content').innerHTML=`
       <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:8px;">
         <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">COD del pedido</div>
@@ -1754,6 +1810,15 @@ async function buscarPedidoCOD(){
       <div style="background:var(--surface2);border-radius:8px;padding:12px;">
         <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">🚚 Agencia</div>
         <b>${data.agencia}</b>
+        ${!necesitaCupon?`<div style="margin-top:6px;color:var(--muted);font-size:12px;">📦 Guía auto: <b style="color:var(--accent);">GUIA-${data.cod}</b></div>`:''}
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-top:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">📍 Dirección</div>
+          <button onclick="toggleEditDireccion()" style="background:transparent;border:1px solid var(--accent);border-radius:6px;color:var(--accent);padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;">✏️ Modificar</button>
+        </div>
+        <div id="es-dir-texto" style="font-size:13px;color:var(--text);">${data.direccion||'<span style="color:var(--muted);">Sin dirección registrada</span>'}</div>
+        <input class="field-input" type="text" id="es-dir-input" value="${data.direccion||''}" placeholder="Escribe la dirección..." style="display:none;margin-top:8px;text-transform:uppercase;" oninput="pedidoEncontrado.direccion=this.value">
       </div>`;
     document.getElementById('es-cupon-wrap').style.display=necesitaCupon?'block':'none';
     document.getElementById('es-unlock').value='';
@@ -1778,6 +1843,10 @@ async function confirmarEnvioSeleccion(){
   const cupon=document.getElementById('es-cupon').value.trim().toUpperCase();
   if(necesitaCupon&&!cupon){ errEl.style.display='block'; errEl.textContent='Ingresa el número de guía'; return; }
 
+  const agUpper=pedidoEncontrado.agencia.toUpperCase();
+  const direccion=pedidoEncontrado.direccion||DIRECCIONES_AUTO[agUpper]||pedidoEncontrado.agencia;
+  const guia=necesitaCupon?cupon:'GUIA-'+pedidoEncontrado.cod;
+
   msgEl.style.display='block';
   msgEl.style.background='var(--surface2)';
   msgEl.style.color='var(--muted)';
@@ -1791,10 +1860,11 @@ async function confirmarEnvioSeleccion(){
     cedula:pedidoEncontrado.cedula,
     celular:pedidoEncontrado.celular,
     agencia:pedidoEncontrado.agencia,
+    direccion:direccion,
     nombre_retira:pedidoEncontrado.retiraNombre,
     ci_retira:pedidoEncontrado.retiraCi,
     cel_retira:pedidoEncontrado.retiraCel,
-    numero_guia:cupon,
+    numero_guia:guia,
     usuario:USUARIOS[unlock],
     fecha:fecha
   });
@@ -1807,7 +1877,7 @@ async function confirmarEnvioSeleccion(){
       cedula:pedidoEncontrado.cedula,
       correo:'',
       cod:pedidoEncontrado.cod,
-      numero_guia:cupon,
+      numero_guia:guia,
       agencia:pedidoEncontrado.agencia,
       status:'Enviado',
       celular:pedidoEncontrado.celular,
@@ -1815,7 +1885,9 @@ async function confirmarEnvioSeleccion(){
       descripcion:'Envío por selección · '+USUARIOS[unlock],
       nombre_envio:pedidoEncontrado.esMismo?'':pedidoEncontrado.retiraNombre,
       cel_envio:pedidoEncontrado.esMismo?'':pedidoEncontrado.retiraCel,
-      ci_envio:pedidoEncontrado.esMismo?'':pedidoEncontrado.retiraCi
+      ci_envio:pedidoEncontrado.esMismo?'':pedidoEncontrado.retiraCi,
+      direccion:direccion,
+      usuario:USUARIOS[unlock]
     });
     // 2. Enviar a Make
     await fetch('https://hook.us2.make.com/9vb6zab74fbbqkbv46c2coi8i7e4mnqs?'+params.toString(),{method:'GET',mode:'no-cors'});
