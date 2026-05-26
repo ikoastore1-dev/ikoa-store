@@ -408,15 +408,54 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">📋 Tipo de Gestión</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-          <button onclick="setTipoGestion('COD')" id="gbtn-COD" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">
-            📦 COD
-          </button>
-          <button onclick="setTipoGestion('Enviado')" id="gbtn-Enviado" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">
-            🚚 Enviado
-          </button>
-          <button onclick="setTipoGestion('Buscar')" id="gbtn-Buscar" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">
-            🔍 Buscar
-          </button>
+          <button onclick="setTipoGestion('COD')" id="gbtn-COD" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">📦 COD</button>
+          <button onclick="toggleEnvioModos()" id="gbtn-Enviado" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🚚 Enviado</button>
+          <button onclick="setTipoGestion('Buscar')" id="gbtn-Buscar" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🔍 Buscar</button>
+        </div>
+        <!-- Sub-modos Enviado -->
+        <div id="envio-modos" style="display:none;margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick="setTipoGestion('Enviado')" id="gbtn-EnviadoManual" style="padding:14px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;">✏️ Envío Manual</button>
+          <button onclick="abrirEnvioSeleccion()" id="gbtn-EnviadoSel" style="padding:14px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;">🔎 Envío por Selección</button>
+        </div>
+      </div>
+
+      <!-- ENVÍO POR SELECCIÓN -->
+      <div id="envio-seleccion-wrap" style="display:none;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">🔎 Buscar pedido por COD</div>
+          <div style="display:flex;gap:8px;">
+            <input class="field-input" type="text" id="es-cod-input" placeholder="Ingresa el COD del pedido..." style="flex:1;text-transform:uppercase;" onkeydown="if(event.key==='Enter')buscarPedidoCOD()">
+            <button onclick="buscarPedidoCOD()" style="padding:12px 20px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">Buscar</button>
+          </div>
+          <div id="es-buscando" style="display:none;text-align:center;padding:16px;color:var(--muted);font-size:13px;"><span class="spinner">↻</span> Buscando...</div>
+          <div id="es-error" style="display:none;background:#2a1010;border:1px solid #4a1a1a;border-radius:8px;padding:10px;font-size:13px;color:var(--danger);margin-top:10px;"></div>
+        </div>
+
+        <!-- Datos del pedido encontrado -->
+        <div id="es-datos-wrap" style="display:none;">
+          <div style="background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">📋 Datos del pedido</div>
+            <div id="es-datos-content" style="font-size:13px;line-height:2;"></div>
+          </div>
+
+          <!-- Cupón si es agencia -->
+          <div id="es-cupon-wrap" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
+            <div class="field-group" style="margin-bottom:0">
+              <div class="field-label">N° de Guía / Cupón de envío</div>
+              <input class="field-input" type="text" id="es-cupon" placeholder="Número de guía o cupón" style="text-transform:uppercase;">
+            </div>
+          </div>
+
+          <!-- Código de autorización -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
+            <div class="field-label" style="margin-bottom:8px;">Código de autorización</div>
+            <input class="field-input" type="password" id="es-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarEnvioSeleccion()">
+            <div id="es-unlock-error" style="font-size:12px;color:var(--danger);margin-top:6px;display:none;"></div>
+          </div>
+
+          <button onclick="confirmarEnvioSeleccion()" style="width:100%;padding:15px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:12px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">📤 CONFIRMAR ENVÍO</button>
+          <div id="es-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;text-align:center;margin-top:10px;"></div>
+          <button onclick="cancelarEnvioSeleccion()" style="width:100%;padding:10px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;">← Cancelar</button>
         </div>
       </div>
 
@@ -532,7 +571,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjxruL0g45vz8pAF0lakglFu3VbRmzYIjqpFKB8_0Vrgxj3dKAh4fbzgXZu8KsuZ2SPA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyIBpH5yi0SZS204fL1Meug7tvF1GfWwS5HkjbBOsA04-DWA9CocXBsJuM_3nqVILvbLA/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1635,7 +1674,162 @@ function clearHistorial(){
   if(confirm('¿Limpiar el historial local?')){historial=[];localStorage.setItem('ikoa_hist_v3','[]');renderHistorial();}
 }
 
-// ── JSONP — para llamadas que necesitan leer la respuesta ─────
+// ── ENVÍO POR SELECCIÓN ───────────────────────────────────────
+let pedidoEncontrado=null;
+
+function toggleEnvioModos(){
+  const modos=document.getElementById('envio-modos');
+  const btn=document.getElementById('gbtn-Enviado');
+  const visible=modos.style.display==='grid';
+  modos.style.display=visible?'none':'grid';
+  btn.style.borderColor=visible?'var(--border)':'var(--accent)';
+  btn.style.color=visible?'var(--muted)':'var(--accent)';
+  btn.style.background=visible?'var(--surface2)':'#0f2b1a';
+  if(visible){
+    document.getElementById('gestion-form-wrap').style.display='none';
+    document.getElementById('envio-seleccion-wrap').style.display='none';
+  }
+}
+
+function abrirEnvioSeleccion(){
+  document.getElementById('envio-seleccion-wrap').style.display='block';
+  document.getElementById('gestion-form-wrap').style.display='none';
+  document.getElementById('es-cod-input').value='';
+  document.getElementById('es-datos-wrap').style.display='none';
+  document.getElementById('es-error').style.display='none';
+  document.getElementById('es-buscando').style.display='none';
+  pedidoEncontrado=null;
+  // Highlight button
+  document.getElementById('gbtn-EnviadoSel').style.borderColor='var(--accent)';
+  document.getElementById('gbtn-EnviadoSel').style.color='var(--accent)';
+  document.getElementById('gbtn-EnviadoSel').style.background='#0f2b1a';
+  document.getElementById('gbtn-EnviadoManual').style.borderColor='var(--border)';
+  document.getElementById('gbtn-EnviadoManual').style.color='var(--muted)';
+  document.getElementById('gbtn-EnviadoManual').style.background='var(--surface2)';
+  setTimeout(()=>document.getElementById('es-cod-input').focus(),100);
+}
+
+function cancelarEnvioSeleccion(){
+  document.getElementById('envio-seleccion-wrap').style.display='none';
+  document.getElementById('envio-modos').style.display='none';
+  document.getElementById('gbtn-Enviado').style.borderColor='var(--border)';
+  document.getElementById('gbtn-Enviado').style.color='var(--muted)';
+  document.getElementById('gbtn-Enviado').style.background='var(--surface2)';
+  pedidoEncontrado=null;
+}
+
+async function buscarPedidoCOD(){
+  const cod=document.getElementById('es-cod-input').value.trim().toUpperCase();
+  const errEl=document.getElementById('es-error');
+  const busEl=document.getElementById('es-buscando');
+  const datosWrap=document.getElementById('es-datos-wrap');
+  if(!cod){ errEl.style.display='block'; errEl.textContent='Ingresa el COD del pedido'; return; }
+  errEl.style.display='none';
+  datosWrap.style.display='none';
+  busEl.style.display='block';
+  try{
+    const data=await scriptGETjson({action:'buscarPedido',cod:cod});
+    busEl.style.display='none';
+    if(!data.ok){ errEl.style.display='block'; errEl.textContent='❌ '+data.error; return; }
+    pedidoEncontrado=data;
+    // Mostrar datos
+    const esMismo=data.esMismo;
+    const agenciasEnvio=['MRW','TEALCA','ZOOM'];
+    const necesitaCupon=agenciasEnvio.some(a=>data.agencia.toUpperCase().includes(a));
+    document.getElementById('es-datos-content').innerHTML=`
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:8px;">
+        <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">COD del pedido</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);">${data.cod}</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:8px;">
+        <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">${esMismo?'👤 Cliente / Quien retira':'👤 Cliente (titular)'}</div>
+        <b>${data.nombre}</b><br>
+        C.I: ${data.cedula} · Cel: ${data.celular}
+      </div>
+      ${!esMismo?`<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:8px;">
+        <div style="color:var(--warn);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">📦 Quien retira (diferente)</div>
+        <b>${data.retiraNombre}</b><br>
+        C.I: ${data.retiraCi} · Cel: ${data.retiraCel}
+      </div>`:''}
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;">
+        <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">🚚 Agencia</div>
+        <b>${data.agencia}</b>
+      </div>`;
+    document.getElementById('es-cupon-wrap').style.display=necesitaCupon?'block':'none';
+    document.getElementById('es-unlock').value='';
+    document.getElementById('es-unlock-error').style.display='none';
+    document.getElementById('es-msg').style.display='none';
+    datosWrap.style.display='block';
+  }catch(e){
+    busEl.style.display='none';
+    errEl.style.display='block';
+    errEl.textContent='Error al buscar: '+e.message;
+  }
+}
+
+async function confirmarEnvioSeleccion(){
+  const unlock=document.getElementById('es-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('es-unlock-error');
+  const msgEl=document.getElementById('es-msg');
+  if(!USUARIOS[unlock]){ errEl.style.display='block'; errEl.textContent='❌ Código incorrecto'; document.getElementById('es-unlock').value=''; return; }
+  errEl.style.display='none';
+  const agenciasEnvio=['MRW','TEALCA','ZOOM'];
+  const necesitaCupon=agenciasEnvio.some(a=>pedidoEncontrado.agencia.toUpperCase().includes(a));
+  const cupon=document.getElementById('es-cupon').value.trim().toUpperCase();
+  if(necesitaCupon&&!cupon){ errEl.style.display='block'; errEl.textContent='Ingresa el número de guía'; return; }
+
+  msgEl.style.display='block';
+  msgEl.style.background='var(--surface2)';
+  msgEl.style.color='var(--muted)';
+  msgEl.innerHTML='<span class="spinner">↻</span> Registrando y enviando a Make...';
+
+  const fecha=getFechaHora();
+  const params=new URLSearchParams({
+    tipo_operacion:'Enviado',
+    cod:pedidoEncontrado.cod,
+    nombre:pedidoEncontrado.nombre,
+    cedula:pedidoEncontrado.cedula,
+    celular:pedidoEncontrado.celular,
+    agencia:pedidoEncontrado.agencia,
+    nombre_retira:pedidoEncontrado.retiraNombre,
+    ci_retira:pedidoEncontrado.retiraCi,
+    cel_retira:pedidoEncontrado.retiraCel,
+    numero_guia:cupon,
+    usuario:USUARIOS[unlock],
+    fecha:fecha
+  });
+
+  try{
+    // 1. Guardar en PEDIDOS
+    await scriptGET({
+      action:'addPedido',
+      nombre:pedidoEncontrado.nombre,
+      cedula:pedidoEncontrado.cedula,
+      correo:'',
+      cod:pedidoEncontrado.cod,
+      numero_guia:cupon,
+      agencia:pedidoEncontrado.agencia,
+      status:'Enviado',
+      celular:pedidoEncontrado.celular,
+      fecha:fecha,
+      descripcion:'Envío por selección · '+USUARIOS[unlock],
+      nombre_envio:pedidoEncontrado.esMismo?'':pedidoEncontrado.retiraNombre,
+      cel_envio:pedidoEncontrado.esMismo?'':pedidoEncontrado.retiraCel,
+      ci_envio:pedidoEncontrado.esMismo?'':pedidoEncontrado.retiraCi
+    });
+    // 2. Enviar a Make
+    await fetch('https://hook.us2.make.com/9vb6zab74fbbqkbv46c2coi8i7e4mnqs?'+params.toString(),{method:'GET',mode:'no-cors'});
+    msgEl.style.background='#0f2b1a';
+    msgEl.style.border='1px solid #1a4a2a';
+    msgEl.style.color='var(--accent)';
+    msgEl.innerHTML=`✅ Enviado · COD ${pedidoEncontrado.cod} · ${USUARIOS[unlock]}`;
+    setTimeout(()=>cancelarEnvioSeleccion(),4000);
+  }catch(e){
+    msgEl.style.background='#2a1010';
+    msgEl.style.color='var(--danger)';
+    msgEl.innerHTML='✗ Error: '+e.message;
+  }
+}
 function scriptGETjson(params){
   return new Promise((resolve,reject)=>{
     const cb='_cb_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
