@@ -1934,7 +1934,13 @@ async function confirmarEnvioSeleccion(){
       usuario:USUARIOS[unlock],
       fecha:fecha
     }).forEach(([k,v])=>makeBody.append(k,v));
-    await fetch(WEBHOOK_URL,{method:'POST',body:makeBody});
+    
+    const makeResponse=await fetch(WEBHOOK_URL,{method:'POST',body:makeBody});
+    console.log('Make response status:', makeResponse.status);
+    const makeText=await makeResponse.text();
+    console.log('Make response body:', makeText);
+    
+    if(!makeResponse.ok) throw new Error('Make error: '+makeResponse.status+' '+makeText);
     msgEl.style.background='#0f2b1a';
     msgEl.style.border='1px solid #1a4a2a';
     msgEl.style.color='var(--accent)';
