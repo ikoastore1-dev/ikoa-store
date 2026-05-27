@@ -581,7 +581,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlNNqhGJ3TPipYwji792T0KFryDQAqqVOwlXBmKEgjdk9zXqpBR5X2i1xAnY6w8tIqjA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1mcECXAgCTHcab8kMFQJAhsfHjz7YiochoizdNsUtJ-7-8KxiIvigUwwRUdP_vGHeFw/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1902,7 +1902,7 @@ async function confirmarEnvioSeleccion(){
       action:'addPedido',
       nombre:pedidoEncontrado.nombre,
       cedula:pedidoEncontrado.cedula,
-      correo:'',
+      correo:pedidoEncontrado.correo||'',
       cod:pedidoEncontrado.cod,
       numero_guia:guia,
       agencia:pedidoEncontrado.agencia,
@@ -1922,7 +1922,7 @@ async function confirmarEnvioSeleccion(){
     makeBody.append('tipo_operacion','Enviado');
     makeBody.append('status','Enviado');
     makeBody.append('nombre',pedidoEncontrado.nombre);
-    makeBody.append('correo','');
+    makeBody.append('correo',pedidoEncontrado.correo||'');
     makeBody.append('cedula',pedidoEncontrado.cedula);
     makeBody.append('celular',pedidoEncontrado.celular);
     makeBody.append('agencia',pedidoEncontrado.agencia);
@@ -1933,7 +1933,7 @@ async function confirmarEnvioSeleccion(){
     makeBody.append('cel_envio',pedidoEncontrado.esMismo?'':pedidoEncontrado.retiraCel);
     makeBody.append('codigo',pedidoEncontrado.cod);
     makeBody.append('numero_guia',guia);
-    makeBody.append('descripcion','Envio por seleccion');
+    makeBody.append('descripcion',pedidoEncontrado.descripcion||'Envio por seleccion');
     makeBody.append('urgente','NO');
     makeBody.append('selector_agregar_arte','no');
     makeBody.append('nombre_arte','');
