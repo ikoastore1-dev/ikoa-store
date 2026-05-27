@@ -156,6 +156,22 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </div>
 </div>
 
+<!-- MODAL PROCESAR RESPALDO -->
+<div class="modal-overlay hidden" id="modal-procesar-rv">
+  <div class="modal">
+    <div class="modal-icon">✓</div>
+    <div class="modal-title">Marcar como Procesado</div>
+    <div class="modal-subtitle" id="modal-rv-resumen"></div>
+    <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div>
+    <input class="modal-cod-input" type="password" id="modal-rv-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarProcesarRespaldo()">
+    <div class="modal-error" id="modal-rv-error"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="document.getElementById('modal-procesar-rv').classList.add('hidden')">Cancelar</button>
+      <button class="modal-confirm" onclick="confirmarProcesarRespaldo()">✓ CONFIRMAR</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL TASA -->
 <div class="modal-overlay hidden" id="modal-tasa">
   <div class="modal">
@@ -392,26 +408,45 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <button onclick="cargarRespaldos()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 14px;font-size:13px;cursor:pointer;">↻</button>
     </div>
 
-    <!-- NUEVO RESPALDO -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">➕ Nuevo Respaldo</div>
-      <div class="field-group">
-        <div class="field-label">Pega el mensaje de WhatsApp</div>
-        <textarea id="rv-mensaje" rows="8" placeholder="Pega aquí el mensaje completo del cliente..." style="background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;outline:none;width:100%;resize:vertical;line-height:1.6;" onkeydown=""></textarea>
-      </div>
-      <div class="field-group" style="margin-bottom:12px;">
-        <div class="field-label">Código de autorización</div>
-        <input class="field-input" type="password" id="rv-unlock" placeholder="Tu código personal" maxlength="20">
-        <div id="rv-unlock-error" style="font-size:12px;color:var(--danger);margin-top:4px;display:none;"></div>
-      </div>
-      <button onclick="guardarRespaldo()" style="width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;">💾 GUARDAR RESPALDO</button>
-      <div id="rv-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:10px;"></div>
+    <!-- SUB-PESTAÑAS -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button onclick="switchRespaldo('nuevo')" id="rvtab-nuevo" style="flex:1;padding:10px;border:2px solid var(--accent);border-radius:10px;background:#0f2b1a;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">➕ Nuevo</button>
+      <button onclick="switchRespaldo('pendientes')" id="rvtab-pendientes" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">⏳ Pendientes</button>
+      <button onclick="switchRespaldo('historial')" id="rvtab-historial" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">📋 Historial</button>
     </div>
 
-    <!-- LISTA DE RESPALDOS PENDIENTES -->
-    <div id="rv-list-wrap">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--warn);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">⏳ Pendientes por procesar</div>
+    <!-- NUEVO RESPALDO -->
+    <div id="rvsec-nuevo">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;">
+        <div class="field-group">
+          <div class="field-label">Pega el mensaje de WhatsApp</div>
+          <textarea id="rv-mensaje" rows="8" placeholder="Pega aquí el mensaje completo del cliente..." style="background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;outline:none;width:100%;resize:vertical;line-height:1.6;"></textarea>
+        </div>
+        <div class="field-group" style="margin-bottom:12px;">
+          <div class="field-label">Código de autorización</div>
+          <input class="field-input" type="password" id="rv-unlock" placeholder="Tu código personal" maxlength="20">
+          <div id="rv-unlock-error" style="font-size:12px;color:var(--danger);margin-top:4px;display:none;"></div>
+        </div>
+        <button onclick="guardarRespaldo()" style="width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;">💾 GUARDAR RESPALDO</button>
+        <div id="rv-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:10px;"></div>
+      </div>
+    </div>
+
+    <!-- PENDIENTES -->
+    <div id="rvsec-pendientes" style="display:none;">
       <div id="rv-list"></div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div id="rvsec-historial" style="display:none;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;">
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <input class="field-input" type="text" id="rv-buscar-cod" placeholder="Buscar por código RV-..." style="flex:1;">
+          <input class="field-input" type="text" id="rv-buscar-fecha" placeholder="Fecha (ej: 27/05)" style="flex:1;">
+          <button onclick="buscarHistorialRespaldo()" style="padding:10px 16px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🔍</button>
+        </div>
+      </div>
+      <div id="rv-historial-list"></div>
     </div>
   </div>
 
@@ -612,7 +647,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyQ54-2K5n_Ma7LefTcntEflkJOxhbqK1GXT8CN4AVRO_VtXvm59cLoqoTy-f4_d7ig9w/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpBkGMcoRQt8_GKXdwfKC6rXvxkExqh7-M2TaFcAKYJySFHwTsv-_IEhTDppyI5eNsBQ/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1100,21 +1135,32 @@ function switchTab(tab){
 }
 
 // ── RESPALDO VENTA ────────────────────────────────────────────
+let rvCodigoPendiente=null;
+
+function switchRespaldo(sub){
+  ['nuevo','pendientes','historial'].forEach(s=>{
+    document.getElementById('rvsec-'+s).style.display=s===sub?'block':'none';
+    const btn=document.getElementById('rvtab-'+s);
+    btn.style.borderColor=s===sub?'var(--accent)':'var(--border)';
+    btn.style.background=s===sub?'#0f2b1a':'var(--surface2)';
+    btn.style.color=s===sub?'var(--accent)':'var(--muted)';
+  });
+  if(sub==='pendientes') cargarRespaldos();
+  if(sub==='historial') cargarHistorialRespaldo();
+}
+
 async function guardarRespaldo(){
   const mensaje=document.getElementById('rv-mensaje').value.trim();
   const unlock=document.getElementById('rv-unlock').value.trim().toUpperCase();
   const errEl=document.getElementById('rv-unlock-error');
   const msgEl=document.getElementById('rv-msg');
-
   if(!mensaje){ alert('Pega el mensaje de WhatsApp primero'); return; }
   if(!USUARIOS[unlock]){ errEl.style.display='block'; errEl.textContent='❌ Código incorrecto'; document.getElementById('rv-unlock').value=''; return; }
   errEl.style.display='none';
-
   msgEl.style.display='block';
   msgEl.style.background='var(--surface2)';
   msgEl.style.color='var(--muted)';
   msgEl.innerHTML='<span class="spinner">↻</span> Guardando...';
-
   try{
     const data=await scriptGETjson({
       action:'addRespaldo',
@@ -1129,10 +1175,8 @@ async function guardarRespaldo(){
       msgEl.innerHTML=`✅ Guardado · <b>${data.codigo}</b> · ${USUARIOS[unlock]}`;
       document.getElementById('rv-mensaje').value='';
       document.getElementById('rv-unlock').value='';
-      setTimeout(()=>{ msgEl.style.display='none'; cargarRespaldos(); },2000);
-    } else {
-      throw new Error(data.error||'Error desconocido');
-    }
+      setTimeout(()=>{ msgEl.style.display='none'; },3000);
+    } else { throw new Error(data.error||'Error desconocido'); }
   }catch(e){
     msgEl.style.background='#2a1010';
     msgEl.style.color='var(--danger)';
@@ -1147,13 +1191,10 @@ async function cargarRespaldos(){
     const data=await scriptGETjson({action:'leerRespaldos'});
     const rows=data.rows||[];
     if(!rows.length){
-      listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
-        <div style="font-size:28px;margin-bottom:8px;">✅</div>
-        <div>No hay respaldos pendientes</div>
-      </div>`;
+      listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);"><div style="font-size:28px;margin-bottom:8px;">✅</div><div>No hay respaldos pendientes</div></div>`;
       return;
     }
-    listEl.innerHTML='';
+    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${rows.length} pendiente(s)</div>`;
     rows.forEach(r=>{
       const codigo=String(r[0]||'').trim();
       const fecha=String(r[1]||'').trim();
@@ -1169,7 +1210,7 @@ async function cargarRespaldos(){
           </div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13px;line-height:1.8;white-space:pre-wrap;margin-bottom:12px;">${mensaje}</div>
-        <button onclick="procesarRespaldo('${codigo}')" style="width:100%;padding:12px;background:var(--warn);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">✓ MARCAR COMO PROCESADO</button>`;
+        <button onclick="abrirModalProcesar('${codigo}')" style="width:100%;padding:12px;background:var(--warn);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">✓ MARCAR COMO PROCESADO</button>`;
       listEl.appendChild(card);
     });
   }catch(e){
@@ -1177,27 +1218,77 @@ async function cargarRespaldos(){
   }
 }
 
-async function procesarRespaldo(codigo){
-  const unlock=prompt('Ingresa tu código de autorización:');
-  if(!unlock) return;
-  const cod=unlock.trim().toUpperCase();
-  if(!USUARIOS[cod]){ alert('❌ Código incorrecto'); return; }
+function abrirModalProcesar(codigo){
+  rvCodigoPendiente=codigo;
+  document.getElementById('modal-rv-resumen').textContent='Código: '+codigo;
+  document.getElementById('modal-rv-unlock').value='';
+  document.getElementById('modal-rv-error').textContent='';
+  document.getElementById('modal-procesar-rv').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('modal-rv-unlock').focus(),100);
+}
+
+async function confirmarProcesarRespaldo(){
+  const unlock=document.getElementById('modal-rv-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('modal-rv-error');
+  if(!USUARIOS[unlock]){ errEl.textContent='❌ Código incorrecto'; document.getElementById('modal-rv-unlock').value=''; return; }
+  document.getElementById('modal-procesar-rv').classList.add('hidden');
   try{
     const data=await scriptGETjson({
       action:'procesarRespaldo',
-      codigo:codigo,
+      codigo:rvCodigoPendiente,
       fecha_proceso:getFechaHora(),
-      usuario_proceso:USUARIOS[cod]
+      usuario_proceso:USUARIOS[unlock]
     });
-    if(data.ok){
-      cargarRespaldos();
-    } else {
-      alert('Error: '+data.error);
+    if(data.ok){ cargarRespaldos(); }
+    else { alert('Error: '+data.error); }
+  }catch(e){ alert('Error: '+e.message); }
+  rvCodigoPendiente=null;
+}
+
+async function cargarHistorialRespaldo(cod='',fecha=''){
+  const listEl=document.getElementById('rv-historial-list');
+  listEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>`;
+  try{
+    const data=await scriptGETjson({action:'leerHistorialRespaldo',cod:cod,fecha:fecha});
+    const rows=data.rows||[];
+    if(!rows.length){
+      listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">No hay registros</div>`;
+      return;
     }
+    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${rows.length} registro(s)</div>`;
+    rows.forEach(r=>{
+      const codigo=String(r[0]||'').trim();
+      const fecha=String(r[1]||'').trim();
+      const usuario=String(r[2]||'').trim();
+      const mensaje=decodeURIComponent(String(r[3]||'').trim());
+      const fechaProceso=String(r[4]||'').trim();
+      const usuarioProceso=String(r[5]||'').trim();
+      const card=document.createElement('div');
+      card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;';
+      card.innerHTML=`
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div>
+            <span style="background:#1a2a10;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">${codigo}</span>
+            <span style="font-size:11px;color:var(--muted);margin-left:8px;">🕐 ${fecha} · ${usuario}</span>
+          </div>
+          <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--accent);">✓ Procesado</span>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13px;line-height:1.8;white-space:pre-wrap;margin-bottom:8px;">${mensaje}</div>
+        ${fechaProceso?`<div style="font-size:11px;color:var(--muted);">Procesado: ${fechaProceso} · ${usuarioProceso}</div>`:''}`;
+      listEl.appendChild(card);
+    });
   }catch(e){
-    alert('Error: '+e.message);
+    listEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--danger);">✗ Error: ${e.message}</div>`;
   }
 }
+
+function buscarHistorialRespaldo(){
+  const cod=document.getElementById('rv-buscar-cod').value.trim().toUpperCase();
+  const fecha=document.getElementById('rv-buscar-fecha').value.trim();
+  cargarHistorialRespaldo(cod,fecha);
+}
+
+
 
 let filtroCola='Pagado';
 function setFiltroCola(filtro){
