@@ -1917,30 +1917,30 @@ async function confirmarEnvioSeleccion(){
       usuario:USUARIOS[unlock]
     });
     if(!resPedido.ok) throw new Error('No se pudo guardar en PEDIDOS: '+(resPedido.error||''));
-    // 2. Enviar a Make igual que el manual
+    // 2. Enviar a Make con exactamente los mismos campos que el manual
     const makeBody=new FormData();
-    Object.entries({
-      tipo_operacion:'Enviado',
-      cod:pedidoEncontrado.cod,
-      nombre:pedidoEncontrado.nombre,
-      cedula:pedidoEncontrado.cedula,
-      celular:pedidoEncontrado.celular,
-      agencia:pedidoEncontrado.agencia,
-      direccion:direccion,
-      nombre_retira:pedidoEncontrado.retiraNombre,
-      ci_retira:pedidoEncontrado.retiraCi,
-      cel_retira:pedidoEncontrado.retiraCel,
-      numero_guia:guia,
-      usuario:USUARIOS[unlock],
-      fecha:fecha
-    }).forEach(([k,v])=>makeBody.append(k,v));
-    
+    makeBody.append('tipo_operacion','Enviado');
+    makeBody.append('status','Enviado');
+    makeBody.append('nombre',pedidoEncontrado.nombre);
+    makeBody.append('correo','');
+    makeBody.append('cedula',pedidoEncontrado.cedula);
+    makeBody.append('celular',pedidoEncontrado.celular);
+    makeBody.append('agencia',pedidoEncontrado.agencia);
+    makeBody.append('direccion_agencia',direccion);
+    makeBody.append('diferente_envio',pedidoEncontrado.esMismo?'no':'si');
+    makeBody.append('nombre_envio',pedidoEncontrado.esMismo?'':pedidoEncontrado.retiraNombre);
+    makeBody.append('ci_envio',pedidoEncontrado.esMismo?'':pedidoEncontrado.retiraCi);
+    makeBody.append('cel_envio',pedidoEncontrado.esMismo?'':pedidoEncontrado.retiraCel);
+    makeBody.append('codigo',pedidoEncontrado.cod);
+    makeBody.append('numero_guia',guia);
+    makeBody.append('descripcion','Envio por seleccion');
+    makeBody.append('urgente','NO');
+    makeBody.append('selector_agregar_arte','no');
+    makeBody.append('nombre_arte','');
+    makeBody.append('usuario',USUARIOS[unlock]);
+    makeBody.append('fecha',fecha);
     const makeResponse=await fetch(WEBHOOK_URL,{method:'POST',body:makeBody});
-    console.log('Make response status:', makeResponse.status);
-    const makeText=await makeResponse.text();
-    console.log('Make response body:', makeText);
-    
-    if(!makeResponse.ok) throw new Error('Make error: '+makeResponse.status+' '+makeText);
+    console.log('Make status:',makeResponse.status);
     msgEl.style.background='#0f2b1a';
     msgEl.style.border='1px solid #1a4a2a';
     msgEl.style.color='var(--accent)';
