@@ -422,6 +422,49 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <div class="field-label">Pega el mensaje de WhatsApp</div>
           <textarea id="rv-mensaje" rows="8" placeholder="Pega aquí el mensaje completo del cliente..." style="background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;outline:none;width:100%;resize:vertical;line-height:1.6;"></textarea>
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div class="field-group" style="margin-bottom:0">
+            <div class="field-label">Banco *</div>
+            <select class="field-input" id="rv-banco">
+              <option value="">Seleccionar</option>
+              <option>Banesco</option>
+              <option>Mercantil</option>
+              <option>Provincial</option>
+              <option>BDV</option>
+              <option>Bicentenario</option>
+              <option>BOD</option>
+              <option>Pago Móvil</option>
+              <option>Zelle</option>
+              <option>PayPal</option>
+              <option>Dólares Efectivo</option>
+              <option>Otro</option>
+            </select>
+          </div>
+          <div class="field-group" style="margin-bottom:0">
+            <div class="field-label">N° Referencia *</div>
+            <input class="field-input" type="text" id="rv-referencia" placeholder="Número de referencia">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div class="field-group" style="margin-bottom:0">
+            <div class="field-label">Factura</div>
+            <select class="field-input" id="rv-factura">
+              <option value="Sin Factura">Sin Factura</option>
+              <option value="Con Factura">Con Factura</option>
+            </select>
+          </div>
+          <div class="field-group" style="margin-bottom:0">
+            <div class="field-label">Tasa</div>
+            <input class="field-input" type="number" id="rv-tasa" placeholder="Ej: 98.50" step="0.01">
+          </div>
+          <div class="field-group" style="margin-bottom:0">
+            <div class="field-label">Moneda</div>
+            <select class="field-input" id="rv-moneda">
+              <option value="Bs">Bs</option>
+              <option value="Divisa">Divisa</option>
+            </select>
+          </div>
+        </div>
         <div class="field-group" style="margin-bottom:12px;">
           <div class="field-label">Código de autorización</div>
           <input class="field-input" type="password" id="rv-unlock" placeholder="Tu código personal" maxlength="20">
@@ -647,7 +690,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpBkGMcoRQt8_GKXdwfKC6rXvxkExqh7-M2TaFcAKYJySFHwTsv-_IEhTDppyI5eNsBQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxcIoTQUzfZ8IJqC528OqbdLwMWxFpVSD59F3oILBwXTZPsyYJrfEbSIiK3N1rvKNCxgw/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1151,10 +1194,17 @@ function switchRespaldo(sub){
 
 async function guardarRespaldo(){
   const mensaje=document.getElementById('rv-mensaje').value.trim();
+  const banco=document.getElementById('rv-banco').value;
+  const referencia=document.getElementById('rv-referencia').value.trim();
+  const factura=document.getElementById('rv-factura').value;
+  const tasa=document.getElementById('rv-tasa').value.trim();
+  const moneda=document.getElementById('rv-moneda').value;
   const unlock=document.getElementById('rv-unlock').value.trim().toUpperCase();
   const errEl=document.getElementById('rv-unlock-error');
   const msgEl=document.getElementById('rv-msg');
   if(!mensaje){ alert('Pega el mensaje de WhatsApp primero'); return; }
+  if(!banco){ alert('Selecciona el banco'); return; }
+  if(!referencia){ alert('Ingresa el número de referencia'); return; }
   if(!USUARIOS[unlock]){ errEl.style.display='block'; errEl.textContent='❌ Código incorrecto'; document.getElementById('rv-unlock').value=''; return; }
   errEl.style.display='none';
   msgEl.style.display='block';
@@ -1166,7 +1216,12 @@ async function guardarRespaldo(){
       action:'addRespaldo',
       fecha:getFechaHora(),
       usuario:USUARIOS[unlock],
-      mensaje:encodeURIComponent(mensaje)
+      mensaje:encodeURIComponent(mensaje),
+      banco:banco,
+      referencia:referencia,
+      factura:factura,
+      tasa:tasa,
+      moneda:moneda
     });
     if(data.ok){
       msgEl.style.background='#0f2b1a';
@@ -1174,6 +1229,9 @@ async function guardarRespaldo(){
       msgEl.style.color='var(--accent)';
       msgEl.innerHTML=`✅ Guardado · <b>${data.codigo}</b> · ${USUARIOS[unlock]}`;
       document.getElementById('rv-mensaje').value='';
+      document.getElementById('rv-banco').value='';
+      document.getElementById('rv-referencia').value='';
+      document.getElementById('rv-tasa').value='';
       document.getElementById('rv-unlock').value='';
       setTimeout(()=>{ msgEl.style.display='none'; },3000);
     } else { throw new Error(data.error||'Error desconocido'); }
@@ -1200,6 +1258,11 @@ async function cargarRespaldos(){
       const fecha=String(r[1]||'').trim();
       const usuario=String(r[2]||'').trim();
       const mensaje=decodeURIComponent(String(r[3]||'').trim());
+      const banco=String(r[4]||'').trim();
+      const referencia=String(r[5]||'').trim();
+      const factura=String(r[6]||'').trim();
+      const tasa=String(r[7]||'').trim();
+      const moneda=String(r[8]||'').trim();
       const card=document.createElement('div');
       card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;';
       card.innerHTML=`
@@ -1208,6 +1271,13 @@ async function cargarRespaldos(){
             <span style="background:#1a2a10;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">${codigo}</span>
             <span style="font-size:11px;color:var(--muted);margin-left:8px;">🕐 ${fecha} · ${usuario}</span>
           </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px;margin-bottom:10px;background:var(--surface2);border-radius:8px;padding:10px;">
+          <div><span style="color:var(--muted);">Banco:</span> <b>${banco}</b></div>
+          <div><span style="color:var(--muted);">Ref:</span> <b>${referencia}</b></div>
+          <div><span style="color:var(--muted);">Factura:</span> <b>${factura}</b></div>
+          <div><span style="color:var(--muted);">Tasa:</span> <b>${tasa}</b></div>
+          <div><span style="color:var(--muted);">Moneda:</span> <b>${moneda}</b></div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13px;line-height:1.8;white-space:pre-wrap;margin-bottom:12px;">${mensaje}</div>
         <button onclick="abrirModalProcesar('${codigo}')" style="width:100%;padding:12px;background:var(--warn);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">✓ MARCAR COMO PROCESADO</button>`;
@@ -1263,6 +1333,11 @@ async function cargarHistorialRespaldo(cod='',fecha=''){
       const mensaje=decodeURIComponent(String(r[3]||'').trim());
       const fechaProceso=String(r[4]||'').trim();
       const usuarioProceso=String(r[5]||'').trim();
+      const banco2=String(r[4]||'').trim();
+      const ref2=String(r[5]||'').trim();
+      const fact2=String(r[6]||'').trim();
+      const tasa2=String(r[7]||'').trim();
+      const mon2=String(r[8]||'').trim();
       const card=document.createElement('div');
       card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;';
       card.innerHTML=`
@@ -1272,6 +1347,13 @@ async function cargarHistorialRespaldo(cod='',fecha=''){
             <span style="font-size:11px;color:var(--muted);margin-left:8px;">🕐 ${fecha} · ${usuario}</span>
           </div>
           <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--accent);">✓ Procesado</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px;margin-bottom:10px;background:var(--surface2);border-radius:8px;padding:10px;">
+          <div><span style="color:var(--muted);">Banco:</span> <b>${banco2}</b></div>
+          <div><span style="color:var(--muted);">Ref:</span> <b>${ref2}</b></div>
+          <div><span style="color:var(--muted);">Factura:</span> <b>${fact2}</b></div>
+          <div><span style="color:var(--muted);">Tasa:</span> <b>${tasa2}</b></div>
+          <div><span style="color:var(--muted);">Moneda:</span> <b>${mon2}</b></div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13px;line-height:1.8;white-space:pre-wrap;margin-bottom:8px;">${mensaje}</div>
         ${fechaProceso?`<div style="font-size:11px;color:var(--muted);">Procesado: ${fechaProceso} · ${usuarioProceso}</div>`:''}`;
