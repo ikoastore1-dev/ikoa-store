@@ -296,7 +296,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   <div class="tabs">
     <button class="tab" onclick="switchTab('tasa')">💱 Tasa</button>
     <button class="tab active" onclick="switchTab('stock')">📦 Stock</button>
-    <button class="tab" onclick="switchTab('etiquetas')">🏷️ Etiquetas</button>
+    <button class="tab" onclick="switchTab('etiquetas')">🆕 Productos Nuevos</button>
     <button class="tab" onclick="switchTab('aprobaciones')">✅ Aprobaciones</button>
     <button class="tab" onclick="switchTab('cola')">⏳ Cola</button>
     <button class="tab" onclick="switchTab('respaldo')">💬 Respaldo</button>
@@ -408,7 +408,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   <div id="tab-etiquetas" style="display:none">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:14px;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">📋 Datos del producto</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">🆕 Nuevo Producto</div>
         <div class="field-group">
           <div class="field-label">Código del producto</div>
           <input class="field-input" type="text" id="qr-codigo" placeholder="Ej: Nike-Met-01" oninput="autoFillFromCode()">
@@ -899,11 +899,16 @@ function findProduct(q){
 }
 
 function doSearch(){
-  const q=document.getElementById('search-input').value;
-  if(!q.trim())return;
+  const q=document.getElementById('search-input').value.trim();
+  if(!q) return;
   const p=findProduct(q);
-  if(p)showProduct(p);
-  else document.getElementById('product-area').innerHTML=`<div class="not-found"><div style="font-size:32px">🔍</div><p style="color:var(--muted);margin-top:8px;">No se encontró "<strong style="color:#ff6b6b">${q}</strong>"</p></div>`;
+  if(p) showProduct(p);
+  else document.getElementById('product-area').innerHTML=`
+    <div class="not-found">
+      <div style="font-size:32px">🔍</div>
+      <p style="color:var(--muted);margin-top:8px;">No se encontró "<strong style="color:#ff6b6b">${q}</strong>"</p>
+      <p style="font-size:12px;color:var(--muted);margin-top:6px;">Los productos nuevos se crean en <b style="color:var(--accent);">🏷️ Etiqueta · Nuevos</b></p>
+    </div>`;
 }
 
 function showProduct(p){
@@ -920,9 +925,18 @@ function showProduct(p){
   }).join('');
   const depPills=DEPOSITOS.map(d=>`<div class="dep-pill ${d===selectedDeposito?'active':''}" onclick="selectDeposito('${d}')">${d}</div>`).join('');
   const totalStock=Object.keys(STOCK).filter(k=>k.startsWith(p.codigo+'||')).reduce((a,k)=>a+STOCK[k],0);
+  const fotoHtml=p.foto
+    ?`<img src="${p.foto}" style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin-bottom:10px;" onerror="this.style.display='none'">`
+    :`<div style="background:var(--surface2);border-radius:10px;padding:20px;text-align:center;color:var(--muted);font-size:13px;margin-bottom:10px;">📷 Sin foto</div>`;
   document.getElementById('product-area').innerHTML=`
     <div class="product-card">
       <div class="pc-header"><div><div class="pc-name">${p.nombre}</div><div class="pc-code">${p.codigo} · ${p.depto}</div></div><div style="font-size:11px;color:var(--muted);">${totalStock} uds total</div></div>
+      ${fotoHtml}
+      <div style="margin-bottom:12px;">
+        <input type="file" id="foto-stk-input" accept="image/*" style="display:none" onchange="subirFotoStock(event)">
+        <button onclick="document.getElementById('foto-stk-input').click()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">📷 ${p.foto?'Cambiar Foto':'Subir Foto'}</button>
+        <div id="foto-stk-msg" style="display:none;font-size:12px;text-align:center;margin-top:6px;padding:6px;border-radius:6px;"></div>
+      </div>
       <div class="section"><div class="section-title">Color y Ubicación</div>
         <div class="fields-row">
           <div class="field-group"><div class="field-label">Color</div><input class="field-input" type="text" id="color-input" placeholder="Ej: Negro, Rojo..." value="${selectedColor}" oninput="selectedColor=this.value"></div>
@@ -1044,13 +1058,16 @@ async function confirmarModal(){
   try{
     await scriptGET({
         action:'updateStock',
-        codigo:currentProduct.codigo,nombre:currentProduct.nombre,
-        talla:selectedTalla,stock:nuevoStock,color:color,
-        deposito:selectedDeposito,fecha:fechaHora,
-        usuario:`${cod} - ${nombreUsuario}`,operacion:currentOp,antes:currentStock
+        codigo:currentProduct.codigo, nombre:currentProduct.nombre,
+        talla:selectedTalla, stock:nuevoStock, color:color,
+        deposito:selectedDeposito, fecha:fechaHora,
+        usuario:`${cod} - ${nombreUsuario}`, operacion:currentOp, antes:currentStock,
+        eliminar: nuevoStock===0 ? 'si' : 'no'
       });
     const key=`${currentProduct.codigo}||${selectedTalla}||${color}||${selectedDeposito}`;
-    STOCK[key]=nuevoStock; selectedColor=color;
+    if(nuevoStock===0) delete STOCK[key];
+    else STOCK[key]=nuevoStock;
+    selectedColor=color;
     historial.unshift({fecha:fechaHora,tipo:currentOp,codigo:currentProduct.codigo,nombre:currentProduct.nombre,talla:selectedTalla,color,deposito:selectedDeposito,antes:currentStock,despues:nuevoStock,delta:nuevoStock-currentStock,usuario:nombreUsuario,cod});
     if(historial.length>200)historial.pop();
     localStorage.setItem('ikoa_hist_v3',JSON.stringify(historial));
@@ -1062,7 +1079,36 @@ async function confirmarModal(){
   pendingMovimiento=null;
 }
 
-function addCustomTalla(){
+async function subirFotoStock(event){
+  const file=event.target.files[0];
+  if(!file||!currentProduct) return;
+  const msgEl=document.getElementById('foto-stk-msg');
+  msgEl.style.display='block';
+  msgEl.style.background='var(--surface2)';
+  msgEl.style.color='var(--muted)';
+  msgEl.innerHTML='<span class="spinner">↻</span> Subiendo foto...';
+  try{
+    const reader=new FileReader();
+    reader.onload=async function(e){
+      const base64=e.target.result.split(',')[1];
+      const mimeType=file.type;
+      const filename=currentProduct.codigo+'_'+Date.now()+'.jpg';
+      const data=await scriptGETjson({action:'uploadFoto',codigo:currentProduct.codigo,base64,mimeType,filename});
+      if(data.ok){
+        currentProduct.foto=data.url;
+        msgEl.style.background='#0f2b1a';
+        msgEl.style.color='var(--accent)';
+        msgEl.innerHTML='✅ Foto guardada';
+        setTimeout(()=>{ msgEl.style.display='none'; showProduct(currentProduct); },1500);
+      } else { throw new Error(data.error||'Error'); }
+    };
+    reader.readAsDataURL(file);
+  }catch(e){
+    msgEl.style.background='#2a1010';
+    msgEl.style.color='var(--danger)';
+    msgEl.innerHTML='✗ Error: '+e.message;
+  }
+}
   const input=document.getElementById('new-talla-input');
   const talla=input.value.trim();
   if(!talla||!currentProduct)return;
@@ -1244,7 +1290,8 @@ function stopScanner(){
 // ── TABS ──────────────────────────────────────────────────────
 function switchTab(tab){
   ['tasa','stock','etiquetas','aprobaciones','respaldo','gestion'].forEach(t=>{
-    document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
+    const el=document.getElementById('tab-'+t);
+    if(el) el.style.display=t===tab?'block':'none';
   });
   document.querySelectorAll('.tab').forEach((b,i)=>{
     b.classList.toggle('active',['tasa','stock','etiquetas','aprobaciones','respaldo','gestion'][i]===tab);
