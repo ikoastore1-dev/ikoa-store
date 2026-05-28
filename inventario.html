@@ -1109,6 +1109,7 @@ async function subirFotoStock(event){
     msgEl.innerHTML='✗ Error: '+e.message;
   }
 }
+function addCustomTalla(){
   const input=document.getElementById('new-talla-input');
   const talla=input.value.trim();
   if(!talla||!currentProduct)return;
