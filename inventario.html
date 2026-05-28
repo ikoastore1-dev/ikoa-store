@@ -294,12 +294,74 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
 <main>
   <div class="tabs">
+    <button class="tab" onclick="switchTab('tasa')">💱 Tasa</button>
     <button class="tab active" onclick="switchTab('stock')">📦 Stock</button>
     <button class="tab" onclick="switchTab('etiquetas')">🏷️ Etiquetas</button>
     <button class="tab" onclick="switchTab('aprobaciones')">✅ Aprobaciones</button>
     <button class="tab" onclick="switchTab('cola')">⏳ Cola</button>
     <button class="tab" onclick="switchTab('respaldo')">💬 Respaldo</button>
     <button class="tab" onclick="switchTab('gestion')">📋 Gestión</button>
+  </div>
+
+  <!-- TAB TASA -->
+  <div id="tab-tasa" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">💱 Tasas de Cambio</div>
+      <button onclick="cargarTasas()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 14px;font-size:13px;cursor:pointer;">↻</button>
+    </div>
+
+    <!-- TASAS ACTUALES -->
+    <div id="tasa-actual-wrap" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Tasas Actuales</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="tasa-display">
+        <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">BCV</div>
+          <div id="tasa-disp-BCV" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--accent);">—</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Shoes</div>
+          <div id="tasa-disp-Shoes" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--warn);">—</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">IKOA</div>
+          <div id="tasa-disp-IKOA" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#cc88ff;">—</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">BeKate</div>
+          <div id="tasa-disp-BeKate" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#ff8844;">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODIFICAR TASAS -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Actualizar Tasas</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <div class="field-group" style="margin-bottom:0;">
+          <div class="field-label">BCV</div>
+          <input class="field-input" type="number" id="tasa-inp-BCV" placeholder="0.00" step="0.01">
+        </div>
+        <div class="field-group" style="margin-bottom:0;">
+          <div class="field-label">Shoes</div>
+          <input class="field-input" type="number" id="tasa-inp-Shoes" placeholder="0.00" step="0.01">
+        </div>
+        <div class="field-group" style="margin-bottom:0;">
+          <div class="field-label">IKOA</div>
+          <input class="field-input" type="number" id="tasa-inp-IKOA" placeholder="0.00" step="0.01">
+        </div>
+        <div class="field-group" style="margin-bottom:0;">
+          <div class="field-label">BeKate</div>
+          <input class="field-input" type="number" id="tasa-inp-BeKate" placeholder="0.00" step="0.01">
+        </div>
+      </div>
+      <div class="field-group" style="margin-bottom:12px;">
+        <div class="field-label">Código de autorización</div>
+        <input class="field-input" type="password" id="tasa-unlock" placeholder="Tu código personal" maxlength="20">
+        <div id="tasa-unlock-error" style="font-size:12px;color:var(--danger);margin-top:4px;display:none;"></div>
+      </div>
+      <button onclick="guardarTasas()" style="width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;">💾 GUARDAR TASAS</button>
+      <div id="tasa-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:10px;"></div>
+    </div>
   </div>
 
   <!-- TAB STOCK -->
@@ -706,7 +768,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyajISXH7LN6IAOQyEV9VTnzt1L43RwnEqA4DnHlkSkB0wUqPgMdeJd12vYm03-r5zmYg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxd9xQJIH-gJOvv-ONmrPluqC0WwYqFHn4puLqV42LQPkiINrzPpwkEe60XKlG0n_rIQ/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -720,7 +782,7 @@ const TALLAS_ROPA = ['XS','S','M','L','XL','XXL','3XL'];
 const TALLAS_ZAP  = ['30','30½','31','31½','32','32½','33','33½','34','34½','35','35½','36','36½','37','37½','38','38½','39','39½','40','40½','41','41½','42','42½','43','43½','44','44½','45'];
 const USUARIOS    = {'2710':'Director Johan','IKOA02':'Vendedor 1','IKOA03':'Vendedor 2','IKOA04':'Almacén','IKOA05':'Showroom'};
 
-let PRODUCTOS=[], STOCK={}, TASAS={BCV:null,Binance:null,Venta:null,BeKate:null};
+let PRODUCTOS=[], STOCK={}, TASAS={BCV:null,Shoes:null,IKOA:null,BeKate:null};
 let currentProduct=null, selectedTalla=null, selectedColor='', selectedDeposito='Tienda';
 let currentOp='entrada', editQty=1, pendingMovimiento=null, pendingEtiqueta=null, selectedTasaName=null;
 let fotoBase64=null, fotoMime=null;
@@ -1181,14 +1243,70 @@ function stopScanner(){
 
 // ── TABS ──────────────────────────────────────────────────────
 function switchTab(tab){
-  ['stock','etiquetas','aprobaciones','respaldo','gestion'].forEach(t=>{
+  ['tasa','stock','etiquetas','aprobaciones','respaldo','gestion'].forEach(t=>{
     document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
   });
   document.querySelectorAll('.tab').forEach((b,i)=>{
-    b.classList.toggle('active',['stock','etiquetas','aprobaciones','respaldo','gestion'][i]===tab);
+    b.classList.toggle('active',['tasa','stock','etiquetas','aprobaciones','respaldo','gestion'][i]===tab);
   });
   if(tab==='aprobaciones') switchAprobaciones('Pendiente');
   if(tab==='respaldo') cargarRespaldos();
+  if(tab==='tasa') cargarTasas();
+}
+
+// ── TASAS ─────────────────────────────────────────────────────
+async function cargarTasas(){
+  try{
+    const t=await loadSheetGviz('TASA');
+    if(!t||!t.rows||!t.rows[0]) return;
+    const row=t.rows[0].c;
+    const vals={BCV:row[0]?row[0].v:null, Shoes:row[1]?row[1].v:null, IKOA:row[2]?row[2].v:null, BeKate:row[3]?row[3].v:null};
+    Object.entries(vals).forEach(([k,v])=>{
+      TASAS[k]=v;
+      const el=document.getElementById('tasa-disp-'+k);
+      if(el) el.textContent=v?Number(v).toFixed(2):'—';
+      const inp=document.getElementById('tasa-inp-'+k);
+      if(inp&&v) inp.value=Number(v).toFixed(2);
+    });
+  }catch(e){ console.error('Error cargando tasas:',e); }
+}
+
+async function guardarTasas(){
+  const unlock=document.getElementById('tasa-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('tasa-unlock-error');
+  const msgEl=document.getElementById('tasa-msg');
+  if(!USUARIOS[unlock]){ errEl.style.display='block'; errEl.textContent='❌ Código incorrecto'; document.getElementById('tasa-unlock').value=''; return; }
+  errEl.style.display='none';
+
+  const nuevas={BCV:document.getElementById('tasa-inp-BCV').value.trim(), Shoes:document.getElementById('tasa-inp-Shoes').value.trim(), IKOA:document.getElementById('tasa-inp-IKOA').value.trim(), BeKate:document.getElementById('tasa-inp-BeKate').value.trim()};
+  if(Object.values(nuevas).some(v=>!v||isNaN(v))){ errEl.style.display='block'; errEl.textContent='Ingresa todas las tasas'; return; }
+
+  msgEl.style.display='block';
+  msgEl.style.background='var(--surface2)';
+  msgEl.style.color='var(--muted)';
+  msgEl.innerHTML='<span class="spinner">↻</span> Guardando...';
+
+  try{
+    const data=await scriptGETjson({
+      action:'updateTasas',
+      bcv:nuevas.BCV, shoes:nuevas.Shoes, ikoa:nuevas.IKOA, bekate:nuevas.BeKate,
+      usuario:USUARIOS[unlock], fecha:getFechaHora(),
+      anterior_bcv:TASAS.BCV||'', anterior_shoes:TASAS.Shoes||'', anterior_ikoa:TASAS.IKOA||'', anterior_bekate:TASAS.BeKate||''
+    });
+    if(data.ok){
+      msgEl.style.background='#0f2b1a';
+      msgEl.style.border='1px solid #1a4a2a';
+      msgEl.style.color='var(--accent)';
+      msgEl.innerHTML=`✅ Tasas actualizadas · ${USUARIOS[unlock]}`;
+      document.getElementById('tasa-unlock').value='';
+      cargarTasas();
+      setTimeout(()=>{ msgEl.style.display='none'; },3000);
+    } else { throw new Error(data.error||'Error desconocido'); }
+  }catch(e){
+    msgEl.style.background='#2a1010';
+    msgEl.style.color='var(--danger)';
+    msgEl.innerHTML='✗ Error: '+e.message;
+  }
 }
 
 function switchStock(sub){
