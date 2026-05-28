@@ -300,11 +300,18 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <button class="tab" onclick="switchTab('cola')">⏳ Cola</button>
     <button class="tab" onclick="switchTab('respaldo')">💬 Respaldo</button>
     <button class="tab" onclick="switchTab('gestion')">📋 Gestión</button>
-    <button class="tab" onclick="switchTab('historial')">🕐 Historial</button>
   </div>
 
   <!-- TAB STOCK -->
   <div id="tab-stock">
+    <!-- SUB-PESTAÑAS STOCK -->
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button onclick="switchStock('inventario')" id="stktab-inventario" style="flex:1;padding:9px;border:2px solid var(--accent);border-radius:10px;background:#0f2b1a;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">📦 Inventario</button>
+      <button onclick="switchStock('historial')" id="stktab-historial" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🕐 Historial</button>
+    </div>
+
+    <!-- INVENTARIO -->
+    <div id="stksec-inventario">
     <button class="scan-btn" id="scan-btn" onclick="toggleScanner()">
       <span style="font-size:24px">⬛</span>
       <span id="scan-btn-text">Escanear Código QR</span>
@@ -322,7 +329,18 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     </div>
     <div id="msg-area"></div>
     <div id="product-area"></div>
-  </div>
+    </div><!-- /stksec-inventario -->
+
+    <!-- HISTORIAL SUB-SECCIÓN -->
+    <div id="stksec-historial" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Movimientos registrados</div>
+        <button onclick="clearHistorial()" style="background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:4px 12px;font-size:12px;cursor:pointer;">Limpiar</button>
+      </div>
+      <div id="historial-list" class="historial-list"></div>
+    </div><!-- /stksec-historial -->
+
+  </div><!-- /tab-stock -->
 
   <!-- TAB ETIQUETAS -->
   <div id="tab-etiquetas" style="display:none">
@@ -373,32 +391,33 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
   <!-- TAB APROBACIONES -->
   <div id="tab-aprobaciones" style="display:none">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">✅ Solicitudes</div>
-      <button onclick="cargarSolicitudes()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 14px;font-size:13px;cursor:pointer;">↻ Actualizar</button>
-    </div>
-    <!-- FILTROS -->
-    <div style="display:flex;gap:6px;margin-bottom:14px;">
-      <button class="sol-filter-btn active" data-filtro="Pendiente" onclick="cargarSolicitudes('Pendiente')" style="flex:1;padding:8px;border:1px solid var(--warn);border-radius:8px;background:#2a1f0a;color:var(--warn);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">⏳ Pendientes</button>
-      <button class="sol-filter-btn" data-filtro="Pagado" onclick="cargarSolicitudes('Pagado')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✅ Aprobadas</button>
-      <button class="sol-filter-btn" data-filtro="Reprobado" onclick="cargarSolicitudes('Reprobado')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✗ Reprobadas</button>
-    </div>
-    <div id="apro-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
-    <div id="solicitudes-list"></div>
-  </div>
-
-  <!-- TAB COLA PLANIFICACIÓN -->
-  <div id="tab-cola" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--warn);text-transform:uppercase;letter-spacing:.08em;">⏳ Cola de Planificación</div>
-      <button onclick="cargarCola()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 14px;font-size:13px;cursor:pointer;">↻</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">✅ Aprobaciones</div>
+      <button onclick="refreshAprobaciones()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 14px;font-size:13px;cursor:pointer;">↻</button>
     </div>
+    <!-- SUB-PESTAÑAS -->
     <div style="display:flex;gap:6px;margin-bottom:14px;">
-      <button class="cola-filter-btn" data-filtro="Pagado" onclick="setFiltroCola('Pagado')" style="flex:1;padding:8px;border:1px solid var(--warn);border-radius:8px;background:#2a1f0a;color:var(--warn);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">⏳ En Cola</button>
-      <button class="cola-filter-btn" data-filtro="En Producción" onclick="setFiltroCola('En Producción')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🚀 Enviados</button>
+      <button class="apro-sub-btn" data-sub="Pendiente" onclick="switchAprobaciones('Pendiente')" style="flex:1;padding:8px;border:2px solid var(--warn);border-radius:8px;background:#2a1f0a;color:var(--warn);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Pendientes</button>
+      <button class="apro-sub-btn" data-sub="Pagado" onclick="switchAprobaciones('Pagado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✅ Aprobadas</button>
+      <button class="apro-sub-btn" data-sub="Reprobado" onclick="switchAprobaciones('Reprobado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✗ Reprobadas</button>
+      <button class="apro-sub-btn" data-sub="Cola" onclick="switchAprobaciones('Cola')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Cola</button>
     </div>
-    <div id="cola-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
-    <div id="cola-list"></div>
+
+    <!-- SOLICITUDES -->
+    <div id="aprosec-solicitudes">
+      <div id="apro-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
+      <div id="solicitudes-list"></div>
+    </div>
+
+    <!-- COLA (sub-sección) -->
+    <div id="aprosec-cola" style="display:none;">
+      <div style="display:flex;gap:6px;margin-bottom:12px;">
+        <button class="cola-filter-btn" data-filtro="Pagado" onclick="setFiltroCola('Pagado')" style="flex:1;padding:8px;border:1px solid var(--warn);border-radius:8px;background:#2a1f0a;color:var(--warn);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ En Cola</button>
+        <button class="cola-filter-btn" data-filtro="En Producción" onclick="setFiltroCola('En Producción')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🚀 Enviados</button>
+      </div>
+      <div id="cola-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
+      <div id="cola-list"></div>
+    </div>
   </div>
 
   <!-- TAB RESPALDO VENTA -->
@@ -684,14 +703,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </div>
 
   <!-- TAB HISTORIAL -->
-  <div id="tab-historial" style="display:none">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Movimientos registrados</div>
-      <button onclick="clearHistorial()" style="background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:4px 12px;font-size:12px;cursor:pointer;">Limpiar</button>
-    </div>
-    <div id="historial-list" class="historial-list"></div>
-  </div>
-</main>
+  </main>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyajISXH7LN6IAOQyEV9VTnzt1L43RwnEqA4DnHlkSkB0wUqPgMdeJd12vYm03-r5zmYg/exec';
@@ -1169,16 +1181,48 @@ function stopScanner(){
 
 // ── TABS ──────────────────────────────────────────────────────
 function switchTab(tab){
-  ['stock','etiquetas','aprobaciones','cola','respaldo','gestion','historial'].forEach(t=>{
+  ['stock','etiquetas','aprobaciones','respaldo','gestion'].forEach(t=>{
     document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
   });
   document.querySelectorAll('.tab').forEach((b,i)=>{
-    b.classList.toggle('active',['stock','etiquetas','aprobaciones','cola','respaldo','gestion','historial'][i]===tab);
+    b.classList.toggle('active',['stock','etiquetas','aprobaciones','respaldo','gestion'][i]===tab);
   });
-  if(tab==='historial') renderHistorial();
-  if(tab==='aprobaciones') cargarSolicitudes();
-  if(tab==='cola') cargarCola();
+  if(tab==='aprobaciones') switchAprobaciones('Pendiente');
   if(tab==='respaldo') cargarRespaldos();
+}
+
+function switchStock(sub){
+  ['inventario','historial'].forEach(s=>{
+    document.getElementById('stksec-'+s).style.display=s===sub?'block':'none';
+    const btn=document.getElementById('stktab-'+s);
+    btn.style.borderColor=s===sub?'var(--accent)':'var(--border)';
+    btn.style.background=s===sub?'#0f2b1a':'var(--surface2)';
+    btn.style.color=s===sub?'var(--accent)':'var(--muted)';
+  });
+  if(sub==='historial') renderHistorial();
+}
+
+function switchAprobaciones(sub){
+  // Actualizar botones
+  document.querySelectorAll('.apro-sub-btn').forEach(b=>{
+    const active=b.dataset.sub===sub;
+    const colors={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)',Cola:'var(--warn)'};
+    const bgs={Pendiente:'#2a1f0a',Pagado:'#0f2b1a',Reprobado:'#2a1010',Cola:'#2a1f0a'};
+    b.style.borderColor=active?colors[sub]:'var(--border)';
+    b.style.background=active?bgs[sub]:'var(--surface2)';
+    b.style.color=active?colors[sub]:'var(--muted)';
+  });
+  // Mostrar sección correcta
+  document.getElementById('aprosec-solicitudes').style.display=sub==='Cola'?'none':'block';
+  document.getElementById('aprosec-cola').style.display=sub==='Cola'?'block':'none';
+  if(sub==='Cola') cargarCola();
+  else cargarSolicitudes(sub);
+}
+
+function refreshAprobaciones(){
+  const activeSub=document.querySelector('.apro-sub-btn[style*="0f2b1a"], .apro-sub-btn[style*="2a1f0a"], .apro-sub-btn[style*="2a1010"]');
+  const sub=activeSub?activeSub.dataset.sub:'Pendiente';
+  switchAprobaciones(sub);
 }
 
 // ── RESPALDO VENTA ────────────────────────────────────────────
