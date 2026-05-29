@@ -794,9 +794,11 @@ function inicializarPiezas(){
   if(!pedido.pack||pedido.pack<1){ alert('Selecciona el tamaño del pack primero'); goStep(2); return; }
   document.getElementById('pack-total-lbl').textContent=pedido.pack+' franelas';
   const container=document.getElementById('piezas-container');
-  const actual=container.querySelectorAll('.pieza-card').length;
-  if(actual===0){ piezaCount=0; for(let i=0;i<pedido.pack;i++) addPieza(); }
-  else if(actual<pedido.pack){ for(let i=actual;i<pedido.pack;i++) addPieza(); }
+  // Limpiar siempre para el pack actual
+  container.innerHTML='';
+  piezaCount=0;
+  pedido.piezas=[];
+  for(let i=0;i<pedido.pack;i++) addPieza();
   actualizarBotonesMult();
 }
 
