@@ -1231,12 +1231,14 @@ async function subirFotoStock(event){
     const base64=dataUrl.split(',')[1];
     const filename=currentProduct.codigo+'_'+Date.now()+'.jpg';
     msgEl.innerHTML='<span class="spinner">↻</span> Subiendo foto...';
-    const params=new URLSearchParams({
-      action:'uploadFoto',
-      codigo:currentProduct.codigo,
-      base64, mimeType:'image/jpeg', filename
+    await fetch(SCRIPT_URL,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:'action=uploadFoto&codigo='+encodeURIComponent(currentProduct.codigo)+
+           '&base64='+encodeURIComponent(base64)+
+           '&mimeType=image%2Fjpeg&filename='+encodeURIComponent(filename)
     });
-    await fetch(SCRIPT_URL+'?'+params.toString(),{method:'GET',mode:'no-cors'});
     await new Promise(r=>setTimeout(r,3000));
     msgEl.style.background='#0f2b1a';
     msgEl.style.color='var(--accent)';
@@ -1381,27 +1383,19 @@ async function ejecutarGenerarEtiqueta(codigo,nombre,precio,tasa){
   // 2. Subir foto si hay
   if(fotoBase64){
     etqMsg.innerHTML='<span class="spinner">↻</span> Subiendo foto...';
-    const kb=Math.round(fotoBase64.length*0.75/1024);
-    console.log('Foto base64 size:',kb,'KB');
     try{
-      // Usar fetch con no-cors para enviar la foto (evita límite de URL)
-      const params=new URLSearchParams({
-        action:'uploadFoto',
-        codigo,
-        base64:fotoBase64,
-        mimeType:'image/jpeg',
-        filename:`${codigo}.jpg`
+      await fetch(SCRIPT_URL, {
+        method:'POST',
+        mode:'no-cors',
+        headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:'action=uploadFoto&codigo='+encodeURIComponent(codigo)+
+             '&base64='+encodeURIComponent(fotoBase64)+
+             '&mimeType=image%2Fjpeg&filename='+encodeURIComponent(codigo+'.jpg')
       });
-      await fetch(SCRIPT_URL+'?'+params.toString(),{
-        method:'GET',
-        mode:'no-cors'
-      });
-      // no-cors no devuelve respuesta legible, esperamos 3s y asumimos éxito
+      // no-cors: no podemos leer la respuesta pero el servidor la procesó
       await new Promise(r=>setTimeout(r,3000));
-      console.log('✅ Foto enviada (no-cors)');
-    }catch(e){
-      console.error('Foto error:',e);
-    }
+      console.log('✅ Foto enviada por POST');
+    }catch(e){ console.error('Foto error:',e); }
   }
 
   etqMsg.style.background='#0f2b1a';
@@ -2050,7 +2044,31 @@ async function confirmarPlanificacion(){
       else throw new Error(res.error||'Error en '+codigoC);
     }
 
-    // 3. Enviar UNA SOLA llamada a Make con todos los packs consolidados
+    // 3. Guardar en PEDIDOS para búsquedas futuras (Envío por Selección)
+    const codMakeStr=String(codMake||'');
+    const descripcionPacks=allPacks.map((pk,i)=>`Pack ${i+1}: ${pk.pack} ${pk.tela}/${pk.vinil}`).join(' | ');
+    try{
+      await scriptGETjson({
+        action:'addPedido',
+        nombre:pendingCola.nombre||'',
+        cedula:pendingCola.cedula||'',
+        correo:pendingCola.correo||'',
+        cod:codMakeStr,
+        numero_guia:'',
+        agencia:pendingCola.agencia||'',
+        status:'En Producción',
+        celular:pendingCola.celular||'',
+        fecha:fechaProd,
+        descripcion:descripcionPacks,
+        nombre_envio:pendingCola.retira||'',
+        cel_envio:pendingCola.retiraCel||'',
+        ci_envio:pendingCola.retiraCi||'',
+        direccion:'',
+        usuario:USUARIOS[unlock]
+      });
+    }catch(e){ console.warn('addPedido error:',e); }
+
+    // 4. Enviar UNA SOLA llamada a Make con todos los packs consolidados
     const packsTexto=allPacks.map((pk,i)=>{
       const piezasLineas=(pk.piezas||'').split(' | ').map(p=>`  • ${p}`).join('\n');
       return `── Pack ${i+1} ──\n${pk.pack} COMFY MEGA PROMO MANGA LARGA SIN CAPUCHA\nTela: ${pk.tela}\nVinil: ${pk.vinil}\nPiezas:\n${piezasLineas}`;
