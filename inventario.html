@@ -298,7 +298,6 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <button class="tab active" onclick="switchTab('stock')">📦 Stock</button>
     <button class="tab" onclick="switchTab('etiquetas')">🆕 Productos Nuevos</button>
     <button class="tab" onclick="switchTab('aprobaciones')">✅ Aprobaciones</button>
-    <button class="tab" onclick="switchTab('cola')">⏳ Cola</button>
     <button class="tab" onclick="switchTab('respaldo')">💬 Respaldo</button>
     <button class="tab" onclick="switchTab('gestion')">📋 Gestión</button>
   </div>
@@ -1771,7 +1770,6 @@ let filtroSolicitudes='Pendiente';
 async function cargarSolicitudes(filtro){
   if(filtro!==undefined) filtroSolicitudes=filtro;
   const listEl=document.getElementById('solicitudes-list');
-  document.querySelectorAll('.sol-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filtro===filtroSolicitudes));
   listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>`;
   try{
     const data=await scriptGETjson({action:'leerAprobaciones',filtro:filtroSolicitudes});
@@ -1780,62 +1778,81 @@ async function cargarSolicitudes(filtro){
       listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);"><div style="font-size:32px;margin-bottom:10px;">${filtroSolicitudes==='Pendiente'?'🎉':'📋'}</div><div style="font-size:15px;">No hay solicitudes ${filtroSolicitudes.toLowerCase()}</div></div>`;
       return;
     }
+    // Agrupar por pedido principal S-5 / S-5.2 / S-5.3
+    const grupos={};
+    filtradas.forEach(r=>{
+      const codigo=String(r[0]||'').trim();
+      const base=codigo.split('.')[0];
+      if(!grupos[base]) grupos[base]=[];
+      grupos[base].push(r);
+    });
+    Object.values(grupos).forEach(g=>g.sort((a,b)=>{
+      const ca=String(a[0]||''), cb=String(b[0]||'');
+      if(!ca.includes('.')&&cb.includes('.')) return -1;
+      if(ca.includes('.')&&!cb.includes('.')) return 1;
+      return parseFloat(ca.split('-')[1]||0)-parseFloat(cb.split('-')[1]||0);
+    }));
     const sc={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)'};
     const sb={Pendiente:'#2a1f0a',Pagado:'#0f2b1a',Reprobado:'#2a1010'};
-    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${filtradas.length} solicitud(es) · ${filtroSolicitudes==='Pendiente'?'esperando aprobación':filtroSolicitudes==='Pagado'?'aprobadas':'reprobadas'}</div>`;
-    filtradas.forEach(r=>{
-      // Nueva estructura APROBACIONES 28 cols:
-      // A(0)=CodigoS, B(1)=CodigoC, C(2)=CodigoP, D(3)=COD_Make
-      // E(4)=FechaSol, F(5)=FechaApro, G(6)=FechaProd
-      // H(7)=Nombre, I(8)=Correo, J(9)=Cedula, K(10)=Celular
-      // L(11)=Modelo, M(12)=Manga, N(13)=Capucha, O(14)=Pack
-      // P(15)=Tela, Q(16)=Vinil, R(17)=Piezas
-      // S(18)=Agencia, T(19)=NombreRetira, U(20)=CedulaRetira, V(21)=CelularRetira
-      // W(22)=Banco, X(23)=Ref, Y(24)=UsuarioAprobo, Z(25)=UsuarioProd
-      // AA(26)=Status, AB(27)=Motivo
+    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${Object.keys(grupos).length} pedido(s) · ${filtradas.length} pack(s)</div>`;
+    Object.entries(grupos).forEach(([base,packs])=>{
+      const r=packs[0];
       const v=i=>String(r[i]||'').trim();
       const card=document.createElement('div');
-      card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;animation:slideUp .3s ease;';
-      card.innerHTML=`
+      card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;animation:slideUp .3s ease;';
+      let html=`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;">${v(7)}</div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
-              <span style="background:#1a2a10;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">${v(0)||'—'}</span>
-              <div style="font-size:11px;color:var(--muted);">🕐 ${v(4)}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;">
+              <span style="background:#1a2a10;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">${base}</span>
+              ${packs.length>1?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">${packs.length} packs</span>`:''}
+              <span style="font-size:11px;color:var(--muted);">🕐 ${v(4)}</span>
             </div>
           </div>
-          <span style="background:${sb[filtroSolicitudes]||'var(--surface2)'};border:1px solid ${sc[filtroSolicitudes]||'var(--border)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:${sc[filtroSolicitudes]||'var(--muted)'};">${filtroSolicitudes.toUpperCase()}</span>
+          <span style="background:${sb[filtroSolicitudes]};border:1px solid ${sc[filtroSolicitudes]};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:${sc[filtroSolicitudes]};">${filtroSolicitudes.toUpperCase()}</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:12px;">
           <div><span style="color:var(--muted);">Correo:</span> ${v(8)}</div>
           <div><span style="color:var(--muted);">Cédula:</span> ${v(9)}</div>
           <div><span style="color:var(--muted);">Celular:</span> ${v(10)}</div>
           <div><span style="color:var(--muted);">Agencia:</span> ${v(18)}</div>
-          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Modelo:</span> ${v(11)} ${v(12)} ${v(13)} · ${v(14)}</div>
-          <div><span style="color:var(--muted);">Tela:</span> ${v(15)}</div>
-          <div><span style="color:var(--muted);">Vinil:</span> ${v(16)}</div>
         </div>
-        ${v(17)?`<div style="background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:12px;"><span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Piezas</span><br>${v(17).split(' | ').join('<br>')}</div>`:''}
         <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
-          <span style="color:var(--muted);">Retira:</span> ${v(19)}
-          ${v(20)?` · <span style="color:var(--muted);">C.I:</span> ${v(20)}`:''}
-          ${v(21)?` · <span style="color:var(--muted);">Cel:</span> ${v(21)}`:''}
-        </div>
-        ${filtroSolicitudes==='Reprobado'?`<div style="background:#2a1010;border:1px solid #4a1a1a;border-radius:8px;padding:8px 10px;font-size:12px;"><span style="color:var(--danger);">Motivo:</span> ${v(27)}</div>`:''}
-        ${filtroSolicitudes==='Pendiente'?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
-          <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigo:v(0)})})'
+          <span style="color:var(--muted);">Retira:</span> ${v(19)}${v(20)?` · C.I: ${v(20)}`:''}${v(21)?` · Cel: ${v(21)}`:''}
+        </div>`;
+      packs.forEach((pk,idx)=>{
+        const vp=i=>String(pk[i]||'').trim();
+        html+=`<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--accent);margin-bottom:8px;">Pack ${idx+1} · ${vp(14)} · <span style="color:var(--muted);font-size:13px;">${vp(0)}</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:8px;">
+            <div><span style="color:var(--muted);">Modelo:</span> ${vp(11)}</div>
+            <div><span style="color:var(--muted);">Manga:</span> ${vp(12)}</div>
+            <div><span style="color:var(--muted);">Tela:</span> ${vp(15)}</div>
+            <div><span style="color:var(--muted);">Vinil:</span> ${vp(16)}</div>
+          </div>
+          ${vp(17)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${vp(17).split(' | ').join('<br>')}</div>`:''}
+        </div>`;
+      });
+      if(filtroSolicitudes==='Reprobado'){
+        html+=`<div style="background:#2a1010;border:1px solid #4a1a1a;border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:10px;"><span style="color:var(--danger);">Motivo:</span> ${v(27)}</div>`;
+      }
+      if(filtroSolicitudes==='Pendiente'){
+        const allCodigos=packs.map(pk=>String(pk[0]||'').trim());
+        html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+          <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigos:allCodigos,codigo:base})})'
             style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✅ Aprobar</button>
-          <button onclick='abrirModalReprobar(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigo:v(0)})})'
+          <button onclick='abrirModalReprobar(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigos:allCodigos,codigo:base})})'
             style="width:100%;padding:13px;background:transparent;border:2px solid var(--danger);border-radius:10px;color:var(--danger);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✗ Reprobar</button>
-        </div>`:''}`;
+        </div>`;
+      }
+      card.innerHTML=html;
       listEl.appendChild(card);
     });
   }catch(e){
     listEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--danger);">✗ Error: ${e.message}</div>`;
   }
 }
-
 
 function abrirModalReprobar(data){
   pendingSolicitud=data;
@@ -1868,23 +1885,22 @@ async function confirmarReprobar(){
   msgEl.innerHTML='<span class="spinner">↻</span> Registrando...';
 
   try{
-    const data=await scriptGETjson({
-      action:'reprobarSolicitud',
-      nombre:pendingSolicitud.nombre,
-      cedula:pendingSolicitud.cedula,
-      motivo:motivo+(detalle?' — '+detalle:''),
-      fecha_reprobacion:getFechaHora(),
-      usuario:USUARIOS[unlock]
-    });
-    if(data.ok){
-      msgEl.style.background='#2a1010';
-      msgEl.style.border='1px solid #4a1a1a';
-      msgEl.style.color='var(--danger)';
-      msgEl.innerHTML=`✗ Solicitud reprobada · <b>${motivo}</b> · ${USUARIOS[unlock]}`;
-      setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},4000);
-    } else {
-      throw new Error(data.error||'Error desconocido');
+    const codigos=pendingSolicitud.codigos||[pendingSolicitud.codigo];
+    for(const cod of codigos){
+      const res=await scriptGETjson({
+        action:'reprobarSolicitudPorCodigo',
+        codigo_s:cod,
+        motivo:motivo+(detalle?' — '+detalle:''),
+        fecha_reprobacion:getFechaHora(),
+        usuario:USUARIOS[unlock]
+      });
+      if(!res.ok) throw new Error(res.error||'Error en '+cod);
     }
+    msgEl.style.background='#2a1010';
+    msgEl.style.border='1px solid #4a1a1a';
+    msgEl.style.color='var(--danger)';
+    msgEl.innerHTML=`✗ Solicitud reprobada · <b>${motivo}</b> · ${USUARIOS[unlock]}`;
+    setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},4000);
   }catch(e){
     msgEl.style.background='#2a1010';
     msgEl.style.color='var(--danger)';
@@ -1927,24 +1943,26 @@ async function confirmarAprobacion(){
   msgEl.innerHTML='<span class="spinner">↻</span> Registrando aprobación...';
 
   try{
-    const data=await scriptGETjson({
-      action:'aprobarSolicitud',
-      nombre:pendingSolicitud.nombre,
-      cedula:pendingSolicitud.cedula,
-      banco:banco,
-      cod_pago:codPago,
-      fecha_aprobacion:fechaApro,
-      usuario:USUARIOS[unlock]
-    });
-    if(data.ok){
-      msgEl.style.background='#0f2b1a';
-      msgEl.style.border='1px solid #1a4a2a';
-      msgEl.style.color='var(--accent)';
-      msgEl.innerHTML=`✅ Pago aprobado · <b>${data.codigoC||''}</b> en cola · ${USUARIOS[unlock]} · ${fechaApro}`;
-      setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},4000);
-    } else {
-      throw new Error(data.error||'Error desconocido');
+    // Aprobar cada pack del grupo por su código individual
+    const codigos=pendingSolicitud.codigos||[pendingSolicitud.codigo];
+    let lastCodigoC='';
+    for(const cod of codigos){
+      const res=await scriptGETjson({
+        action:'aprobarSolicitudPorCodigo',
+        codigo_s:cod,
+        banco:banco,
+        cod_pago:codPago,
+        fecha_aprobacion:fechaApro,
+        usuario:USUARIOS[unlock]
+      });
+      if(res.ok) lastCodigoC=res.codigoC;
+      else throw new Error(res.error||'Error en '+cod);
     }
+    msgEl.style.background='#0f2b1a';
+    msgEl.style.border='1px solid #1a4a2a';
+    msgEl.style.color='var(--accent)';
+    msgEl.innerHTML=`✅ Pago aprobado · <b>${lastCodigoC||''}</b> en cola · ${USUARIOS[unlock]} · ${fechaApro}`;
+    setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},4000);
   }catch(e){
     msgEl.style.background='#2a1010';
     msgEl.style.border='1px solid #4a1a1a';
