@@ -466,6 +466,8 @@ function checkContrasteColores(){
   const esMala=malas.some(([t,v])=>pedido.tela===t&&pedido.vinil===v);
   warnEl.style.display=esMala?'block':'none';
 }
+
+function mostrarModalDatos(cedula,celular,correo){
   return new Promise(resolve=>{
     modalDatosResolve=resolve;
     document.getElementById('modal-datos-content').innerHTML=
