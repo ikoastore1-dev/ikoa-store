@@ -326,9 +326,86 @@ select.field-input option{background:var(--surface3);color:var(--text);}
     </div>
   </div>
 
-  <!-- STEP 6: RESUMEN -->
+  <!-- STEP 6: PAGO -->
   <div class="step" id="step6">
-    <div class="step-header"><div class="step-num">Paso 6 de 6</div><div class="step-title">Resumen del pedido</div></div>
+    <div class="step-header"><div class="step-num">Paso 6 de 7</div><div class="step-title">💳 Pago</div></div>
+
+    <!-- PRECIO TOTAL -->
+    <div class="card" id="pago-precio-card">
+      <div class="card-title">Monto total de tu pedido</div>
+      <div id="pago-desglose" style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.8;"></div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:4px;">
+        <div style="text-align:center;background:var(--surface2);border-radius:10px;padding:14px 20px;flex:1;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">En Bs</div>
+          <div id="pago-total-bs" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--accent);">—</div>
+        </div>
+        <div style="text-align:center;background:var(--surface2);border-radius:10px;padding:14px 20px;flex:1;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">En $ Divisa</div>
+          <div id="pago-total-usd" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--warn);">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÉTODO DE PAGO -->
+    <div class="card">
+      <div class="card-title">¿Cómo deseas pagar?</div>
+      <div class="option-grid cols2">
+        <button class="opt-btn" id="btn-pago-bs" onclick="seleccionarPago('bs')">💵 Bolívares<span class="sub">Pago Móvil</span></button>
+        <button class="opt-btn" id="btn-pago-usd" onclick="seleccionarPago('usd')">💲 Divisa<span class="sub">Binance</span></button>
+      </div>
+    </div>
+
+    <!-- DATOS PAGO BS -->
+    <div class="card" id="pago-bs-card" style="display:none;">
+      <div class="card-title">📱 Datos para Pago Móvil</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;line-height:2.2;">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
+          <span><span style="color:var(--muted);">Banco:</span> <b>Banesco</b></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
+          <span><span style="color:var(--muted);">Celular:</span> <b id="pm-cel">04149450742</b></span>
+          <button onclick="copiarDato('04149450742','btn-copy-cel')" id="btn-copy-cel" style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
+          <span><span style="color:var(--muted);">Cédula:</span> <b id="pm-ci">18265345</b></span>
+          <button onclick="copiarDato('18265345','btn-copy-ci')" id="btn-copy-ci" style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
+        </div>
+        <div style="font-size:14px;"><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-bs" style="color:var(--accent);">—</b></div>
+      </div>
+      <div class="field-group" style="margin-top:14px;margin-bottom:0;">
+        <div class="field-label">Número de referencia * <span style="color:var(--danger);">(obligatorio)</span></div>
+        <input class="field-input" type="text" id="pago-ref-bs" placeholder="Ingresa el número de referencia" inputmode="numeric" oninput="validarRef()">
+      </div>
+    </div>
+
+    <!-- DATOS PAGO USD -->
+    <div class="card" id="pago-usd-card" style="display:none;">
+      <div class="card-title">💲 Datos para pago en Divisa</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;line-height:2.2;">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
+          <span><span style="color:var(--muted);">Plataforma:</span> <b>Binance</b></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
+          <span><span style="color:var(--muted);">Correo:</span> <b id="bin-correo">johancazorla@gmail.com</b></span>
+          <button onclick="copiarDato('johancazorla@gmail.com','btn-copy-bin')" id="btn-copy-bin" style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
+        </div>
+        <div style="font-size:14px;"><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-usd" style="color:var(--warn);">—</b></div>
+      </div>
+      <div class="field-group" style="margin-top:14px;margin-bottom:0;">
+        <div class="field-label">Código de confirmación * <span style="color:var(--danger);">(obligatorio)</span></div>
+        <input class="field-input" type="text" id="pago-ref-usd" placeholder="Ingresa el código de confirmación" oninput="validarRef()">
+      </div>
+    </div>
+
+    <div class="nav-row" style="margin-top:14px;">
+      <button class="btn-back" onclick="goStep(5)">← Atrás</button>
+      <button class="btn-next" id="btn-ir-resumen" onclick="irAlResumen()" disabled style="opacity:.4;cursor:not-allowed;">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- STEP 7: RESUMEN -->
+  <div class="step" id="step7">
+    <div class="step-header"><div class="step-num">Paso 7 de 7</div><div class="step-title">Resumen del pedido</div></div>
     <div id="resumen-container"></div>
     <div class="nota">⏱️ <b>Tiempo de entrega:</b> 5 días hábiles desde la confirmación.<br>📞 Ante cualquier duda, consúltanos. <b>Estamos para ayudarte.</b></div>
     <button class="btn-send" id="btn-whatsapp" onclick="enviarWhatsApp()">
@@ -338,7 +415,7 @@ select.field-input option{background:var(--surface3);color:var(--text);}
       📋 Enviar pedido sin copia en WhatsApp
     </button>
     <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px;" id="sending-note"></div>
-    <div class="nav-row" style="margin-top:12px;"><button class="btn-back" onclick="goStep(5)">← Editar pedido</button></div>
+    <div class="nav-row" style="margin-top:12px;"><button class="btn-back" onclick="goStep(6)">← Editar pago</button></div>
   </div>
 </main>
 
@@ -353,12 +430,12 @@ select.field-input option{background:var(--surface3);color:var(--text);}
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbydpSBsh32NwzBmj4R31fHoHDkOUG4JG2yYb0nKVtm07g1Yfv0DYEDzQ5rdCnufjU4F4A/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzaXus39Yc5ZULb4UEVsxNgX4HlOhQku2iFXIXg1YLvMxKarkhNJ0RPlB-3VNc30lJQNQ/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
-const TOTAL_STEPS=6;
+const TOTAL_STEPS=7;
 let currentStep=1;
-let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:0,modelo:'',manga:'',capucha:'',tela:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:'',packs:[]};
+let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:0,modelo:'',manga:'',capucha:'',tela:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:'',packs:[],pagoMoneda:'',pagoRef:'',pagoMonto:0};
 // packs = [{pack, modelo, manga, capucha, tela, vinil, piezas:[]}]
 let piezaCount=0;
 let AGENCIAS_DATA=[];
@@ -538,12 +615,12 @@ function goStep(n){
     pedido.modelo='Comfy'; pedido.manga='Manga Larga'; pedido.capucha='Sin Capucha';
   }
   if(n===5){
-    // Si no hay packs guardados aún, guardar el actual
     if(pedido.packs.length===0){
       pedido.packs.push({pack:pedido.pack,modelo:pedido.modelo,manga:pedido.manga,capucha:pedido.capucha,tela:pedido.tela,vinil:pedido.vinil,piezas:JSON.parse(JSON.stringify(pedido.piezas))});
     }
   }
-  if(n===6) buildResumen();
+  if(n===6) calcularPago();
+  if(n===7) buildResumen();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -840,6 +917,94 @@ function savePiezas(){
   });
 }
 
+// ── PAGO ──────────────────────────────────────────────────────
+let precioComfy={bs:0,usd:0}, precioRecarga={bs:0,usd:0};
+let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
+
+async function calcularPago(){
+  try{
+    const data=await scriptGETjson({action:'leerPrecios'});
+    if(data.ok){
+      precioComfy={bs:parseFloat(data.comfy_bs)||0, usd:parseFloat(data.comfy_usd)||0};
+      precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
+    }
+  }catch(e){ console.error('Error leyendo precios:',e); }
+
+  // Contar franelas totales y recargas
+  const tallasGrandes=['XL','XXL','3XL','XXXL'];
+  let totalFranelas=0, totalRecargas=0;
+  let desglose=[];
+  pedido.packs.forEach((pk,i)=>{
+    const franelas=pk.piezas.length||pk.pack||0;
+    const recargas=pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase())).length;
+    totalFranelas+=franelas;
+    totalRecargas+=recargas;
+    desglose.push(`Pack ${i+1}: ${franelas} franelas${recargas>0?` + ${recargas} recarga(s) talla grande`:''}`);
+  });
+
+  pagoTotalBs=Math.round((totalFranelas*precioComfy.bs + totalRecargas*precioRecarga.bs)*100)/100;
+  pagoTotalUsd=Math.round((totalFranelas*precioComfy.usd + totalRecargas*precioRecarga.usd)*100)/100;
+
+  document.getElementById('pago-desglose').innerHTML=
+    desglose.join('<br>')+
+    `<br><span style="color:var(--muted);">• Precio/franela:</span> Bs ${precioComfy.bs.toFixed(2)} / $${precioComfy.usd.toFixed(2)}`+
+    (totalRecargas>0?`<br><span style="color:var(--muted);">• Recarga talla grande:</span> Bs ${precioRecarga.bs.toFixed(2)} / $${precioRecarga.usd.toFixed(2)}`:'');
+  document.getElementById('pago-total-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
+  document.getElementById('pago-total-usd').textContent='$'+pagoTotalUsd.toFixed(2);
+  document.getElementById('pm-monto-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
+  document.getElementById('pm-monto-usd').textContent='$'+pagoTotalUsd.toFixed(2);
+}
+
+function seleccionarPago(tipo){
+  pagoMoneda=tipo;
+  document.getElementById('btn-pago-bs').classList.toggle('selected',tipo==='bs');
+  document.getElementById('btn-pago-usd').classList.toggle('selected',tipo==='usd');
+  document.getElementById('pago-bs-card').style.display=tipo==='bs'?'block':'none';
+  document.getElementById('pago-usd-card').style.display=tipo==='usd'?'block':'none';
+  validarRef();
+}
+
+function validarRef(){
+  const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim():document.getElementById('pago-ref-usd')?.value.trim();
+  const btn=document.getElementById('btn-ir-resumen');
+  const ok=pagoMoneda&&ref&&ref.length>3;
+  btn.disabled=!ok;
+  btn.style.opacity=ok?'1':'0.4';
+  btn.style.cursor=ok?'pointer':'not-allowed';
+  if(ok){
+    pagoRef=ref;
+    pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
+    pedido.pagoRef=ref;
+    pedido.pagoMonto=pagoMoneda==='bs'?pagoTotalBs:pagoTotalUsd;
+  }
+}
+
+function irAlResumen(){
+  if(!pagoMoneda){ alert('Selecciona el método de pago'); return; }
+  const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim():document.getElementById('pago-ref-usd')?.value.trim();
+  if(!ref||ref.length<3){ alert('Ingresa la referencia o código de confirmación'); return; }
+  pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
+  pedido.pagoRef=ref;
+  pedido.pagoMonto=pagoMoneda==='bs'?pagoTotalBs:pagoTotalUsd;
+  const curEl=document.getElementById('step6');
+  curEl.classList.remove('active');
+  currentStep=7;
+  document.getElementById('step7').classList.add('active');
+  updateProgress();
+  buildResumen();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function copiarDato(texto, btnId){
+  navigator.clipboard.writeText(texto).then(()=>{
+    const btn=document.getElementById(btnId);
+    const orig=btn.textContent;
+    btn.textContent='✓ Copiado';
+    btn.style.color='var(--accent)';
+    setTimeout(()=>{ btn.textContent=orig; btn.style.color=''; },2000);
+  }).catch(()=>{ alert('No se pudo copiar. Copia manualmente: '+texto); });
+}
+
 // ── RESUMEN ───────────────────────────────────────────────────
 function buildResumen(){
   const retiraText=pedido.mismoEnvio?`${pedido.nombre} · ${pedido.cedula} · ${pedido.celular}`:`${pedido.eNombre} · ${pedido.eCi} · ${pedido.eCel}`;
@@ -857,6 +1022,8 @@ function buildResumen(){
       ${packsHtml}
       <div class="resumen-label">🚚 Entrega</div>
       <div class="resumen-block"><b>Agencia:</b> ${pedido.agencia}<br><b>Retira:</b> ${retiraText}</div>
+      <div class="resumen-label">💳 Pago</div>
+      <div class="resumen-block"><b>Moneda:</b> ${pedido.pagoMoneda||'—'}<br><b>Monto:</b> ${pedido.pagoMoneda==='Bs'?'Bs':'$'}${pedido.pagoMonto||'—'}<br><b>Referencia:</b> ${pedido.pagoRef||'—'}</div>
     </div>`;
 }
 
@@ -866,7 +1033,7 @@ function buildMensaje(){
     const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla} — ${p.nombre}`).join('\n');
     return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: ${pk.modelo} ${pk.manga} ${pk.capucha}\nColor tela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
   }).join('\n\n');
-  return `🛍️ *PEDIDO IKOA & BEKATE*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
+  return `🛍️ *PEDIDO IKOA & BEKATE*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Bs'?'Bs':'$'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
 }
 
 async function guardarEnSheets(){
@@ -897,8 +1064,11 @@ async function guardarEnSheets(){
         retira_nombre:retiraNombre,
         retira_ci:retiraCi,
         retira_cel:retiraCel,
-        subindex: i===0 ? '0' : String(i+1),      // 0=principal, 2,3...=subpacks
-        codigo_principal: codigoPrincipal           // vacío para el primero
+        subindex: i===0 ? '0' : String(i+1),
+        codigo_principal: codigoPrincipal,
+        pago_moneda: pedido.pagoMoneda||'',
+        pago_monto: String(pedido.pagoMonto||''),
+        pago_ref: pedido.pagoRef||''
       });
       if(i===0 && res.ok) codigoPrincipal=res.codigo;
     }catch(e){ console.error(e); }
