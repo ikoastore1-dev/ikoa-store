@@ -430,7 +430,7 @@ const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
 let currentStep=1;
-let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:0,modelo:'',manga:'',capucha:'',tela:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:'',packs:[],pagoMoneda:'',pagoRef:'',pagoMonto:0};
+let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:0,modelo:'Comfy',manga:'Manga Larga',capucha:'Sin Capucha',tela:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:'',packs:[],pagoMoneda:'',pagoRef:'',pagoMonto:0};
 // packs = [{pack, modelo, manga, capucha, tela, vinil, piezas:[]}]
 let piezaCount=0;
 let AGENCIAS_DATA=[];
@@ -607,6 +607,7 @@ function goStep(n){
   updateProgress();
   if(n===4) inicializarPiezas();
   if(n===3){
+    // Asignar valores fijos ANTES de avanzar
     pedido.modelo='Comfy'; pedido.manga='Manga Larga'; pedido.capucha='Sin Capucha';
   }
   if(n===5){
@@ -680,8 +681,7 @@ function renderPacksResumen(){
 
 function agregarOtroPack(){
   // Resetear campos de modelo/pack para nuevo pack
-  pedido.pack=0; pedido.modelo='Comfy'; pedido.manga='Manga Larga'; pedido.capucha='Sin Capucha';
-  pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
+  pedido.pack=0; pedido.modelo='Comfy'; pedido.manga='Manga Larga'; pedido.capucha='Sin Capucha';  pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
   // Limpiar selecciones visuales
   document.querySelectorAll('#tela-opts .opt-btn, #vinil-opts .opt-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
