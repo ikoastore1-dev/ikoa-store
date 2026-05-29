@@ -1213,7 +1213,7 @@ async function subirFotoStock(event){
       const base64=e.target.result.split(',')[1];
       const mimeType=file.type;
       const filename=currentProduct.codigo+'_'+Date.now()+'.jpg';
-      const data=await scriptGETjson({action:'uploadFoto',codigo:currentProduct.codigo,base64,mimeType,filename});
+      const data=await scriptPOSTjson({action:'uploadFoto',codigo:currentProduct.codigo,base64,mimeType,filename});
       if(data.ok){
         currentProduct.foto=data.url;
         msgEl.style.background='#0f2b1a';
@@ -1344,8 +1344,20 @@ async function ejecutarGenerarEtiqueta(codigo,nombre,precio,tasa){
 
   // 2. Subir foto si hay
   if(fotoBase64){
+    etqMsg.innerHTML='<span class="spinner">↻</span> Subiendo foto...';
     try{
-      await scriptGET({action:'uploadFoto',codigo,base64:fotoBase64,mimeType:fotoMime,filename:`${codigo}.jpg`});
+      const fotoData=await scriptPOSTjson({
+        action:'uploadFoto',
+        codigo,
+        base64:fotoBase64,
+        mimeType:fotoMime,
+        filename:`${codigo}.jpg`
+      });
+      if(fotoData.ok){
+        console.log('Foto subida:',fotoData.url);
+      } else {
+        console.warn('Error foto:',fotoData.error);
+      }
     }catch(e){console.error('Foto error:',e);}
   }
 
@@ -2806,8 +2818,17 @@ function scriptGETjson(params){
     script.onerror=()=>{ delete window[cb]; try{document.body.removeChild(script);}catch(e){} reject(new Error('Error de red')); };
     script.src=url;
     document.body.appendChild(script);
-    setTimeout(()=>{ if(window[cb]){ delete window[cb]; try{document.body.removeChild(script);}catch(e){} reject(new Error('Timeout')); }},10000);
+    setTimeout(()=>{ if(window[cb]){ delete window[cb]; try{document.body.removeChild(script);}catch(e){} reject(new Error('Timeout')); }},15000);
   });
+}
+
+function scriptPOSTjson(params){
+  // Para payloads grandes como base64 de imágenes
+  const form=new FormData();
+  Object.entries(params).forEach(([k,v])=>form.append(k,v??''));
+  return fetch(SCRIPT_URL,{method:'POST',body:form})
+    .then(r=>r.json())
+    .catch(()=>({ok:false,error:'Error de red'}));
 }
 
 // ── TOKEN GENERATOR ───────────────────────────────────────────
