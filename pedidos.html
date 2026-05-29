@@ -18,6 +18,7 @@ main{max-width:640px;margin:0 auto;padding:20px 16px 60px;}
 @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
 .step-header{margin-bottom:20px;}
 .step-num{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:600;margin-bottom:4px;}
 .step-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--text);}
@@ -333,13 +334,26 @@ select.field-input option{background:var(--surface3);color:var(--text);}
     <button class="btn-send" id="btn-whatsapp" onclick="enviarWhatsApp()">
       <span style="font-size:22px;">💬</span> Enviar pedido por WhatsApp
     </button>
+    <button id="btn-sin-whatsapp" onclick="enviarSinWhatsApp()" style="width:100%;padding:16px;background:transparent;border:2px solid var(--border);border-radius:14px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-top:10px;">
+      📋 Enviar pedido sin copia en WhatsApp
+    </button>
     <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px;" id="sending-note"></div>
     <div class="nav-row" style="margin-top:12px;"><button class="btn-back" onclick="goStep(5)">← Editar pedido</button></div>
   </div>
 </main>
 
+<!-- PANTALLA DE ÉXITO -->
+<div id="pantalla-exito" style="display:none;position:fixed;inset:0;z-index:999;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;">
+  <div style="font-size:72px;margin-bottom:20px;animation:bounceIn .6s ease;">🎉</div>
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;color:var(--accent);letter-spacing:.04em;margin-bottom:12px;">¡Gracias por elegir a IKOA!</div>
+  <div style="font-size:16px;color:var(--text);line-height:1.7;max-width:340px;">Estamos trabajando para ti.<br><b style="color:var(--accent);">Pronto revisaremos tu solicitud</b> y te contactaremos por <b>WhatsApp, Instagram o correo</b>.</div>
+  <div style="margin-top:28px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 24px;">
+    <div style="font-size:13px;color:var(--muted);">Tu solicitud fue registrada exitosamente ✅</div>
+  </div>
+</div>
+
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbxoXwlKrhZl00eR-AimzEpcRRiOvPeFkDMPZCR001IkfYkv1KM0UsuTtHx3g0eWvOiNLA/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbydpSBsh32NwzBmj4R31fHoHDkOUG4JG2yYb0nKVtm07g1Yfv0DYEDzQ5rdCnufjU4F4A/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=6;
@@ -654,7 +668,11 @@ function validateStep(n){
       return false;
     }
     alerta.style.display='none';
-    for(let p of pedido.piezas){ if(!p.genero||!p.talla){ alert('Completa género y talla en cada franela'); return false; } }
+    for(let i=0; i<pedido.piezas.length; i++){
+      const p=pedido.piezas[i];
+      if(!p.genero||!p.talla){ alert(`Completa género y talla en la franela ${i+1}`); return false; }
+      if(!p.sinNombre && !p.nombre){ alert(`⚠️ La franela ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
+    }
     return true;
   }
   if(n===5){
@@ -887,16 +905,25 @@ async function guardarEnSheets(){
   }
 }
 
+async function enviarSinWhatsApp(){
+  const btn=document.getElementById('btn-sin-whatsapp');
+  const btnWA=document.getElementById('btn-whatsapp');
+  btn.disabled=true; btnWA.disabled=true;
+  btn.innerHTML='<span class="spinner">↻</span> Registrando pedido...';
+  await guardarEnSheets();
+  await marcarTokenUsado();
+  document.getElementById('pantalla-exito').style.display='flex';
+}
+
 async function enviarWhatsApp(){
   const btn=document.getElementById('btn-whatsapp');
-  const note=document.getElementById('sending-note');
-  btn.disabled=true; btn.innerHTML='<span class="spinner">↻</span> Enviando...';
+  const btnSin=document.getElementById('btn-sin-whatsapp');
+  btn.disabled=true; if(btnSin) btnSin.disabled=true;
+  btn.innerHTML='<span class="spinner">↻</span> Enviando...';
   await guardarEnSheets();
   await marcarTokenUsado();
   window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(buildMensaje())}`,'_blank');
-  btn.disabled=false; btn.innerHTML='<span style="font-size:22px;">💬</span> Enviar pedido por WhatsApp';
-  note.textContent='✓ Tu pedido fue registrado. Te contactaremos pronto.';
-  note.style.color='var(--accent)';
+  document.getElementById('pantalla-exito').style.display='flex';
 }
 
 verificarToken();
