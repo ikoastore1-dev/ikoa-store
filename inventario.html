@@ -172,6 +172,64 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </div>
 </div>
 
+<!-- MODAL EDITAR RESPALDO -->
+<div class="modal-overlay hidden" id="modal-editar-rv">
+  <div class="modal" style="max-width:420px;width:100%;">
+    <div class="modal-icon">✏️</div>
+    <div class="modal-title">Editar Respaldo</div>
+    <div class="modal-subtitle" id="modal-rv-edit-codigo"></div>
+    <div style="text-align:left;width:100%;">
+      <div class="field-label" style="margin-bottom:4px;">Mensaje</div>
+      <textarea id="edit-rv-mensaje" rows="5" style="background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;outline:none;width:100%;resize:vertical;line-height:1.6;margin-bottom:10px;"></textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div>
+          <div class="field-label" style="margin-bottom:4px;">Banco</div>
+          <select class="field-input" id="edit-rv-banco" style="font-size:13px;padding:8px 10px;">
+            <option value="">Seleccionar</option>
+            <option>Banesco</option><option>Mercantil</option><option>Provincial</option>
+            <option>BDV</option><option>Bicentenario</option><option>BOD</option>
+            <option>Pago Móvil</option><option>Binance</option><option>Zelle</option>
+            <option>PayPal</option><option>Dólares Efectivo</option><option>Otro</option>
+          </select>
+        </div>
+        <div>
+          <div class="field-label" style="margin-bottom:4px;">Referencia</div>
+          <input class="field-input" type="text" id="edit-rv-referencia" style="font-size:13px;padding:8px 10px;">
+        </div>
+        <div>
+          <div class="field-label" style="margin-bottom:4px;">Factura</div>
+          <select class="field-input" id="edit-rv-factura" style="font-size:13px;padding:8px 10px;">
+            <option value="Acuerdo Cliente/S">Acuerdo Cliente/S</option>
+            <option value="Con Factura">Con Factura</option>
+          </select>
+        </div>
+        <div>
+          <div class="field-label" style="margin-bottom:4px;">Tasa</div>
+          <input class="field-input" type="number" id="edit-rv-tasa" step="0.01" style="font-size:13px;padding:8px 10px;">
+        </div>
+        <div>
+          <div class="field-label" style="margin-bottom:4px;">Moneda</div>
+          <select class="field-input" id="edit-rv-moneda" style="font-size:13px;padding:8px 10px;">
+            <option value="Bs">Bs</option>
+            <option value="Divisa">Divisa</option>
+          </select>
+        </div>
+        <div>
+          <div class="field-label" style="margin-bottom:4px;">Monto</div>
+          <input class="field-input" type="number" id="edit-rv-monto" step="0.01" style="font-size:13px;padding:8px 10px;">
+        </div>
+      </div>
+      <div class="field-label" style="margin-bottom:4px;">Código de autorización</div>
+      <input class="modal-cod-input" type="password" id="edit-rv-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarEditarRespaldo()">
+      <div class="modal-error" id="edit-rv-error"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="document.getElementById('modal-editar-rv').classList.add('hidden')">Cancelar</button>
+      <button class="modal-confirm" onclick="confirmarEditarRespaldo()">💾 GUARDAR</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL TASA -->
 <div class="modal-overlay hidden" id="modal-tasa">
   <div class="modal">
@@ -368,6 +426,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <!-- SUB-PESTAÑAS STOCK -->
     <div style="display:flex;gap:8px;margin-bottom:14px;">
       <button onclick="switchStock('inventario')" id="stktab-inventario" style="flex:1;padding:9px;border:2px solid var(--accent);border-radius:10px;background:#0f2b1a;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">📦 Inventario</button>
+      <button onclick="switchStock('buscar')" id="stktab-buscar" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🔍 Buscar</button>
       <button onclick="switchStock('historial')" id="stktab-historial" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🕐 Historial</button>
     </div>
 
@@ -392,7 +451,16 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div id="product-area"></div>
     </div><!-- /stksec-inventario -->
 
-    <!-- HISTORIAL SUB-SECCIÓN -->
+    <!-- BUSCAR SUB-SECCIÓN -->
+    <div id="stksec-buscar" style="display:none;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;">
+        <div class="search-row" style="margin-bottom:0;">
+          <input class="search-input" type="text" id="buscar-cod-input" placeholder="Escribe el código..." oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')buscarPorCodigo()">
+          <button class="search-btn" onclick="buscarPorCodigo()">🔍</button>
+        </div>
+      </div>
+      <div id="buscar-result" style="margin-top:14px;"></div>
+    </div>
     <div id="stksec-historial" style="display:none;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Movimientos registrados</div>
@@ -1296,9 +1364,21 @@ function switchTab(tab){
   document.querySelectorAll('.tab').forEach((b,i)=>{
     b.classList.toggle('active',['tasa','stock','etiquetas','aprobaciones','respaldo','gestion'][i]===tab);
   });
+  // Limpiar áreas de contenido al cambiar pestaña
+  ['product-area','msg-area','historial-list','solicitudes-list','cola-list',
+   'rv-list','rv-historial-list','apro-msg','cola-msg'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.innerHTML='';
+  });
+  // Ocultar mensaje de estado
+  ['apro-msg','cola-msg'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display='none';
+  });
   if(tab==='aprobaciones') switchAprobaciones('Pendiente');
-  if(tab==='respaldo') cargarRespaldos();
+  if(tab==='respaldo'){ switchRespaldo('nuevo'); }
   if(tab==='tasa') cargarTasas();
+  if(tab==='stock') switchStock('inventario');
 }
 
 // ── TASAS ─────────────────────────────────────────────────────
@@ -1356,15 +1436,43 @@ async function guardarTasas(){
   }
 }
 
+function buscarPorCodigo(){
+  const cod=document.getElementById('buscar-cod-input').value.trim().toUpperCase();
+  const resultEl=document.getElementById('buscar-result');
+  if(!cod){ resultEl.innerHTML=''; return; }
+  const producto=PRODUCTOS.find(p=>String(p.codigo||'').toUpperCase()===cod);
+  if(!producto){
+    resultEl.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;">
+      <div style="font-size:28px;margin-bottom:8px;">🔍</div>
+      <div style="color:var(--danger);font-size:14px;">Código <b>${cod}</b> no encontrado</div>
+    </div>`;
+    return;
+  }
+  resultEl.innerHTML=`<div style="background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);padding:20px;">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Producto encontrado</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);margin-bottom:4px;">${producto.codigo}</div>
+    <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;">${producto.nombre}</div>
+    <div style="font-size:13px;color:var(--muted);">Depto: ${producto.depto||'—'}</div>
+  </div>`;
+}
+
 function switchStock(sub){
-  ['inventario','historial'].forEach(s=>{
-    document.getElementById('stksec-'+s).style.display=s===sub?'block':'none';
+  ['inventario','buscar','historial'].forEach(s=>{
+    const sec=document.getElementById('stksec-'+s);
+    if(sec) sec.style.display=s===sub?'block':'none';
     const btn=document.getElementById('stktab-'+s);
-    btn.style.borderColor=s===sub?'var(--accent)':'var(--border)';
-    btn.style.background=s===sub?'#0f2b1a':'var(--surface2)';
-    btn.style.color=s===sub?'var(--accent)':'var(--muted)';
+    if(btn){
+      btn.style.borderColor=s===sub?'var(--accent)':'var(--border)';
+      btn.style.background=s===sub?'#0f2b1a':'var(--surface2)';
+      btn.style.color=s===sub?'var(--accent)':'var(--muted)';
+    }
   });
   if(sub==='historial') renderHistorial();
+  if(sub==='buscar'){
+    document.getElementById('buscar-cod-input').value='';
+    document.getElementById('buscar-result').innerHTML='';
+    setTimeout(()=>document.getElementById('buscar-cod-input').focus(),100);
+  }
 }
 
 function switchAprobaciones(sub){
@@ -1498,12 +1606,57 @@ async function cargarRespaldos(){
           <div><span style="color:var(--muted);">Factura:</span> <b>${factura}</b></div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13px;line-height:1.8;white-space:pre-wrap;margin-bottom:12px;">${mensaje}</div>
-        <button onclick="abrirModalProcesar('${codigo}')" style="width:100%;padding:12px;background:var(--warn);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">✓ MARCAR COMO PROCESADO</button>`;
+        <button onclick="abrirModalProcesar('${codigo}')" style="width:100%;padding:12px;background:var(--warn);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">✓ MARCAR COMO PROCESADO</button>
+        <button onclick="abrirModalEditarRespaldo('${codigo}','${encodeURIComponent(mensaje)}','${banco}','${referencia}','${factura}','${tasa}','${moneda}','${monto}')" style="width:100%;padding:10px;background:transparent;border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;">✏️ EDITAR</button>`;
       listEl.appendChild(card);
     });
   }catch(e){
     listEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--danger);">✗ Error: ${e.message}</div>`;
   }
+}
+
+function abrirModalEditarRespaldo(codigo,mensaje,banco,referencia,factura,tasa,moneda,monto){
+  document.getElementById('modal-rv-edit-codigo').textContent='Código: '+codigo;
+  document.getElementById('edit-rv-mensaje').value=decodeURIComponent(mensaje||'');
+  document.getElementById('edit-rv-banco').value=banco||'';
+  document.getElementById('edit-rv-referencia').value=referencia||'';
+  document.getElementById('edit-rv-factura').value=factura||'Acuerdo Cliente/S';
+  document.getElementById('edit-rv-tasa').value=tasa||'';
+  document.getElementById('edit-rv-moneda').value=moneda||'Bs';
+  document.getElementById('edit-rv-monto').value=monto||'';
+  document.getElementById('edit-rv-unlock').value='';
+  document.getElementById('edit-rv-error').textContent='';
+  document.getElementById('modal-editar-rv').classList.remove('hidden');
+  // Guardar codigo en dataset
+  document.getElementById('modal-editar-rv').dataset.codigo=codigo;
+  setTimeout(()=>document.getElementById('edit-rv-unlock').focus(),100);
+}
+
+async function confirmarEditarRespaldo(){
+  const unlock=document.getElementById('edit-rv-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('edit-rv-error');
+  if(!USUARIOS[unlock]){ errEl.textContent='❌ Código incorrecto'; document.getElementById('edit-rv-unlock').value=''; return; }
+  const codigo=document.getElementById('modal-editar-rv').dataset.codigo;
+  const mensaje=document.getElementById('edit-rv-mensaje').value.trim();
+  const banco=document.getElementById('edit-rv-banco').value;
+  const referencia=document.getElementById('edit-rv-referencia').value.trim();
+  const factura=document.getElementById('edit-rv-factura').value;
+  const tasa=document.getElementById('edit-rv-tasa').value.trim();
+  const moneda=document.getElementById('edit-rv-moneda').value;
+  const monto=document.getElementById('edit-rv-monto').value.trim();
+  document.getElementById('modal-editar-rv').classList.add('hidden');
+  try{
+    const data=await scriptGETjson({
+      action:'editarRespaldo',
+      codigo,
+      mensaje:encodeURIComponent(mensaje),
+      banco, referencia, factura, tasa, moneda, monto,
+      usuario:USUARIOS[unlock],
+      fecha_edit:getFechaHora()
+    });
+    if(data.ok){ cargarRespaldos(); }
+    else { alert('Error: '+(data.error||'No se pudo editar')); }
+  }catch(e){ alert('Error: '+e.message); }
 }
 
 function abrirModalProcesar(codigo){
