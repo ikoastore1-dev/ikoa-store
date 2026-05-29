@@ -1232,12 +1232,16 @@ async function subirFotoStock(event){
     const filename=currentProduct.codigo+'_'+Date.now()+'.jpg';
     msgEl.innerHTML='<span class="spinner">↻</span> Subiendo foto...';
     if(WEBHOOK_FOTO){
-      const fotoForm=new FormData();
-      fotoForm.append('codigo', currentProduct.codigo);
-      fotoForm.append('base64', base64);
-      fotoForm.append('filename', filename);
-      fotoForm.append('mimeType', 'image/jpeg');
-      await fetch(WEBHOOK_FOTO, {method:'POST', body:fotoForm});
+      await fetch(WEBHOOK_FOTO, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          codigo: currentProduct.codigo,
+          base64: base64,
+          filename: filename,
+          mimeType: 'image/jpeg'
+        })
+      });
     }
     msgEl.style.background='#0f2b1a';
     msgEl.style.color='var(--accent)';
@@ -1383,12 +1387,16 @@ async function ejecutarGenerarEtiqueta(codigo,nombre,precio,tasa){
   if(fotoBase64 && WEBHOOK_FOTO){
     etqMsg.innerHTML='<span class="spinner">↻</span> Subiendo foto...';
     try{
-      const fotoForm=new FormData();
-      fotoForm.append('codigo', codigo);
-      fotoForm.append('base64', fotoBase64);
-      fotoForm.append('filename', codigo+'.jpg');
-      fotoForm.append('mimeType', 'image/jpeg');
-      await fetch(WEBHOOK_FOTO, {method:'POST', body:fotoForm});
+      await fetch(WEBHOOK_FOTO, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          codigo: codigo,
+          base64: fotoBase64,
+          filename: codigo+'.jpg',
+          mimeType: 'image/jpeg'
+        })
+      });
       console.log('✅ Foto enviada a Make');
     }catch(e){ console.error('Foto error:',e); }
   }
