@@ -32,6 +32,7 @@ main{max-width:640px;margin:0 auto;padding:20px 16px 60px;}
 .field-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;}
 .field-note{font-size:11px;color:var(--warn);margin-top:3px;line-height:1.4;}
 .field-input{background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:border-color .2s;width:100%;}
+input[type="text"].field-input, input[type="tel"].field-input{text-transform:uppercase;}
 .field-input:focus{border-color:var(--accent);}.field-input::placeholder{color:var(--muted);}.field-input.error{border-color:var(--danger);}
 select.field-input option{background:var(--surface3);color:var(--text);}
 .input-row{display:flex;gap:8px;}.input-row select{flex:0 0 90px;}.input-row input{flex:1;}
@@ -201,19 +202,13 @@ select.field-input option{background:var(--surface3);color:var(--text);}
 
   <!-- STEP 3: MODELO -->
   <div class="step" id="step3">
-    <div class="step-header"><div class="step-num">Paso 3 de 6</div><div class="step-title">¿Qué modelo deseas?</div></div>
+    <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title">Modelo y colores</div></div>
     <div class="card">
-      <div class="card-title">Modelo</div>
-      <div class="option-grid">
-        <button class="opt-btn selected" onclick="selectOpt(this,'modelo','Comfy')" id="btn-modelo-comfy">COMFY — MEGA PROMO<span class="sub">Tela microfibra viscosa</span></button>
-      </div>
-      <div class="card-title" style="margin-top:4px;">Manga</div>
-      <div class="option-grid">
-        <button class="opt-btn selected" onclick="selectOpt(this,'manga','Manga Larga')" id="btn-manga-larga">MANGA LARGA</button>
-      </div>
-      <div class="card-title" style="margin-top:4px;">¿Con capucha?</div>
-      <div class="option-grid">
-        <button class="opt-btn selected" onclick="selectOpt(this,'capucha','Sin Capucha')" id="btn-sin-capucha">SIN CAPUCHA</button>
+      <!-- MODELO FIJO - solo informativo -->
+      <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Modelo seleccionado</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">COMFY — MEGA PROMO</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px;">Manga Larga · Sin Capucha</div>
       </div>
     </div>
     <div class="card">
@@ -796,6 +791,7 @@ function setMismoEnvio(val){
 
 // ── PIEZAS ────────────────────────────────────────────────────
 function inicializarPiezas(){
+  if(!pedido.pack||pedido.pack<1){ alert('Selecciona el tamaño del pack primero'); goStep(2); return; }
   document.getElementById('pack-total-lbl').textContent=pedido.pack+' franelas';
   const container=document.getElementById('piezas-container');
   const actual=container.querySelectorAll('.pieza-card').length;
@@ -1095,6 +1091,16 @@ async function enviarWhatsApp(){
   window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(buildMensaje())}`,'_blank');
   document.getElementById('pantalla-exito').style.display='flex';
 }
+
+// Auto-uppercase en campos de texto (excepto correo y referencias)
+document.addEventListener('input', function(e){
+  const el=e.target;
+  if(el.tagName==='INPUT'&&el.type==='text'&&!el.id.includes('correo')&&!el.id.includes('email')){
+    const pos=el.selectionStart;
+    el.value=el.value.toUpperCase();
+    el.setSelectionRange(pos,pos);
+  }
+});
 
 verificarToken();
 </script>
