@@ -242,13 +242,13 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div style="font-size:17px;font-weight:700;color:var(--accent);"   id="val-BCV">—</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px;">Tasa BCV</div>
       </button>
-      <button class="tasa-btn" id="tbtn-Binance"  onclick="seleccionarTasa('Binance')">
-        <div style="font-size:17px;font-weight:700;color:#f7931a;"         id="val-Binance">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px;">Binance</div>
+      <button class="tasa-btn" id="tbtn-Shoes"  onclick="seleccionarTasa('Shoes')">
+        <div style="font-size:17px;font-weight:700;color:#f7931a;"         id="val-Shoes">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;">Tasa Shoes</div>
       </button>
-      <button class="tasa-btn" id="tbtn-Venta"   onclick="seleccionarTasa('Venta')">
-        <div style="font-size:17px;font-weight:700;color:var(--accent2);"  id="val-Venta">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px;">Tasa Venta</div>
+      <button class="tasa-btn" id="tbtn-IKOA"   onclick="seleccionarTasa('IKOA')">
+        <div style="font-size:17px;font-weight:700;color:var(--accent2);"  id="val-IKOA">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;">Tasa IKOA</div>
       </button>
       <button class="tasa-btn" id="tbtn-BeKate"  onclick="seleccionarTasa('BeKate')">
         <div style="font-size:17px;font-weight:700;color:#cc44ff;"         id="val-BeKate">—</div>
@@ -256,6 +256,11 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       </button>
     </div>
     <div id="tasa-preview" style="background:#0f1f17;border:1px solid #1a3a2a;border-radius:10px;padding:12px;font-size:13px;color:var(--muted);text-align:center;margin-bottom:14px;">Selecciona una tasa para ver el cálculo</div>
+    <div style="margin-bottom:12px;">
+      <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div>
+      <input class="modal-cod-input" type="password" id="tasa-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarTasa()">
+      <div class="modal-error" id="tasa-unlock-error"></div>
+    </div>
     <div class="modal-btns">
       <button class="modal-cancel" onclick="document.getElementById('modal-tasa').classList.add('hidden')">Cancelar</button>
       <button class="modal-confirm" id="tasa-confirm-btn" onclick="confirmarTasa()" disabled>✓ CONFIRMAR</button>
@@ -939,8 +944,8 @@ async function init(){
     }));
     if(t2.rows&&t2.rows[0]&&t2.rows[0].c){
       TASAS.BCV     =parseFloat(gvizVal(t2.rows[0].c[0]))||null;
-      TASAS.Binance =parseFloat(gvizVal(t2.rows[0].c[1]))||null;
-      TASAS.Venta   =parseFloat(gvizVal(t2.rows[0].c[2]))||null;
+      TASAS.Shoes =parseFloat(gvizVal(t2.rows[0].c[1]))||null;
+      TASAS.IKOA   =parseFloat(gvizVal(t2.rows[0].c[2]))||null;
       TASAS.BeKate  =parseFloat(gvizVal(t2.rows[0].c[3]))||null;
     }
     if(t3){
@@ -1240,13 +1245,15 @@ function mostrarModalTasa(codigo,nombre,precio){
   pendingEtiqueta={codigo,nombre,precio};
   selectedTasaName=null;
   document.getElementById('val-BCV').textContent    =TASAS.BCV    ?TASAS.BCV.toFixed(2)    :'—';
-  document.getElementById('val-Binance').textContent=TASAS.Binance?TASAS.Binance.toFixed(2):'—';
-  document.getElementById('val-Venta').textContent  =TASAS.Venta  ?TASAS.Venta.toFixed(2)  :'—';
+  document.getElementById('val-Shoes').textContent=TASAS.Shoes?TASAS.Shoes.toFixed(2):'—';
+  document.getElementById('val-IKOA').textContent  =TASAS.IKOA  ?TASAS.IKOA.toFixed(2)  :'—';
   document.getElementById('val-BeKate').textContent =TASAS.BeKate ?TASAS.BeKate.toFixed(2) :'—';
   document.getElementById('tasa-resumen').innerHTML=`Producto: <b style="color:var(--text)">${nombre}</b><br>Código: <span>${codigo}</span><br>Base Imponible: <span>$ ${parseFloat(precio).toFixed(2)}</span>`;
   document.querySelectorAll('.tasa-btn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('tasa-confirm-btn').disabled=true;
   document.getElementById('tasa-preview').innerHTML='Selecciona una tasa para ver el cálculo';
+  document.getElementById('tasa-unlock').value='';
+  document.getElementById('tasa-unlock-error').textContent='';
   document.getElementById('modal-tasa').classList.remove('hidden');
 }
 
@@ -1261,21 +1268,28 @@ function seleccionarTasa(nombre){
     const baseBS=precio*tasa;
     const iva=baseBS*0.16;
     const totalBS=baseBS+iva;
-    const totalBCV=totalBS/(TASAS.BCV||tasa);
+    const totalUSD=totalBS/tasa;
     const igtf=totalBS*0.03;
     document.getElementById('tasa-preview').innerHTML=`
       <div style="text-align:left;line-height:2;">
+        Tasa seleccionada: <b style="color:var(--warn)">${nombre} = ${tasa.toFixed(2)}</b><br>
         Base Imponible Bs: <b style="color:var(--text)">${baseBS.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b><br>
         IVA (16%): <b style="color:var(--text)">${iva.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b><br>
         Total con IVA Bs: <b style="color:var(--accent)">${totalBS.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b><br>
-        Total con IVA $ BCV: <b style="color:var(--accent2)">$ ${totalBCV.toFixed(2)}</b><br>
+        Total con IVA $: <b style="color:var(--accent2)">$ ${totalUSD.toFixed(2)}</b><br>
         IGTF (3%): <b style="color:var(--text)">${igtf.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b>
       </div>`;
+  } else {
+    document.getElementById('tasa-preview').innerHTML=`<span style="color:var(--danger);">⚠️ Tasa ${nombre} no disponible — ve a 💱 Tasa y actualízala primero</span>`;
   }
 }
 
 async function confirmarTasa(){
-  if(!selectedTasaName||!pendingEtiqueta)return;
+  if(!selectedTasaName||!pendingEtiqueta) return;
+  const unlock=document.getElementById('tasa-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('tasa-unlock-error');
+  if(!USUARIOS[unlock]){ errEl.textContent='❌ Código incorrecto'; document.getElementById('tasa-unlock').value=''; return; }
+  errEl.textContent='';
   document.getElementById('modal-tasa').classList.add('hidden');
   await ejecutarGenerarEtiqueta(pendingEtiqueta.codigo,pendingEtiqueta.nombre,pendingEtiqueta.precio,selectedTasaName);
 }
@@ -1339,6 +1353,15 @@ async function ejecutarGenerarEtiqueta(codigo,nombre,precio,tasa){
   etqMsg.style.color='var(--accent)';
   etqMsg.innerHTML='✓ Producto registrado en Google Sheets · Tasa '+tasa;
   setTimeout(()=>{etqMsg.style.display='none';},5000);
+
+  // Limpiar formulario
+  document.getElementById('qr-codigo').value='';
+  document.getElementById('qr-nombre').value='';
+  document.getElementById('qr-precio').value='';
+  if(document.getElementById('qr-depto')) document.getElementById('qr-depto').value='';
+  if(document.getElementById('qr-obs')) document.getElementById('qr-obs').value='';
+  document.getElementById('foto-preview-wrap').innerHTML=`<div style="font-size:28px;">📷</div><div style="font-size:13px;color:var(--muted);margin-top:6px;">Toca para subir foto o arrastra aquí</div>`;
+  fotoBase64=''; fotoMime='';
 
   // Generar QR
   const previewEl=document.getElementById('etiqueta-preview');
