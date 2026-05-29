@@ -329,14 +329,17 @@ select.field-input option{background:var(--surface3);color:var(--text);}
     <!-- PRECIO TOTAL -->
     <div class="card" id="pago-precio-card">
       <div class="card-title">Monto total de tu pedido</div>
+      <div id="pago-tasa-info" style="background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:12px;text-align:center;">
+        <span style="color:var(--muted);">Tasa BCV:</span> <b id="pago-tasa-bcv" style="color:var(--accent);">Cargando...</b>
+      </div>
       <div id="pago-desglose" style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.8;"></div>
       <div style="display:flex;gap:10px;justify-content:center;margin-bottom:4px;">
         <div style="text-align:center;background:var(--surface2);border-radius:10px;padding:14px 20px;flex:1;">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">En Bs</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Oferta en Bs</div>
           <div id="pago-total-bs" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--accent);">—</div>
         </div>
         <div style="text-align:center;background:var(--surface2);border-radius:10px;padding:14px 20px;flex:1;">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">En $ Divisa</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Oferta en Divisa</div>
           <div id="pago-total-usd" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--warn);">—</div>
         </div>
       </div>
@@ -426,7 +429,7 @@ select.field-input option{background:var(--surface3);color:var(--text);}
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzaXus39Yc5ZULb4UEVsxNgX4HlOhQku2iFXIXg1YLvMxKarkhNJ0RPlB-3VNc30lJQNQ/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwexeub5ESbaSdX0v26e4f_69Afq-rEmlLMc9airBH-VrklSCkjT_a5FwEFoELZcTsR4Q/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
@@ -926,6 +929,10 @@ async function calcularPago(){
     if(data.ok){
       precioComfy={bs:parseFloat(data.comfy_bs)||0, usd:parseFloat(data.comfy_usd)||0};
       precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
+      // Mostrar tasa BCV
+      if(data.tasa_bcv){
+        document.getElementById('pago-tasa-bcv').textContent='Bs '+parseFloat(data.tasa_bcv).toFixed(2);
+      }
     }
   }catch(e){ console.error('Error leyendo precios:',e); }
 
