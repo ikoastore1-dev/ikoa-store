@@ -1820,6 +1820,14 @@ async function cargarSolicitudes(filtro){
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
           <span style="color:var(--muted);">Retira:</span> ${v(19)}${v(20)?` · C.I: ${v(20)}`:''}${v(21)?` · Cel: ${v(21)}`:''}
+        </div>
+        <div style="background:#0f2b1a;border:1px solid #1a4a2a;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:12px;">
+          <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px;">💳 Pago del cliente</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <div><span style="color:var(--muted);">Moneda:</span> <b>${v(28)||'—'}</b></div>
+            <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent);">${v(28)==='Bs'?'Bs':'$'}${v(29)||'—'}</b></div>
+            <div style="grid-column:1/-1;"><span style="color:var(--muted);">Referencia:</span> <b style="color:var(--warn);">${v(30)||'—'}</b></div>
+          </div>
         </div>`;
       packs.forEach((pk,idx)=>{
         const vp=i=>String(pk[i]||'').trim();
