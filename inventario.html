@@ -853,7 +853,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvaClT9974dwpeJWSeISDWEEwvGAkMqgE-lgeV1_JrUxHZBqSIwtGbDHJNCOxri9E2VA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6dguC7jJoefRjz1oCKSWvZzvup7J98d4iZ1S72bLABWklohqgwsP3r6qktc_JrxGMRw/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1231,15 +1231,14 @@ async function subirFotoStock(event){
     const base64=dataUrl.split(',')[1];
     const filename=currentProduct.codigo+'_'+Date.now()+'.jpg';
     msgEl.innerHTML='<span class="spinner">↻</span> Subiendo foto...';
-    await fetch(SCRIPT_URL,{
-      method:'POST',
-      mode:'no-cors',
-      headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:'action=uploadFoto&codigo='+encodeURIComponent(currentProduct.codigo)+
-           '&base64='+encodeURIComponent(base64)+
-           '&mimeType=image%2Fjpeg&filename='+encodeURIComponent(filename)
-    });
-    await new Promise(r=>setTimeout(r,3000));
+    if(WEBHOOK_FOTO){
+      const fotoForm=new FormData();
+      fotoForm.append('codigo', currentProduct.codigo);
+      fotoForm.append('base64', base64);
+      fotoForm.append('filename', filename);
+      fotoForm.append('mimeType', 'image/jpeg');
+      await fetch(WEBHOOK_FOTO, {method:'POST', body:fotoForm});
+    }
     msgEl.style.background='#0f2b1a';
     msgEl.style.color='var(--accent)';
     msgEl.innerHTML='✅ Foto enviada';
@@ -1380,21 +1379,17 @@ async function ejecutarGenerarEtiqueta(codigo,nombre,precio,tasa){
     });
   }catch(e){console.error('addProducto error:',e);}
 
-  // 2. Subir foto si hay
-  if(fotoBase64){
+  // 2. Subir foto via Make → Dropbox
+  if(fotoBase64 && WEBHOOK_FOTO){
     etqMsg.innerHTML='<span class="spinner">↻</span> Subiendo foto...';
     try{
-      await fetch(SCRIPT_URL, {
-        method:'POST',
-        mode:'no-cors',
-        headers:{'Content-Type':'application/x-www-form-urlencoded'},
-        body:'action=uploadFoto&codigo='+encodeURIComponent(codigo)+
-             '&base64='+encodeURIComponent(fotoBase64)+
-             '&mimeType=image%2Fjpeg&filename='+encodeURIComponent(codigo+'.jpg')
-      });
-      // no-cors: no podemos leer la respuesta pero el servidor la procesó
-      await new Promise(r=>setTimeout(r,3000));
-      console.log('✅ Foto enviada por POST');
+      const fotoForm=new FormData();
+      fotoForm.append('codigo', codigo);
+      fotoForm.append('base64', fotoBase64);
+      fotoForm.append('filename', codigo+'.jpg');
+      fotoForm.append('mimeType', 'image/jpeg');
+      await fetch(WEBHOOK_FOTO, {method:'POST', body:fotoForm});
+      console.log('✅ Foto enviada a Make');
     }catch(e){ console.error('Foto error:',e); }
   }
 
@@ -2348,6 +2343,7 @@ async function confirmarAprobacion(){
 
 // ── GESTIÓN ───────────────────────────────────────────────────
 const WEBHOOK_URL='https://hook.us2.make.com/9vb6zab74fbbqkbv46c2coi8i7e4mnqs';
+const WEBHOOK_FOTO='https://hook.us2.make.com/6eprt8kp7xj3jj8t5ahsypbtz3hohf6c';
 
 function resetGestionBtns(){
   // Deselecciona los 3 botones principales
