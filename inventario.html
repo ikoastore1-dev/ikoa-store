@@ -444,22 +444,20 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <div id="reader"></div>
     </div>
     <div class="search-row">
-      <input class="search-input" type="text" id="search-input" placeholder="Buscar código o nombre..." onkeydown="if(event.key==='Enter')doSearch()">
+      <input class="search-input" type="text" id="search-input" placeholder="Buscar código o nombre..." oninput="doSearch()" onkeydown="if(event.key==='Enter')doSearch()">
       <button class="search-btn" onclick="doSearch()">🔍</button>
     </div>
+    <div id="search-suggestions" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-top:6px;max-height:220px;overflow-y:auto;"></div>
     <div id="msg-area"></div>
     <div id="product-area"></div>
     </div><!-- /stksec-inventario -->
 
     <!-- BUSCAR SUB-SECCIÓN -->
     <div id="stksec-buscar" style="display:none;">
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;">
-        <div class="search-row" style="margin-bottom:0;">
-          <input class="search-input" type="text" id="buscar-cod-input" placeholder="Escribe el código..." oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')buscarPorCodigo()">
-          <button class="search-btn" onclick="buscarPorCodigo()">🔍</button>
-        </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;">
+        <input class="search-input" type="text" id="buscar-cod-input" placeholder="Busca por código, nombre o descripción..." style="width:100%;" oninput="buscarPorCodigo(this.value)">
       </div>
-      <div id="buscar-result" style="margin-top:14px;"></div>
+      <div id="buscar-result"></div>
     </div>
     <div id="stksec-historial" style="display:none;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -966,16 +964,51 @@ function findProduct(q){
 }
 
 function doSearch(){
-  const q=document.getElementById('search-input').value.trim();
-  if(!q) return;
-  const p=findProduct(q);
-  if(p) showProduct(p);
-  else document.getElementById('product-area').innerHTML=`
-    <div class="not-found">
-      <div style="font-size:32px">🔍</div>
-      <p style="color:var(--muted);margin-top:8px;">No se encontró "<strong style="color:#ff6b6b">${q}</strong>"</p>
-      <p style="font-size:12px;color:var(--muted);margin-top:6px;">Los productos nuevos se crean en <b style="color:var(--accent);">🏷️ Etiqueta · Nuevos</b></p>
-    </div>`;
+  const q=document.getElementById('search-input').value.trim().toUpperCase();
+  const sugEl=document.getElementById('search-suggestions');
+  const prodEl=document.getElementById('product-area');
+  if(!q){ sugEl.style.display='none'; sugEl.innerHTML=''; return; }
+
+  // Búsqueda por coincidencia parcial en código y nombre
+  const matches=PRODUCTOS.filter(p=>
+    String(p.codigo||'').toUpperCase().includes(q)||
+    String(p.nombre||'').toUpperCase().includes(q)
+  );
+
+  if(!matches.length){
+    sugEl.style.display='block';
+    sugEl.innerHTML=`<div style="padding:12px 16px;font-size:13px;color:var(--danger);">Sin resultados para "<b>${q}</b>"</div>`;
+    prodEl.innerHTML='';
+    return;
+  }
+
+  // Si hay coincidencia exacta de código → mostrar producto directo
+  const exacto=matches.find(p=>String(p.codigo||'').toUpperCase()===q);
+  if(exacto && matches.length===1){
+    sugEl.style.display='none';
+    sugEl.innerHTML='';
+    showProduct(exacto);
+    return;
+  }
+
+  // Si hay varios → mostrar lista de sugerencias
+  sugEl.style.display='block';
+  const hl=txt=>txt.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<b style="color:var(--accent);">${m}</b>`);
+  sugEl.innerHTML=`<div style="padding:8px 12px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);">${matches.length} resultado(s) — toca uno para seleccionar</div>`+
+    matches.map(p=>`
+      <div onclick="seleccionarProducto('${p.codigo}')" style="padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;">${hl(String(p.codigo||''))}</div>
+        <div style="font-size:13px;color:var(--muted);">${hl(String(p.nombre||''))}</div>
+      </div>`).join('');
+}
+
+function seleccionarProducto(codigo){
+  const p=PRODUCTOS.find(x=>String(x.codigo||'').toUpperCase()===String(codigo).toUpperCase());
+  if(!p) return;
+  document.getElementById('search-input').value=p.codigo;
+  document.getElementById('search-suggestions').style.display='none';
+  document.getElementById('search-suggestions').innerHTML='';
+  showProduct(p);
 }
 
 function showProduct(p){
@@ -1436,24 +1469,35 @@ async function guardarTasas(){
   }
 }
 
-function buscarPorCodigo(){
-  const cod=document.getElementById('buscar-cod-input').value.trim().toUpperCase();
+function buscarPorCodigo(q){
   const resultEl=document.getElementById('buscar-result');
-  if(!cod){ resultEl.innerHTML=''; return; }
-  const producto=PRODUCTOS.find(p=>String(p.codigo||'').toUpperCase()===cod);
-  if(!producto){
+  const query=(q||'').trim().toUpperCase();
+  if(!query){ resultEl.innerHTML=''; return; }
+  const matches=PRODUCTOS.filter(p=>{
+    const cod=String(p.codigo||'').toUpperCase();
+    const nom=String(p.nombre||'').toUpperCase();
+    const obs=String(p.observacion||p.obs||p.descripcion||'').toUpperCase();
+    return cod.includes(query)||nom.includes(query)||obs.includes(query);
+  });
+  if(!matches.length){
     resultEl.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;">
       <div style="font-size:28px;margin-bottom:8px;">🔍</div>
-      <div style="color:var(--danger);font-size:14px;">Código <b>${cod}</b> no encontrado</div>
+      <div style="color:var(--danger);font-size:14px;">Sin resultados para <b>"${query}"</b></div>
     </div>`;
     return;
   }
-  resultEl.innerHTML=`<div style="background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);padding:20px;">
-    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Producto encontrado</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);margin-bottom:4px;">${producto.codigo}</div>
-    <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;">${producto.nombre}</div>
-    <div style="font-size:13px;color:var(--muted);">Depto: ${producto.depto||'—'}</div>
-  </div>`;
+  resultEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${matches.length} resultado(s)</div>`+
+    matches.map(p=>{
+      const cod=String(p.codigo||'');
+      const nom=String(p.nombre||'');
+      const obs=String(p.observacion||p.obs||p.descripcion||'');
+      const hl=txt=>txt.replace(new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<b style="color:var(--accent);">${m}</b>`);
+      return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:2px;">${hl(cod)}</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">${hl(nom)}</div>
+        ${obs?`<div style="font-size:12px;color:var(--muted);">${hl(obs)}</div>`:''}
+      </div>`;
+    }).join('');
 }
 
 function switchStock(sub){
@@ -1469,9 +1513,11 @@ function switchStock(sub){
   });
   if(sub==='historial') renderHistorial();
   if(sub==='buscar'){
-    document.getElementById('buscar-cod-input').value='';
-    document.getElementById('buscar-result').innerHTML='';
-    setTimeout(()=>document.getElementById('buscar-cod-input').focus(),100);
+    const inp=document.getElementById('buscar-cod-input');
+    if(inp){ inp.value=''; }
+    const res=document.getElementById('buscar-result');
+    if(res) res.innerHTML='';
+    setTimeout(()=>{ const i=document.getElementById('buscar-cod-input'); if(i) i.focus(); },100);
   }
 }
 
