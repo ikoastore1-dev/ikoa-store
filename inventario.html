@@ -483,6 +483,21 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <input class="field-input" type="text" id="qr-nombre" placeholder="Nombre del producto">
         </div>
         <div class="field-group">
+          <div class="field-label">Departamento</div>
+          <select class="field-input" id="qr-depto">
+            <option value="">Seleccionar</option>
+            <option value="Ropa">Ropa</option>
+            <option value="Zapatos">Zapatos</option>
+            <option value="Accesorios">Accesorios</option>
+            <option value="Kids">Kids</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Observación / Descripción</div>
+          <input class="field-input" type="text" id="qr-obs" placeholder="Descripción del producto">
+        </div>
+        <div class="field-group">
           <div class="field-label">Base Imponible en Divisa ($)</div>
           <input class="field-input" type="number" id="qr-precio" placeholder="Ej: 125">
         </div>
@@ -1300,25 +1315,30 @@ async function ejecutarGenerarEtiqueta(codigo,nombre,precio,tasa){
   etqMsg.style.color='var(--muted)';
   etqMsg.innerHTML='<span class="spinner">↻</span> Guardando en Google Sheets...';
 
-  // Subir foto
+  // 1. Registrar/actualizar producto en CODIGOS
+  try{
+    const depto=document.getElementById('qr-depto')?.value||'';
+    const obs=document.getElementById('qr-obs')?.value||'';
+    await scriptGETjson({
+      action:'addProducto',
+      codigo, nombre,
+      depto, obs,
+      precio:parseFloat(precio),
+      tasa
+    });
+  }catch(e){console.error('addProducto error:',e);}
+
+  // 2. Subir foto si hay
   if(fotoBase64){
     try{
       await scriptGET({action:'uploadFoto',codigo,base64:fotoBase64,mimeType:fotoMime,filename:`${codigo}.jpg`});
     }catch(e){console.error('Foto error:',e);}
   }
 
-  // Guardar precio + fórmulas
-  try{
-    await scriptGET({action:'updatePrecio',codigo,precio:parseFloat(precio),tasa});
-    etqMsg.style.background='#0f2b1a';
-    etqMsg.style.color='var(--accent)';
-    etqMsg.innerHTML='✓ Guardado en Google Sheets con tasa '+tasa;
-    setTimeout(()=>{etqMsg.style.display='none';},5000);
-  }catch(e){
-    etqMsg.style.background='#2a1010';
-    etqMsg.style.color='var(--danger)';
-    etqMsg.innerHTML='✗ Error al guardar: '+e.message;
-  }
+  etqMsg.style.background='#0f2b1a';
+  etqMsg.style.color='var(--accent)';
+  etqMsg.innerHTML='✓ Producto registrado en Google Sheets · Tasa '+tasa;
+  setTimeout(()=>{etqMsg.style.display='none';},5000);
 
   // Generar QR
   const previewEl=document.getElementById('etiqueta-preview');
