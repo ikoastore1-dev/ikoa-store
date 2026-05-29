@@ -1893,7 +1893,11 @@ async function confirmarReprobar(){
   msgEl.innerHTML='<span class="spinner">↻</span> Registrando...';
 
   try{
-    const codigos=pendingSolicitud.codigos||[pendingSolicitud.codigo];
+    let codigos=pendingSolicitud.codigos||[pendingSolicitud.codigo];
+    if(typeof codigos==='string') try{ codigos=JSON.parse(codigos); }catch(e){ codigos=[codigos]; }
+    if(!Array.isArray(codigos)) codigos=[codigos];
+    codigos=codigos.filter(c=>c&&String(c).trim());
+    console.log('Reprobando codigos:', codigos);
     for(const cod of codigos){
       const res=await scriptGETjson({
         action:'reprobarSolicitudPorCodigo',
@@ -1951,8 +1955,12 @@ async function confirmarAprobacion(){
   msgEl.innerHTML='<span class="spinner">↻</span> Registrando aprobación...';
 
   try{
-    // Aprobar cada pack del grupo por su código individual
-    const codigos=pendingSolicitud.codigos||[pendingSolicitud.codigo];
+    // Asegurar que codigos es un array válido
+    let codigos=pendingSolicitud.codigos||[pendingSolicitud.codigo];
+    if(typeof codigos==='string') try{ codigos=JSON.parse(codigos); }catch(e){ codigos=[codigos]; }
+    if(!Array.isArray(codigos)) codigos=[codigos];
+    codigos=codigos.filter(c=>c&&String(c).trim());
+    console.log('Aprobando codigos:', codigos);
     let lastCodigoC='';
     for(const cod of codigos){
       const res=await scriptGETjson({
