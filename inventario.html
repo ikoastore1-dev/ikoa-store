@@ -464,10 +464,27 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
     <!-- BUSCAR SUB-SECCIÓN -->
     <div id="stksec-buscar" style="display:none;">
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;">
-        <input class="search-input" type="text" id="buscar-cod-input" placeholder="Busca por código, nombre o descripción..." style="width:100%;" oninput="buscarPorCodigo(this.value)">
+
+      <!-- FILTRO POR COLOR -->
+      <div style="margin-bottom:14px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">🎨 Filtrar por Color</div>
+        <div id="buscar-colores" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
       </div>
-      <div id="buscar-result"></div>
+
+      <!-- FILTRO POR TALLA -->
+      <div style="margin-bottom:14px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">📏 Filtrar por Talla</div>
+        <div id="buscar-tallas" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      </div>
+
+      <!-- RESULTADOS + REFINADOR -->
+      <div id="buscar-filtro-wrap" style="display:none;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px;margin-bottom:10px;">
+          <input class="search-input" type="text" id="buscar-refinar-input" placeholder="Refinar por nombre o código..." style="width:100%;" oninput="refinarBusqueda(this.value)">
+        </div>
+        <div id="buscar-filtro-result"></div>
+      </div>
+
     </div>
     <div id="stksec-historial" style="display:none;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -867,8 +884,10 @@ function scriptGET(params){
 }
 const SHEET_ID   = '1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const DEPOSITOS  = ['Tienda','Showroom Caracas','Taller','Solicitud Envío USA'];
-const TALLAS_KIDS = ['Kids 2','Kids 4','Kids 6','Kids 8','Kids 10','Kids 12','Kids 14','Kids 16'];
+const TALLAS_KIDS = ['Kids 1','Kids 2','Kids 4','Kids 6','Kids 8','Kids 10','Kids 12','Kids 14','Kids 16'];
 const TALLAS_ROPA = ['XS','S','M','L','XL','XXL','3XL'];
+const TALLAS_DAMA = ['Dama XS','Dama S','Dama M','Dama L','Dama XL','Dama XXL','Dama 3XL'];
+const TALLAS_CAB  = ['Caballero XS','Caballero S','Caballero M','Caballero L','Caballero XL','Caballero XXL','Caballero 3XL'];
 const TALLAS_ZAP  = ['30','30½','31','31½','32','32½','33','33½','34','34½','35','35½','36','36½','37','37½','38','38½','39','39½','40','40½','41','41½','42','42½','43','43½','44','44½','45'];
 const USUARIOS    = {'2710':'Director Johan','IKOA02':'Vendedor 1','IKOA03':'Vendedor 2','IKOA04':'Almacén','IKOA05':'Showroom'};
 
@@ -977,10 +996,11 @@ function getStockDisplay(cod,tal){
 }
 
 function getTallasDefault(depto){
-  const d=depto.toLowerCase();
-  if(d.includes('zapato')||d.includes('sandalia'))return TALLAS_ZAP;
-  if(d.includes('traje')||d.includes('baño')||d.includes('bkvo'))return TALLAS_ROPA;
-  return [...TALLAS_KIDS,...TALLAS_ROPA];
+  const d=(depto||'').toLowerCase();
+  if(d.includes('zapato')||d.includes('sandalia')) return TALLAS_ZAP;
+  if(d.includes('traje')||d.includes('baño')||d.includes('bkvo')) return TALLAS_ROPA;
+  // Por defecto: Kids + tallas genéricas + Dama + Caballero
+  return [...TALLAS_KIDS, ...TALLAS_ROPA, ...TALLAS_DAMA, ...TALLAS_CAB];
 }
 
 function findProduct(q){
@@ -1072,6 +1092,34 @@ function showProduct(p){
         <div class="tallas-grid">${tallasHTML}</div>
         <div class="new-talla-row"><input class="new-talla-input" type="text" id="new-talla-input" placeholder="Agregar talla personalizada..."><button class="add-talla-btn" onclick="addCustomTalla()">+ Agregar</button></div>
         <div id="edit-panel"></div>
+      </div>
+      <!-- CARGA MASIVA -->
+      <div class="section">
+        <button onclick="toggleCargaMasiva()" style="width:100%;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;">
+          📦 Carga Masiva de Tallas
+        </button>
+        <div id="carga-masiva-panel" style="display:none;">
+          <div id="cm-filas"></div>
+          <button onclick="agregarFilaCM()" style="width:100%;padding:9px;background:transparent;border:1px dashed var(--accent);border-radius:8px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;">
+            + Agregar talla
+          </button>
+          <div class="field-group" style="margin-bottom:10px;">
+            <div class="field-label">Operación</div>
+            <div style="display:flex;gap:8px;">
+              <button id="cm-op-entrada" onclick="setCMOp('entrada')" style="flex:1;padding:9px;background:#0f2b1a;border:2px solid var(--accent);border-radius:8px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">➕ Entrada</button>
+              <button id="cm-op-salida" onclick="setCMOp('salida')" style="flex:1;padding:9px;background:var(--surface2);border:2px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">➖ Salida</button>
+            </div>
+          </div>
+          <div class="field-group" style="margin-bottom:10px;">
+            <div class="field-label">Código de autorización</div>
+            <input class="field-input" type="password" id="cm-unlock" placeholder="Tu código personal" maxlength="20">
+            <div id="cm-error" style="font-size:12px;color:var(--danger);margin-top:4px;display:none;"></div>
+          </div>
+          <button onclick="registrarCargaMasiva()" style="width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;">
+            ✅ REGISTRAR TODO
+          </button>
+          <div id="cm-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:10px;"></div>
+        </div>
       </div>
     </div>`;
 }
@@ -1258,6 +1306,118 @@ async function subirFotoStock(event){
     msgEl.innerHTML='✗ Error: '+e.message;
   }
 }
+// ── CARGA MASIVA ──────────────────────────────────────────────
+let cmOp='entrada'; let cmCount=0;
+
+function toggleCargaMasiva(){
+  const panel=document.getElementById('carga-masiva-panel');
+  const visible=panel.style.display==='block';
+  panel.style.display=visible?'none':'block';
+  if(!visible && document.getElementById('cm-filas').children.length===0) agregarFilaCM();
+}
+
+function setCMOp(op){
+  cmOp=op;
+  document.getElementById('cm-op-entrada').style.background=op==='entrada'?'#0f2b1a':'var(--surface2)';
+  document.getElementById('cm-op-entrada').style.borderColor=op==='entrada'?'var(--accent)':'var(--border)';
+  document.getElementById('cm-op-entrada').style.color=op==='entrada'?'var(--accent)':'var(--muted)';
+  document.getElementById('cm-op-salida').style.background=op==='salida'?'#2a1010':'var(--surface2)';
+  document.getElementById('cm-op-salida').style.borderColor=op==='salida'?'var(--danger)':'var(--border)';
+  document.getElementById('cm-op-salida').style.color=op==='salida'?'var(--danger)':'var(--muted)';
+}
+
+function agregarFilaCM(){
+  const id=++cmCount;
+  const todasTallas=getTallasDefault(currentProduct?.depto||'');
+  const tallasOpts=todasTallas.map(t=>`<option value="${t}">${t}</option>`).join('');
+  const depOpts=DEPOSITOS.map(d=>`<option value="${d}">${d}</option>`).join('');
+  const fila=document.createElement('div');
+  fila.id='cm-fila-'+id;
+  fila.style.cssText='background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:8px;position:relative;';
+  fila.innerHTML=`
+    <button onclick="document.getElementById('cm-fila-${id}').remove()" style="position:absolute;top:6px;right:8px;background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer;">✕</button>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:6px;">
+      <div>
+        <div class="field-label" style="font-size:11px;">Talla</div>
+        <select class="field-input" id="cm-talla-${id}" style="font-size:13px;padding:7px 10px;">
+          ${tallasOpts}
+        </select>
+      </div>
+      <div>
+        <div class="field-label" style="font-size:11px;">Cantidad</div>
+        <input class="field-input" type="number" id="cm-qty-${id}" value="1" min="1" style="font-size:13px;padding:7px 10px;">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div>
+        <div class="field-label" style="font-size:11px;">Color</div>
+        <input class="field-input" type="text" id="cm-color-${id}" placeholder="Negro, Rojo..." value="${selectedColor}" style="font-size:13px;padding:7px 10px;">
+      </div>
+      <div>
+        <div class="field-label" style="font-size:11px;">Depósito</div>
+        <select class="field-input" id="cm-dep-${id}" style="font-size:13px;padding:7px 10px;">
+          ${depOpts}
+        </select>
+      </div>
+    </div>`;
+  document.getElementById('cm-filas').appendChild(fila);
+}
+
+async function registrarCargaMasiva(){
+  const unlock=document.getElementById('cm-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('cm-error');
+  const msgEl=document.getElementById('cm-msg');
+  if(!USUARIOS[unlock]){ errEl.style.display='block'; errEl.textContent='❌ Código incorrecto'; document.getElementById('cm-unlock').value=''; return; }
+  errEl.style.display='none';
+  // Recoger todas las filas
+  const filas=document.querySelectorAll('[id^="cm-fila-"]');
+  if(!filas.length){ alert('Agrega al menos una talla'); return; }
+  const registros=[];
+  for(const fila of filas){
+    const id=fila.id.replace('cm-fila-','');
+    const talla=document.getElementById('cm-talla-'+id)?.value||'';
+    const qty=parseInt(document.getElementById('cm-qty-'+id)?.value)||0;
+    const color=document.getElementById('cm-color-'+id)?.value.trim()||'';
+    const dep=document.getElementById('cm-dep-'+id)?.value||DEPOSITOS[0];
+    if(talla&&qty>0) registros.push({talla,qty,color,dep});
+  }
+  if(!registros.length){ alert('Completa al menos una fila'); return; }
+  msgEl.style.display='block';
+  msgEl.style.background='var(--surface2)';
+  msgEl.style.color='var(--muted)';
+  msgEl.innerHTML=`<span class="spinner">↻</span> Registrando ${registros.length} talla(s)...`;
+  let ok=0, err=0;
+  for(const reg of registros){
+    const key=`${currentProduct.codigo}||${reg.talla}||${reg.color}||${reg.dep}`;
+    const stockActual=STOCK[key]||0;
+    const nuevoStock=cmOp==='entrada'?stockActual+reg.qty:Math.max(0,stockActual-reg.qty);
+    const eliminar=nuevoStock===0?'si':'no';
+    try{
+      await scriptGETjson({
+        action:'updateStock',
+        codigo:currentProduct.codigo, nombre:currentProduct.nombre,
+        talla:reg.talla, stock:nuevoStock, color:reg.color,
+        deposito:reg.dep, fecha:getFechaHora(),
+        usuario:`${unlock} - ${USUARIOS[unlock]}`,
+        operacion:cmOp, antes:stockActual, eliminar
+      });
+      if(eliminar==='si') delete STOCK[key];
+      else STOCK[key]=nuevoStock;
+      // Registrar en historial local
+      historial.push({fecha:getFechaHora(),codigo:currentProduct.codigo,nombre:currentProduct.nombre,talla:reg.talla,color:reg.color,deposito:reg.dep,operacion:cmOp,antes:stockActual,despues:nuevoStock,delta:nuevoStock-stockActual,usuario:USUARIOS[unlock]});
+      ok++;
+    }catch(e){ err++; }
+  }
+  localStorage.setItem('ikoa_hist_v3',JSON.stringify(historial));
+  msgEl.style.background=err?'#2a1010':'#0f2b1a';
+  msgEl.style.border=err?'1px solid #4a1a1a':'1px solid #1a4a2a';
+  msgEl.style.color=err?'var(--danger)':'var(--accent)';
+  msgEl.innerHTML=`✅ ${ok} registro(s) guardado(s)${err?` · ⚠️ ${err} error(s)`:''}`;
+  document.getElementById('cm-unlock').value='';
+  document.getElementById('cm-filas').innerHTML=''; cmCount=0;
+  setTimeout(()=>{ msgEl.style.display='none'; showProduct(currentProduct); renderStockLista(); },3000);
+}
+
 function addCustomTalla(){
   const input=document.getElementById('new-talla-input');
   const talla=input.value.trim();
@@ -1569,35 +1729,118 @@ async function guardarTasas(){
   }
 }
 
-function buscarPorCodigo(q){
-  const resultEl=document.getElementById('buscar-result');
-  const query=(q||'').trim().toUpperCase();
-  if(!query){ resultEl.innerHTML=''; return; }
-  const matches=PRODUCTOS.filter(p=>{
-    const cod=String(p.codigo||'').toUpperCase();
-    const nom=String(p.nombre||'').toUpperCase();
-    const obs=String(p.observacion||p.obs||p.descripcion||'').toUpperCase();
-    return cod.includes(query)||nom.includes(query)||obs.includes(query);
+let buscarFiltroActivo={tipo:'',valor:''};
+
+function renderBuscarFiltros(){
+  // Recoger todos los colores y tallas del STOCK
+  const colores=new Set(), tallas=new Set();
+  Object.keys(STOCK).forEach(key=>{
+    const parts=key.split('||');
+    if(STOCK[key]>0){
+      if(parts[3]) colores.add(parts[3]);
+      if(parts[1]) tallas.add(parts[1]);
+    }
   });
-  if(!matches.length){
-    resultEl.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;">
-      <div style="font-size:28px;margin-bottom:8px;">🔍</div>
-      <div style="color:var(--danger);font-size:14px;">Sin resultados para <b>"${query}"</b></div>
-    </div>`;
+  // Botones de colores
+  const coloresEl=document.getElementById('buscar-colores');
+  if(coloresEl){
+    if(colores.size===0){
+      coloresEl.innerHTML=`<div style="font-size:13px;color:var(--muted);">Sin colores registrados</div>`;
+    } else {
+      coloresEl.innerHTML=[...colores].sort().map(c=>`
+        <button onclick="aplicarFiltroBuscar('color','${c}')"
+          style="padding:7px 14px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;"
+          onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          🎨 ${c}
+        </button>`).join('');
+    }
+  }
+  // Botones de tallas
+  const tallasEl=document.getElementById('buscar-tallas');
+  if(tallasEl){
+    if(tallas.size===0){
+      tallasEl.innerHTML=`<div style="font-size:13px;color:var(--muted);">Sin tallas registradas</div>`;
+    } else {
+      // Ordenar tallas por el orden natural
+      const orden=[...TALLAS_KIDS,...TALLAS_ROPA,...TALLAS_DAMA,...TALLAS_CAB,...TALLAS_ZAP];
+      const tallasOrdenadas=[...tallas].sort((a,b)=>{
+        const ia=orden.indexOf(a), ib=orden.indexOf(b);
+        if(ia>=0&&ib>=0) return ia-ib;
+        if(ia>=0) return -1;
+        if(ib>=0) return 1;
+        return a.localeCompare(b);
+      });
+      tallasEl.innerHTML=tallasOrdenadas.map(t=>`
+        <button onclick="aplicarFiltroBuscar('talla','${t}')"
+          style="padding:7px 14px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;"
+          onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          📏 ${t}
+        </button>`).join('');
+    }
+  }
+}
+
+function aplicarFiltroBuscar(tipo, valor){
+  buscarFiltroActivo={tipo, valor};
+  // Resaltar botón activo
+  const container=document.getElementById(tipo==='color'?'buscar-colores':'buscar-tallas');
+  container.querySelectorAll('button').forEach(b=>{
+    const activo=b.textContent.trim().includes(valor);
+    b.style.borderColor=activo?'var(--accent)':'var(--border)';
+    b.style.background=activo?'#0f2b1a':'var(--surface2)';
+    b.style.color=activo?'var(--accent)':'var(--text)';
+  });
+  // Limpiar el otro filtro
+  const otro=document.getElementById(tipo==='color'?'buscar-tallas':'buscar-colores');
+  otro.querySelectorAll('button').forEach(b=>{
+    b.style.borderColor='var(--border)';
+    b.style.background='var(--surface2)';
+    b.style.color='var(--text)';
+  });
+  document.getElementById('buscar-refinar-input').value='';
+  document.getElementById('buscar-filtro-wrap').style.display='block';
+  mostrarResultadosFiltro('');
+}
+
+function mostrarResultadosFiltro(refinar){
+  const {tipo, valor}=buscarFiltroActivo;
+  const q=refinar.trim().toUpperCase();
+  const resultEl=document.getElementById('buscar-filtro-result');
+  // Filtrar stock por tipo y valor
+  const resultados=[];
+  Object.entries(STOCK).forEach(([key,qty])=>{
+    if(qty<=0) return;
+    const parts=key.split('||');
+    const cod=parts[0], talla=parts[1], color=parts[3]||'', dep=parts[4]||'';
+    const match=tipo==='color'?color===valor:talla===valor;
+    if(!match) return;
+    const prod=PRODUCTOS.find(p=>String(p.codigo||'').toUpperCase()===cod.toUpperCase());
+    const nombre=prod?prod.nombre:'';
+    if(q && !cod.toUpperCase().includes(q) && !nombre.toUpperCase().includes(q)) return;
+    resultados.push({cod, talla, color, dep, qty, nombre});
+  });
+  if(!resultados.length){
+    resultEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted);">Sin resultados para ${valor}${q?' · "'+refinar+'"':''}</div>`;
     return;
   }
-  resultEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${matches.length} resultado(s)</div>`+
-    matches.map(p=>{
-      const cod=String(p.codigo||'');
-      const nom=String(p.nombre||'');
-      const obs=String(p.observacion||p.obs||p.descripcion||'');
-      const hl=txt=>txt.replace(new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<b style="color:var(--accent);">${m}</b>`);
-      return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:2px;">${hl(cod)}</div>
-        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">${hl(nom)}</div>
-        ${obs?`<div style="font-size:12px;color:var(--muted);">${hl(obs)}</div>`:''}
-      </div>`;
-    }).join('');
+  resultEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${resultados.length} resultado(s) para <b style="color:var(--accent)">${valor}</b></div>`+
+    resultados.map(r=>`
+      <div onclick="seleccionarProducto('${r.cod}')"
+        style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:7px;cursor:pointer;"
+        onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--surface2)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);">${r.cod}</div>
+            <div style="font-size:12px;color:var(--muted);">${r.nombre} · ${r.talla} · ${r.color||'—'} · ${r.dep}</div>
+          </div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:${r.qty<=3?'var(--danger)':r.qty<=10?'var(--warn)':'var(--accent)'};">${r.qty}</div>
+        </div>
+      </div>`).join('');
+}
+
+function refinarBusqueda(val){
+  mostrarResultadosFiltro(val);
 }
 
 function renderStockLista(){
@@ -1651,11 +1894,10 @@ function switchStock(sub){
   if(sub==='historial') renderHistorial();
   if(sub==='inventario') renderStockLista();
   if(sub==='buscar'){
-    const inp=document.getElementById('buscar-cod-input');
-    if(inp){ inp.value=''; }
-    const res=document.getElementById('buscar-result');
-    if(res) res.innerHTML='';
-    setTimeout(()=>{ const i=document.getElementById('buscar-cod-input'); if(i) i.focus(); },100);
+    buscarFiltroActivo={tipo:'',valor:''};
+    const wrap=document.getElementById('buscar-filtro-wrap');
+    if(wrap) wrap.style.display='none';
+    renderBuscarFiltros();
   }
 }
 
