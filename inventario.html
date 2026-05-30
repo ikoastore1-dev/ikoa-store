@@ -230,6 +230,27 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </div>
 </div>
 
+<!-- MODAL SELECCION MODELO LINK -->
+<div class="modal-overlay hidden" id="modal-modelo-link">
+  <div class="modal">
+    <div class="modal-icon">🔗</div>
+    <div class="modal-title">Tipo de Pedido</div>
+    <div class="modal-subtitle">¿Para qué modelo es este link?</div>
+    <div style="display:flex;flex-direction:column;gap:10px;width:100%;margin-bottom:8px;">
+      <button onclick="confirmarModeloLink('comfy')" style="width:100%;padding:14px;background:#0f2b1a;border:2px solid var(--accent);border-radius:10px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
+        🟢 COMFY MEGA PROMO
+      </button>
+      <button onclick="confirmarModeloLink('fullcomfy')" style="width:100%;padding:14px;background:#1a1a2a;border:2px solid #6688ff;border-radius:10px;color:#6688ff;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
+        🔵 FULL COMFY
+      </button>
+      <button onclick="confirmarModeloLink('licra')" style="width:100%;padding:14px;background:#2a1a1a;border:2px solid var(--warn);border-radius:10px;color:var(--warn);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
+        🟠 LICRA PROTECT
+      </button>
+    </div>
+    <button class="modal-cancel" onclick="document.getElementById('modal-modelo-link').classList.add('hidden')">Cancelar</button>
+  </div>
+</div>
+
 <!-- MODAL TASA -->
 <div class="modal-overlay hidden" id="modal-tasa">
   <div class="modal">
@@ -875,7 +896,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6dguC7jJoefRjz1oCKSWvZzvup7J98d4iZ1S72bLABWklohqgwsP3r6qktc_JrxGMRw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwTIWLmmG4L_nrBhDE1aijURssNixUnK3hnD3BrcavHzE9-ztPKJ8t4w2YmNXZsJB4vGg/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -3205,10 +3226,20 @@ function scriptPOSTjson(params){
 }
 
 // ── TOKEN GENERATOR ───────────────────────────────────────────
-const BASE_URL='https://ikoastore1-dev.github.io/ikoa-store/pedidos.html';
+const BASE_URLS={
+  comfy:    'https://ikoastore1-dev.github.io/ikoa-store/pedidos.html',
+  fullcomfy:'https://ikoastore1-dev.github.io/ikoa-store/pedidos-fullcomfy.html',
+  licra:    'https://ikoastore1-dev.github.io/ikoa-store/pedidos-licra.html'
+};
+const BASE_URL=BASE_URLS.comfy;
 let currentToken='';
 
-async function generarLinkPedido(){
+function generarLinkPedido(){
+  document.getElementById('modal-modelo-link').classList.remove('hidden');
+}
+
+async function confirmarModeloLink(modelo){
+  document.getElementById('modal-modelo-link').classList.add('hidden');
   const btn=document.getElementById('btn-generar-link');
   const msg=document.getElementById('link-msg');
   btn.disabled=true; btn.textContent='⏳ Generando...';
@@ -3217,7 +3248,8 @@ async function generarLinkPedido(){
     const data=await scriptGETjson({action:'generarToken'});
     if(data.ok){
       currentToken=data.token;
-      const link=`${BASE_URL}?token=${data.token}`;
+      const baseUrl=BASE_URLS[modelo]||BASE_URLS.comfy;
+      const link=`${baseUrl}?token=${data.token}`;
       document.getElementById('link-text').textContent=link;
       document.getElementById('link-result').style.display='block';
       msg.style.display='none';
