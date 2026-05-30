@@ -937,12 +937,14 @@ async function calcularPago(){
   }catch(e){ console.error('Error leyendo precios:',e); }
 
   // Contar franelas totales y recargas
-  const tallasGrandes=['XL','XXL','3XL','XXXL'];
+  const tallasGrandes=['XL','XXL','3XL','XXXL','2XL',
+    'DAMA XL','DAMA XXL','DAMA 3XL','DAMA XXXL','DAMA 2XL',
+    'CABALLERO XL','CABALLERO XXL','CABALLERO 3XL','CABALLERO XXXL','CABALLERO 2XL'];
   let totalFranelas=0, totalRecargas=0;
   let desglose=[];
   pedido.packs.forEach((pk,i)=>{
     const franelas=pk.piezas.length||pk.pack||0;
-    const recargas=pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase())).length;
+    const recargas=pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase().trim())).length;
     totalFranelas+=franelas;
     totalRecargas+=recargas;
     desglose.push(`Pack ${i+1}: ${franelas} franelas${recargas>0?` + ${recargas} recarga(s) talla grande`:''}`);
