@@ -418,8 +418,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       </div>
       <div class="field-group" style="margin-bottom:12px;">
         <div class="field-label">Código de autorización</div>
-        <input class="field-input" type="password" id="tasa-unlock" placeholder="Tu código personal" maxlength="20">
-        <div id="tasa-unlock-error" style="font-size:12px;color:var(--danger);margin-top:4px;display:none;"></div>
+        <input class="field-input" type="password" id="tasa-tab-unlock" placeholder="Tu código personal" maxlength="20">
+        <div id="tasa-tab-unlock-error" style="font-size:12px;color:var(--danger);margin-top:4px;display:none;"></div>
       </div>
       <button onclick="guardarTasas()" style="width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;">💾 GUARDAR TASAS</button>
       <div id="tasa-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:10px;"></div>
@@ -1527,10 +1527,10 @@ async function cargarTasas(){
 }
 
 async function guardarTasas(){
-  const unlock=document.getElementById('tasa-unlock').value.trim().toUpperCase();
-  const errEl=document.getElementById('tasa-unlock-error');
+  const unlock=document.getElementById('tasa-tab-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('tasa-tab-unlock-error');
   const msgEl=document.getElementById('tasa-msg');
-  if(!USUARIOS[unlock]){ errEl.style.display='block'; errEl.textContent='❌ Código incorrecto'; document.getElementById('tasa-unlock').value=''; return; }
+  if(!USUARIOS[unlock]){ errEl.style.display='block'; errEl.textContent='❌ Código incorrecto'; document.getElementById('tasa-tab-unlock').value=''; return; }
   errEl.style.display='none';
 
   const nuevas={BCV:document.getElementById('tasa-inp-BCV').value.trim(), Shoes:document.getElementById('tasa-inp-Shoes').value.trim(), IKOA:document.getElementById('tasa-inp-IKOA').value.trim(), BeKate:document.getElementById('tasa-inp-BeKate').value.trim()};
@@ -1553,7 +1553,7 @@ async function guardarTasas(){
       msgEl.style.border='1px solid #1a4a2a';
       msgEl.style.color='var(--accent)';
       msgEl.innerHTML=`✅ Tasas actualizadas · ${USUARIOS[unlock]}`;
-      document.getElementById('tasa-unlock').value='';
+      document.getElementById('tasa-tab-unlock').value='';
       cargarTasas();
       setTimeout(()=>{ msgEl.style.display='none'; },3000);
     } else { throw new Error(data.error||'Error desconocido'); }
