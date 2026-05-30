@@ -455,6 +455,11 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div id="search-suggestions" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-top:6px;max-height:220px;overflow-y:auto;"></div>
     <div id="msg-area"></div>
     <div id="product-area"></div>
+    <!-- LISTA DE STOCK -->
+    <div id="stock-lista-wrap" style="margin-top:14px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Productos en Stock</div>
+      <div id="stock-lista"></div>
+    </div>
     </div><!-- /stksec-inventario -->
 
     <!-- BUSCAR SUB-SECCIÓN -->
@@ -1595,6 +1600,43 @@ function buscarPorCodigo(q){
     }).join('');
 }
 
+function renderStockLista(){
+  const listaEl=document.getElementById('stock-lista');
+  if(!listaEl) return;
+  const grupos={};
+  Object.entries(STOCK).forEach(([key,qty])=>{
+    const parts=key.split('||');
+    const cod=parts[0];
+    if(!grupos[cod]) grupos[cod]=0;
+    grupos[cod]+=qty;
+  });
+  const codigos=Object.keys(grupos).filter(c=>grupos[c]>0).sort();
+  if(!codigos.length){
+    listaEl.innerHTML=`<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">Sin productos en stock</div>`;
+    return;
+  }
+  listaEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${codigos.length} producto(s) con stock</div>`+
+    codigos.map(cod=>{
+      const total=grupos[cod];
+      const prod=PRODUCTOS.find(p=>String(p.codigo||'').toUpperCase()===cod.toUpperCase());
+      const nombre=prod?prod.nombre:'';
+      const color=total<=3?'var(--danger)':total<=10?'var(--warn)':'var(--accent)';
+      return `<div onclick="seleccionarProducto('${cod}')"
+        style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 14px;margin-bottom:7px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;"
+        onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--surface2)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);">${cod}</div>
+          ${nombre?`<div style="font-size:12px;color:var(--muted);">${nombre}</div>`:''}
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:${color};">${total}</div>
+          <div style="font-size:10px;color:var(--muted);">uds</div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
 function switchStock(sub){
   ['inventario','buscar','historial'].forEach(s=>{
     const sec=document.getElementById('stksec-'+s);
@@ -1607,6 +1649,7 @@ function switchStock(sub){
     }
   });
   if(sub==='historial') renderHistorial();
+  if(sub==='inventario') renderStockLista();
   if(sub==='buscar'){
     const inp=document.getElementById('buscar-cod-input');
     if(inp){ inp.value=''; }
@@ -2644,18 +2687,41 @@ document.getElementById('gestion-form').addEventListener('submit',async function
 // ── HISTORIAL ─────────────────────────────────────────────────
 function renderHistorial(){
   const el=document.getElementById('historial-list');
-  if(!historial.length){el.innerHTML='<div class="empty-hist">📋 Sin movimientos registrados</div>';return;}
-  el.innerHTML=historial.map(h=>{
-    const delta=h.delta>0?'+'+h.delta:h.delta;
-    const cls=h.delta>0?'pos':h.delta<0?'neg':'eq';
-    return `<div class="hist-item">
-      <div class="hist-top"><span class="hist-badge ${h.tipo}">${h.tipo.toUpperCase()}</span><span class="hist-prod">${h.nombre}</span><span class="hist-qty ${cls}">${delta}</span></div>
-      <div class="hist-meta">
-        <span class="hist-chip">T:${h.talla}</span><span class="hist-chip">${h.color||'—'}</span><span class="hist-chip">${h.deposito||'—'}</span>
-        <span class="hist-chip">${h.antes}→${h.despues} uds</span><span class="hist-chip usuario">👤 ${h.usuario||h.cod}</span><span class="hist-chip">🕐 ${h.fecha}</span>
-      </div>
-    </div>`;
-  }).join('');
+  if(!el) return;
+  if(!historial.length){
+    el.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><div style="font-size:28px;margin-bottom:8px;">📋</div><div>No hay movimientos registrados</div></div>`;
+    return;
+  }
+  const ultimos=[...historial].reverse().slice(0,10);
+  el.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${historial.length} movimiento(s) · últimos ${ultimos.length}</div>`+
+    ultimos.map((h,i)=>{
+      const delta=h.delta||((h.despues||0)-(h.antes||0));
+      const esEntrada=delta>0||(h.tipo&&h.tipo==='entrada')||(h.operacion&&h.operacion==='entrada');
+      return `<div onclick="toggleHistorialDetalle(${i})" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;"
+        onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:${esEntrada?'var(--accent)':'var(--danger)'};">${esEntrada?'▲ ENTRADA':'▼ SALIDA'}</span>
+            <span style="font-size:13px;color:var(--text);margin-left:8px;">${h.codigo||''}</span>
+          </div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:${esEntrada?'var(--accent)':'var(--danger)'};">${delta>0?'+':''}${delta} uds</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">${h.nombre||''} · T:${h.talla||'—'} · ${h.fecha||'—'}</div>
+        <div id="hist-det-${i}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);line-height:1.9;">
+          <div>📦 <b>${h.nombre||h.codigo}</b></div>
+          <div>📏 Talla: ${h.talla||'—'} · Color: ${h.color||'—'}</div>
+          <div>📍 Depósito: ${h.deposito||'—'}</div>
+          <div>📊 Antes: ${h.antes||0} → Después: ${h.despues||0}</div>
+          <div>👤 ${h.usuario||h.cod||'—'}</div>
+          <div>🕐 ${h.fecha||'—'}</div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function toggleHistorialDetalle(i){
+  const el=document.getElementById('hist-det-'+i);
+  if(el) el.style.display=el.style.display==='none'?'block':'none';
 }
 function clearHistorial(){
   if(confirm('¿Limpiar el historial local?')){historial=[];localStorage.setItem('ikoa_hist_v3','[]');renderHistorial();}
