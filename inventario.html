@@ -1737,7 +1737,7 @@ function renderBuscarFiltros(){
   Object.keys(STOCK).forEach(key=>{
     const parts=key.split('||');
     if(STOCK[key]>0){
-      if(parts[3]) colores.add(parts[3]);
+      if(parts[2]) colores.add(parts[2]);
       if(parts[1]) tallas.add(parts[1]);
     }
   });
@@ -1811,7 +1811,7 @@ function mostrarResultadosFiltro(refinar){
   Object.entries(STOCK).forEach(([key,qty])=>{
     if(qty<=0) return;
     const parts=key.split('||');
-    const cod=parts[0], talla=parts[1], color=parts[3]||'', dep=parts[4]||'';
+    const cod=parts[0], talla=parts[1], color=parts[2]||'', dep=parts[3]||'';
     const match=tipo==='color'?color===valor:talla===valor;
     if(!match) return;
     const prod=PRODUCTOS.find(p=>String(p.codigo||'').toUpperCase()===cod.toUpperCase());
