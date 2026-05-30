@@ -208,7 +208,7 @@ select.field-input option{background:var(--surface3);color:var(--text);}
       <!-- MODELO FIJO - solo informativo -->
       <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center;">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Modelo seleccionado</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">COMFY PROTECT</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">LICRA PROTECT</div>
         <div style="font-size:13px;color:var(--muted);margin-top:2px;">Manga Larga</div>
       </div>
       <!-- CAPUCHA -->
@@ -231,12 +231,11 @@ select.field-input option{background:var(--surface3);color:var(--text);}
         <button class="opt-btn" onclick="selectColor(this,'tela','Beige')">BEIGE</button>
         <button class="opt-btn" onclick="selectColor(this,'tela','Gris')">GRIS</button>
         <button class="opt-btn" onclick="selectColor(this,'tela','Naranja Neón')">NARANJA NEÓN</button>
+        <button class="opt-btn" onclick="selectColor(this,'tela','Amarillo Neón')">AMARILLO NEÓN</button>
         <button class="opt-btn" onclick="selectColor(this,'tela','Rojo')">ROJO</button>
         <button class="opt-btn" onclick="selectColor(this,'tela','Rosa Bebé')">ROSA BEBÉ</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Rosa Vieja')">ROSA VIEJA</button>
         <button class="opt-btn" onclick="selectColor(this,'tela','Verde Militar')">VERDE MILITAR</button>
         <button class="opt-btn" onclick="selectColor(this,'tela','Lila')">LILA</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Marrón')">MARRÓN</button>
       </div>
       <div class="card-title" style="margin-top:4px;">Color de Vinil</div>
       <div id="vinil-warn" style="display:none;background:#2a1f0a;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--warn);margin-bottom:8px;">⚠️ Este color de vinil puede no contrastar bien con la tela seleccionada.</div>
@@ -459,7 +458,7 @@ const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
 let currentStep=1;
-let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:0,modelo:'Comfy Protect',manga:'Manga Larga',capucha:'',tela:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:'',packs:[],pagoMoneda:'',pagoRef:'',pagoMonto:0};
+let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:0,modelo:'Licra Protect',manga:'Manga Larga',capucha:'',tela:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:'',packs:[],pagoMoneda:'',pagoRef:'',pagoMonto:0};
 // packs = [{pack, modelo, manga, capucha, tela, vinil, piezas:[]}]
 let piezaCount=0;
 let AGENCIAS_DATA=[];
@@ -637,7 +636,7 @@ function goStep(n){
   if(n===4) inicializarPiezas();
   if(n===3){
     // Asignar valores fijos ANTES de avanzar
-    pedido.modelo='Comfy Protect'; pedido.manga='Manga Larga'; // capucha se selecciona manualmente
+    pedido.modelo='Licra Protect'; pedido.manga='Manga Larga'; // capucha se selecciona manualmente
   }
   if(n===5){
     if(pedido.packs.length===0){
@@ -710,7 +709,7 @@ function renderPacksResumen(){
 
 function agregarOtroPack(){
   // Resetear campos de modelo/pack para nuevo pack
-  pedido.pack=0; pedido.modelo='Comfy Protect'; pedido.manga='Manga Larga'; // capucha se selecciona manualmente  pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
+  pedido.pack=0; pedido.modelo='Licra Protect'; pedido.manga='Manga Larga'; // capucha se selecciona manualmente  pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
   // Limpiar selecciones visuales
   document.querySelectorAll('#tela-opts .opt-btn, #vinil-opts .opt-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
@@ -966,7 +965,7 @@ function descomponerPacks(n){
 
 async function calcularPago(){
   try{
-    const data=await scriptGETjson({action:'leerPreciosFullComfy'});
+    const data=await scriptGETjson({action:'leerPreciosLicra'});
     if(data.ok){
       precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
       precioCapucha={bs:parseFloat(data.capucha_bs)||0, usd:parseFloat(data.capucha_usd)||0};
@@ -993,7 +992,7 @@ async function calcularPago(){
     const combos=descomponerPacks(franelas);
     let packBs=0, packUsd=0;
     combos.forEach(c=>{
-      const key=c+'PACK.C.01.40OFF';
+      const key=c+'PACK.L.01';
       const pp=window._packPrecios&&window._packPrecios[key];
       if(pp){ packBs+=parseFloat(pp.bs)||0; packUsd+=parseFloat(pp.usd)||0; }
     });
@@ -1098,9 +1097,9 @@ function buildMensaje(){
   const packsText=pedido.packs.map((pk,i)=>{
     const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conCapucha?' 🧢':''} — ${p.nombre}`).join('\n');
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
-    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: COMFY PROTECT ${pk.manga}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nColor tela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
+    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: LICRA PROTECT ${pk.manga}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nColor tela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
   }).join('\n\n');
-  return `🛍️ *PEDIDO IKOA & BEKATE — COMFY PROTECT*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Bs'?'Bs':'$'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
+  return `🛍️ *PEDIDO IKOA & BEKATE — LICRA PROTECT*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Bs'?'Bs':'$'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
 }
 
 async function guardarEnSheets(){
