@@ -1628,7 +1628,7 @@ async function ejecutarGenerarEtiqueta(codigo,nombre,precio,tasa){
   etiqueta.id='etiqueta-render';
   etiqueta.style.cssText='background:#fff;border-radius:12px;padding:16px;width:220px;font-family:\'Barlow Condensed\',sans-serif;text-align:center;color:#111;';
   etiqueta.innerHTML=`
-    <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">IKOA & BEKATE</div>
+    <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;">IKOA — BEKATE</div>
     <div id="qr-etiqueta-div" style="margin:0 auto 10px;"></div>
     <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px;">${nombre}</div>
     <div style="font-size:11px;color:#777;letter-spacing:.08em;margin-bottom:6px;">${codigo}</div>
@@ -1986,6 +1986,7 @@ function mostrarQRProducto(codigo){
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;align-items:center;gap:10px;">
         <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">Etiqueta</div>
         <div style="background:#fff;border-radius:8px;padding:14px;text-align:center;width:100%;">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:#555;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;">IKOA — BEKATE</div>
           <div id="verqr-etiqueta-div" style="display:flex;justify-content:center;margin-bottom:6px;"></div>
           <div style="font-family:monospace;font-size:11px;color:#111;font-weight:700;">${prod.codigo}</div>
           <div style="font-size:10px;color:#444;margin-top:2px;">${prod.nombre||''}</div>

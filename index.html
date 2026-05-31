@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Ikoa & BeKate — Consulta de Precio</title>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -129,18 +129,18 @@ function setSyncTimestamp() {
 
   <!-- TAB PRECIOS -->
   <div id="tab-precios">
-    <button class="scan-btn" onclick="toggleScanner()">
-      <span style="font-size:28px">⬛</span>
-      <span id="scan-btn-text">Escanear Código QR</span>
-    </button>
-
-    <div id="scanner-wrap">
-      <div id="scanner-header">
-        <span>📷 Apunta la cámara al código QR del producto</span>
-        <button id="close-scanner" onclick="stopScanner()">✕ Cerrar</button>
-      </div>
-      <div id="reader"></div>
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <button class="scan-btn" onclick="document.getElementById('qr-camera-input').click()" style="flex:1;margin-bottom:0;">
+        <span style="font-size:26px">📷</span>
+        <span id="scan-btn-text">Escanear QR</span>
+      </button>
+      <button onclick="document.getElementById('qr-gallery-input').click()" style="flex:1;padding:18px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:.06em;">
+        🖼️ GALERÍA
+      </button>
     </div>
+    <input type="file" id="qr-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="leerQRdesdeImagen(event)">
+    <input type="file" id="qr-gallery-input" accept="image/*" style="display:none;" onchange="leerQRdesdeImagen(event)">
+    <div id="qr-scan-msg" style="display:none;padding:12px 16px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
 
     <div class="search-row">
       <input class="search-input" type="text" id="search-input" placeholder="Buscar por código o nombre..." oninput="onSearchInput()" onkeydown="if(event.key==='Enter')doSearch()">
@@ -442,38 +442,42 @@ function onSearchInput() {
   if (p) showResult(p);
 }
 
-function toggleScanner() {
-  if (scannerActive) { stopScanner(); return; }
-  document.getElementById('scanner-wrap').classList.add('active');
-  document.getElementById('scan-btn-text').textContent = 'Detener Escáner';
-  scannerActive = true;
-  html5QrCode = new Html5Qrcode('reader');
-  html5QrCode.start(
-    { facingMode:'environment' },
-    { fps:12, qrbox:{ width:260, height:260 } },
-    decodedText => {
-      document.getElementById('search-input').value = decodedText;
-      const p = findProduct(decodedText);
-      if (p) showResult(p); else showNotFound(decodedText);
-      stopScanner();
-    },
-    () => {}
-  ).catch(err => { alert('No se pudo acceder a la cámara: ' + err); stopScanner(); });
+async function leerQRdesdeImagen(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  const msgEl=document.getElementById('qr-scan-msg');
+  msgEl.style.display='block';
+  msgEl.style.background='var(--surface2)';
+  msgEl.style.border='1px solid var(--border)';
+  msgEl.style.color='var(--muted)';
+  msgEl.innerHTML='<span style="display:inline-block;animation:spin 1s linear infinite">↻</span> Leyendo QR...';
+  try{
+    const url=URL.createObjectURL(file);
+    const hints=new Map();
+    hints.set(ZXing.DecodeHintType.TRY_HARDER,true);
+    const reader=new ZXing.BrowserMultiFormatReader(hints);
+    const result=await reader.decodeFromImageUrl(url);
+    URL.revokeObjectURL(url);
+    const decoded=result.getText();
+    msgEl.style.background='#0f2b1a';
+    msgEl.style.border='1px solid var(--accent)';
+    msgEl.style.color='var(--accent)';
+    msgEl.innerHTML='✅ QR leído: <b>'+decoded+'</b>';
+    document.getElementById('search-input').value=decoded;
+    doSearch();
+    setTimeout(()=>{ msgEl.style.display='none'; },3000);
+  }catch(e){
+    msgEl.style.background='#2a1010';
+    msgEl.style.border='1px solid var(--danger)';
+    msgEl.style.color='var(--danger)';
+    msgEl.innerHTML='✗ No se encontró QR — intenta con mejor luz o más cerca';
+    setTimeout(()=>{ msgEl.style.display='none'; },4000);
+  }
+  event.target.value='';
 }
 
-function stopScanner() {
-  if (html5QrCode) {
-    html5QrCode.stop().catch(()=>{}).finally(() => {
-      html5QrCode = null; scannerActive = false;
-      document.getElementById('scanner-wrap').classList.remove('active');
-      document.getElementById('scan-btn-text').textContent = 'Escanear Código QR';
-    });
-  } else {
-    scannerActive = false;
-    document.getElementById('scanner-wrap').classList.remove('active');
-    document.getElementById('scan-btn-text').textContent = 'Escanear Código QR';
-  }
-}
+function toggleScanner(){ document.getElementById('qr-camera-input').click(); }
+function stopScanner(){}
 
 function renderFilters() {
   const brands = ['Todos', ...new Set(PRODUCTOS.map(p => getBrand(p)))];
