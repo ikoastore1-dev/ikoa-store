@@ -454,9 +454,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
     <!-- INVENTARIO -->
     <div id="stksec-inventario">
-    <!-- SCANNER: cámara nativa + galería -->
     <div style="display:flex;gap:8px;margin-bottom:16px;">
-      <button class="scan-btn" id="scan-btn" onclick="document.getElementById('qr-camera-input').click()" style="flex:1;margin-bottom:0;">
+      <button class="scan-btn" id="scan-btn" onclick="toggleScanner()" style="flex:1;margin-bottom:0;">
         <span style="font-size:20px;">📷</span>
         <span id="scan-btn-text">Escanear QR</span>
       </button>
@@ -464,11 +463,26 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         🖼️ GALERÍA
       </button>
     </div>
-    <!-- Input cámara nativa (capture) -->
-    <input type="file" id="qr-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="leerQRdesdeImagen(event)">
-    <!-- Input galería -->
     <input type="file" id="qr-gallery-input" accept="image/*" style="display:none;" onchange="leerQRdesdeImagen(event)">
+    <div id="scanner-wrap" style="display:none;margin-bottom:16px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);">
+      <div style="position:relative;width:100%;background:#000;">
+        <video id="scanner-video" style="width:100%;display:block;max-height:340px;object-fit:cover;" autoplay muted playsinline></video>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+          <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
+          <div style="position:relative;width:220px;height:220px;z-index:2;">
+            <div style="position:absolute;top:0;left:0;width:28px;height:28px;border-top:3px solid #00e5b0;border-left:3px solid #00e5b0;border-radius:4px 0 0 0;"></div>
+            <div style="position:absolute;top:0;right:0;width:28px;height:28px;border-top:3px solid #00e5b0;border-right:3px solid #00e5b0;border-radius:0 4px 0 0;"></div>
+            <div style="position:absolute;bottom:0;left:0;width:28px;height:28px;border-bottom:3px solid #00e5b0;border-left:3px solid #00e5b0;border-radius:0 0 0 4px;"></div>
+            <div style="position:absolute;bottom:0;right:0;width:28px;height:28px;border-bottom:3px solid #00e5b0;border-right:3px solid #00e5b0;border-radius:0 0 4px 0;"></div>
+            <div style="position:absolute;left:4px;right:4px;height:2px;background:linear-gradient(90deg,transparent,#00e5b0,transparent);animation:scanLine 2s linear infinite;top:0;"></div>
+          </div>
+        </div>
+        <button onclick="stopScanner()" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);border:none;border-radius:8px;color:#fff;padding:6px 14px;font-size:13px;cursor:pointer;z-index:10;">✕ Cerrar</button>
+      </div>
+      <div style="background:var(--surface2);padding:10px;text-align:center;font-size:12px;color:var(--muted);">Centra el código QR dentro del recuadro</div>
+    </div>
     <div id="qr-scan-msg" style="display:none;padding:12px 16px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
+    <style>@keyframes scanLine{0%{top:4px}50%{top:calc(100% - 6px)}100%{top:4px}}</style>
     <div class="search-row">
       <input class="search-input" type="text" id="search-input" placeholder="Buscar código o nombre..." oninput="doSearch()" onkeydown="if(event.key==='Enter')doSearch()">
       <button class="search-btn" onclick="doSearch()">🔍</button>
@@ -1699,9 +1713,53 @@ async function leerQRdesdeImagen(event){
   event.target.value='';
 }
 
-// Scanner de video (no usado, mantenido por compatibilidad)
-function toggleScanner(){ document.getElementById('qr-camera-input').click(); }
-function stopScanner(){}
+async function toggleScanner(){
+  if(scannerActive){ stopScanner(); return; }
+  document.getElementById('scanner-wrap').style.display='block';
+  document.getElementById('scan-btn').classList.add('stop');
+  document.getElementById('scan-btn-text').textContent='Detener';
+  scannerActive=true;
+  try{
+    const hints=new Map();
+    hints.set(ZXing.DecodeHintType.TRY_HARDER,true);
+    zxingReader=new ZXing.BrowserMultiFormatReader(hints,500);
+    const constraints={
+      video:{
+        facingMode:{ideal:'environment'},
+        width:{ideal:1280},
+        height:{ideal:720}
+      }
+    };
+    const videoEl=document.getElementById('scanner-video');
+    await zxingReader.decodeFromConstraints(constraints, videoEl, (result,err)=>{
+      if(result){
+        const decoded=result.getText();
+        document.getElementById('search-input').value=decoded;
+        doSearch();
+        stopScanner();
+      }
+    });
+  }catch(err){
+    const msgEl=document.getElementById('qr-scan-msg');
+    msgEl.style.display='block';
+    msgEl.style.background='#2a1010';
+    msgEl.style.border='1px solid var(--danger)';
+    msgEl.style.color='var(--danger)';
+    msgEl.innerHTML='✗ No se pudo acceder a la cámara';
+    setTimeout(()=>msgEl.style.display='none',3000);
+    stopScanner();
+  }
+}
+
+function stopScanner(){
+  if(zxingReader){ try{ zxingReader.reset(); }catch(e){} zxingReader=null; }
+  scannerActive=false;
+  document.getElementById('scanner-wrap').style.display='none';
+  document.getElementById('scan-btn').classList.remove('stop');
+  document.getElementById('scan-btn-text').textContent='Escanear QR';
+  const video=document.getElementById('scanner-video');
+  if(video&&video.srcObject){ video.srcObject.getTracks().forEach(t=>t.stop()); video.srcObject=null; }
+}
 
 // ── TABS ──────────────────────────────────────────────────────
 function switchTab(tab){
