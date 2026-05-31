@@ -8,14 +8,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--surface3:#252533;
-  --accent:#00e5b0;--accent2:#0099ff;--text:#f0f0f5;--muted:#7a7a99;
-  --border:#2a2a3a;--nike:#e8441a;--adidas:#0057a8;--puma:#dd1f26;--on:#2d9f5d;--radius:16px;
-}
+:root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--surface3:#252533;--accent:#00e5b0;--accent2:#0099ff;--warn:#e8a020;--danger:#ff4444;--text:#f0f0f5;--muted:#7a7a99;--border:#2a2a3a;--radius:14px;}
 body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.logo{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:.05em;color:var(--accent);text-transform:uppercase}
+.logo{font-family:'Barlow',sans-serif;font-size:22px;font-weight:700;letter-spacing:.05em;color:var(--accent);text-transform:uppercase}
 .logo span{color:var(--text)}
 .tasa-chip{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 12px;font-size:13px;color:var(--muted)}
 .tasa-chip b{color:var(--accent)}
@@ -23,7 +19,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 #sync-status.ok{background:#0f2b1a;color:#00e5b0;display:inline-block}
 #sync-status.err{background:#2a1010;color:#ff6b6b;display:inline-block}
 main{max-width:900px;margin:0 auto;padding:24px 20px 60px}
-.scan-btn{width:100%;padding:22px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:var(--radius);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:14px;box-shadow:0 4px 30px rgba(0,229,176,.25);margin-bottom:20px;transition:transform .15s}
+.scan-btn{width:100%;padding:22px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:var(--radius);color:#000;font-family:'Barlow',sans-serif;font-size:26px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:14px;box-shadow:0 4px 30px rgba(0,229,176,.25);margin-bottom:20px;transition:transform .15s}
 .scan-btn:active{transform:scale(.97)}
 #scanner-wrap{display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px}
 #scanner-wrap.active{display:block}
@@ -43,16 +39,16 @@ main{max-width:900px;margin:0 auto;padding:24px 20px 60px}
 @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 .result-header{padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand-badge{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:5px 14px;border-radius:6px;color:#fff}
+.brand-badge{font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:5px 14px;border-radius:6px;color:#fff}
 .brand-Nike{background:var(--nike)}.brand-Adidas{background:var(--adidas)}.brand-Puma{background:var(--puma)}.brand-On{background:var(--on)}.brand-default{background:var(--surface3)}
-.product-code{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--muted);letter-spacing:.05em}
-.product-name{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;padding:0 22px 8px;letter-spacing:.02em}
+.product-code{font-family:'Barlow',sans-serif;font-size:13px;color:var(--muted);letter-spacing:.05em}
+.product-name{font-family:'Barlow',sans-serif;font-size:32px;font-weight:700;padding:0 22px 8px;letter-spacing:.02em}
 .price-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border)}
 .price-cell{background:var(--surface);padding:16px 22px}
 .price-cell.highlight{background:var(--surface2)}
 .price-cell.full-width{grid-column:1/-1;background:#0f1f17;border-top:2px solid var(--accent)}
 .price-label{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
-.price-value{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:600;color:var(--text)}
+.price-value{font-family:'Barlow',sans-serif;font-size:26px;font-weight:600;color:var(--text)}
 .price-value.big{font-size:38px;color:var(--accent)}
 .price-value.blue{color:var(--accent2);font-size:30px}
 .price-sub{font-size:12px;color:var(--muted);margin-top:2px}
@@ -63,30 +59,30 @@ main{max-width:900px;margin:0 auto;padding:24px 20px 60px}
 .not-found p{color:var(--muted);font-size:15px}
 .not-found strong{color:#ff6b6b}
 .divider{height:1px;background:var(--border);margin:24px 0}
-.list-header{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.list-header{font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
 .filter-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .filter-pill{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 16px;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s;font-family:'Barlow',sans-serif}
-.filter-pill.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:500}
+.filter-pill.active{background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);color:#000;border-color:var(--accent);font-weight:500}
 .product-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .product-list-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;cursor:pointer;transition:border-color .2s,background .2s;display:flex;align-items:center;gap:10px}
 .product-list-item:active{background:var(--surface2);border-color:var(--accent)}
 .pli-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .pli-info{flex:1;overflow:hidden}
-.pli-name{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pli-name{font-family:'Barlow',sans-serif;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pli-code{font-size:11px;color:var(--muted)}
-.pli-price{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;color:var(--accent);white-space:nowrap}
+.pli-price{font-family:'Barlow',sans-serif;font-size:15px;font-weight:600;color:var(--accent);white-space:nowrap}
 .loading-box{grid-column:1/-1;text-align:center;padding:50px 0;color:var(--muted)}
 .spinner{font-size:36px;display:inline-block;animation:spin 1s linear infinite;margin-bottom:14px}
 .error-box{grid-column:1/-1;text-align:center;padding:30px;color:#ff6b6b;background:var(--surface);border:1px solid #6b1a1a;border-radius:var(--radius)}
-.retry-btn{margin-top:16px;padding:12px 28px;background:var(--accent);color:#000;border:none;border-radius:10px;font-size:16px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.05em}
-.nav-tab{flex:1;padding:10px;border:none;background:transparent;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;border-radius:8px;transition:all .2s}
-.nav-tab.active{background:var(--accent);color:#000}
+.retry-btn{margin-top:16px;padding:12px 28px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);color:#000;border:none;border-radius:10px;font-size:16px;cursor:pointer;font-family:'Barlow',sans-serif;font-weight:700;letter-spacing:.05em}
+.nav-tab{flex:1;padding:10px;border:none;background:transparent;color:var(--muted);font-family:'Barlow',sans-serif;font-size:16px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;border-radius:8px;transition:all .2s}
+.nav-tab.active{background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);color:#000}
 @media(max-width:520px){.product-list{grid-template-columns:1fr}.price-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header>
-  <div style="display:flex;align-items:center;gap:0;font-family:'Rajdhani',sans-serif;letter-spacing:.15em;font-size:20px;font-weight:700;text-transform:uppercase;">
+  <div style="display:flex;align-items:center;gap:0;font-family:'Barlow',sans-serif;letter-spacing:.15em;font-size:20px;font-weight:700;text-transform:uppercase;">
     <span style="color:#00e5b0;">IKOA</span>
     <span style="color:#7a7a99;margin:0 10px;font-weight:300;">—</span>
     <span style="color:#f0f0f5;">BeKate</span>
@@ -100,7 +96,7 @@ main{max-width:900px;margin:0 auto;padding:24px 20px 60px}
       <span style="color:var(--muted);font-size:11px;">Última sync:</span>
       <span id="clock-date" style="color:var(--text);font-weight:500;">—</span>
       <span style="color:var(--border);">|</span>
-      <span id="clock-time" style="color:var(--accent);font-weight:600;font-family:'Barlow Condensed',sans-serif;font-size:15px;letter-spacing:.05em;">—</span>
+      <span id="clock-time" style="color:var(--accent);font-weight:600;font-family:'Barlow',sans-serif;font-size:15px;letter-spacing:.05em;">—</span>
     </div>
     <span id="sync-status"></span>
   </div>
@@ -580,7 +576,7 @@ function buscarInventario() {
           <span style="color:${dc};">📍 ${i.deposito}</span>
         </div>
       </div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:${sc};">${i.stock} <span style="font-size:12px;font-weight:400;color:var(--muted);">uds</span></div>
+      <div style="font-family:'Barlow',sans-serif;font-size:22px;font-weight:700;color:${sc};">${i.stock} <span style="font-size:12px;font-weight:400;color:var(--muted);">uds</span></div>
     </div>`;
   });
 

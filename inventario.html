@@ -4,121 +4,121 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Ikoa & BeKate — Inventario</title>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--surface3:#252533;
-  --accent:#00e5b0;--accent2:#0099ff;--warn:#e8a020;--danger:#ff4444;
-  --text:#f0f0f5;--muted:#7a7a99;--border:#2a2a3a;--radius:14px;
+  --bg:#f5f5f7;--surface:#ffffff;--surface2:#f5f5f7;--surface3:#e8e8ed;
+  --accent:#007AFF;--accent2:#0055cc;--warn:#f5a623;--danger:#ff3b30;
+  --text:#1d1d1f;--muted:#6e6e73;--border:#d2d2d7;--radius:14px;
 }
-body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body{font-family:'Barlow Condensed',sans-serif,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.logo{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;letter-spacing:.15em;display:flex;align-items:center;}
-.logo .i{color:var(--accent)}.logo .sep{color:var(--muted);margin:0 8px;font-weight:300}.logo .b{color:var(--text)}
+.logo{font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;}
+.logo .i{color:var(--text)}.logo .sep{color:var(--muted);margin:0 8px;font-weight:300}.logo .b{color:var(--text)}
 main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
-.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:20px}
-.tab{flex:1;padding:10px;border:none;background:transparent;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;border-radius:8px;transition:all .2s}
-.tab.active{background:var(--accent);color:#000}
-.scan-btn{width:100%;padding:18px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:var(--radius);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;transition:transform .15s}
-.scan-btn:active{transform:scale(.97)}
-.scan-btn.stop{background:linear-gradient(135deg,#ff4444,#cc2222)}
-#scanner-wrap{display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+.tabs{display:flex;gap:2px;background:var(--surface3);border-radius:12px;padding:3px;margin-bottom:20px}
+.tab{flex:1;padding:9px 4px;border:none;background:transparent;color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;letter-spacing:-.01em;cursor:pointer;border-radius:9px;transition:all .2s}
+.tab.active{background:var(--surface);color:var(--text);}
+.scan-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:var(--radius);color:#000;font-family:'Barlow',sans-serif;font-size:17px;font-weight:600;letter-spacing:-.02em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;transition:opacity .15s}
+.scan-btn:active{opacity:.8}
+.scan-btn.stop{background:var(--danger)}
+#scanner-wrap{display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
 #scanner-wrap.active{display:block}
 #scanner-header{padding:12px 18px;background:var(--surface2);display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted)}
-#close-scanner{background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px 14px;font-size:13px;cursor:pointer}
+#close-scanner{background:var(--surface3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:5px 14px;font-size:13px;cursor:pointer}
 #reader{width:100%;max-height:300px;overflow:hidden}
 #reader video{width:100%!important;height:auto!important}
 .search-row{display:flex;gap:8px;margin-bottom:16px}
-.search-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 16px;color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;outline:none;transition:border-color .2s}
-.search-input:focus{border-color:var(--accent)}
+.search-input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:13px 16px;color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;outline:none;transition:border-color .2s;}
+.search-input:focus{border-color:var(--text)}
 .search-input::placeholder{color:var(--muted)}
-.search-btn{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:13px 18px;color:var(--text);font-size:18px;cursor:pointer}
-.product-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;animation:slideUp .3s ease}
+.search-btn{background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:12px;padding:13px 18px;color:#fff;font-size:18px;cursor:pointer}
+.product-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;animation:slideUp .3s ease;}
 @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.pc-header{padding:14px 18px;background:var(--surface2);display:flex;align-items:center;justify-content:space-between}
-.pc-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700}
-.pc-code{font-size:12px;color:var(--muted);letter-spacing:.05em;margin-top:2px}
+.pc-header{padding:16px 18px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.pc-name{font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;letter-spacing:-.02em}
+.pc-code{font-size:12px;color:var(--muted);letter-spacing:.02em;margin-top:2px}
 .section{padding:16px 18px;border-top:1px solid var(--border)}
-.section-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+.section-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
 .fields-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
 .field-group{display:flex;flex-direction:column;gap:6px}
-.field-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
-.field-input{background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
-.field-input:focus{border-color:var(--accent)}
+.field-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.field-input{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:border-color .2s}
+.field-input:focus{border-color:var(--text)}
 .deposito-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
-.dep-pill{padding:6px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap}
-.dep-pill.active{background:#0f2b1a;border-color:var(--accent);color:var(--accent);font-weight:500}
+.dep-pill{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.dep-pill.active{background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border-color:var(--text);color:#fff;font-weight:600}
 .tallas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:8px;margin-bottom:16px}
-.talla-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .15s}
-.talla-card:hover{border-color:var(--accent)}
-.talla-card.selected{border-color:var(--accent);background:#0f2b1a}
-.talla-card.agotado{border-color:#3a1a1a;opacity:.6}
-.talla-label{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--text)}
+.talla-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .15s;}
+.talla-card:hover{border-color:var(--text)}
+.talla-card.selected{border-color:var(--text);background:#f0f0f0;}
+.talla-card.agotado{opacity:.4}
+.talla-label{font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;color:var(--text)}
 .talla-stock{font-size:11px;margin-top:2px}
-.talla-stock.ok{color:var(--accent)}.talla-stock.low{color:var(--warn)}.talla-stock.zero{color:var(--danger)}.talla-stock.new{color:var(--muted);font-style:italic}
+.talla-stock.ok{color:#34c759}.talla-stock.low{color:var(--warn)}.talla-stock.zero{color:var(--danger)}.talla-stock.new{color:var(--muted);font-style:italic}
 .new-talla-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
-.new-talla-input{flex:1;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;outline:none}
-.new-talla-input:focus{border-color:var(--accent)}
-.add-talla-btn{padding:10px 16px;background:var(--surface3);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;cursor:pointer;white-space:nowrap}
-.edit-panel{background:#0f1f17;border:1px solid #1a3a2a;border-radius:10px;padding:16px;margin-top:4px}
+.new-talla-input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;outline:none}
+.new-talla-input:focus{border-color:var(--text)}
+.add-talla-btn{padding:10px 16px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.edit-panel{background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-top:4px}
 .edit-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .edit-label{font-size:13px;color:var(--muted);min-width:80px}
 .qty-controls{display:flex;align-items:center;gap:8px}
-.qty-btn{width:40px;height:40px;border:1px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.qty-btn.plus{border-color:var(--accent);color:var(--accent)}
-.qty-btn.minus{border-color:var(--danger);color:var(--danger)}
-.qty-display{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;min-width:50px;text-align:center}
+.qty-btn{width:40px;height:40px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.qty-btn.plus{border-color:var(--text);color:var(--text);background:#f0f0f0}
+.qty-btn.minus{border-color:var(--danger);color:var(--danger);background:#2a1010}
+.qty-display{font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;min-width:50px;text-align:center}
 .op-btns{display:flex;gap:8px;flex-wrap:wrap}
-.op-btn{padding:8px 16px;border-radius:8px;border:1px solid;font-family:'Barlow',sans-serif;font-size:13px;font-weight:500;cursor:pointer}
-.op-btn.entrada{background:#0f2b1a;border-color:var(--accent);color:var(--accent)}
-.op-btn.salida{background:#2a1010;border-color:var(--danger);color:var(--danger)}
-.op-btn.ajuste{background:#1a1a10;border-color:var(--warn);color:var(--warn)}
-.save-btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;margin-top:8px}
-.save-btn:disabled{opacity:.4;cursor:not-allowed}
-.msg{padding:12px 18px;border-radius:10px;font-size:14px;margin-bottom:12px;display:none}
-.msg.ok{background:#0f2b1a;border:1px solid #1a4a2a;color:var(--accent);display:flex;align-items:center;gap:8px}
-.msg.err{background:#2a1010;border:1px solid #4a1a1a;color:var(--danger);display:flex;align-items:center;gap:8px}
+.op-btn{padding:8px 16px;border-radius:10px;border:1.5px solid;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.op-btn.entrada{background:#0f2b1a;border-color:#34c759;color:#1a7a35}
+.op-btn.salida{background:#2a1010;border-color:var(--danger);color:#c0392b}
+.op-btn.ajuste{background:#1a1a10;border-color:var(--warn);color:#b8760a}
+.save-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:12px;color:#000;font-family:'Barlow',sans-serif;font-size:17px;font-weight:600;letter-spacing:-.02em;cursor:pointer;margin-top:8px}
+.save-btn:disabled{opacity:.3;cursor:not-allowed}
+.msg{padding:12px 18px;border-radius:12px;font-size:14px;margin-bottom:12px;display:none}
+.msg.ok{background:#0f2b1a;border:1px solid #1a4a2a;color:#1a7a35;display:flex;align-items:center;gap:8px}
+.msg.err{background:#2a1010;border:1px solid #4a1a1a;color:#c0392b;display:flex;align-items:center;gap:8px}
 .msg.loading{background:var(--surface2);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;gap:8px}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.hidden{display:none}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:26px 22px;width:100%;max-width:400px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:400px;}
 .modal-icon{font-size:34px;text-align:center;margin-bottom:10px}
-.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;text-align:center;margin-bottom:6px}
-.modal-subtitle{font-size:13px;color:var(--muted);text-align:center;margin-bottom:16px;line-height:1.5}
-.modal-summary{background:var(--surface2);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.8}
-.modal-summary span{color:var(--accent);font-weight:600}
-.modal-cod-input{width:100%;background:var(--surface3);border:2px solid var(--border);border-radius:10px;padding:14px 18px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;letter-spacing:.2em;text-align:center;outline:none;transition:border-color .2s;margin-bottom:6px}
-.modal-cod-input:focus{border-color:var(--accent)}
-.modal-cod-input::placeholder{font-size:14px;letter-spacing:.05em;font-weight:400;color:var(--muted)}
+.modal-title{font-family:'Barlow',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.02em;text-align:center;margin-bottom:6px}
+.modal-subtitle{font-size:14px;color:var(--muted);text-align:center;margin-bottom:18px;line-height:1.5}
+.modal-summary{background:var(--surface2);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;line-height:1.9}
+.modal-summary span{color:var(--text);font-weight:600}
+.modal-cod-input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:14px 18px;color:var(--text);font-family:'Barlow',sans-serif;font-size:24px;font-weight:700;letter-spacing:.2em;text-align:center;outline:none;transition:border-color .2s;margin-bottom:6px}
+.modal-cod-input:focus{border-color:var(--text)}
+.modal-cod-input::placeholder{font-size:14px;letter-spacing:.02em;font-weight:400;color:var(--muted)}
 .modal-error{font-size:12px;color:var(--danger);text-align:center;min-height:18px;margin-bottom:12px}
 .modal-btns{display:flex;gap:10px}
-.modal-cancel{flex:1;padding:13px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;cursor:pointer}
-.modal-confirm{flex:2;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
-.modal-confirm:disabled{opacity:.4;cursor:not-allowed}
-.tasa-btn{background:var(--surface2);border:2px solid var(--border);border-radius:12px;padding:14px 10px;cursor:pointer;transition:all .2s;text-align:center;width:100%}
-.tasa-btn:hover{border-color:var(--accent)}
-.tasa-btn.selected{border-color:var(--accent);background:#0f2b1a}
-.sol-filter-btn.active{border-color:var(--accent)!important;background:#0f2b1a!important;color:var(--accent)!important;}
+.modal-cancel{flex:1;padding:13px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:500;cursor:pointer}
+.modal-confirm{flex:2;padding:13px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:12px;color:#000;font-family:'Barlow',sans-serif;font-size:17px;font-weight:600;letter-spacing:-.02em;cursor:pointer}
+.modal-confirm:disabled{opacity:.3;cursor:not-allowed}
+.tasa-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:14px 10px;cursor:pointer;transition:all .2s;text-align:center;width:100%}
+.tasa-btn:hover{border-color:var(--text)}
+.tasa-btn.selected{border-color:var(--text);background:#f0f0f0;}
+.sol-filter-btn.active{border-color:var(--text)!important;background:#f0f0f0!important;color:var(--text)!important;}
 .historial-list{display:flex;flex-direction:column;gap:8px}
-.hist-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px}
+.hist-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;}
 .hist-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
 .hist-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
-.hist-badge.entrada{background:#0f2b1a;color:var(--accent)}
-.hist-badge.salida{background:#2a1010;color:var(--danger)}
-.hist-badge.ajuste{background:#1a1a10;color:var(--warn)}
+.hist-badge.entrada{background:#0f2b1a;color:#1a7a35}
+.hist-badge.salida{background:#2a1010;color:#c0392b}
+.hist-badge.ajuste{background:#1a1a10;color:#b8760a}
 .hist-prod{font-size:14px;font-weight:600;flex:1}
-.hist-qty{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700}
-.hist-qty.pos{color:var(--accent)}.hist-qty.neg{color:var(--danger)}.hist-qty.eq{color:var(--warn)}
+.hist-qty{font-family:'Barlow',sans-serif;font-size:20px;font-weight:700}
+.hist-qty.pos{color:#34c759}.hist-qty.neg{color:var(--danger)}.hist-qty.eq{color:var(--warn)}
 .hist-meta{display:flex;gap:8px;flex-wrap:wrap}
 .hist-chip{background:var(--surface2);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--muted)}
 .hist-chip.usuario{color:var(--warn)}
 .empty-hist{text-align:center;padding:40px;color:var(--muted);font-size:14px}
-.not-found{background:var(--surface);border:1px solid #6b1a1a;border-radius:var(--radius);padding:24px;text-align:center}
+.not-found{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;text-align:center;}
 .spinner{display:inline-block;animation:spin 1s linear infinite}
 @media(max-width:600px){.fields-row{grid-template-columns:1fr}.tallas-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr))}}
 </style>
@@ -151,7 +151,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div class="modal-error" id="repro-error"></div>
     <div class="modal-btns">
       <button class="modal-cancel" onclick="document.getElementById('modal-reprobar').classList.add('hidden')">Cancelar</button>
-      <button style="flex:2;padding:13px;background:var(--danger);border:none;border-radius:10px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;" onclick="confirmarReprobar()">✗ REPROBAR</button>
+      <button style="flex:2;padding:13px;background:var(--danger);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;" onclick="confirmarReprobar()">✗ REPROBAR</button>
     </div>
   </div>
 </div>
@@ -237,13 +237,13 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div class="modal-title">Tipo de Pedido</div>
     <div class="modal-subtitle">¿Para qué modelo es este link?</div>
     <div style="display:flex;flex-direction:column;gap:10px;width:100%;margin-bottom:8px;">
-      <button onclick="confirmarModeloLink('comfy')" style="width:100%;padding:14px;background:#0f2b1a;border:2px solid var(--accent);border-radius:10px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
+      <button onclick="confirmarModeloLink('comfy')" style="width:100%;padding:14px;background:#f0f0f0;border:2px solid var(--accent);border-radius:10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
         🟢 COMFY MEGA PROMO
       </button>
-      <button onclick="confirmarModeloLink('fullcomfy')" style="width:100%;padding:14px;background:#1a1a2a;border:2px solid #6688ff;border-radius:10px;color:#6688ff;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
+      <button onclick="confirmarModeloLink('fullcomfy')" style="width:100%;padding:14px;background:#1a1a2a;border:2px solid #6688ff;border-radius:10px;color:#6688ff;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
         🔵 FULL COMFY
       </button>
-      <button onclick="confirmarModeloLink('licra')" style="width:100%;padding:14px;background:#2a1a1a;border:2px solid var(--warn);border-radius:10px;color:var(--warn);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
+      <button onclick="confirmarModeloLink('licra')" style="width:100%;padding:14px;background:#2a1a1a;border:2px solid var(--warn);border-radius:10px;color:var(--warn);font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
         🟠 LICRA PROTECT
       </button>
     </div>
@@ -260,7 +260,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div class="modal-summary" id="tasa-resumen"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
       <button class="tasa-btn" id="tbtn-BCV"     onclick="seleccionarTasa('BCV')">
-        <div style="font-size:17px;font-weight:700;color:var(--accent);"   id="val-BCV">—</div>
+        <div style="font-size:17px;font-weight:700;color:var(--text);"   id="val-BCV">—</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px;">Tasa BCV</div>
       </button>
       <button class="tasa-btn" id="tbtn-Shoes"  onclick="seleccionarTasa('Shoes')">
@@ -276,7 +276,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div style="font-size:11px;color:var(--muted);margin-top:3px;">BeKate</div>
       </button>
     </div>
-    <div id="tasa-preview" style="background:#0f1f17;border:1px solid #1a3a2a;border-radius:10px;padding:12px;font-size:13px;color:var(--muted);text-align:center;margin-bottom:14px;">Selecciona una tasa para ver el cálculo</div>
+    <div id="tasa-preview" style="background:var(--surface2);border:1px solid #1a4a2a;border-radius:10px;padding:12px;font-size:13px;color:var(--muted);text-align:center;margin-bottom:14px;">Selecciona una tasa para ver el cálculo</div>
     <div style="margin-bottom:12px;">
       <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div>
       <input class="modal-cod-input" type="password" id="tasa-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarTasa()">
@@ -367,11 +367,11 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </div>
   <div style="display:flex;align-items:center;gap:8px;">
     <div id="clock-chip" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 12px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;">
-      <span style="color:var(--accent);font-size:13px;">🔄</span>
+      <span style="color:var(--text);font-size:13px;">🔄</span>
       <span style="font-size:11px;">Última sync:</span>
       <span id="clock-date" style="color:var(--text);font-weight:500;">—</span>
       <span style="color:var(--border);">|</span>
-      <span id="clock-time" style="color:var(--accent);font-weight:600;font-family:'Barlow Condensed',sans-serif;font-size:15px;">—</span>
+      <span id="clock-time" style="color:var(--text);font-weight:600;font-family:'Barlow',sans-serif;font-size:15px;">—</span>
     </div>
   </div>
 </header>
@@ -389,36 +389,36 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   <!-- TAB TASA -->
   <div id="tab-tasa" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">💱 Tasas de Cambio</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">💱 Tasas de Cambio</div>
       <button onclick="cargarTasas()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 14px;font-size:13px;cursor:pointer;">↻</button>
     </div>
 
     <!-- TASAS ACTUALES -->
     <div id="tasa-actual-wrap" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Tasas Actuales</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Tasas Actuales</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="tasa-display">
         <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">BCV</div>
-          <div id="tasa-disp-BCV" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--accent);">—</div>
+          <div id="tasa-disp-BCV" style="font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;color:var(--text);">—</div>
         </div>
         <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Shoes</div>
-          <div id="tasa-disp-Shoes" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--warn);">—</div>
+          <div id="tasa-disp-Shoes" style="font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;color:var(--warn);">—</div>
         </div>
         <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">IKOA</div>
-          <div id="tasa-disp-IKOA" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#cc88ff;">—</div>
+          <div id="tasa-disp-IKOA" style="font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;color:#cc88ff;">—</div>
         </div>
         <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">BeKate</div>
-          <div id="tasa-disp-BeKate" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#ff8844;">—</div>
+          <div id="tasa-disp-BeKate" style="font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;color:#ff8844;">—</div>
         </div>
       </div>
     </div>
 
     <!-- MODIFICAR TASAS -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Actualizar Tasas</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Actualizar Tasas</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
         <div class="field-group" style="margin-bottom:0;">
           <div class="field-label">BCV</div>
@@ -442,7 +442,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <input class="field-input" type="password" id="tasa-tab-unlock" placeholder="Tu código personal" maxlength="20">
         <div id="tasa-tab-unlock-error" style="font-size:12px;color:var(--danger);margin-top:4px;display:none;"></div>
       </div>
-      <button onclick="guardarTasas()" style="width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;">💾 GUARDAR TASAS</button>
+      <button onclick="guardarTasas()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;">💾 GUARDAR TASAS</button>
       <div id="tasa-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:10px;"></div>
     </div>
   </div>
@@ -451,9 +451,9 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   <div id="tab-stock">
     <!-- SUB-PESTAÑAS STOCK -->
     <div style="display:flex;gap:8px;margin-bottom:14px;">
-      <button onclick="switchStock('inventario')" id="stktab-inventario" style="flex:1;padding:9px;border:2px solid var(--accent);border-radius:10px;background:#0f2b1a;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">📦 Inventario</button>
-      <button onclick="switchStock('buscar')" id="stktab-buscar" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🔍 Buscar</button>
-      <button onclick="switchStock('historial')" id="stktab-historial" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🕐 Historial</button>
+      <button onclick="switchStock('inventario')" id="stktab-inventario" style="flex:1;padding:9px;border:2px solid var(--accent);border-radius:10px;background:#f0f0f0;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">📦 Inventario</button>
+      <button onclick="switchStock('buscar')" id="stktab-buscar" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🔍 Buscar</button>
+      <button onclick="switchStock('historial')" id="stktab-historial" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🕐 Historial</button>
     </div>
 
     <!-- INVENTARIO -->
@@ -467,7 +467,10 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <span>📷 Apunta al código QR del producto</span>
         <button id="close-scanner" onclick="stopScanner()">✕ Cerrar</button>
       </div>
-      <div id="reader"></div>
+      <div id="reader" style="position:relative;width:100%;max-height:320px;overflow:hidden;border-radius:10px;background:#000;">
+        <video id="scanner-video" style="width:100%;height:auto;display:block;" autoplay muted playsinline></video>
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;border:3px solid var(--accent);border-radius:12px;pointer-events:none;"></div>
+      </div>
     </div>
     <div class="search-row">
       <input class="search-input" type="text" id="search-input" placeholder="Buscar código o nombre..." oninput="doSearch()" onkeydown="if(event.key==='Enter')doSearch()">
@@ -478,7 +481,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div id="product-area"></div>
     <!-- LISTA DE STOCK -->
     <div id="stock-lista-wrap" style="margin-top:14px;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Productos en Stock</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Productos en Stock</div>
       <div id="stock-lista"></div>
     </div>
     </div><!-- /stksec-inventario -->
@@ -488,13 +491,13 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
       <!-- FILTRO POR COLOR -->
       <div style="margin-bottom:14px;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">🎨 Filtrar por Color</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">🎨 Filtrar por Color</div>
         <div id="buscar-colores" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
       </div>
 
       <!-- FILTRO POR TALLA -->
       <div style="margin-bottom:14px;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">📏 Filtrar por Talla</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">📏 Filtrar por Talla</div>
         <div id="buscar-tallas" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
       </div>
 
@@ -509,7 +512,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     </div>
     <div id="stksec-historial" style="display:none;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Movimientos registrados</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Movimientos registrados</div>
         <button onclick="clearHistorial()" style="background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:4px 12px;font-size:12px;cursor:pointer;">Limpiar</button>
       </div>
       <div id="historial-list" class="historial-list"></div>
@@ -519,9 +522,17 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
   <!-- TAB ETIQUETAS -->
   <div id="tab-etiquetas" style="display:none">
+    <!-- SUB-TABS -->
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button onclick="switchEtiqueta('nuevo')" id="etqtab-nuevo" style="flex:1;padding:9px;border:2px solid var(--accent);border-radius:10px;background:#f0f0f0;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">➕ Nuevo</button>
+      <button onclick="switchEtiqueta('verqr')" id="etqtab-verqr" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🔍 Ver QR</button>
+    </div>
+
+    <!-- SUB: NUEVO -->
+    <div id="etqsec-nuevo">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:14px;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">🆕 Nuevo Producto</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">🆕 Nuevo Producto</div>
         <div class="field-group">
           <div class="field-label">Código del producto</div>
           <input class="field-input" type="text" id="qr-codigo" placeholder="Ej: Nike-Met-01" oninput="autoFillFromCode()">
@@ -559,54 +570,67 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           </div>
           <input type="file" id="foto-input" accept="image/*" style="display:none" onchange="handleFotoChange(event)">
         </div>
-        <button onclick="generarEtiqueta()" style="width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;">⚡ Generar Etiqueta</button>
+        <button onclick="generarEtiqueta()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;">⚡ Generar Etiqueta</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:12px;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">👁️ Vista previa</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">👁️ Vista previa</div>
         <div id="etiqueta-preview" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;min-height:200px;display:flex;align-items:center;justify-content:center;">
           <div style="text-align:center;color:var(--muted);font-size:13px;">Completa el formulario y<br>presiona Generar Etiqueta</div>
         </div>
         <div id="qr-solo-wrap" style="display:none;flex-direction:column;gap:8px;">
           <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Solo QR</div>
-          <div id="qr-solo" style="background:#fff;border-radius:10px;padding:12px;display:inline-block;"></div>
+          <div id="qr-solo" style="background:#fff;border-radius:10px;padding:20px;display:inline-block;"></div>
         </div>
         <div id="btns-descarga" style="display:none;flex-direction:column;gap:8px;">
-          <button onclick="descargarQRsolo()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--accent);border-radius:10px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">⬇️ Descargar QR</button>
-          <button onclick="imprimirEtiqueta()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">🖨️ Imprimir</button>
+          <button onclick="descargarQRsolo()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--accent);border-radius:10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">⬇️ Descargar QR</button>
+          <button onclick="imprimirEtiqueta()" style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">🖨️ Imprimir</button>
         </div>
         <div id="etq-msg" style="display:none;padding:12px;border-radius:10px;font-size:13px;text-align:center;"></div>
       </div>
     </div>
+    </div><!-- /etqsec-nuevo -->
+
+    <!-- SUB: VER QR -->
+    <div id="etqsec-verqr" style="display:none;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;">
+        <div class="search-row" style="margin-bottom:0;">
+          <input class="search-input" type="text" id="verqr-input" placeholder="Busca código o nombre..." oninput="buscarVerQR(this.value)" style="text-transform:uppercase;">
+        </div>
+        <div id="verqr-sugerencias" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-top:8px;max-height:200px;overflow-y:auto;"></div>
+      </div>
+      <div id="verqr-resultado"></div>
+    </div>
+
   </div>
 
   <!-- TAB APROBACIONES -->
   <div id="tab-aprobaciones" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">✅ Aprobaciones</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">✅ Aprobaciones</div>
       <button onclick="refreshAprobaciones()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 14px;font-size:13px;cursor:pointer;">↻</button>
     </div>
 
     <!-- GENERAR LINK -->
     <div id="g-token-section-apro" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">🔗 Generar Link de Pedido</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">🔗 Generar Link de Pedido</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Link único que expira en <b style="color:var(--warn);">4 horas</b> · solo se usa <b style="color:var(--warn);">una vez</b>.</div>
-      <button onclick="generarLinkPedido()" id="btn-generar-link" style="width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;">⚡ Generar Link</button>
+      <button onclick="generarLinkPedido()" id="btn-generar-link" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;">⚡ Generar Link</button>
       <div id="link-result" style="display:none;margin-top:14px;">
-        <div style="background:#0f2b1a;border:1px solid #1a4a2a;border-radius:10px;padding:12px 14px;">
+        <div style="background:#f0f0f0;border:1px solid #1a4a2a;border-radius:10px;padding:12px 14px;">
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Link generado — válido por 4 horas</div>
-          <div id="link-text" style="font-size:13px;color:var(--accent);word-break:break-all;margin-bottom:10px;"></div>
-          <button onclick="copiarLink()" style="width:100%;padding:10px;background:var(--surface3);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">📋 Copiar Link</button>
-          <button onclick="enviarLinkWhatsApp()" style="width:100%;padding:10px;background:linear-gradient(135deg,#25d366,#128c7e);border:none;border-radius:8px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;">💬 Enviar por WhatsApp</button>
+          <div id="link-text" style="font-size:13px;color:var(--text);word-break:break-all;margin-bottom:10px;"></div>
+          <button onclick="copiarLink()" style="width:100%;padding:10px;background:var(--surface3);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">📋 Copiar Link</button>
+          <button onclick="enviarLinkWhatsApp()" style="width:100%;padding:10px;background:linear-gradient(135deg,#25d366,#128c7e);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;">💬 Enviar por WhatsApp</button>
         </div>
       </div>
       <div id="link-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:10px;"></div>
     </div>
     <!-- SUB-PESTAÑAS -->
     <div style="display:flex;gap:6px;margin-bottom:14px;">
-      <button class="apro-sub-btn" data-sub="Pendiente" onclick="switchAprobaciones('Pendiente')" style="flex:1;padding:8px;border:2px solid var(--warn);border-radius:8px;background:#2a1f0a;color:var(--warn);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Pendientes</button>
-      <button class="apro-sub-btn" data-sub="Pagado" onclick="switchAprobaciones('Pagado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✅ Aprobadas</button>
-      <button class="apro-sub-btn" data-sub="Reprobado" onclick="switchAprobaciones('Reprobado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✗ Reprobadas</button>
-      <button class="apro-sub-btn" data-sub="Cola" onclick="switchAprobaciones('Cola')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Cola</button>
+      <button class="apro-sub-btn" data-sub="Pendiente" onclick="switchAprobaciones('Pendiente')" style="flex:1;padding:8px;border:2px solid var(--warn);border-radius:8px;background:#1a1a10;color:var(--warn);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Pendientes</button>
+      <button class="apro-sub-btn" data-sub="Pagado" onclick="switchAprobaciones('Pagado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✅ Aprobadas</button>
+      <button class="apro-sub-btn" data-sub="Reprobado" onclick="switchAprobaciones('Reprobado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✗ Reprobadas</button>
+      <button class="apro-sub-btn" data-sub="Cola" onclick="switchAprobaciones('Cola')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Cola</button>
     </div>
 
     <!-- SOLICITUDES -->
@@ -618,8 +642,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <!-- COLA (sub-sección) -->
     <div id="aprosec-cola" style="display:none;">
       <div style="display:flex;gap:6px;margin-bottom:12px;">
-        <button class="cola-filter-btn" data-filtro="Pagado" onclick="setFiltroCola('Pagado')" style="flex:1;padding:8px;border:1px solid var(--warn);border-radius:8px;background:#2a1f0a;color:var(--warn);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ En Cola</button>
-        <button class="cola-filter-btn" data-filtro="En Producción" onclick="setFiltroCola('En Producción')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🚀 Enviados</button>
+        <button class="cola-filter-btn" data-filtro="Pagado" onclick="setFiltroCola('Pagado')" style="flex:1;padding:8px;border:1px solid var(--warn);border-radius:8px;background:#1a1a10;color:var(--warn);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ En Cola</button>
+        <button class="cola-filter-btn" data-filtro="En Producción" onclick="setFiltroCola('En Producción')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🚀 Enviados</button>
       </div>
       <div id="cola-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
       <div id="cola-list"></div>
@@ -629,15 +653,15 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   <!-- TAB RESPALDO VENTA -->
   <div id="tab-respaldo" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">💬 Respaldo Venta</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">💬 Respaldo Venta</div>
       <button onclick="cargarRespaldos()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 14px;font-size:13px;cursor:pointer;">↻</button>
     </div>
 
     <!-- SUB-PESTAÑAS -->
     <div style="display:flex;gap:8px;margin-bottom:16px;">
-      <button onclick="switchRespaldo('nuevo')" id="rvtab-nuevo" style="flex:1;padding:10px;border:2px solid var(--accent);border-radius:10px;background:#0f2b1a;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">➕ Nuevo</button>
-      <button onclick="switchRespaldo('pendientes')" id="rvtab-pendientes" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">⏳ Pendientes</button>
-      <button onclick="switchRespaldo('historial')" id="rvtab-historial" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">📋 Historial</button>
+      <button onclick="switchRespaldo('nuevo')" id="rvtab-nuevo" style="flex:1;padding:10px;border:2px solid var(--accent);border-radius:10px;background:#f0f0f0;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">➕ Nuevo</button>
+      <button onclick="switchRespaldo('pendientes')" id="rvtab-pendientes" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">⏳ Pendientes</button>
+      <button onclick="switchRespaldo('historial')" id="rvtab-historial" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">📋 Historial</button>
     </div>
 
     <!-- NUEVO RESPALDO -->
@@ -699,7 +723,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <input class="field-input" type="password" id="rv-unlock" placeholder="Tu código personal" maxlength="20">
           <div id="rv-unlock-error" style="font-size:12px;color:var(--danger);margin-top:4px;display:none;"></div>
         </div>
-        <button onclick="guardarRespaldo()" style="width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;">💾 GUARDAR RESPALDO</button>
+        <button onclick="guardarRespaldo()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;">💾 GUARDAR RESPALDO</button>
         <div id="rv-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:10px;"></div>
       </div>
     </div>
@@ -715,7 +739,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div style="display:flex;gap:8px;margin-bottom:12px;">
           <input class="field-input" type="text" id="rv-buscar-cod" placeholder="Buscar por código RV-..." style="flex:1;">
           <input class="field-input" type="text" id="rv-buscar-fecha" placeholder="Fecha (ej: 27/05)" style="flex:1;">
-          <button onclick="buscarHistorialRespaldo()" style="padding:10px 16px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🔍</button>
+          <button onclick="buscarHistorialRespaldo()" style="padding:10px 16px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🔍</button>
         </div>
       </div>
       <div id="rv-historial-list"></div>
@@ -728,35 +752,35 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
       <!-- TIPO DE GESTIÓN -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">📋 Tipo de Gestión</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">📋 Tipo de Gestión</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-          <button onclick="setTipoGestion('COD')" id="gbtn-COD" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">📦 COD</button>
-          <button onclick="toggleEnvioModos()" id="gbtn-Enviado" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🚚 Enviado</button>
-          <button onclick="setTipoGestion('Buscar')" id="gbtn-Buscar" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🔍 Buscar</button>
+          <button onclick="setTipoGestion('COD')" id="gbtn-COD" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">📦 COD</button>
+          <button onclick="toggleEnvioModos()" id="gbtn-Enviado" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🚚 Enviado</button>
+          <button onclick="setTipoGestion('Buscar')" id="gbtn-Buscar" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🔍 Buscar</button>
         </div>
         <!-- Sub-modos Enviado -->
         <div id="envio-modos" style="display:none;margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <button onclick="setTipoGestion('Enviado')" id="gbtn-EnviadoManual" style="padding:14px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;">✏️ Envío Manual</button>
-          <button onclick="abrirEnvioSeleccion()" id="gbtn-EnviadoSel" style="padding:14px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;">🔎 Envío por Selección</button>
+          <button onclick="setTipoGestion('Enviado')" id="gbtn-EnviadoManual" style="padding:14px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;">✏️ Envío Manual</button>
+          <button onclick="abrirEnvioSeleccion()" id="gbtn-EnviadoSel" style="padding:14px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;">🔎 Envío por Selección</button>
         </div>
       </div>
 
       <!-- ENVÍO POR SELECCIÓN -->
       <div id="envio-seleccion-wrap" style="display:none;">
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">🔎 Buscar pedido por COD</div>
+          <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">🔎 Buscar pedido por COD</div>
           <div style="display:flex;gap:8px;">
             <input class="field-input" type="text" id="es-cod-input" placeholder="Ingresa el COD del pedido..." style="flex:1;text-transform:uppercase;" onkeydown="if(event.key==='Enter')buscarPedidoCOD()">
-            <button onclick="buscarPedidoCOD()" style="padding:12px 20px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">Buscar</button>
+            <button onclick="buscarPedidoCOD()" style="padding:12px 20px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">Buscar</button>
           </div>
           <div id="es-buscando" style="display:none;text-align:center;padding:16px;color:var(--muted);font-size:13px;"><span class="spinner">↻</span> Buscando...</div>
-          <div id="es-error" style="display:none;background:#2a1010;border:1px solid #4a1a1a;border-radius:8px;padding:10px;font-size:13px;color:var(--danger);margin-top:10px;"></div>
+          <div id="es-error" style="display:none;background:#2a1010;border:1px solid var(--danger);border-radius:8px;padding:10px;font-size:13px;color:var(--danger);margin-top:10px;"></div>
         </div>
 
         <!-- Datos del pedido encontrado -->
         <div id="es-datos-wrap" style="display:none;">
           <div style="background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">📋 Datos del pedido</div>
+            <div style="font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">📋 Datos del pedido</div>
             <div id="es-datos-content" style="font-size:13px;line-height:2;"></div>
           </div>
 
@@ -775,9 +799,9 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
             <div id="es-unlock-error" style="font-size:12px;color:var(--danger);margin-top:6px;display:none;"></div>
           </div>
 
-          <button onclick="confirmarEnvioSeleccion()" style="width:100%;padding:15px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:12px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">📤 CONFIRMAR ENVÍO</button>
+          <button onclick="confirmarEnvioSeleccion()" style="width:100%;padding:15px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:12px;color:#000;font-family:'Barlow',sans-serif;font-size:19px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">📤 CONFIRMAR ENVÍO</button>
           <div id="es-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;text-align:center;margin-top:10px;"></div>
-          <button onclick="cancelarEnvioSeleccion()" style="width:100%;padding:10px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;">← Cancelar</button>
+          <button onclick="cancelarEnvioSeleccion()" style="width:100%;padding:10px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;">← Cancelar</button>
         </div>
       </div>
 
@@ -789,7 +813,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
           <!-- CAMPOS COMUNES -->
           <div id="g-cliente-section" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;display:flex;flex-direction:column;gap:12px;">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">👤 Datos del Cliente</div>
+            <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">👤 Datos del Cliente</div>
             <div class="field-group"><div class="field-label">Nombre y Apellido</div><input class="field-input" type="text" name="nombre" id="g-nombre" placeholder="NOMBRE APELLIDO" style="text-transform:uppercase;" required></div>
             <div class="field-group"><div class="field-label">Correo electrónico</div><input class="field-input" type="email" name="correo" id="g-correo" placeholder="correo@email.com" required></div>
             <div id="g-cedula-wrap" class="field-group" style="display:none;"><div class="field-label">Cédula</div><input class="field-input" type="text" name="cedula" placeholder="V-12345678" style="text-transform:uppercase;"></div>
@@ -798,7 +822,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
           <!-- ARTE DIGITAL -->
           <div id="g-arte-section" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;flex-direction:column;gap:12px;">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">🎨 Arte Digital</div>
+            <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">🎨 Arte Digital</div>
             <div class="field-group">
               <div class="field-label">¿Agregar Arte Digital?</div>
               <select class="field-input" name="selector_agregar_arte" id="g-arte-cod" onchange="toggleArteCod()">
@@ -814,7 +838,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
           <!-- AGENCIA Y DIRECCIÓN -->
           <div id="g-envio-wrap" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;flex-direction:column;gap:12px;">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">🚚 Envío</div>
+            <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">🚚 Envío</div>
             <div class="field-group">
               <div class="field-label">Agencia</div>
               <select class="field-input" name="agencia" id="g-agencia" onchange="toggleDireccion()" required>
@@ -846,14 +870,14 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
           <!-- CAMPOS COD -->
           <div id="g-cod-section" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;flex-direction:column;gap:12px;">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">📦 Detalles COD</div>
+            <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">📦 Detalles COD</div>
             <div class="field-group"><div class="field-label">Descripción del pedido</div><textarea class="field-input" name="descripcion" placeholder="DESCRIPCIÓN..." rows="3" style="text-transform:uppercase;resize:vertical;"></textarea></div>
             <div class="field-group"><div class="field-label">¿Es urgente?</div><input class="field-input" type="text" name="urgente" placeholder="SÍ / NO / FECHA LÍMITE" style="text-transform:uppercase;"></div>
           </div>
 
           <!-- CAMPOS ENVIADO -->
           <div id="g-enviado-section" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;flex-direction:column;gap:12px;">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">🚚 Detalles Enviado</div>
+            <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">🚚 Detalles Enviado</div>
             <div class="field-group"><div class="field-label">Código COD</div><input class="field-input" type="text" name="codigo" id="g-codigo-enviado" placeholder="CÓDIGO" style="text-transform:uppercase;" oninput="autoGuia()"></div>
             <div id="g-guia-wrap" class="field-group"><div class="field-label">Número de Guía</div><input class="field-input" type="text" name="numero_guia" id="g-numero-guia" placeholder="NÚMERO DE GUÍA" style="text-transform:uppercase;"></div>
           </div>
@@ -861,11 +885,11 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <!-- SECCIÓN BUSCAR -->
           <div id="g-buscar-section" style="display:none;flex-direction:column;gap:12px;">
             <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:12px;">
-              <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">🔍 Buscar Pedido</div>
+              <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">🔍 Buscar Pedido</div>
               <div style="font-size:12px;color:var(--muted);">Busca por COD, nombre, correo o cédula</div>
               <div style="display:flex;gap:8px;">
                 <input class="field-input" type="text" id="g-buscar-input" placeholder="COD, nombre, correo o cédula..." style="flex:1;font-size:16px;" onkeydown="if(event.key==='Enter')buscarCOD()">
-                <button onclick="buscarCOD()" style="padding:10px 20px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;white-space:nowrap;">Buscar</button>
+                <button onclick="buscarCOD()" style="padding:10px 20px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;cursor:pointer;white-space:nowrap;">Buscar</button>
               </div>
             </div>
             <div id="g-buscar-results"></div>
@@ -873,7 +897,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
           <!-- CÓDIGO DE AUTORIZACIÓN -->
           <div id="g-auth-section" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;margin-top:4px;">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">🔐 Autorización</div>
+            <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">🔐 Autorización</div>
             <div class="field-group" style="margin-bottom:0">
               <div class="field-label">Código de acceso *</div>
               <input class="field-input" type="password" id="g-auth-code" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')document.getElementById('g-submit-btn').click()">
@@ -882,7 +906,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           </div>
 
           <!-- BOTÓN ENVIAR -->
-          <button type="submit" id="g-submit-btn" style="width:100%;padding:16px;background:var(--accent);border:none;border-radius:12px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;margin-top:4px;">
+          <button type="submit" id="g-submit-btn" style="width:100%;padding:16px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:12px;color:#000;font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;margin-top:4px;">
             📤 ENVIAR GESTIÓN
           </button>
 
@@ -917,8 +941,7 @@ let currentProduct=null, selectedTalla=null, selectedColor='', selectedDeposito=
 let currentOp='entrada', editQty=1, pendingMovimiento=null, pendingEtiqueta=null, selectedTasaName=null;
 let fotoBase64=null, fotoMime=null;
 let historial=JSON.parse(localStorage.getItem('ikoa_hist_v3')||'[]');
-let html5QrCode=null, scannerActive=false;
-
+let html5QrCode=null, scannerActive=false, zxingReader=null;
 const gvizVal = c => (!c||c.v===null||c.v===undefined)?'':c.v;
 
 function setSyncTimestamp(){
@@ -1059,11 +1082,11 @@ function doSearch(){
 
   // Si hay varios → mostrar lista de sugerencias
   sugEl.style.display='block';
-  const hl=txt=>txt.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<b style="color:var(--accent);">${m}</b>`);
+  const hl=txt=>txt.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<b style="color:var(--text);">${m}</b>`);
   sugEl.innerHTML=`<div style="padding:8px 12px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);">${matches.length} resultado(s) — toca uno para seleccionar</div>`+
     matches.map(p=>`
       <div onclick="seleccionarProducto('${p.codigo}')" style="padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;">${hl(String(p.codigo||''))}</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;">${hl(String(p.codigo||''))}</div>
         <div style="font-size:13px;color:var(--muted);">${hl(String(p.nombre||''))}</div>
       </div>`).join('');
 }
@@ -1100,7 +1123,7 @@ function showProduct(p){
       ${fotoHtml}
       <div style="margin-bottom:12px;">
         <input type="file" id="foto-stk-input" accept="image/*" style="display:none" onchange="subirFotoStock(event)">
-        <button onclick="document.getElementById('foto-stk-input').click()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">📷 ${p.foto?'Cambiar Foto':'Subir Foto'}</button>
+        <button onclick="document.getElementById('foto-stk-input').click()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">📷 ${p.foto?'Cambiar Foto':'Subir Foto'}</button>
         <div id="foto-stk-msg" style="display:none;font-size:12px;text-align:center;margin-top:6px;padding:6px;border-radius:6px;"></div>
       </div>
       <div class="section"><div class="section-title">Color y Ubicación</div>
@@ -1116,19 +1139,19 @@ function showProduct(p){
       </div>
       <!-- CARGA MASIVA -->
       <div class="section">
-        <button onclick="toggleCargaMasiva()" style="width:100%;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;">
+        <button onclick="toggleCargaMasiva()" style="width:100%;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;">
           📦 Carga Masiva de Tallas
         </button>
         <div id="carga-masiva-panel" style="display:none;">
           <div id="cm-filas"></div>
-          <button onclick="agregarFilaCM()" style="width:100%;padding:9px;background:transparent;border:1px dashed var(--accent);border-radius:8px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;">
+          <button onclick="agregarFilaCM()" style="width:100%;padding:9px;background:transparent;border:1px dashed var(--accent);border-radius:8px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;">
             + Agregar talla
           </button>
           <div class="field-group" style="margin-bottom:10px;">
             <div class="field-label">Operación</div>
             <div style="display:flex;gap:8px;">
-              <button id="cm-op-entrada" onclick="setCMOp('entrada')" style="flex:1;padding:9px;background:#0f2b1a;border:2px solid var(--accent);border-radius:8px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">➕ Entrada</button>
-              <button id="cm-op-salida" onclick="setCMOp('salida')" style="flex:1;padding:9px;background:var(--surface2);border:2px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">➖ Salida</button>
+              <button id="cm-op-entrada" onclick="setCMOp('entrada')" style="flex:1;padding:9px;background:#f0f0f0;border:2px solid var(--accent);border-radius:8px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">➕ Entrada</button>
+              <button id="cm-op-salida" onclick="setCMOp('salida')" style="flex:1;padding:9px;background:var(--surface2);border:2px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">➖ Salida</button>
             </div>
           </div>
           <div class="field-group" style="margin-bottom:10px;">
@@ -1136,7 +1159,7 @@ function showProduct(p){
             <input class="field-input" type="password" id="cm-unlock" placeholder="Tu código personal" maxlength="20">
             <div id="cm-error" style="font-size:12px;color:var(--danger);margin-top:4px;display:none;"></div>
           </div>
-          <button onclick="registrarCargaMasiva()" style="width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;cursor:pointer;">
+          <button onclick="registrarCargaMasiva()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;">
             ✅ REGISTRAR TODO
           </button>
           <div id="cm-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:10px;"></div>
@@ -1167,8 +1190,8 @@ function renderEditPanel(talla,currentStock){
   const color=document.getElementById('color-input')?.value||'—';
   document.getElementById('edit-panel').innerHTML=`
     <div class="edit-panel">
-      <div style="font-size:13px;color:var(--accent);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em;">✏️ T:${talla} · ${color} · ${selectedDeposito}</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Stock actual: <span style="color:var(--accent);font-weight:600;">${currentStock} uds</span></div>
+      <div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em;">✏️ T:${talla} · ${color} · ${selectedDeposito}</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Stock actual: <span style="color:var(--text);font-weight:600;">${currentStock} uds</span></div>
       <div class="edit-row"><span class="edit-label">Operación:</span>
         <div class="op-btns">
           <button class="op-btn entrada ${currentOp==='entrada'?'active-op':''}" onclick="setOp('entrada')">+ Entrada</button>
@@ -1317,7 +1340,7 @@ async function subirFotoStock(event){
         })
       });
     }
-    msgEl.style.background='#0f2b1a';
+    msgEl.style.background='var(--surface2)';
     msgEl.style.color='var(--accent)';
     msgEl.innerHTML='✅ Foto enviada';
     setTimeout(()=>{ msgEl.style.display='none'; },2000);
@@ -1339,7 +1362,7 @@ function toggleCargaMasiva(){
 
 function setCMOp(op){
   cmOp=op;
-  document.getElementById('cm-op-entrada').style.background=op==='entrada'?'#0f2b1a':'var(--surface2)';
+  document.getElementById('cm-op-entrada').style.background=op==='entrada'?'var(--surface2)':'var(--surface2)';
   document.getElementById('cm-op-entrada').style.borderColor=op==='entrada'?'var(--accent)':'var(--border)';
   document.getElementById('cm-op-entrada').style.color=op==='entrada'?'var(--accent)':'var(--muted)';
   document.getElementById('cm-op-salida').style.background=op==='salida'?'#2a1010':'var(--surface2)';
@@ -1430,7 +1453,7 @@ async function registrarCargaMasiva(){
     }catch(e){ err++; }
   }
   localStorage.setItem('ikoa_hist_v3',JSON.stringify(historial));
-  msgEl.style.background=err?'#2a1010':'#0f2b1a';
+  msgEl.style.background=err?'#2a1010':'var(--surface2)';
   msgEl.style.border=err?'1px solid #4a1a1a':'1px solid #1a4a2a';
   msgEl.style.color=err?'var(--danger)':'var(--accent)';
   msgEl.innerHTML=`✅ ${ok} registro(s) guardado(s)${err?` · ⚠️ ${err} error(s)`:''}`;
@@ -1485,7 +1508,7 @@ function seleccionarTasa(nombre){
         Tasa seleccionada: <b style="color:var(--warn)">${nombre} = ${tasa.toFixed(2)}</b><br>
         Base Imponible Bs: <b style="color:var(--text)">${baseBS.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b><br>
         IVA (16%): <b style="color:var(--text)">${iva.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b><br>
-        Total con IVA Bs: <b style="color:var(--accent)">${totalBS.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b><br>
+        Total con IVA Bs: <b style="color:var(--text)">${totalBS.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b><br>
         Total con IVA $: <b style="color:var(--accent2)">$ ${totalUSD.toFixed(2)}</b><br>
         IGTF (3%): <b style="color:var(--text)">${igtf.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})} Bs</b>
       </div>`;
@@ -1532,7 +1555,7 @@ function procesarFoto(file){
       const dataUrl=canvas.toDataURL('image/jpeg',0.5);
       fotoBase64=dataUrl.split(',')[1];
       const kb=Math.round(fotoBase64.length*0.75/1024);
-      document.getElementById('foto-preview-wrap').innerHTML=`<img src="${dataUrl}" style="max-height:120px;max-width:100%;border-radius:8px;object-fit:contain;"><div style="font-size:11px;color:var(--accent);margin-top:6px;">✓ ${file.name} · ${kb}KB comprimida</div>`;
+      document.getElementById('foto-preview-wrap').innerHTML=`<img src="${dataUrl}" style="max-height:120px;max-width:100%;border-radius:8px;object-fit:contain;"><div style="font-size:11px;color:var(--text);margin-top:6px;">✓ ${file.name} · ${kb}KB comprimida</div>`;
     };
     img.src=ev.target.result;
   };
@@ -1587,7 +1610,7 @@ async function ejecutarGenerarEtiqueta(codigo,nombre,precio,tasa){
     }catch(e){ console.error('Foto error:',e); }
   }
 
-  etqMsg.style.background='#0f2b1a';
+  etqMsg.style.background='var(--surface2)';
   etqMsg.style.color='var(--accent)';
   etqMsg.innerHTML='✓ Producto registrado en Google Sheets · Tasa '+tasa;
   setTimeout(()=>{etqMsg.style.display='none';},5000);
@@ -1614,12 +1637,12 @@ async function ejecutarGenerarEtiqueta(codigo,nombre,precio,tasa){
     <div style="font-size:11px;color:#777;letter-spacing:.08em;margin-bottom:6px;">${codigo}</div>
     <div style="font-size:16px;font-weight:700;color:#111;letter-spacing:.05em;">IKOA${parseFloat(precio).toFixed(0)}</div>`;
   previewEl.appendChild(etiqueta);
-  new QRCode(document.getElementById('qr-etiqueta-div'),{text:codigo,width:130,height:130,colorDark:'#111',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+  new QRCode(document.getElementById('qr-etiqueta-div'),{text:codigo,width:180,height:180,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
 
   // QR solo
   const qrSoloEl=document.getElementById('qr-solo');
   qrSoloEl.innerHTML='';
-  new QRCode(qrSoloEl,{text:codigo,width:160,height:160,colorDark:'#000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  new QRCode(qrSoloEl,{text:codigo,width:220,height:220,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
   document.getElementById('qr-solo-wrap').style.display='flex';
   document.getElementById('btns-descarga').style.display='flex';
 }
@@ -1643,30 +1666,44 @@ function imprimirEtiqueta(){
   win.print();
 }
 
+
 // ── SCANNER ───────────────────────────────────────────────────
-function toggleScanner(){
-  if(scannerActive){stopScanner();return;}
+async function toggleScanner(){
+  if(scannerActive){ stopScanner(); return; }
   document.getElementById('scanner-wrap').classList.add('active');
   document.getElementById('scan-btn').classList.add('stop');
   document.getElementById('scan-btn-text').textContent='Detener Escáner';
   scannerActive=true;
-  html5QrCode=new Html5Qrcode('reader');
-  html5QrCode.start({facingMode:'environment'},{fps:12,qrbox:{width:240,height:240}},
-    decoded=>{
-      document.getElementById('search-input').value=decoded;
-      const p=findProduct(decoded);
-      if(p)showProduct(p);
-      else document.getElementById('product-area').innerHTML=`<div class="not-found"><div style="font-size:32px">🔍</div><p style="color:var(--muted);margin-top:8px;">No encontrado</p></div>`;
-      stopScanner();
-    },()=>{}
-  ).catch(err=>{alert('No se pudo acceder a la cámara: '+err);stopScanner();});
-}
-function stopScanner(){
-  if(html5QrCode){
-    html5QrCode.stop().catch(()=>{}).finally(()=>{html5QrCode=null;scannerActive=false;document.getElementById('scanner-wrap').classList.remove('active');document.getElementById('scan-btn').classList.remove('stop');document.getElementById('scan-btn-text').textContent='Escanear Código QR';});
-  }else{
-    scannerActive=false;document.getElementById('scanner-wrap').classList.remove('active');document.getElementById('scan-btn').classList.remove('stop');document.getElementById('scan-btn-text').textContent='Escanear Código QR';
+  try{
+    const hints=new Map();
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+    zxingReader=new ZXing.BrowserMultiFormatReader(hints);
+    const devices=await ZXing.BrowserCodeReader.listVideoInputDevices();
+    const backCam=devices.find(d=>d.label.toLowerCase().includes('back')||d.label.toLowerCase().includes('rear')||d.label.toLowerCase().includes('environment'));
+    const deviceId=backCam?backCam.deviceId:undefined;
+    const videoEl=document.getElementById('scanner-video');
+    zxingReader.decodeFromVideoDevice(deviceId, videoEl, (result, err)=>{
+      if(result){
+        const decoded=result.getText();
+        document.getElementById('search-input').value=decoded;
+        doSearch();
+        stopScanner();
+      }
+    });
+  }catch(err){
+    alert('No se pudo acceder a la cámara: '+err);
+    stopScanner();
   }
+}
+
+function stopScanner(){
+  if(zxingReader){ try{ zxingReader.reset(); }catch(e){} zxingReader=null; }
+  scannerActive=false;
+  document.getElementById('scanner-wrap').classList.remove('active');
+  document.getElementById('scan-btn').classList.remove('stop');
+  document.getElementById('scan-btn-text').textContent='Escanear Código QR';
+  const video=document.getElementById('scanner-video');
+  if(video&&video.srcObject){ video.srcObject.getTracks().forEach(t=>t.stop()); video.srcObject=null; }
 }
 
 // ── TABS ──────────────────────────────────────────────────────
@@ -1693,6 +1730,7 @@ function switchTab(tab){
   if(tab==='respaldo'){ switchRespaldo('nuevo'); }
   if(tab==='tasa') cargarTasas();
   if(tab==='stock') switchStock('inventario');
+  if(tab==='etiquetas') switchEtiqueta('nuevo');
 }
 
 // ── TASAS ─────────────────────────────────────────────────────
@@ -1735,7 +1773,7 @@ async function guardarTasas(){
       anterior_bcv:TASAS.BCV||'', anterior_shoes:TASAS.Shoes||'', anterior_ikoa:TASAS.IKOA||'', anterior_bekate:TASAS.BeKate||''
     });
     if(data.ok){
-      msgEl.style.background='#0f2b1a';
+      msgEl.style.background='var(--surface2)';
       msgEl.style.border='1px solid #1a4a2a';
       msgEl.style.color='var(--accent)';
       msgEl.innerHTML=`✅ Tasas actualizadas · ${USUARIOS[unlock]}`;
@@ -1808,7 +1846,7 @@ function aplicarFiltroBuscar(tipo, valor){
   container.querySelectorAll('button').forEach(b=>{
     const activo=b.textContent.trim().includes(valor);
     b.style.borderColor=activo?'var(--accent)':'var(--border)';
-    b.style.background=activo?'#0f2b1a':'var(--surface2)';
+    b.style.background=activo?'var(--surface2)':'var(--surface2)';
     b.style.color=activo?'var(--accent)':'var(--text)';
   });
   // Limpiar el otro filtro
@@ -1844,7 +1882,7 @@ function mostrarResultadosFiltro(refinar){
     resultEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted);">Sin resultados para ${valor}${q?' · "'+refinar+'"':''}</div>`;
     return;
   }
-  resultEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${resultados.length} resultado(s) para <b style="color:var(--accent)">${valor}</b></div>`+
+  resultEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${resultados.length} resultado(s) para <b style="color:var(--text)">${valor}</b></div>`+
     resultados.map(r=>`
       <div onclick="seleccionarProducto('${r.cod}')"
         style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:7px;cursor:pointer;"
@@ -1852,10 +1890,10 @@ function mostrarResultadosFiltro(refinar){
         onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);">${r.cod}</div>
+            <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);">${r.cod}</div>
             <div style="font-size:12px;color:var(--muted);">${r.nombre} · ${r.talla} · ${r.color||'—'} · ${r.dep}</div>
           </div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:${r.qty<=3?'var(--danger)':r.qty<=10?'var(--warn)':'var(--accent)'};">${r.qty}</div>
+          <div style="font-family:'Barlow',sans-serif;font-size:22px;font-weight:700;color:${r.qty<=3?'var(--danger)':r.qty<=10?'var(--warn)':'var(--accent)'};">${r.qty}</div>
         </div>
       </div>`).join('');
 }
@@ -1890,15 +1928,101 @@ function renderStockLista(){
         onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--surface2)'"
         onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
         <div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);">${cod}</div>
+          <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);">${cod}</div>
           ${nombre?`<div style="font-size:12px;color:var(--muted);">${nombre}</div>`:''}
         </div>
         <div style="text-align:right;">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:${color};">${total}</div>
+          <div style="font-family:'Barlow',sans-serif;font-size:22px;font-weight:700;color:${color};">${total}</div>
           <div style="font-size:10px;color:var(--muted);">uds</div>
         </div>
       </div>`;
     }).join('');
+}
+
+function switchEtiqueta(sub){
+  ['nuevo','verqr'].forEach(s=>{
+    const sec=document.getElementById('etqsec-'+s);
+    if(sec) sec.style.display=s===sub?'block':'none';
+    const btn=document.getElementById('etqtab-'+s);
+    if(btn){
+      btn.style.borderColor=s===sub?'var(--accent)':'var(--border)';
+      btn.style.background=s===sub?'var(--surface2)':'var(--surface2)';
+      btn.style.color=s===sub?'var(--accent)':'var(--muted)';
+    }
+  });
+  if(sub==='verqr'){
+    document.getElementById('verqr-input').value='';
+    document.getElementById('verqr-sugerencias').style.display='none';
+    document.getElementById('verqr-resultado').innerHTML='';
+    setTimeout(()=>document.getElementById('verqr-input').focus(),100);
+  }
+}
+
+function buscarVerQR(q){
+  const sugEl=document.getElementById('verqr-sugerencias');
+  const query=(q||'').trim().toUpperCase();
+  if(!query){ sugEl.style.display='none'; sugEl.innerHTML=''; return; }
+  const matches=PRODUCTOS.filter(p=>
+    String(p.codigo||'').toUpperCase().includes(query)||
+    String(p.nombre||'').toUpperCase().includes(query)
+  ).slice(0,10);
+  if(!matches.length){ sugEl.style.display='none'; return; }
+  const hl=txt=>txt.replace(new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<b style="color:var(--text);">${m}</b>`);
+  sugEl.style.display='block';
+  sugEl.innerHTML=matches.map(p=>`
+    <div onclick="mostrarQRProducto('${p.codigo}')"
+      style="padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;"
+      onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background=''">
+      <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;">${hl(String(p.codigo||''))}</div>
+      <div style="font-size:12px;color:var(--muted);">${hl(String(p.nombre||''))}</div>
+    </div>`).join('');
+}
+
+function mostrarQRProducto(codigo){
+  document.getElementById('verqr-sugerencias').style.display='none';
+  const prod=PRODUCTOS.find(p=>String(p.codigo||'').toUpperCase()===codigo.toUpperCase());
+  if(!prod) return;
+  const resultEl=document.getElementById('verqr-resultado');
+  resultEl.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <!-- ETIQUETA -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;align-items:center;gap:10px;">
+        <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">Etiqueta</div>
+        <div style="background:#fff;border-radius:8px;padding:14px;text-align:center;width:100%;">
+          <div id="verqr-etiqueta-div" style="display:flex;justify-content:center;margin-bottom:6px;"></div>
+          <div style="font-family:monospace;font-size:11px;color:#111;font-weight:700;">${prod.codigo}</div>
+          <div style="font-size:10px;color:#444;margin-top:2px;">${prod.nombre||''}</div>
+        </div>
+        <button onclick="descargarQRverqr('${prod.codigo}')" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">⬇️ Descargar QR</button>
+      </div>
+      <!-- SOLO QR -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;align-items:center;gap:10px;">
+        <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">Solo QR</div>
+        <div style="background:#fff;border-radius:8px;padding:20px;display:inline-block;">
+          <div id="verqr-solo-div"></div>
+        </div>
+        <button onclick="descargarQRsoloVerqr('${prod.codigo}')" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">⬇️ Descargar QR</button>
+      </div>
+    </div>`;
+  // Generar QR etiqueta
+  setTimeout(()=>{
+    const etqEl=document.getElementById('verqr-etiqueta-div');
+    const soloEl=document.getElementById('verqr-solo-div');
+    if(etqEl) new QRCode(etqEl,{text:prod.codigo,width:180,height:180,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+    if(soloEl) new QRCode(soloEl,{text:prod.codigo,width:220,height:220,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  },100);
+}
+
+function descargarQRverqr(codigo){
+  const img=document.querySelector('#verqr-etiqueta-div img');
+  if(!img) return;
+  const a=document.createElement('a'); a.href=img.src; a.download=`etiqueta-${codigo}.png`; a.click();
+}
+
+function descargarQRsoloVerqr(codigo){
+  const img=document.querySelector('#verqr-solo-div img');
+  if(!img) return;
+  const a=document.createElement('a'); a.href=img.src; a.download=`qr-${codigo}.png`; a.click();
 }
 
 function switchStock(sub){
@@ -1908,7 +2032,7 @@ function switchStock(sub){
     const btn=document.getElementById('stktab-'+s);
     if(btn){
       btn.style.borderColor=s===sub?'var(--accent)':'var(--border)';
-      btn.style.background=s===sub?'#0f2b1a':'var(--surface2)';
+      btn.style.background=s===sub?'var(--surface2)':'var(--surface2)';
       btn.style.color=s===sub?'var(--accent)':'var(--muted)';
     }
   });
@@ -1927,7 +2051,7 @@ function switchAprobaciones(sub){
   document.querySelectorAll('.apro-sub-btn').forEach(b=>{
     const active=b.dataset.sub===sub;
     const colors={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)',Cola:'var(--warn)'};
-    const bgs={Pendiente:'#2a1f0a',Pagado:'#0f2b1a',Reprobado:'#2a1010',Cola:'#2a1f0a'};
+    const bgs={Pendiente:'#2a1f0a',Pagado:'var(--surface2)',Reprobado:'#2a1010',Cola:'#2a1f0a'};
     b.style.borderColor=active?colors[sub]:'var(--border)';
     b.style.background=active?bgs[sub]:'var(--surface2)';
     b.style.color=active?colors[sub]:'var(--muted)';
@@ -1953,7 +2077,7 @@ function switchRespaldo(sub){
     document.getElementById('rvsec-'+s).style.display=s===sub?'block':'none';
     const btn=document.getElementById('rvtab-'+s);
     btn.style.borderColor=s===sub?'var(--accent)':'var(--border)';
-    btn.style.background=s===sub?'#0f2b1a':'var(--surface2)';
+    btn.style.background=s===sub?'var(--surface2)':'var(--surface2)';
     btn.style.color=s===sub?'var(--accent)':'var(--muted)';
   });
   if(sub==='pendientes') cargarRespaldos();
@@ -1995,7 +2119,7 @@ async function guardarRespaldo(){
       moneda:moneda
     });
     if(data.ok){
-      msgEl.style.background='#0f2b1a';
+      msgEl.style.background='var(--surface2)';
       msgEl.style.border='1px solid #1a4a2a';
       msgEl.style.color='var(--accent)';
       msgEl.innerHTML=`✅ Guardado · <b>${data.codigo}</b> · ${USUARIOS[unlock]}`;
@@ -2041,7 +2165,7 @@ async function cargarRespaldos(){
       card.innerHTML=`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
           <div>
-            <span style="background:#1a2a10;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">${codigo}</span>
+            <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text);">${codigo}</span>
             <span style="font-size:11px;color:var(--muted);margin-left:8px;">🕐 ${fecha} · ${usuario}</span>
           </div>
         </div>
@@ -2053,8 +2177,8 @@ async function cargarRespaldos(){
           <div><span style="color:var(--muted);">Factura:</span> <b>${factura}</b></div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13px;line-height:1.8;white-space:pre-wrap;margin-bottom:12px;">${mensaje}</div>
-        <button onclick="abrirModalProcesar('${codigo}')" style="width:100%;padding:12px;background:var(--warn);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">✓ MARCAR COMO PROCESADO</button>
-        <button onclick="abrirModalEditarRespaldo('${codigo}','${encodeURIComponent(mensaje)}','${banco}','${referencia}','${factura}','${tasa}','${moneda}','${monto}')" style="width:100%;padding:10px;background:transparent;border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;">✏️ EDITAR</button>`;
+        <button onclick="abrirModalProcesar('${codigo}')" style="width:100%;padding:12px;background:var(--warn);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">✓ MARCAR COMO PROCESADO</button>
+        <button onclick="abrirModalEditarRespaldo('${codigo}','${encodeURIComponent(mensaje)}','${banco}','${referencia}','${factura}','${tasa}','${moneda}','${monto}')" style="width:100%;padding:10px;background:transparent;border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;">✏️ EDITAR</button>`;
       listEl.appendChild(card);
     });
   }catch(e){
@@ -2162,10 +2286,10 @@ async function cargarHistorialRespaldo(cod='',fecha=''){
       card.innerHTML=`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
           <div>
-            <span style="background:#1a2a10;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">${codigo}</span>
+            <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text);">${codigo}</span>
             <span style="font-size:11px;color:var(--muted);margin-left:8px;">🕐 ${fecha} · ${usuario}</span>
           </div>
-          <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--accent);">✓ Procesado</span>
+          <span style="background:#f0f0f0;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--text);">✓ Procesado</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px;margin-bottom:10px;background:var(--surface2);border-radius:8px;padding:10px;">
           <div><span style="color:var(--muted);">Banco:</span> <b>${banco2}</b></div>
@@ -2242,13 +2366,13 @@ async function cargarCola(){
       let html=`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;">${v(7)}</div>
+            <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;">${v(7)}</div>
             <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
-              <span style="background:#1a2a10;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">${base}</span>
+              <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text);">${base}</span>
               ${packs.length>1?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">${packs.length} packs</span>`:''}
             </div>
           </div>
-          <span style="background:${filtroCola==='Pagado'?'#2a1f0a':'#0f2b1a'};border:1px solid ${filtroCola==='Pagado'?'var(--warn)':'var(--accent)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:${filtroCola==='Pagado'?'var(--warn)':'var(--accent)'};">${filtroCola==='Pagado'?'EN COLA':'EN PRODUCCIÓN'}</span>
+          <span style="background:${filtroCola==='Pagado'?'#2a1f0a':'var(--surface2)'};border:1px solid ${filtroCola==='Pagado'?'var(--warn)':'var(--accent)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:${filtroCola==='Pagado'?'var(--warn)':'var(--accent)'};">${filtroCola==='Pagado'?'EN COLA':'EN PRODUCCIÓN'}</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:10px;">
           <div><span style="color:var(--muted);">Correo:</span> ${v(8)}</div>
@@ -2265,7 +2389,7 @@ async function cargarCola(){
       packs.forEach((pk,idx)=>{
         const vp=i=>String(pk[i]||'').trim();
         html+=`<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--accent);margin-bottom:8px;">Pack ${idx+1} · ${vp(14)} · <span style="color:var(--muted);font-size:13px;">${vp(1)}</span></div>
+          <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Pack ${idx+1} · ${vp(14)} · <span style="color:var(--muted);font-size:13px;">${vp(1)}</span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:6px;">
             <div><span style="color:var(--muted);">Tela:</span> ${vp(15)}</div>
             <div><span style="color:var(--muted);">Vinil:</span> ${vp(16)}</div>
@@ -2291,7 +2415,7 @@ async function cargarCola(){
           agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),
           banco:v(22),codpago:v(23)
         })})'
-          style="width:100%;padding:13px;background:linear-gradient(135deg,var(--warn),#c07010);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">
+          style="width:100%;padding:13px;background:linear-gradient(135deg,var(--warn),#c07010);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">
           🚀 Enviar a Producción
         </button>`;
       }
@@ -2307,7 +2431,7 @@ function abrirModalPlanificacion(data){
   const packs=data.allPacks||[];
   document.getElementById('plan-resumen').innerHTML=`
     <b style="color:var(--text)">${data.nombre}</b><br>
-    <span style="color:var(--accent);">${data.codigoCBase||''}</span> · <b>${packs.length} pack(s)</b><br>
+    <span style="color:var(--text);">${data.codigoCBase||''}</span> · <b>${packs.length} pack(s)</b><br>
     Agencia: <span>${data.agencia}</span><br>
     ${packs.map((pk,i)=>`Pack ${i+1}: ${pk.pack} · ${pk.tela}/${pk.vinil}`).join('<br>')}`;
   document.getElementById('plan-unlock').value='';
@@ -2403,7 +2527,7 @@ async function confirmarPlanificacion(){
     makeBody.append('fecha',fechaProd);
     await fetch(WEBHOOK_URL,{method:'POST',body:makeBody});
 
-    msgEl.style.background='#0f2b1a';
+    msgEl.style.background='var(--surface2)';
     msgEl.style.border='1px solid #1a4a2a';
     msgEl.style.color='var(--accent)';
     msgEl.innerHTML=`✅ Enviado a producción · <b>${lastCodigoP}</b> · ${allPacks.length} pack(s) · ${USUARIOS[unlock]}`;
@@ -2424,7 +2548,7 @@ function setFiltroApro(filtro){
   document.querySelectorAll('.sol-filter-btn').forEach(b=>{
     const act=b.dataset.filtro===filtro;
     const colors={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)'};
-    const bgs={Pendiente:'#2a1f0a',Pagado:'#0f2b1a',Reprobado:'#2a1010'};
+    const bgs={Pendiente:'#2a1f0a',Pagado:'var(--surface2)',Reprobado:'#2a1010'};
     b.style.borderColor=act?colors[filtro]:'var(--border)';
     b.style.background=act?bgs[filtro]:'var(--surface2)';
     b.style.color=act?colors[filtro]:'var(--muted)';
@@ -2460,7 +2584,7 @@ async function cargarSolicitudes(filtro){
       return parseFloat(ca.split('-')[1]||0)-parseFloat(cb.split('-')[1]||0);
     }));
     const sc={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)'};
-    const sb={Pendiente:'#2a1f0a',Pagado:'#0f2b1a',Reprobado:'#2a1010'};
+    const sb={Pendiente:'#2a1f0a',Pagado:'var(--surface2)',Reprobado:'#2a1010'};
     listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${Object.keys(grupos).length} pedido(s) · ${filtradas.length} pack(s)</div>`;
     Object.entries(grupos).forEach(([base,packs])=>{
       const r=packs[0];
@@ -2470,9 +2594,9 @@ async function cargarSolicitudes(filtro){
       let html=`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;">${v(7)}</div>
+            <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;">${v(7)}</div>
             <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;">
-              <span style="background:#1a2a10;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">${base}</span>
+              <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text);">${base}</span>
               ${packs.length>1?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">${packs.length} packs</span>`:''}
               <span style="font-size:11px;color:var(--muted);">🕐 ${v(4)}</span>
             </div>
@@ -2488,18 +2612,18 @@ async function cargarSolicitudes(filtro){
         <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
           <span style="color:var(--muted);">Retira:</span> ${v(19)}${v(20)?` · C.I: ${v(20)}`:''}${v(21)?` · Cel: ${v(21)}`:''}
         </div>
-        <div style="background:#0f2b1a;border:1px solid #1a4a2a;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:12px;">
-          <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px;">💳 Pago del cliente</div>
+        <div style="background:#f0f0f0;border:1px solid #1a4a2a;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:12px;">
+          <div style="font-size:11px;color:var(--text);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px;">💳 Pago del cliente</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
             <div><span style="color:var(--muted);">Moneda:</span> <b>${v(28)||'—'}</b></div>
-            <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent);">${v(28)==='Bs'?'Bs':'$'}${v(29)||'—'}</b></div>
+            <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--text);">${v(28)==='Bs'?'Bs':'$'}${v(29)||'—'}</b></div>
             <div style="grid-column:1/-1;"><span style="color:var(--muted);">Referencia:</span> <b style="color:var(--warn);">${v(30)||'—'}</b></div>
           </div>
         </div>`;
       packs.forEach((pk,idx)=>{
         const vp=i=>String(pk[i]||'').trim();
         html+=`<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--accent);margin-bottom:8px;">Pack ${idx+1} · ${vp(14)} · <span style="color:var(--muted);font-size:13px;">${vp(0)}</span></div>
+          <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Pack ${idx+1} · ${vp(14)} · <span style="color:var(--muted);font-size:13px;">${vp(0)}</span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:8px;">
             <div><span style="color:var(--muted);">Modelo:</span> COMFY MEGA PROMO</div>
             <div><span style="color:var(--muted);">Manga:</span> ${vp(12)}</div>
@@ -2510,15 +2634,15 @@ async function cargarSolicitudes(filtro){
         </div>`;
       });
       if(filtroSolicitudes==='Reprobado'){
-        html+=`<div style="background:#2a1010;border:1px solid #4a1a1a;border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:10px;"><span style="color:var(--danger);">Motivo:</span> ${v(27)}</div>`;
+        html+=`<div style="background:#2a1010;border:1px solid var(--danger);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:10px;"><span style="color:var(--danger);">Motivo:</span> ${v(27)}</div>`;
       }
       if(filtroSolicitudes==='Pendiente'){
         const allCodigos=packs.map(pk=>String(pk[0]||'').trim());
         html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
           <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigos:allCodigos,codigo:base})})'
-            style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✅ Aprobar</button>
+            style="width:100%;padding:13px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✅ Aprobar</button>
           <button onclick='abrirModalReprobar(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigos:allCodigos,codigo:base})})'
-            style="width:100%;padding:13px;background:transparent;border:2px solid var(--danger);border-radius:10px;color:var(--danger);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✗ Reprobar</button>
+            style="width:100%;padding:13px;background:transparent;border:2px solid var(--danger);border-radius:10px;color:var(--danger);font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✗ Reprobar</button>
         </div>`;
       }
       card.innerHTML=html;
@@ -2533,7 +2657,7 @@ function abrirModalReprobar(data){
   pendingSolicitud=data;
   document.getElementById('repro-resumen').innerHTML=`
     <b style="color:var(--text)">${data.nombre}</b><br>
-    <span style="color:var(--accent);font-weight:700;">${data.codigo||''}</span><br>
+    <span style="color:var(--text);font-weight:700;">${data.codigo||''}</span><br>
     Cédula: <span>${data.cedula}</span><br>
     Solicitud: <span>${data.fecha}</span>`;
   document.getElementById('repro-motivo').value='';
@@ -2592,7 +2716,7 @@ function abrirModalAprobacion(data){
   pendingSolicitud=data;
   document.getElementById('apro-resumen').innerHTML=`
     <b style="color:var(--text)">${data.nombre}</b><br>
-    <span style="color:var(--accent);font-weight:700;">${data.codigo||''}</span><br>
+    <span style="color:var(--text);font-weight:700;">${data.codigo||''}</span><br>
     Cédula: <span>${data.cedula}</span> · Correo: <span>${data.correo}</span><br>
     Solicitud: <span>${data.fecha}</span>`;
   document.getElementById('apro-banco').value='';
@@ -2641,7 +2765,7 @@ async function confirmarAprobacion(){
       if(res.ok) lastCodigoC=res.codigoC;
       else throw new Error(res.error||'Error en '+cod);
     }
-    msgEl.style.background='#0f2b1a';
+    msgEl.style.background='var(--surface2)';
     msgEl.style.border='1px solid #1a4a2a';
     msgEl.style.color='var(--accent)';
     msgEl.innerHTML=`✅ Pago aprobado · <b>${lastCodigoC||''}</b> en cola · ${USUARIOS[unlock]} · ${fechaApro}`;
@@ -2684,7 +2808,7 @@ function setTipoGestion(tipo){
   // Activar botón principal correcto
   const mainBtn=tipo==='Enviado'?'Enviado':tipo;
   const btn=document.getElementById('gbtn-'+mainBtn);
-  if(btn){ btn.style.borderColor='var(--accent)'; btn.style.background='#0f2b1a'; btn.style.color='var(--accent)'; }
+  if(btn){ btn.style.borderColor='var(--accent)'; btn.style.background='var(--surface2)'; btn.style.color='var(--accent)'; }
 
   // Mostrar form
   document.getElementById('gestion-form-wrap').style.display='block';
@@ -2710,7 +2834,7 @@ function setTipoGestion(tipo){
     envSec.style.display='flex'; envioWrap.style.display='flex';
     // Activar sub-botón manual
     const bManual=document.getElementById('gbtn-EnviadoManual');
-    if(bManual){ bManual.style.borderColor='var(--accent)'; bManual.style.background='#0f2b1a'; bManual.style.color='var(--accent)'; }
+    if(bManual){ bManual.style.borderColor='var(--accent)'; bManual.style.background='var(--surface2)'; bManual.style.color='var(--accent)'; }
     const bSel=document.getElementById('gbtn-EnviadoSel');
     if(bSel){ bSel.style.borderColor='var(--border)'; bSel.style.background='var(--surface2)'; bSel.style.color='var(--muted)'; }
   } else if(tipo==='Buscar'){
@@ -2724,7 +2848,7 @@ function toggleEnvioModos(){
   // Al tocar "Enviado" — deseleccionar COD y Buscar, mostrar sub-modos
   resetGestionBtns();
   const btn=document.getElementById('gbtn-Enviado');
-  btn.style.borderColor='var(--accent)'; btn.style.background='#0f2b1a'; btn.style.color='var(--accent)';
+  btn.style.borderColor='var(--accent)'; btn.style.background='var(--surface2)'; btn.style.color='var(--accent)';
   const modos=document.getElementById('envio-modos');
   modos.style.display='grid';
   // Ocultar form hasta que elijan sub-modo
@@ -2760,11 +2884,11 @@ async function buscarCOD(){
       const status=v(6); const c=sc[status]||'var(--muted)';
       html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;animation:slideUp .3s ease;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;">${v(0)}</div>
+          <div style="font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;">${v(0)}</div>
           <span style="background:${c}22;border:1px solid ${c};border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:${c};letter-spacing:.08em;">${status}</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
-          <div><span style="color:var(--muted);">COD:</span> <b style="color:var(--accent);">${v(3)}</b></div>
+          <div><span style="color:var(--muted);">COD:</span> <b style="color:var(--text);">${v(3)}</b></div>
           <div><span style="color:var(--muted);">N° Guía:</span> <b>${v(4)||'—'}</b></div>
           <div><span style="color:var(--muted);">Cédula:</span> ${v(1)||'—'}</div>
           <div><span style="color:var(--muted);">Celular:</span> ${v(7)||'—'}</div>
@@ -2917,7 +3041,7 @@ document.getElementById('gestion-form').addEventListener('submit',async function
 
     if(response.ok){
       msg.style.display='block';
-      msg.style.background='#0f2b1a';
+      msg.style.background='var(--surface2)';
       msg.style.border='1px solid #1a4a2a';
       msg.style.color='var(--accent)';
       msg.innerHTML=tipo==='COD'&&codMake
@@ -2964,10 +3088,10 @@ function renderHistorial(){
         onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:${esEntrada?'var(--accent)':'var(--danger)'};">${esEntrada?'▲ ENTRADA':'▼ SALIDA'}</span>
+            <span style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:${esEntrada?'var(--accent)':'var(--danger)'};">${esEntrada?'▲ ENTRADA':'▼ SALIDA'}</span>
             <span style="font-size:13px;color:var(--text);margin-left:8px;">${h.codigo||''}</span>
           </div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:${esEntrada?'var(--accent)':'var(--danger)'};">${delta>0?'+':''}${delta} uds</div>
+          <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;color:${esEntrada?'var(--accent)':'var(--danger)'};">${delta>0?'+':''}${delta} uds</div>
         </div>
         <div style="font-size:12px;color:var(--muted);margin-top:4px;">${h.nombre||''} · T:${h.talla||'—'} · ${h.fecha||'—'}</div>
         <div id="hist-det-${i}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);line-height:1.9;">
@@ -3005,7 +3129,7 @@ function abrirEnvioSeleccion(){
   // Activar sub-botón selección, desactivar manual
   const bSel=document.getElementById('gbtn-EnviadoSel');
   const bMan=document.getElementById('gbtn-EnviadoManual');
-  if(bSel){ bSel.style.borderColor='var(--accent)'; bSel.style.color='var(--accent)'; bSel.style.background='#0f2b1a'; }
+  if(bSel){ bSel.style.borderColor='var(--accent)'; bSel.style.color='var(--accent)'; bSel.style.background='var(--surface2)'; }
   if(bMan){ bMan.style.borderColor='var(--border)'; bMan.style.color='var(--muted)'; bMan.style.background='var(--surface2)'; }
   setTimeout(()=>document.getElementById('es-cod-input').focus(),100);
 }
@@ -3072,7 +3196,7 @@ async function buscarPedidoCOD(){
     document.getElementById('es-datos-content').innerHTML=`
       <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:8px;">
         <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">COD del pedido</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);">${data.cod}</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:22px;font-weight:700;color:var(--text);">${data.cod}</div>
       </div>
       <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:8px;">
         <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">${esMismo?'👤 Cliente / Quien retira':'👤 Cliente (titular)'}</div>
@@ -3087,12 +3211,12 @@ async function buscarPedidoCOD(){
       <div style="background:var(--surface2);border-radius:8px;padding:12px;">
         <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">🚚 Agencia</div>
         <b>${data.agencia}</b>
-        ${!necesitaCupon?`<div style="margin-top:6px;color:var(--muted);font-size:12px;">📦 Guía auto: <b style="color:var(--accent);">GUIA-${data.cod}</b></div>`:''}
+        ${!necesitaCupon?`<div style="margin-top:6px;color:var(--muted);font-size:12px;">📦 Guía auto: <b style="color:var(--text);">GUIA-${data.cod}</b></div>`:''}
       </div>
       <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-top:8px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
           <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">📍 Dirección</div>
-          <button onclick="toggleEditDireccion()" style="background:transparent;border:1px solid var(--accent);border-radius:6px;color:var(--accent);padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;">✏️ Modificar</button>
+          <button onclick="toggleEditDireccion()" style="background:transparent;border:1px solid var(--accent);border-radius:6px;color:var(--text);padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;">✏️ Modificar</button>
         </div>
         <div id="es-dir-texto" style="font-size:13px;color:var(--text);">${data.direccion||'<span style="color:var(--muted);">Sin dirección registrada</span>'}</div>
         <input class="field-input" type="text" id="es-dir-input" value="${data.direccion||''}" placeholder="Escribe la dirección..." style="display:none;margin-top:8px;text-transform:uppercase;" oninput="pedidoEncontrado.direccion=this.value">
@@ -3191,7 +3315,7 @@ async function confirmarEnvioSeleccion(){
     makeBody.append('fecha',fecha);
     const makeResponse=await fetch(WEBHOOK_URL,{method:'POST',body:makeBody});
     console.log('Make status:',makeResponse.status);
-    msgEl.style.background='#0f2b1a';
+    msgEl.style.background='var(--surface2)';
     msgEl.style.border='1px solid #1a4a2a';
     msgEl.style.color='var(--accent)';
     msgEl.innerHTML=`✅ Enviado · COD ${pedidoEncontrado.cod} · ${USUARIOS[unlock]}`;

@@ -10,7 +10,7 @@
 :root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--surface3:#252533;--accent:#00e5b0;--accent2:#0099ff;--warn:#e8a020;--danger:#ff4444;--text:#f0f0f5;--muted:#7a7a99;--border:#2a2a3a;--radius:14px;}
 body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 20px;text-align:center;}
-.logo{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;letter-spacing:.15em;}
+.logo{font-family:'Barlow',sans-serif;font-size:26px;font-weight:700;letter-spacing:.15em;}
 .logo .i{color:var(--accent)}.logo .sep{color:var(--muted);margin:0 8px;font-weight:300}.logo .b{color:var(--text)}
 .tagline{font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:.08em;}
 main{max-width:640px;margin:0 auto;padding:20px 16px 60px;}
@@ -21,38 +21,38 @@ main{max-width:640px;margin:0 auto;padding:20px 16px 60px;}
 @keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
 .step-header{margin-bottom:20px;}
 .step-num{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:600;margin-bottom:4px;}
-.step-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--text);}
+.step-title{font-family:'Barlow',sans-serif;font-size:26px;font-weight:700;color:var(--text);}
 .progress-bar{display:flex;gap:6px;margin-bottom:24px;}
-.prog-dot{flex:1;height:4px;border-radius:2px;background:var(--surface3);transition:background .3s;}
-.prog-dot.done{background:var(--accent);}.prog-dot.active{background:var(--accent);opacity:.5;}
+.prog-dot{flex:1;height:4px;border-radius:2px;background:var(--surface2);transition:background .3s;}
+.prog-dot.done{background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);}.prog-dot.active{background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);opacity:.5;}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;}
-.card-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;}
+.card-title{font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;}
 .card-note{font-size:12px;color:var(--muted);margin-top:-8px;margin-bottom:12px;line-height:1.5;}
 .field-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
 .field-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;}
 .field-note{font-size:11px;color:var(--warn);margin-top:3px;line-height:1.4;}
-.field-input{background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:border-color .2s;width:100%;}
+.field-input{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:border-color .2s;width:100%;}
 input[type="text"].field-input, input[type="tel"].field-input{text-transform:uppercase;}
 .field-input:focus{border-color:var(--accent);}.field-input::placeholder{color:var(--muted);}.field-input.error{border-color:var(--danger);}
-select.field-input option{background:var(--surface3);color:var(--text);}
+select.field-input option{background:var(--surface2);color:var(--text);}
 .input-row{display:flex;gap:8px;}.input-row select{flex:0 0 90px;}.input-row input{flex:1;}
 .option-grid{display:grid;gap:10px;margin-bottom:14px;}
 .option-grid.cols2{grid-template-columns:1fr 1fr;}.option-grid.cols3{grid-template-columns:1fr 1fr 1fr;}
-.opt-btn{padding:14px 10px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;letter-spacing:.03em;width:100%;}
+.opt-btn{padding:14px 10px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;letter-spacing:.03em;width:100%;}
 .opt-btn:hover{border-color:var(--accent);}.opt-btn.selected{border-color:var(--accent);background:#0f2b1a;color:var(--accent);}
 .opt-btn .sub{font-size:11px;font-weight:400;color:var(--muted);margin-top:3px;display:block;font-family:'Barlow',sans-serif;}
 .opt-btn.selected .sub{color:var(--accent);opacity:.7;}
 .pieza-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;position:relative;}
-.pieza-num{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;}
+.pieza-num{font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;}
 .pieza-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .remove-btn{position:absolute;top:12px;right:12px;background:transparent;border:1px solid #3a1a1a;border-radius:6px;color:var(--danger);padding:4px 10px;font-size:12px;cursor:pointer;}
 .mult-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
-.mult-btn{padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;}
+.mult-btn{padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;}
 .mult-btn:hover{border-color:var(--accent);color:var(--accent);}
 .nav-row{display:flex;gap:10px;margin-top:20px;}
-.btn-back{flex:1;padding:14px;background:transparent;border:1px solid var(--border);border-radius:12px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:600;cursor:pointer;}
-.btn-next{flex:2;padding:14px;background:var(--accent);border:none;border-radius:12px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;}
-.btn-send{width:100%;padding:16px;background:linear-gradient(135deg,#25d366,#128c7e);border:none;border-radius:12px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;cursor:pointer;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:10px;}
+.btn-back{flex:1;padding:14px;background:transparent;border:1px solid var(--border);border-radius:12px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:17px;font-weight:600;cursor:pointer;}
+.btn-next{flex:2;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:12px;color:#000;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;}
+.btn-send{width:100%;padding:16px;background:linear-gradient(135deg,#25d366,#128c7e);border:none;border-radius:12px;color:#000;font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;cursor:pointer;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:10px;}
 .resumen-block{background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:10px;font-size:13px;line-height:1.9;}
 .resumen-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;}
 .nota{background:#1a1a10;border:1px solid #3a3a10;border-radius:10px;padding:12px 14px;font-size:13px;color:var(--warn);line-height:1.6;margin-top:12px;}
@@ -64,13 +64,13 @@ select.field-input option{background:var(--surface3);color:var(--text);}
 .modal-overlay.hidden{display:none;}
 .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:26px 22px;width:100%;max-width:380px;}
 .modal-icon{font-size:36px;text-align:center;margin-bottom:10px;}
-.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;text-align:center;margin-bottom:8px;}
+.modal-title{font-family:'Barlow',sans-serif;font-size:22px;font-weight:700;text-align:center;margin-bottom:8px;}
 .modal-body{font-size:14px;color:var(--muted);text-align:center;margin-bottom:18px;line-height:1.7;}
 .modal-data{background:var(--surface2);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:14px;line-height:2;}
 .modal-btns{display:flex;gap:10px;}
-.mbtn-cancel{flex:1;padding:13px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;cursor:pointer;}
-.mbtn-ok{flex:2;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;}
-.mbtn-warn{flex:2;padding:13px;background:var(--warn);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;}
+.mbtn-cancel{flex:1;padding:13px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:16px;font-weight:600;cursor:pointer;}
+.mbtn-ok{flex:2;padding:13px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;}
+.mbtn-warn{flex:2;padding:13px;background:var(--warn);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;}
 /* BLOQUEADA */
 #pantalla-bloqueada{position:fixed;inset:0;background:var(--bg);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;}
 </style>
@@ -106,9 +106,9 @@ select.field-input option{background:var(--surface3);color:var(--text);}
 
 <div id="pantalla-bloqueada" style="display:flex;">
   <div style="font-size:56px;margin-bottom:20px;" id="bloqueo-icon">⏳</div>
-  <div style="font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--text);margin-bottom:10px;" id="bloqueo-titulo">Verificando acceso...</div>
+  <div style="font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;color:var(--text);margin-bottom:10px;" id="bloqueo-titulo">Verificando acceso...</div>
   <div style="font-size:15px;color:var(--muted);line-height:1.7;max-width:320px;" id="bloqueo-texto">Por favor espera.</div>
-  <div style="margin-top:24px;font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;letter-spacing:.15em;"><span style="color:var(--accent);">IKOA</span><span style="color:var(--muted);margin:0 8px;">—</span><span style="color:var(--text);">BEKATE</span></div>
+  <div style="margin-top:24px;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.15em;"><span style="color:var(--accent);">IKOA</span><span style="color:var(--muted);margin:0 8px;">—</span><span style="color:var(--text);">BEKATE</span></div>
 </div>
 
 <header>
@@ -193,7 +193,7 @@ select.field-input option{background:var(--surface3);color:var(--text);}
       </div>
     </div>
     <div id="pack-seleccionado" style="display:none;background:#0f2b1a;border:1px solid var(--accent);border-radius:10px;padding:12px 16px;text-align:center;margin-bottom:12px;">
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="pack-label">—</span>
+      <span style="font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="pack-label">—</span>
     </div>
     <div class="nav-row">
       <button class="btn-back" onclick="goStep(1)">← Atrás</button>
@@ -208,7 +208,7 @@ select.field-input option{background:var(--surface3);color:var(--text);}
       <!-- MODELO FIJO - solo informativo -->
       <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center;">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Modelo seleccionado</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">LICRA PROTECT</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">LICRA PROTECT</div>
         <div style="font-size:13px;color:var(--muted);margin-top:2px;">Manga Larga</div>
       </div>
       <!-- CAPUCHA -->
@@ -238,7 +238,7 @@ select.field-input option{background:var(--surface3);color:var(--text);}
         <button class="opt-btn" onclick="selectColor(this,'tela','Lila')">LILA</button>
       </div>
       <div class="card-title" style="margin-top:4px;">Color de Vinil</div>
-      <div id="vinil-warn" style="display:none;background:#2a1f0a;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--warn);margin-bottom:8px;">⚠️ Este color de vinil puede no contrastar bien con la tela seleccionada.</div>
+      <div id="vinil-warn" style="display:none;background:#1a1a10;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--warn);margin-bottom:8px;">⚠️ Este color de vinil puede no contrastar bien con la tela seleccionada.</div>
       <div class="option-grid cols2" id="vinil-opts">
         <button class="opt-btn" onclick="selectColor(this,'vinil','Blanco')">BLANCO</button>
         <button class="opt-btn" onclick="selectColor(this,'vinil','Negro')">NEGRO</button>
@@ -360,11 +360,11 @@ select.field-input option{background:var(--surface3);color:var(--text);}
       <div style="display:flex;gap:10px;justify-content:center;margin-bottom:4px;">
         <div style="text-align:center;background:var(--surface2);border-radius:10px;padding:14px 20px;flex:1;">
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Oferta en Bs</div>
-          <div id="pago-total-bs" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--accent);">—</div>
+          <div id="pago-total-bs" style="font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;color:var(--accent);">—</div>
         </div>
         <div style="text-align:center;background:var(--surface2);border-radius:10px;padding:14px 20px;flex:1;">
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Oferta en Divisa</div>
-          <div id="pago-total-usd" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--warn);">—</div>
+          <div id="pago-total-usd" style="font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;color:var(--warn);">—</div>
         </div>
       </div>
     </div>
@@ -387,11 +387,11 @@ select.field-input option{background:var(--surface3);color:var(--text);}
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
           <span><span style="color:var(--muted);">Celular:</span> <b id="pm-cel">04149450742</b></span>
-          <button onclick="copiarDato('04149450742','btn-copy-cel')" id="btn-copy-cel" style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
+          <button onclick="copiarDato('04149450742','btn-copy-cel')" id="btn-copy-cel" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
           <span><span style="color:var(--muted);">Cédula:</span> <b id="pm-ci">18265345</b></span>
-          <button onclick="copiarDato('18265345','btn-copy-ci')" id="btn-copy-ci" style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
+          <button onclick="copiarDato('18265345','btn-copy-ci')" id="btn-copy-ci" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
         </div>
         <div style="font-size:14px;"><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-bs" style="color:var(--accent);">—</b></div>
       </div>
@@ -410,7 +410,7 @@ select.field-input option{background:var(--surface3);color:var(--text);}
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
           <span><span style="color:var(--muted);">Correo:</span> <b id="bin-correo">johancazorla@gmail.com</b></span>
-          <button onclick="copiarDato('johancazorla@gmail.com','btn-copy-bin')" id="btn-copy-bin" style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
+          <button onclick="copiarDato('johancazorla@gmail.com','btn-copy-bin')" id="btn-copy-bin" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
         </div>
         <div style="font-size:14px;"><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-usd" style="color:var(--warn);">—</b></div>
       </div>
@@ -434,7 +434,7 @@ select.field-input option{background:var(--surface3);color:var(--text);}
     <button class="btn-send" id="btn-whatsapp" onclick="enviarWhatsApp()">
       <span style="font-size:22px;">💬</span> Enviar pedido por WhatsApp
     </button>
-    <button id="btn-sin-whatsapp" onclick="enviarSinWhatsApp()" style="width:100%;padding:16px;background:transparent;border:2px solid var(--border);border-radius:14px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-top:10px;">
+    <button id="btn-sin-whatsapp" onclick="enviarSinWhatsApp()" style="width:100%;padding:16px;background:transparent;border:2px solid var(--border);border-radius:14px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-top:10px;">
       📋 Enviar pedido sin copia en WhatsApp
     </button>
     <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px;" id="sending-note"></div>
@@ -445,7 +445,7 @@ select.field-input option{background:var(--surface3);color:var(--text);}
 <!-- PANTALLA DE ÉXITO -->
 <div id="pantalla-exito" style="display:none;position:fixed;inset:0;z-index:999;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;">
   <div style="font-size:72px;margin-bottom:20px;animation:bounceIn .6s ease;">🎉</div>
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;color:var(--accent);letter-spacing:.04em;margin-bottom:12px;">¡Gracias por elegir a IKOA!</div>
+  <div style="font-family:'Barlow',sans-serif;font-size:32px;font-weight:700;color:var(--accent);letter-spacing:.04em;margin-bottom:12px;">¡Gracias por elegir a IKOA!</div>
   <div style="font-size:16px;color:var(--text);line-height:1.7;max-width:340px;">Estamos trabajando para ti.<br><b style="color:var(--accent);">Pronto revisaremos tu solicitud</b> y te contactaremos por <b>WhatsApp, Instagram o correo</b>.</div>
   <div style="margin-top:28px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 24px;">
     <div style="font-size:13px;color:var(--muted);">Tu solicitud fue registrada exitosamente ✅</div>
@@ -869,7 +869,7 @@ function addPieza(copiarDe=null){
       </div>
       <input class="field-input" type="text" id="pz-nombre-${id}" placeholder="Ej: María, Carlos..." value="${nomCopy}" style="${sinCopy?'display:none':''}">
     </div>
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface3);border-radius:8px;margin-bottom:6px;">
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;margin-bottom:6px;">
       <input type="checkbox" id="pz-capucha-${id}" ${pedido.capucha==='Con Capucha'?' checked':''} style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
       <label for="pz-capucha-${id}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">Con capucha <span style="color:var(--accent);font-size:11px;">(+recarga C.01)</span></label>
     </div>
