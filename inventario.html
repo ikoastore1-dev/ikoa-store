@@ -9,19 +9,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#f5f5f7;--surface:#ffffff;--surface2:#f5f5f7;--surface3:#e8e8ed;
-  --accent:#007AFF;--accent2:#0055cc;--warn:#f5a623;--danger:#ff3b30;
-  --text:#1d1d1f;--muted:#6e6e73;--border:#d2d2d7;--radius:14px;
-}
-body{font-family:'Barlow Condensed',sans-serif,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+:root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--surface3:#252533;--accent:#00e5b0;--accent2:#0099ff;--warn:#e8a020;--danger:#ff4444;--text:#f0f0f5;--muted:#7a7a99;--border:#2a2a3a;--radius:14px;}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .logo{font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;}
-.logo .i{color:var(--text)}.logo .sep{color:var(--muted);margin:0 8px;font-weight:300}.logo .b{color:var(--text)}
+.logo .i{color:var(--accent)}.logo .sep{color:var(--muted);margin:0 8px;font-weight:300}.logo .b{color:var(--text)}
 main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 .tabs{display:flex;gap:2px;background:var(--surface3);border-radius:12px;padding:3px;margin-bottom:20px}
 .tab{flex:1;padding:9px 4px;border:none;background:transparent;color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;letter-spacing:-.01em;cursor:pointer;border-radius:9px;transition:all .2s}
-.tab.active{background:var(--surface);color:var(--text);}
+.tab.active{background:var(--accent);color:#000;}
 .scan-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:var(--radius);color:#000;font-family:'Barlow',sans-serif;font-size:17px;font-weight:600;letter-spacing:-.02em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;transition:opacity .15s}
 .scan-btn:active{opacity:.8}
 .scan-btn.stop{background:var(--danger)}
@@ -33,7 +29,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 #reader video{width:100%!important;height:auto!important}
 .search-row{display:flex;gap:8px;margin-bottom:16px}
 .search-input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:13px 16px;color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;outline:none;transition:border-color .2s;}
-.search-input:focus{border-color:var(--text)}
+.search-input:focus{border-color:var(--accent)}
 .search-input::placeholder{color:var(--muted)}
 .search-btn{background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:12px;padding:13px 18px;color:#fff;font-size:18px;cursor:pointer}
 .product-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;animation:slideUp .3s ease;}
@@ -49,40 +45,40 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 .field-group{display:flex;flex-direction:column;gap:6px}
 .field-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
 .field-input{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:border-color .2s}
-.field-input:focus{border-color:var(--text)}
+.field-input:focus{border-color:var(--accent)}
 .deposito-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .dep-pill{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap}
-.dep-pill.active{background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border-color:var(--text);color:#fff;font-weight:600}
+.dep-pill.active{background:#0f2b1a;border-color:var(--accent);color:var(--accent);font-weight:500}
 .tallas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:8px;margin-bottom:16px}
 .talla-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .15s;}
-.talla-card:hover{border-color:var(--text)}
-.talla-card.selected{border-color:var(--text);background:#f0f0f0;}
+.talla-card:hover{border-color:var(--accent)}
+.talla-card.selected{border-color:var(--text);background:var(--surface2);}
 .talla-card.agotado{opacity:.4}
 .talla-label{font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;color:var(--text)}
 .talla-stock{font-size:11px;margin-top:2px}
-.talla-stock.ok{color:#34c759}.talla-stock.low{color:var(--warn)}.talla-stock.zero{color:var(--danger)}.talla-stock.new{color:var(--muted);font-style:italic}
+.talla-stock.ok{color:var(--accent)}.talla-stock.low{color:var(--warn)}.talla-stock.zero{color:var(--danger)}.talla-stock.new{color:var(--muted);font-style:italic}
 .new-talla-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
 .new-talla-input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;outline:none}
-.new-talla-input:focus{border-color:var(--text)}
+.new-talla-input:focus{border-color:var(--accent)}
 .add-talla-btn{padding:10px 16px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .edit-panel{background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-top:4px}
 .edit-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .edit-label{font-size:13px;color:var(--muted);min-width:80px}
 .qty-controls{display:flex;align-items:center;gap:8px}
 .qty-btn{width:40px;height:40px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.qty-btn.plus{border-color:var(--text);color:var(--text);background:#f0f0f0}
+.qty-btn.plus{border-color:var(--text);color:var(--text);background:var(--surface2)}
 .qty-btn.minus{border-color:var(--danger);color:var(--danger);background:#2a1010}
 .qty-display{font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;min-width:50px;text-align:center}
 .op-btns{display:flex;gap:8px;flex-wrap:wrap}
 .op-btn{padding:8px 16px;border-radius:10px;border:1.5px solid;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
-.op-btn.entrada{background:#0f2b1a;border-color:#34c759;color:#1a7a35}
-.op-btn.salida{background:#2a1010;border-color:var(--danger);color:#c0392b}
-.op-btn.ajuste{background:#1a1a10;border-color:var(--warn);color:#b8760a}
+.op-btn.entrada{background:#0f2b1a;border-color:var(--accent);color:var(--accent)}
+.op-btn.salida{background:#2a1010;border-color:var(--danger);color:var(--danger)}
+.op-btn.ajuste{background:#1a1a10;border-color:var(--warn);color:var(--warn)}
 .save-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:12px;color:#000;font-family:'Barlow',sans-serif;font-size:17px;font-weight:600;letter-spacing:-.02em;cursor:pointer;margin-top:8px}
 .save-btn:disabled{opacity:.3;cursor:not-allowed}
 .msg{padding:12px 18px;border-radius:12px;font-size:14px;margin-bottom:12px;display:none}
-.msg.ok{background:#0f2b1a;border:1px solid #1a4a2a;color:#1a7a35;display:flex;align-items:center;gap:8px}
-.msg.err{background:#2a1010;border:1px solid #4a1a1a;color:#c0392b;display:flex;align-items:center;gap:8px}
+.msg.ok{background:#0f2b1a;border:1px solid #1a4a2a;color:var(--accent);display:flex;align-items:center;gap:8px}
+.msg.err{background:#2a1010;border:1px solid #4a1a1a;color:var(--danger);display:flex;align-items:center;gap:8px}
 .msg.loading{background:var(--surface2);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;gap:8px}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.hidden{display:none}
@@ -91,9 +87,9 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 .modal-title{font-family:'Barlow',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.02em;text-align:center;margin-bottom:6px}
 .modal-subtitle{font-size:14px;color:var(--muted);text-align:center;margin-bottom:18px;line-height:1.5}
 .modal-summary{background:var(--surface2);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;line-height:1.9}
-.modal-summary span{color:var(--text);font-weight:600}
+.modal-summary span{color:var(--accent);font-weight:600}
 .modal-cod-input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:14px 18px;color:var(--text);font-family:'Barlow',sans-serif;font-size:24px;font-weight:700;letter-spacing:.2em;text-align:center;outline:none;transition:border-color .2s;margin-bottom:6px}
-.modal-cod-input:focus{border-color:var(--text)}
+.modal-cod-input:focus{border-color:var(--accent)}
 .modal-cod-input::placeholder{font-size:14px;letter-spacing:.02em;font-weight:400;color:var(--muted)}
 .modal-error{font-size:12px;color:var(--danger);text-align:center;min-height:18px;margin-bottom:12px}
 .modal-btns{display:flex;gap:10px}
@@ -101,19 +97,19 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 .modal-confirm{flex:2;padding:13px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:12px;color:#000;font-family:'Barlow',sans-serif;font-size:17px;font-weight:600;letter-spacing:-.02em;cursor:pointer}
 .modal-confirm:disabled{opacity:.3;cursor:not-allowed}
 .tasa-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:14px 10px;cursor:pointer;transition:all .2s;text-align:center;width:100%}
-.tasa-btn:hover{border-color:var(--text)}
-.tasa-btn.selected{border-color:var(--text);background:#f0f0f0;}
-.sol-filter-btn.active{border-color:var(--text)!important;background:#f0f0f0!important;color:var(--text)!important;}
+.tasa-btn:hover{border-color:var(--accent)}
+.tasa-btn.selected{border-color:var(--text);background:var(--surface2);}
+.sol-filter-btn.active{border-color:var(--text)!important;background:var(--surface2)!important;color:var(--text)!important;}
 .historial-list{display:flex;flex-direction:column;gap:8px}
 .hist-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;}
 .hist-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
 .hist-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
-.hist-badge.entrada{background:#0f2b1a;color:#1a7a35}
-.hist-badge.salida{background:#2a1010;color:#c0392b}
-.hist-badge.ajuste{background:#1a1a10;color:#b8760a}
+.hist-badge.entrada{background:#0f2b1a;color:var(--accent)}
+.hist-badge.salida{background:#2a1010;color:var(--danger)}
+.hist-badge.ajuste{background:#1a1a10;color:var(--warn)}
 .hist-prod{font-size:14px;font-weight:600;flex:1}
 .hist-qty{font-family:'Barlow',sans-serif;font-size:20px;font-weight:700}
-.hist-qty.pos{color:#34c759}.hist-qty.neg{color:var(--danger)}.hist-qty.eq{color:var(--warn)}
+.hist-qty.pos{color:var(--accent)}.hist-qty.neg{color:var(--danger)}.hist-qty.eq{color:var(--warn)}
 .hist-meta{display:flex;gap:8px;flex-wrap:wrap}
 .hist-chip{background:var(--surface2);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--muted)}
 .hist-chip.usuario{color:var(--warn)}
@@ -237,7 +233,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div class="modal-title">Tipo de Pedido</div>
     <div class="modal-subtitle">¿Para qué modelo es este link?</div>
     <div style="display:flex;flex-direction:column;gap:10px;width:100%;margin-bottom:8px;">
-      <button onclick="confirmarModeloLink('comfy')" style="width:100%;padding:14px;background:#f0f0f0;border:2px solid var(--accent);border-radius:10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
+      <button onclick="confirmarModeloLink('comfy')" style="width:100%;padding:14px;background:var(--surface2);border:2px solid var(--accent);border-radius:10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
         🟢 COMFY MEGA PROMO
       </button>
       <button onclick="confirmarModeloLink('fullcomfy')" style="width:100%;padding:14px;background:#1a1a2a;border:2px solid #6688ff;border-radius:10px;color:#6688ff;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
@@ -451,7 +447,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   <div id="tab-stock">
     <!-- SUB-PESTAÑAS STOCK -->
     <div style="display:flex;gap:8px;margin-bottom:14px;">
-      <button onclick="switchStock('inventario')" id="stktab-inventario" style="flex:1;padding:9px;border:2px solid var(--accent);border-radius:10px;background:#f0f0f0;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">📦 Inventario</button>
+      <button onclick="switchStock('inventario')" id="stktab-inventario" style="flex:1;padding:9px;border:2px solid var(--accent);border-radius:10px;background:var(--surface2);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">📦 Inventario</button>
       <button onclick="switchStock('buscar')" id="stktab-buscar" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🔍 Buscar</button>
       <button onclick="switchStock('historial')" id="stktab-historial" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🕐 Historial</button>
     </div>
@@ -524,7 +520,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   <div id="tab-etiquetas" style="display:none">
     <!-- SUB-TABS -->
     <div style="display:flex;gap:8px;margin-bottom:14px;">
-      <button onclick="switchEtiqueta('nuevo')" id="etqtab-nuevo" style="flex:1;padding:9px;border:2px solid var(--accent);border-radius:10px;background:#f0f0f0;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">➕ Nuevo</button>
+      <button onclick="switchEtiqueta('nuevo')" id="etqtab-nuevo" style="flex:1;padding:9px;border:2px solid var(--accent);border-radius:10px;background:var(--surface2);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">➕ Nuevo</button>
       <button onclick="switchEtiqueta('verqr')" id="etqtab-verqr" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🔍 Ver QR</button>
     </div>
 
@@ -616,7 +612,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Link único que expira en <b style="color:var(--warn);">4 horas</b> · solo se usa <b style="color:var(--warn);">una vez</b>.</div>
       <button onclick="generarLinkPedido()" id="btn-generar-link" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;">⚡ Generar Link</button>
       <div id="link-result" style="display:none;margin-top:14px;">
-        <div style="background:#f0f0f0;border:1px solid #1a4a2a;border-radius:10px;padding:12px 14px;">
+        <div style="background:var(--surface2);border:1px solid #1a4a2a;border-radius:10px;padding:12px 14px;">
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Link generado — válido por 4 horas</div>
           <div id="link-text" style="font-size:13px;color:var(--text);word-break:break-all;margin-bottom:10px;"></div>
           <button onclick="copiarLink()" style="width:100%;padding:10px;background:var(--surface3);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">📋 Copiar Link</button>
@@ -659,7 +655,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
     <!-- SUB-PESTAÑAS -->
     <div style="display:flex;gap:8px;margin-bottom:16px;">
-      <button onclick="switchRespaldo('nuevo')" id="rvtab-nuevo" style="flex:1;padding:10px;border:2px solid var(--accent);border-radius:10px;background:#f0f0f0;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">➕ Nuevo</button>
+      <button onclick="switchRespaldo('nuevo')" id="rvtab-nuevo" style="flex:1;padding:10px;border:2px solid var(--accent);border-radius:10px;background:var(--surface2);color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">➕ Nuevo</button>
       <button onclick="switchRespaldo('pendientes')" id="rvtab-pendientes" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">⏳ Pendientes</button>
       <button onclick="switchRespaldo('historial')" id="rvtab-historial" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">📋 Historial</button>
     </div>
@@ -1150,7 +1146,7 @@ function showProduct(p){
           <div class="field-group" style="margin-bottom:10px;">
             <div class="field-label">Operación</div>
             <div style="display:flex;gap:8px;">
-              <button id="cm-op-entrada" onclick="setCMOp('entrada')" style="flex:1;padding:9px;background:#f0f0f0;border:2px solid var(--accent);border-radius:8px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">➕ Entrada</button>
+              <button id="cm-op-entrada" onclick="setCMOp('entrada')" style="flex:1;padding:9px;background:var(--surface2);border:2px solid var(--accent);border-radius:8px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">➕ Entrada</button>
               <button id="cm-op-salida" onclick="setCMOp('salida')" style="flex:1;padding:9px;background:var(--surface2);border:2px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">➖ Salida</button>
             </div>
           </div>
@@ -2289,7 +2285,7 @@ async function cargarHistorialRespaldo(cod='',fecha=''){
             <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text);">${codigo}</span>
             <span style="font-size:11px;color:var(--muted);margin-left:8px;">🕐 ${fecha} · ${usuario}</span>
           </div>
-          <span style="background:#f0f0f0;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--text);">✓ Procesado</span>
+          <span style="background:var(--surface2);border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--text);">✓ Procesado</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px;margin-bottom:10px;background:var(--surface2);border-radius:8px;padding:10px;">
           <div><span style="color:var(--muted);">Banco:</span> <b>${banco2}</b></div>
@@ -2612,7 +2608,7 @@ async function cargarSolicitudes(filtro){
         <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
           <span style="color:var(--muted);">Retira:</span> ${v(19)}${v(20)?` · C.I: ${v(20)}`:''}${v(21)?` · Cel: ${v(21)}`:''}
         </div>
-        <div style="background:#f0f0f0;border:1px solid #1a4a2a;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:12px;">
+        <div style="background:var(--surface2);border:1px solid #1a4a2a;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:12px;">
           <div style="font-size:11px;color:var(--text);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px;">💳 Pago del cliente</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
             <div><span style="color:var(--muted);">Moneda:</span> <b>${v(28)||'—'}</b></div>
