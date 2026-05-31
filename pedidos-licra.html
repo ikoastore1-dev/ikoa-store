@@ -202,6 +202,7 @@ window.addEventListener('load',function(){
       <div class="card-title">Selecciona tu pack</div>
       <div class="card-note">Cada pack incluye franelas del mismo color de tela y vinil.</div>
       <div class="option-grid cols3" id="pack-grid">
+        <button class="opt-btn" onclick="selectPack(this,1)" id="btn-pack-1">1 PRENDA<span class="sub">prenda individual</span></button>
         <button class="opt-btn" onclick="selectPack(this,2)">2 PACK<span class="sub">2 franelas</span></button>
         <button class="opt-btn" onclick="selectPack(this,3)">3 PACK<span class="sub">3 franelas</span></button>
         <button class="opt-btn" onclick="selectPack(this,4)">4 PACK<span class="sub">4 franelas</span></button>
@@ -476,7 +477,7 @@ window.addEventListener('load',function(){
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbxscZ0dKNG1UF2iHfB5h16vSoc0lXi6Fj6oJvk5iwPSDHgaKWBugn78BUBmIxV2H0iKPw/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbxFRsIeC42qD2QXeZL01SanN41r0qwCRoSzB_pDdNpoH-1J8f_t9T5dGHPesK9oKdiUJw/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
@@ -1052,14 +1053,21 @@ async function calcularPago(){
     const recargas=pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase().trim())).length;
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
 
-    // Descomponer en combinación de packs
-    const combos=descomponerPacks(franelas);
     let packBs=0, packUsd=0;
-    combos.forEach(c=>{
-      const key=c+'PACK.L.01';
-      const pp=window._packPrecios&&window._packPrecios[key];
-      if(pp){ packBs+=parseFloat(pp.bs)||0; packUsd+=parseFloat(pp.usd)||0; }
-    });
+
+    if(franelas===1){
+      // Prenda individual → usar LICRA01
+      const pp=window._packPrecios&&window._packPrecios['LICRA01'];
+      if(pp){ packBs=parseFloat(pp.bs)||0; packUsd=parseFloat(pp.usd)||0; }
+    } else {
+      // Descomponer en combinación de packs
+      const combos=descomponerPacks(franelas);
+      combos.forEach(c=>{
+        const key=c+'PACK.L.01';
+        const pp=window._packPrecios&&window._packPrecios[key];
+        if(pp){ packBs+=parseFloat(pp.bs)||0; packUsd+=parseFloat(pp.usd)||0; }
+      });
+    }
 
     const recargaBs=recargas*precioRecarga.bs;
     const recargaUsd=recargas*precioRecarga.usd;
@@ -1069,7 +1077,8 @@ async function calcularPago(){
     totalBs+=packBs+recargaBs+capuchaBs;
     totalUsd+=packUsd+recargaUsd+capuchaUsd;
 
-    desglose.push(`Pack ${i+1}: ${franelas} franelas (${combos.map(c=>c+'P').join('+')})`+
+    const label=franelas===1?'1 Prenda':`${franelas} franelas (${descomponerPacks(franelas).map(c=>c+'P').join('+')})`;
+    desglose.push(`Pack ${i+1}: ${label}`+
       (recargas>0?` + ${recargas} plus`:'')+
       (capuchas>0?` + ${capuchas} capucha(s)`:''));
   });
