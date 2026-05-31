@@ -454,20 +454,21 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
     <!-- INVENTARIO -->
     <div id="stksec-inventario">
-    <button class="scan-btn" id="scan-btn" onclick="toggleScanner()">
-      <span style="font-size:24px">⬛</span>
-      <span id="scan-btn-text">Escanear Código QR</span>
-    </button>
-    <div id="scanner-wrap">
-      <div id="scanner-header">
-        <span>📷 Apunta al código QR del producto</span>
-        <button id="close-scanner" onclick="stopScanner()">✕ Cerrar</button>
-      </div>
-      <div id="reader" style="position:relative;width:100%;max-height:320px;overflow:hidden;border-radius:10px;background:#000;">
-        <video id="scanner-video" style="width:100%;height:auto;display:block;" autoplay muted playsinline></video>
-        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;border:3px solid var(--accent);border-radius:12px;pointer-events:none;"></div>
-      </div>
+    <!-- SCANNER: cámara nativa + galería -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="scan-btn" id="scan-btn" onclick="document.getElementById('qr-camera-input').click()" style="flex:1;margin-bottom:0;">
+        <span style="font-size:20px;">📷</span>
+        <span id="scan-btn-text">Escanear QR</span>
+      </button>
+      <button onclick="document.getElementById('qr-gallery-input').click()" style="flex:1;padding:16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.04em;">
+        🖼️ GALERÍA
+      </button>
     </div>
+    <!-- Input cámara nativa (capture) -->
+    <input type="file" id="qr-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="leerQRdesdeImagen(event)">
+    <!-- Input galería -->
+    <input type="file" id="qr-gallery-input" accept="image/*" style="display:none;" onchange="leerQRdesdeImagen(event)">
+    <div id="qr-scan-msg" style="display:none;padding:12px 16px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
     <div class="search-row">
       <input class="search-input" type="text" id="search-input" placeholder="Buscar código o nombre..." oninput="doSearch()" onkeydown="if(event.key==='Enter')doSearch()">
       <button class="search-btn" onclick="doSearch()">🔍</button>
@@ -1664,43 +1665,43 @@ function imprimirEtiqueta(){
 
 
 // ── SCANNER ───────────────────────────────────────────────────
-async function toggleScanner(){
-  if(scannerActive){ stopScanner(); return; }
-  document.getElementById('scanner-wrap').classList.add('active');
-  document.getElementById('scan-btn').classList.add('stop');
-  document.getElementById('scan-btn-text').textContent='Detener Escáner';
-  scannerActive=true;
+async function leerQRdesdeImagen(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  const msgEl=document.getElementById('qr-scan-msg');
+  msgEl.style.display='block';
+  msgEl.style.background='var(--surface2)';
+  msgEl.style.border='1px solid var(--border)';
+  msgEl.style.color='var(--muted)';
+  msgEl.innerHTML='<span class="spinner">↻</span> Leyendo QR...';
   try{
+    const url=URL.createObjectURL(file);
     const hints=new Map();
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-    zxingReader=new ZXing.BrowserMultiFormatReader(hints);
-    const devices=await ZXing.BrowserCodeReader.listVideoInputDevices();
-    const backCam=devices.find(d=>d.label.toLowerCase().includes('back')||d.label.toLowerCase().includes('rear')||d.label.toLowerCase().includes('environment'));
-    const deviceId=backCam?backCam.deviceId:undefined;
-    const videoEl=document.getElementById('scanner-video');
-    zxingReader.decodeFromVideoDevice(deviceId, videoEl, (result, err)=>{
-      if(result){
-        const decoded=result.getText();
-        document.getElementById('search-input').value=decoded;
-        doSearch();
-        stopScanner();
-      }
-    });
-  }catch(err){
-    alert('No se pudo acceder a la cámara: '+err);
-    stopScanner();
+    hints.set(ZXing.DecodeHintType.TRY_HARDER,true);
+    const reader=new ZXing.BrowserMultiFormatReader(hints);
+    const result=await reader.decodeFromImageUrl(url);
+    URL.revokeObjectURL(url);
+    const decoded=result.getText();
+    msgEl.style.background='#0f2b1a';
+    msgEl.style.border='1px solid var(--accent)';
+    msgEl.style.color='var(--accent)';
+    msgEl.innerHTML='✅ QR leído: <b>'+decoded+'</b>';
+    document.getElementById('search-input').value=decoded;
+    doSearch();
+    setTimeout(()=>{ msgEl.style.display='none'; },3000);
+  }catch(e){
+    msgEl.style.background='#2a1010';
+    msgEl.style.border='1px solid var(--danger)';
+    msgEl.style.color='var(--danger)';
+    msgEl.innerHTML='✗ No se encontró QR en la imagen — intenta con mejor luz o más cerca';
+    setTimeout(()=>{ msgEl.style.display='none'; },4000);
   }
+  event.target.value='';
 }
 
-function stopScanner(){
-  if(zxingReader){ try{ zxingReader.reset(); }catch(e){} zxingReader=null; }
-  scannerActive=false;
-  document.getElementById('scanner-wrap').classList.remove('active');
-  document.getElementById('scan-btn').classList.remove('stop');
-  document.getElementById('scan-btn-text').textContent='Escanear Código QR';
-  const video=document.getElementById('scanner-video');
-  if(video&&video.srcObject){ video.srcObject.getTracks().forEach(t=>t.stop()); video.srcObject=null; }
-}
+// Scanner de video (no usado, mantenido por compatibilidad)
+function toggleScanner(){ document.getElementById('qr-camera-input').click(); }
+function stopScanner(){}
 
 // ── TABS ──────────────────────────────────────────────────────
 function switchTab(tab){
