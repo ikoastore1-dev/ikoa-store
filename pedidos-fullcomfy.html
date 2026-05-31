@@ -930,35 +930,29 @@ function cambiarRepeticion(id, delta){
   const cntEl=document.getElementById('rep-count-'+id);
   if(!cntEl) return;
   const actual=parseInt(cntEl.textContent||'1');
-  const totalActual=getTotalRepeticiones();
   const nuevo=actual+delta;
 
   // No bajar de 1
   if(nuevo<1) return;
 
-  // No subir si ya completamos el pack
-  if(delta>0 && totalActual>=pedido.pack) return;
+  // No subir más allá del total del pack
+  if(nuevo>pedido.pack) return;
 
+  // Actualizar contador
   cntEl.textContent=nuevo;
 
-  // Si subimos → eliminar franelas del final hasta que la suma cuadre
   if(delta>0){
-    // Eliminar la última franela (si hay más de una)
+    // Subimos → eliminar franelas del final (excepto la actual) hasta cuadrar
     const cards=[...document.getElementById('piezas-container').querySelectorAll('.pieza-card')];
-    const totalNuevo=getTotalRepeticiones();
-    // Eliminar franelas extras del final (no la actual)
     for(let i=cards.length-1;i>=0&&getTotalRepeticiones()>pedido.pack;i--){
       const cid=cards[i].id.replace('pieza-','');
       if(String(cid)!==String(id)){
         cards[i].remove();
       }
     }
-  }
-
-  // Si bajamos → agregar una franela vacía si falta
-  if(delta<0){
-    const totalNuevo=getTotalRepeticiones();
-    if(totalNuevo<pedido.pack){
+  } else {
+    // Bajamos → agregar franelas vacías hasta completar el pack
+    while(getTotalRepeticiones()<pedido.pack){
       addPieza();
     }
   }
