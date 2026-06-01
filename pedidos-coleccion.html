@@ -816,13 +816,6 @@ function validateStep(n){
     if(v==='Short'&&!pedido.largo){ alert('Selecciona el largo del short'); return false; }
     return true;
   }
-    if(!pedido.modelo){ alert('Selecciona el modelo'); return false; }
-    if(!pedido.manga){ alert('Selecciona el tipo de manga'); return false; }
-    if(!pedido.capucha){ alert('Selecciona si deseas capucha'); return false; }
-    if(!pedido.tela){ alert('Selecciona el color de tela'); return false; }
-    if(!pedido.vinil){ alert('Selecciona el color del vinil'); return false; }
-    return true;
-  }
   if(n===4){
     savePiezas();
     const alerta=document.getElementById('alerta-min');
@@ -1174,52 +1167,7 @@ async function calcularPago(){
   document.getElementById('pago-total-usd').textContent='$'+pagoTotalUsd.toFixed(2);
   document.getElementById('pm-monto-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
   document.getElementById('pm-monto-usd').textContent='$'+pagoTotalUsd.toFixed(2);
-}
-  try{
-    const data=await scriptGETjson({action:'leerPreciosColeccion'});
-    if(data.ok){
-      precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
-      precioCapucha={bs:parseFloat(data.capucha_bs)||0, usd:parseFloat(data.capucha_usd)||0};
-      // tasa BCV
-      if(data.tasa_bcv) document.getElementById('pago-tasa-bcv').textContent='Bs '+parseFloat(data.tasa_bcv).toFixed(2);
-      // precios por pack
-      window._packPrecios=data.pack_precios||{};
-    }
-  }catch(e){ console.error('Error leyendo precios:',e); }
 
-  const tallasGrandes=['XL','XXL','3XL','XXXL','2XL',
-    'DAMA XL','DAMA XXL','DAMA 3XL','DAMA XXXL','DAMA 2XL',
-    'CABALLERO XL','CABALLERO XXL','CABALLERO 3XL','CABALLERO XXXL','CABALLERO 2XL'];
-
-  let totalBs=0, totalUsd=0;
-  let desglose=[];
-
-  pedido.packs.forEach((pk,i)=>{
-    const franelas=pk.piezas.length||pk.pack||0;
-    const recargas=pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase().trim())).length;
-    const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
-    const codigoProd=pk.codigoProducto||pedido.codigoProducto;
-    const pp=window._packPrecios&&window._packPrecios[codigoProd];
-    let packBs=pp?parseFloat(pp.bs)||0:0;
-    let packUsd=pp?parseFloat(pp.usd)||0:0;
-    const recargaBs=recargas*precioRecarga.bs, recargaUsd=recargas*precioRecarga.usd;
-    const v=pk.variante||pedido.variante||'';
-    const capuchaBs=(v==='Playera'||v==='Dress')?capuchas*precioCapucha.bs:0;
-    const capuchaUsd=(v==='Playera'||v==='Dress')?capuchas*precioCapucha.usd:0;
-    totalBs+=packBs+recargaBs+capuchaBs;
-    totalUsd+=packUsd+recargaUsd+capuchaUsd;
-    desglose.push(`${pk.modelo||codigoProd}${pk.largo?' · '+pk.largo:''}${pk.capucha&&pk.capucha!=='Sin Capucha'?' · Con capucha':''}`+
-      (recargas>0?` + ${recargas} plus`:''));
-  });
-
-  pagoTotalBs=Math.round(totalBs*100)/100;
-  pagoTotalUsd=Math.round(totalUsd*100)/100;
-
-  document.getElementById('pago-desglose').innerHTML=desglose.join('<br>');
-  document.getElementById('pago-total-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
-  document.getElementById('pago-total-usd').textContent='$'+pagoTotalUsd.toFixed(2);
-  document.getElementById('pm-monto-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
-  document.getElementById('pm-monto-usd').textContent='$'+pagoTotalUsd.toFixed(2);
 }
 
 function seleccionarPago(tipo){
