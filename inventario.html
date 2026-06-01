@@ -242,6 +242,9 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <button onclick="confirmarModeloLink('licra')" style="width:100%;padding:14px;background:#2a1a1a;border:2px solid var(--warn);border-radius:10px;color:var(--warn);font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
         🟠 LICRA PROTECT
       </button>
+      <button onclick="confirmarModeloLink('coleccion')" style="width:100%;padding:14px;background:#1a1a2a;border:2px solid #aa88ff;border-radius:10px;color:#aa88ff;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
+        🟣 LICRA COLECCIÓN
+      </button>
     </div>
     <button class="modal-cancel" onclick="document.getElementById('modal-modelo-link').classList.add('hidden')">Cancelar</button>
   </div>
@@ -926,7 +929,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjmR4llMxnHQaTeOXlFXPq4uypx2MsrVUHrqnkJAWiHgiGkiaibf8GRNCX6vvWkMp9HA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmv9vsqZKfyLD6Pt3LLBFV7QlITW4XSb0Bso_C9h2VKl3iWTm_bu0_su0XMct5sdS03Q/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -3526,7 +3529,8 @@ function scriptPOSTjson(params){
 const BASE_URLS={
   comfy:    'https://ikoastore1-dev.github.io/ikoa-store/pedidos.html',
   fullcomfy:'https://ikoastore1-dev.github.io/ikoa-store/pedidos-fullcomfy.html',
-  licra:    'https://ikoastore1-dev.github.io/ikoa-store/pedidos-licra.html'
+  licra:    'https://ikoastore1-dev.github.io/ikoa-store/pedidos-licra.html',
+  coleccion:'https://ikoastore1-dev.github.io/ikoa-store/pedidos-coleccion.html'
 };
 const BASE_URL=BASE_URLS.comfy;
 let currentToken='';

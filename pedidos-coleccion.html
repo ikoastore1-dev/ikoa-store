@@ -97,6 +97,27 @@ window.addEventListener('load',function(){
   },2000);
 });
 </script>
+<!-- SPLASH SCREEN -->
+<div id="splash" style="position:fixed;inset:0;background:#0a0a0f;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s ease;">
+  <div style="text-align:center;animation:splashIn .8s cubic-bezier(.16,1,.3,1) forwards;">
+    <div style="font-family:'Rajdhani',sans-serif;font-size:64px;font-weight:700;letter-spacing:.25em;color:#00e5b0;line-height:1;">IKOA</div>
+    <div style="width:40px;height:2px;background:#00e5b0;margin:12px auto 14px;border-radius:2px;animation:splashLine 1s ease .4s both;transform:scaleX(0);transform-origin:center;"></div>
+    <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:400;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;animation:splashIn 1s ease .6s both;opacity:0;">Ropa Técnica · vivir el sol sin límites</div>
+  </div>
+</div>
+<style>
+@keyframes splashIn{from{opacity:0;transform:scale(.92) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes splashLine{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+</style>
+<script>
+window.addEventListener('load',function(){
+  setTimeout(function(){
+    const s=document.getElementById('splash');
+    s.style.opacity='0';
+    setTimeout(function(){ s.style.display='none'; },600);
+  },2000);
+});
+</script>
 
 
 <!-- MODAL CONFIRMACIÓN DATOS -->
@@ -197,26 +218,40 @@ window.addEventListener('load',function(){
 
   <!-- STEP 2: PACK -->
   <div class="step" id="step2">
-    <div class="step-header"><div class="step-num">Paso 2 de 6</div><div class="step-title">¿Cuántas franelas deseas?</div></div>
+    <div class="step-header"><div class="step-num">Paso 2 de 6</div><div class="step-title">Selecciona el producto</div></div>
     <div class="card">
-      <div class="card-title">Selecciona tu pack</div>
-      <div class="card-note">Cada pack incluye franelas del mismo color de tela y vinil.</div>
-      <div class="option-grid cols3" id="pack-grid">
-        <button class="opt-btn" onclick="selectPack(this,1)" id="btn-pack-1">1 PRENDA<span class="sub">prenda individual</span></button>
-        <button class="opt-btn" onclick="selectPack(this,2)">2 PACK<span class="sub">2 franelas</span></button>
-        <button class="opt-btn" onclick="selectPack(this,3)">3 PACK<span class="sub">3 franelas</span></button>
-        <button class="opt-btn" onclick="selectPack(this,4)">4 PACK<span class="sub">4 franelas</span></button>
-        <button class="opt-btn" onclick="selectPack(this,5)">5 PACK<span class="sub">5 franelas</span></button>
-        <button class="opt-btn" onclick="selectPack(this,6)">6 PACK<span class="sub">6 franelas</span></button>
-        <button class="opt-btn" onclick="selectPack(this,7)">7 PACK<span class="sub">7 franelas</span></button>
+      <div class="card-title">Serie</div>
+      <div class="option-grid cols3" id="serie-grid">
+        <button class="opt-btn" onclick="selectSerie(this,'Camping')">CAMPING<span class="sub">Outdoor</span></button>
+        <button class="opt-btn" onclick="selectSerie(this,'Nautica')">NÁUTICA<span class="sub">Colección</span></button>
+        <button class="opt-btn" onclick="selectSerie(this,'Alpha')">ALPHA<span class="sub">Colección</span></button>
       </div>
-      <div class="field-group" style="margin-bottom:0">
-        <div class="field-label">¿Otra cantidad?</div>
-        <input class="field-input" type="number" id="pack-custom" placeholder="Ej: 8, 10, 12..." min="2" max="50" oninput="setCustomPack(this.value)">
+      <div id="color-serie-wrap" style="display:none;margin-top:12px;">
+        <div class="card-title">Color</div>
+        <div class="option-grid cols3" id="color-serie-grid"></div>
+      </div>
+      <div id="variante-wrap" style="display:none;margin-top:12px;">
+        <div class="card-title">Variante</div>
+        <div class="option-grid cols2" id="variante-grid"></div>
+      </div>
+      <!-- Short Serie unicolor -->
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+        <div class="card-title">Short Serie Unicolor</div>
+        <div class="option-grid cols3" id="short-serie-grid">
+          <button class="opt-btn" onclick="selectShortSerie(this,'Blanco')">BLANCO</button>
+          <button class="opt-btn" onclick="selectShortSerie(this,'Negro')">NEGRO</button>
+          <button class="opt-btn" onclick="selectShortSerie(this,'Azul Rey')">AZUL REY</button>
+          <button class="opt-btn" onclick="selectShortSerie(this,'Azul Marino')">AZUL MARINO</button>
+          <button class="opt-btn" onclick="selectShortSerie(this,'Menta')">MENTA</button>
+          <button class="opt-btn" onclick="selectShortSerie(this,'Gris')">GRIS</button>
+          <button class="opt-btn" onclick="selectShortSerie(this,'Rojo')">ROJO</button>
+          <button class="opt-btn" onclick="selectShortSerie(this,'Rosa Bebé')">ROSA BEBÉ</button>
+          <button class="opt-btn" onclick="selectShortSerie(this,'Verde Militar')">VERDE MILITAR</button>
+        </div>
       </div>
     </div>
-    <div id="pack-seleccionado" style="display:none;background:#0f2b1a;border:1px solid var(--accent);border-radius:10px;padding:12px 16px;text-align:center;margin-bottom:12px;">
-      <span style="font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="pack-label">—</span>
+    <div id="producto-seleccionado" style="display:none;background:#0f2b1a;border:1px solid var(--accent);border-radius:10px;padding:12px 16px;text-align:center;margin-bottom:12px;">
+      <span style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--accent);" id="producto-label">—</span>
     </div>
     <div class="nav-row">
       <button class="btn-back" onclick="goStep(1)">← Atrás</button>
@@ -224,45 +259,40 @@ window.addEventListener('load',function(){
     </div>
   </div>
 
-  <!-- STEP 3: MODELO -->
+  <!-- STEP 3: OPCIONES -->
   <div class="step" id="step3">
-    <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title">Modelo y colores</div></div>
+    <div class="step-header"><div class="step-num">Paso 3 de 6</div><div class="step-title">Opciones del producto</div></div>
     <div class="card">
-      <!-- MODELO FIJO - solo informativo -->
+      <!-- Producto seleccionado informativo -->
       <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center;">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Modelo seleccionado</div>
-        <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">COMFY PROTECT</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:2px;">Manga Larga</div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Producto seleccionado</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="step3-producto-label">—</div>
       </div>
-      <!-- CAPUCHA -->
-      <div class="card-title">¿Con o sin capucha?</div>
-      <div class="option-grid cols2">
-        <button class="opt-btn" id="btn-con-capucha" onclick="selectOpt(this,'capucha','Con Capucha')">CON CAPUCHA</button>
-        <button class="opt-btn" id="btn-sin-capucha" onclick="selectOpt(this,'capucha','Sin Capucha')">SIN CAPUCHA</button>
+      <!-- CAPUCHA - solo para Playera, Dress y Cortaviento -->
+      <div id="capucha-wrap">
+        <div class="card-title">¿Con o sin capucha?</div>
+        <div class="option-grid cols2">
+          <button class="opt-btn" id="btn-con-capucha" onclick="selectOpt(this,'capucha','Con Capucha')">CON CAPUCHA</button>
+          <button class="opt-btn" id="btn-sin-capucha" onclick="selectOpt(this,'capucha','Sin Capucha')">SIN CAPUCHA</button>
+        </div>
+      </div>
+      <!-- LARGO - solo para Short -->
+      <div id="largo-wrap" style="display:none;">
+        <div class="card-title">Largo del Short</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Textil Aquatech · Anti-salpicaduras · Secado rápido · Ultra ligero</div>
+        <div class="option-grid cols2">
+          <button class="opt-btn" onclick="selectOpt(this,'largo','Largo Playero')">LARGO PLAYERO</button>
+          <button class="opt-btn" onclick="selectOpt(this,'largo','Largo Sport')">LARGO SPORT</button>
+        </div>
+      </div>
+      <!-- INFO Cortaviento -->
+      <div id="cortaviento-info" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted);margin-top:8px;">
+        🧥 Textil Aquatech · Anti-salpicaduras · Secado rápido · Ultra ligero y fresco
       </div>
     </div>
     <div class="card">
-      <div class="card-title">Colores</div>
-      <div class="card-title" style="margin-top:4px;">Color de Tela</div>
-      <div class="option-grid cols2" id="tela-opts">
-        <button class="opt-btn" onclick="selectColor(this,'tela','Blanco')">BLANCO</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Negro')">NEGRO</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Azul Rey')">AZUL REY</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Azul Marino')">AZUL MARINO</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Menta')">MENTA</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Azul Bebé')">AZUL BEBÉ</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Beige')">BEIGE</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Gris')">GRIS</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Naranja Neón')">NARANJA NEÓN</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Rojo')">ROJO</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Rosa Bebé')">ROSA BEBÉ</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Rosa Vieja')">ROSA VIEJA</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Verde Militar')">VERDE MILITAR</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Lila')">LILA</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Marrón')">MARRÓN</button>
-      </div>
-      <div class="card-title" style="margin-top:4px;">Color de Vinil</div>
-      <div id="vinil-warn" style="display:none;background:#1a1a10;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--warn);margin-bottom:8px;">⚠️ Este color de vinil puede no contrastar bien con la tela seleccionada.</div>
+      <div class="card-title">Color de Vinil</div>
+      <div id="vinil-warn" style="display:none;background:#2a1f0a;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--warn);margin-bottom:8px;">⚠️ Este color de vinil puede no contrastar bien con la tela seleccionada.</div>
       <div class="option-grid cols2" id="vinil-opts">
         <button class="opt-btn" onclick="selectColor(this,'vinil','Blanco')">BLANCO</button>
         <button class="opt-btn" onclick="selectColor(this,'vinil','Negro')">NEGRO</button>
@@ -280,14 +310,14 @@ window.addEventListener('load',function(){
     </div>
     <div class="nav-row">
       <button class="btn-back" onclick="goStep(2)">← Atrás</button>
-      <button class="btn-next" onclick="intentarPaso4()">Siguiente →</button>
+      <button class="btn-next" onclick="goStep(4)">Siguiente →</button>
     </div>
   </div>
 
   <!-- STEP 4: PIEZAS -->
   <div class="step" id="step4">
     <div class="step-header"><div class="step-num">Paso 4 de 6</div><div class="step-title">Tallas y nombres</div></div>
-    <div class="nota" style="margin-bottom:14px;">📌 Nombre en <b>manga derecha</b>, sin iniciales ni logos.<br>Completa las <b id="pack-total-lbl">—</b> franelas de tu pack.<br>Usa el contador <b>+/−</b> para repetir franelas iguales.</div>
+    <div class="nota" style="margin-bottom:14px;">📌 Nombre en <b>manga derecha</b>, sin iniciales ni logos.<br>Selecciona el producto y completa los datos.<br>Usa el contador <b>+/−</b> para repetir franelas iguales.</div>
     <div id="franelas-progreso" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;color:var(--warn);"></div>
     <div class="alerta-min" id="alerta-min"></div>
     <div id="piezas-container"></div>
@@ -323,6 +353,7 @@ window.addEventListener('load',function(){
         <button class="opt-btn" onclick="selectTipoEntrega(this,'ZOOM')">ZOOM</button>
         <button class="opt-btn" onclick="selectTipoEntrega(this,'Tienda MCY')">🏪 Retirar en<br>Tienda Maracay</button>
         <button class="opt-btn" onclick="selectTipoEntrega(this,'Delivery Maracay')">🛵 Delivery<br>Maracay</button>
+        <button class="opt-btn" onclick="selectTipoEntrega(this,'Showroom Caracas')">🏪 Retirar en<br>Showroom Caracas</button>
         <button class="opt-btn" style="grid-column:1/-1" onclick="selectTipoEntrega(this,'Delivery Caracas')">🛵 Delivery Caracas</button>
       </div>
     </div>
@@ -482,7 +513,7 @@ const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
 let currentStep=1;
-let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:0,modelo:'Comfy Protect',manga:'Manga Larga',capucha:'',tela:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:'',packs:[],pagoMoneda:'',pagoRef:'',pagoMonto:0};
+let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:1,codigoProducto:'',nombreProducto:'',variante:'',capucha:'',largo:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:'',packs:[],pagoMoneda:'',pagoRef:'',pagoMonto:0};
 // packs = [{pack, modelo, manga, capucha, tela, vinil, piezas:[]}]
 let piezaCount=0;
 let AGENCIAS_DATA=[];
@@ -659,12 +690,11 @@ function goStep(n){
   updateProgress();
   if(n===4) inicializarPiezas();
   if(n===3){
-    // Asignar valores fijos ANTES de avanzar
-    pedido.modelo='Comfy Protect'; pedido.manga='Manga Larga'; // capucha se selecciona manualmente
+    actualizarPaso3();
   }
   if(n===5){
     if(pedido.packs.length===0){
-      pedido.packs.push({pack:pedido.pack,modelo:pedido.modelo,manga:pedido.manga,capucha:pedido.capucha,tela:pedido.tela,vinil:pedido.vinil,piezas:JSON.parse(JSON.stringify(pedido.piezas))});
+      pedido.packs.push({pack:1,codigoProducto:pedido.codigoProducto,modelo:pedido.nombreProducto,manga:'',capucha:pedido.capucha,largo:pedido.largo,tela:pedido.tela||'',vinil:pedido.vinil,piezas:JSON.parse(JSON.stringify(pedido.piezas))});
     }
   }
   if(n===6) calcularPago();
@@ -733,7 +763,7 @@ function renderPacksResumen(){
 
 function agregarOtroPack(){
   // Resetear campos de modelo/pack para nuevo pack
-  pedido.pack=0; pedido.modelo='Comfy Protect'; pedido.manga='Manga Larga'; // capucha se selecciona manualmente  pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
+  pedido.pack=0; pedido.modelo='Licra Colección'; pedido.manga='Manga Larga'; // capucha se selecciona manualmente  pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
   // Limpiar selecciones visuales
   document.querySelectorAll('#tela-opts .opt-btn, #vinil-opts .opt-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
@@ -774,8 +804,14 @@ function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidCel(c){ return c.replace(/\D/g,'').length>=7; }
 
 function validateStep(n){
-  if(n===2){ if(!pedido.pack||pedido.pack<2){ alert('Selecciona la cantidad de franelas'); return false; } return true; }
+  if(n===2){ if(!pedido.codigoProducto){ alert('Selecciona un producto'); return false; } return true; }
   if(n===3){
+    if(!pedido.vinil){ alert('Selecciona el color de vinil'); return false; }
+    const v=pedido.variante;
+    if((v==='Playera'||v==='Dress'||v==='Cortaviento')&&!pedido.capucha){ alert('Selecciona si deseas capucha'); return false; }
+    if(v==='Short'&&!pedido.largo){ alert('Selecciona el largo del short'); return false; }
+    return true;
+  }
     if(!pedido.modelo){ alert('Selecciona el modelo'); return false; }
     if(!pedido.manga){ alert('Selecciona el tipo de manga'); return false; }
     if(!pedido.capucha){ alert('Selecciona si deseas capucha'); return false; }
@@ -827,6 +863,83 @@ function selectPack(btn,n){
 function setCustomPack(val){
   const n=parseInt(val);
   if(n>=2){ pedido.pack=n; document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected')); document.getElementById('pack-seleccionado').style.display='block'; document.getElementById('pack-label').textContent=n+'PACK — '+n+' franelas'; }
+}
+
+// ── COLECCION SERIE/VARIANTE SELECTION ───────────────────────
+const SERIES_COLECCION={
+  Camping:{nombre:'Camping (Outdoor)',colores:['Negro','Camuflaje','Verde'],
+    codigos:{Negro:{Playera:'CampingBlack',Dress:'CampingBlackDress',Cortaviento:'CampingBlackCortaviento'},
+             Camuflaje:{Playera:'CampingCamo',Dress:'CampingCamoDress',Cortaviento:'CampingCamoCortaviento'},
+             Verde:{Playera:'CampingSelva',Dress:'CampingSelvaDress',Cortaviento:'CampingSelvaCortaviento'}}},
+  Nautica:{nombre:'Náutica',colores:['Pink','Azul','Blanco-Menta','Blanco-Negro'],
+    codigos:{Pink:{Playera:'NauticaPink',Dress:'NauticaPinkDress',Cortaviento:'NauticaPinkCortaviento'},
+             Azul:{Playera:'NauticaMarino',Dress:'NauticaMarinoDress',Cortaviento:'NauticaMarinoCortaviento'},
+             'Blanco-Menta':{Playera:'NauticaMintJack',Dress:'NauticaMintJackDress',Cortaviento:'NauticaMintJackCortaviento'},
+             'Blanco-Negro':{Playera:'NauticaBlackJack',Dress:'NauticaBlackJackDress',Cortaviento:'NauticaBlackJackCortaviento'}}},
+  Alpha:{nombre:'Alpha',colores:['Verde','Gris','Azul','Pink'],
+    codigos:{Verde:{Playera:'AlphaSelva',Dress:'AlphaSelvaDress',Cortaviento:'AlphaSelvaCortaviento'},
+             Gris:{Playera:'AlphaGris',Dress:'AlphaGrisDress',Cortaviento:'AlphaGrisCortaviento'},
+             Azul:{Playera:'AlphaMarino',Dress:'AlphaMarinoDress',Cortaviento:'AlphaMarinoCortaviento'},
+             Pink:{Playera:'AlphaPink',Dress:'AlphaPinkDress',Cortaviento:'AlphaPinkCortaviento'}}}
+};
+let selectedSerie='',selectedColorSerie='',selectedVariante='';
+
+function selectSerie(btn,serie){
+  selectedSerie=serie; selectedColorSerie=''; selectedVariante='';
+  document.querySelectorAll('#serie-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const s=SERIES_COLECCION[serie];
+  document.getElementById('color-serie-grid').innerHTML=s.colores.map(col=>`<button class="opt-btn" onclick="selectColorSerie(this,'${col}')">${col.toUpperCase()}</button>`).join('');
+  document.getElementById('color-serie-wrap').style.display='block';
+  document.getElementById('variante-wrap').style.display='none';
+  document.getElementById('producto-seleccionado').style.display='none';
+  document.querySelectorAll('#short-serie-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+}
+
+function selectColorSerie(btn,color){
+  selectedColorSerie=color; selectedVariante='';
+  document.querySelectorAll('#color-serie-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const s=SERIES_COLECCION[selectedSerie];
+  document.getElementById('variante-grid').innerHTML=s.variantes?s.variantes.map(v=>`<button class="opt-btn" onclick="selectVariante(this,'${v}')">${v.toUpperCase()}</button>`).join(''):'';
+  document.getElementById('variante-wrap').style.display='block';
+  document.getElementById('producto-seleccionado').style.display='none';
+}
+
+function selectVariante(btn,variante){
+  selectedVariante=variante;
+  document.querySelectorAll('#variante-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const s=SERIES_COLECCION[selectedSerie];
+  const codigo=s.codigos[selectedColorSerie][variante];
+  const nombre=`${variante} ${s.nombre} ${selectedColorSerie}`;
+  pedido.codigoProducto=codigo; pedido.nombreProducto=nombre; pedido.variante=variante; pedido.pack=1;
+  document.getElementById('producto-label').textContent=nombre+' · '+codigo;
+  document.getElementById('producto-seleccionado').style.display='block';
+  document.querySelectorAll('#short-serie-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+}
+
+function selectShortSerie(btn,color){
+  document.querySelectorAll('#short-serie-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.querySelectorAll('#serie-grid .opt-btn,#color-serie-grid .opt-btn,#variante-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  selectedSerie=''; selectedColorSerie=''; selectedVariante='Short';
+  pedido.codigoProducto='ShortSerie'; pedido.nombreProducto=`Short Serie ${color}`; pedido.variante='Short'; pedido.tela=color; pedido.pack=1;
+  document.getElementById('producto-label').textContent=`Short Serie ${color} · ShortSerie`;
+  document.getElementById('producto-seleccionado').style.display='block';
+  document.getElementById('color-serie-wrap').style.display='none';
+  document.getElementById('variante-wrap').style.display='none';
+}
+
+function actualizarPaso3(){
+  const v=pedido.variante;
+  document.getElementById('capucha-wrap').style.display=(v==='Playera'||v==='Dress'||v==='Cortaviento')?'block':'none';
+  document.getElementById('largo-wrap').style.display=v==='Short'?'block':'none';
+  document.getElementById('cortaviento-info').style.display=v==='Cortaviento'?'block':'none';
+  document.getElementById('step3-producto-label').textContent=pedido.nombreProducto||'—';
+  pedido.capucha=''; pedido.largo='';
+  document.querySelectorAll('#capucha-wrap .opt-btn,#largo-wrap .opt-btn').forEach(b=>b.classList.remove('selected'));
+  if(v==='Short') pedido.capucha='Sin Capucha';
 }
 
 function selectOpt(btn,field,val){
@@ -1014,23 +1127,52 @@ function savePiezas(){
 }
 
 // ── PAGO ──────────────────────────────────────────────────────
-let precioComfy={bs:0,usd:0}, precioRecarga={bs:0,usd:0}, precioCapucha={bs:0,usd:0};
+let precioRecarga={bs:0,usd:0}, precioCapucha={bs:0,usd:0};
 let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
-
-// Descompone N franelas en combinación óptima de packs 4+3+2
-function descomponerPacks(n){
-  const combos=[];
-  let resto=n;
-  while(resto>=4){ combos.push(4); resto-=4; }
-  if(resto===3) combos.push(3);
-  else if(resto===2) combos.push(2);
-  else if(resto===1){ if(combos.length>0){ combos[combos.length-1]--; combos.push(2); } else combos.push(2); }
-  return combos;
-}
 
 async function calcularPago(){
   try{
-    const data=await scriptGETjson({action:'leerPreciosFullComfy'});
+    const data=await scriptGETjson({action:'leerPreciosColeccion',codigo:pedido.codigoProducto});
+    if(data.ok){
+      precioRecarga={bs:parseFloat(data.recarga_bs)||0,usd:parseFloat(data.recarga_usd)||0};
+      precioCapucha={bs:parseFloat(data.capucha_bs)||0,usd:parseFloat(data.capucha_usd)||0};
+      if(data.tasa_bcv) document.getElementById('pago-tasa-bcv').textContent='Bs '+parseFloat(data.tasa_bcv).toFixed(2);
+      window._packPrecios=data.pack_precios||{};
+    }
+  }catch(e){ console.error('Error leyendo precios:',e); }
+
+  const tallasGrandes=['DAMA XL','DAMA XXL','DAMA 3XL','DAMA 2XL','CABALLERO XL','CABALLERO XXL','CABALLERO 3XL','CABALLERO 2XL'];
+  let totalBs=0, totalUsd=0;
+  let desglose=[];
+
+  pedido.packs.forEach((pk,i)=>{
+    const recargas=pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase().trim())).length;
+    const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
+    const codigoProd=pk.codigoProducto||pedido.codigoProducto;
+    const pp=window._packPrecios&&window._packPrecios[codigoProd];
+    let packBs=pp?parseFloat(pp.bs)||0:0;
+    let packUsd=pp?parseFloat(pp.usd)||0:0;
+    const recargaBs=recargas*precioRecarga.bs, recargaUsd=recargas*precioRecarga.usd;
+    // Capucha solo aplica a Playera y Dress
+    const v=pk.variante||pedido.variante;
+    const capuchaBs=(v==='Playera'||v==='Dress')?capuchas*precioCapucha.bs:0;
+    const capuchaUsd=(v==='Playera'||v==='Dress')?capuchas*precioCapucha.usd:0;
+    totalBs+=packBs+recargaBs+capuchaBs;
+    totalUsd+=packUsd+recargaUsd+capuchaUsd;
+    desglose.push(`${pk.modelo||codigoProd}${pk.largo?' · '+pk.largo:''}${pk.capucha&&pk.capucha!=='Sin Capucha'?' · Con capucha':''}`+
+      (recargas>0?` + ${recargas} plus`:''));
+  });
+
+  pagoTotalBs=Math.round(totalBs*100)/100;
+  pagoTotalUsd=Math.round(totalUsd*100)/100;
+  document.getElementById('pago-desglose').innerHTML=desglose.join('<br>');
+  document.getElementById('pago-total-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
+  document.getElementById('pago-total-usd').textContent='$'+pagoTotalUsd.toFixed(2);
+  document.getElementById('pm-monto-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
+  document.getElementById('pm-monto-usd').textContent='$'+pagoTotalUsd.toFixed(2);
+}
+  try{
+    const data=await scriptGETjson({action:'leerPreciosColeccion'});
     if(data.ok){
       precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
       precioCapucha={bs:parseFloat(data.capucha_bs)||0, usd:parseFloat(data.capucha_usd)||0};
@@ -1056,13 +1198,14 @@ async function calcularPago(){
     let packBs=0, packUsd=0;
 
     if(franelas===1){
-      // Prenda individual → usar COMFY01
-      const pp=window._packPrecios&&window._packPrecios['COMFY01'];
+      // Prenda individual → usar LICRA01
+      const pp=window._packPrecios&&window._packPrecios['LICRA01'];
       if(pp){ packBs=parseFloat(pp.bs)||0; packUsd=parseFloat(pp.usd)||0; }
     } else {
+      // Descomponer en combinación de packs
       const combos=descomponerPacks(franelas);
       combos.forEach(c=>{
-        const key=c+'PACK.C.01.40OFF';
+        const key=c+'PACK.L.01';
         const pp=window._packPrecios&&window._packPrecios[key];
         if(pp){ packBs+=parseFloat(pp.bs)||0; packUsd+=parseFloat(pp.usd)||0; }
       });
@@ -1169,9 +1312,9 @@ function buildMensaje(){
   const packsText=pedido.packs.map((pk,i)=>{
     const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conCapucha?' 🧢':''} — ${p.nombre}`).join('\n');
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
-    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: COMFY PROTECT ${pk.manga}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nColor tela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
+    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: LICRA COLECCIÓN ${pk.manga}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nColor tela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
   }).join('\n\n');
-  return `🛍️ *PEDIDO IKOA & BEKATE — COMFY PROTECT*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Bs'?'Bs':'$'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
+  return `🛍️ *PEDIDO IKOA & BEKATE — LICRA COLECCIÓN*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Bs'?'Bs':'$'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
 }
 
 async function guardarEnSheets(){
@@ -1191,11 +1334,11 @@ async function guardarEnSheets(){
         correo:pedido.correo,
         cedula:pedido.cedula,
         celular:pedido.celular,
-        modelo:'COMFY PROTECT',
-        manga:pk.manga,
-        capucha:pk.capucha,
-        pack:`${pk.pack}PACK`,
-        tela:pk.tela,
+        modelo:'LICRA COLECCIÓN',
+        manga:pk.largo||'',
+        capucha:pk.capucha||'Sin Capucha',
+        pack:pk.codigoProducto||pedido.codigoProducto,
+        tela:pk.tela||pedido.tela||'',
         vinil:pk.vinil,
         piezas:piezasText,
         agencia:pedido.agencia,
