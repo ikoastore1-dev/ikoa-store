@@ -2652,7 +2652,9 @@ async function confirmarPlanificacion(){
     makeBody.append('packs_detalle',packsTexto);
     makeBody.append('usuario',USUARIOS[unlock]);
     makeBody.append('fecha',fechaProd);
-    await fetch(WEBHOOK_URL,{method:'POST',body:makeBody});
+    try{
+      await fetch(WEBHOOK_URL,{method:'POST',body:makeBody,mode:'no-cors'});
+    }catch(makeErr){ console.warn('Make webhook error:',makeErr); }
 
     msgEl.style.background='var(--surface2)';
     msgEl.style.border='1px solid #1a4a2a';
@@ -3204,7 +3206,7 @@ document.getElementById('gestion-form').addEventListener('submit',async function
     if(codMake) formData.append('cod_make', codMake);
 
     // Enviar al webhook de Make
-    const response=await fetch(WEBHOOK_URL,{method:'POST',body:formData});
+    const response=await fetch(WEBHOOK_URL,{method:'POST',body:formData,mode:'no-cors'});
 
     // Guardar en Google Sheets PEDIDOS
     if(tipo==='COD'||tipo==='Enviado'){
@@ -3229,7 +3231,8 @@ document.getElementById('gestion-form').addEventListener('submit',async function
       });
     }
 
-    if(response.ok){
+    // With no-cors, response.type is 'opaque' and response.ok is false — treat as success
+    if(response.ok || response.type==='opaque'){
       msg.style.display='block';
       msg.style.background='var(--surface2)';
       msg.style.border='1px solid #1a4a2a';
