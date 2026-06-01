@@ -307,30 +307,16 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   <div class="modal">
     <div class="modal-icon">✅</div>
     <div class="modal-title">Aprobar Pago</div>
-    <div class="modal-subtitle">Completa los datos del pago y tu código para confirmar</div>
+    <div class="modal-subtitle">Verifica los datos de pago del cliente</div>
     <div class="modal-summary" id="apro-resumen"></div>
-    <div class="field-group" style="margin-bottom:12px;">
-      <div class="field-label">Banco / Método de pago</div>
-      <select class="field-input" id="apro-banco" style="background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;">
-        <option value="">Seleccionar</option>
-        <option>Banesco</option>
-        <option>Mercantil</option>
-        <option>Provincial</option>
-        <option>BDV</option>
-        <option>Bicentenario</option>
-        <option>BOD</option>
-        <option>Pago Móvil</option>
-        <option>Dólares Efectivo</option>
-        <option>Zelle</option>
-        <option>PayPal</option>
-        <option>Otro</option>
-      </select>
+    <!-- Datos de pago del cliente (solo lectura) -->
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;line-height:2;">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Pago del Cliente</div>
+      <div><span style="color:var(--muted);">Moneda:</span> <b id="apro-pago-moneda">—</b></div>
+      <div><span style="color:var(--muted);">Monto:</span> <b id="apro-pago-monto">—</b></div>
+      <div><span style="color:var(--muted);">Referencia:</span> <b id="apro-pago-ref">—</b></div>
     </div>
-    <div class="field-group" style="margin-bottom:12px;">
-      <div class="field-label">Código / Referencia de pago</div>
-      <input class="field-input" type="text" id="apro-cod" placeholder="N° de referencia o confirmación" style="background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;width:100%;">
-    </div>
-    <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de desbloqueo</div>
+    <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div>
     <input class="modal-cod-input" type="password" id="apro-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarAprobacion()">
     <div class="modal-error" id="apro-error"></div>
     <div class="modal-btns">
@@ -643,6 +629,11 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <button class="apro-sub-btn" data-sub="Reprobado" onclick="switchAprobaciones('Reprobado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✗ Reprobadas</button>
       <button class="apro-sub-btn" data-sub="Cola" onclick="switchAprobaciones('Cola')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Cola</button>
     </div>
+    <!-- Búsqueda para Aprobadas/Reprobadas -->
+    <div id="historial-apro-search" style="display:none;margin-bottom:12px;">
+      <input class="search-input" type="text" id="historial-apro-input" placeholder="Buscar por nombre, cédula o código..." style="width:100%;" oninput="filtrarHistorialApro(this.value)">
+    </div>
+    </div>
 
     <!-- SOLICITUDES -->
     <div id="aprosec-solicitudes">
@@ -654,7 +645,11 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div id="aprosec-cola" style="display:none;">
       <div style="display:flex;gap:6px;margin-bottom:12px;">
         <button class="cola-filter-btn" data-filtro="Pagado" onclick="setFiltroCola('Pagado')" style="flex:1;padding:8px;border:1px solid var(--warn);border-radius:8px;background:#1a1a10;color:var(--warn);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ En Cola</button>
-        <button class="cola-filter-btn" data-filtro="En Producción" onclick="setFiltroCola('En Producción')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🚀 Enviados</button>
+        <button class="cola-filter-btn" data-filtro="Enviado" onclick="setFiltroCola('Enviado')" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🚀 Enviados</button>
+      </div>
+      <!-- Búsqueda para Enviados -->
+      <div id="cola-enviados-search" style="display:none;margin-bottom:12px;">
+        <input class="search-input" type="text" id="cola-enviados-input" placeholder="Buscar por nombre, cédula o código..." style="width:100%;" oninput="filtrarEnviados(this.value)">
       </div>
       <div id="cola-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
       <div id="cola-list"></div>
@@ -931,7 +926,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxFRsIeC42qD2QXeZL01SanN41r0qwCRoSzB_pDdNpoH-1J8f_t9T5dGHPesK9oKdiUJw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjmR4llMxnHQaTeOXlFXPq4uypx2MsrVUHrqnkJAWiHgiGkiaibf8GRNCX6vvWkMp9HA/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -2103,7 +2098,6 @@ function switchStock(sub){
 }
 
 function switchAprobaciones(sub){
-  // Actualizar botones
   document.querySelectorAll('.apro-sub-btn').forEach(b=>{
     const active=b.dataset.sub===sub;
     const colors={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)',Cola:'var(--warn)'};
@@ -2112,7 +2106,14 @@ function switchAprobaciones(sub){
     b.style.background=active?bgs[sub]:'var(--surface2)';
     b.style.color=active?colors[sub]:'var(--muted)';
   });
-  // Mostrar sección correcta
+  // Mostrar búsqueda solo para Aprobadas y Reprobadas
+  const searchEl=document.getElementById('historial-apro-search');
+  if(searchEl){
+    searchEl.style.display=(sub==='Pagado'||sub==='Reprobado')?'block':'none';
+    if(sub==='Pagado'||sub==='Reprobado'){
+      document.getElementById('historial-apro-input').value='';
+    }
+  }
   document.getElementById('aprosec-solicitudes').style.display=sub==='Cola'?'none':'block';
   document.getElementById('aprosec-cola').style.display=sub==='Cola'?'block':'none';
   if(sub==='Cola') cargarCola();
@@ -2372,6 +2373,8 @@ function buscarHistorialRespaldo(){
 
 
 let filtroCola='Pagado';
+let _enviados=[];
+
 function setFiltroCola(filtro){
   filtroCola=filtro;
   document.querySelectorAll('.cola-filter-btn').forEach(b=>{
@@ -2380,7 +2383,63 @@ function setFiltroCola(filtro){
     b.style.background=act?'#2a1f0a':'var(--surface2)';
     b.style.color=act?'var(--warn)':'var(--muted)';
   });
-  cargarCola();
+  const searchEl=document.getElementById('cola-enviados-search');
+  if(searchEl){
+    searchEl.style.display=filtro==='Enviado'?'block':'none';
+    if(filtro==='Enviado') document.getElementById('cola-enviados-input').value='';
+  }
+  if(filtro==='Enviado') cargarEnviados();
+  else cargarCola();
+}
+
+async function cargarEnviados(){
+  const listEl=document.getElementById('cola-list');
+  listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando enviados...</div>`;
+  try{
+    const data=await scriptGETjson({action:'leerHistorialCola'});
+    _enviados=(data.rows||[]).slice(-5).reverse();
+    renderEnviados(_enviados);
+  }catch(e){
+    listEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--danger);">✗ Error: ${e.message}</div>`;
+  }
+}
+
+function renderEnviados(rows){
+  const listEl=document.getElementById('cola-list');
+  if(!rows.length){
+    listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);"><div style="font-size:32px;margin-bottom:10px;">🚀</div><div>No hay pedidos enviados</div></div>`;
+    return;
+  }
+  listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${rows.length} registro(s)</div>`+
+    rows.map(r=>{
+      const v=i=>String(r[i]||'').trim();
+      return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;">${v(7)}</div>
+            <div style="font-size:12px;color:var(--muted);">${v(9)} · ${v(8)}</div>
+          </div>
+          <span style="background:#0f1a2a;border:1px solid var(--accent2);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--accent2);">EN PRODUCCIÓN</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.8;">
+          <div>Código P: <b style="color:var(--text)">${v(2)}</b> · Cola: ${v(1)}</div>
+          <div>${v(11)} · ${v(14)} · Tela: ${v(15)} / Vinil: ${v(16)}</div>
+          <div>Agencia: ${v(18)} · Fecha: ${v(6)}</div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function filtrarEnviados(q){
+  if(!q.trim()){ renderEnviados(_enviados); return; }
+  const query=q.trim().toUpperCase();
+  const filtrado=_enviados.filter(r=>
+    String(r[7]||'').toUpperCase().includes(query)||
+    String(r[9]||'').toUpperCase().includes(query)||
+    String(r[2]||'').toUpperCase().includes(query)||
+    String(r[1]||'').toUpperCase().includes(query)
+  );
+  renderEnviados(filtrado);
 }
 
 // ── COLA PLANIFICACIÓN ────────────────────────────────────────
@@ -2599,6 +2658,46 @@ async function confirmarPlanificacion(){
 
 
 
+function renderHistorialApro(rows){
+  const listEl=document.getElementById('solicitudes-list');
+  if(!rows.length){
+    listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);"><div style="font-size:32px;margin-bottom:10px;">📋</div><div>No hay registros</div></div>`;
+    return;
+  }
+  const color=filtroSolicitudes==='Pagado'?'var(--accent)':'var(--danger)';
+  const bg=filtroSolicitudes==='Pagado'?'#0f2b1a':'#2a1010';
+  listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${rows.length} registro(s)</div>`+
+    rows.map(r=>{
+      const v=i=>String(r[i]||'').trim();
+      return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;">${v(7)}</div>
+            <div style="font-size:12px;color:var(--muted);">${v(9)} · ${v(8)}</div>
+          </div>
+          <span style="background:${bg};border:1px solid ${color};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:${color};">${filtroSolicitudes==='Pagado'?'APROBADO':'REPROBADO'}</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.8;">
+          <div>Código: <b style="color:var(--text)">${v(0)}</b> · ${v(11)} · ${v(14)}</div>
+          <div>Tela: ${v(15)} · Vinil: ${v(16)}</div>
+          <div>Agencia: ${v(18)} · Fecha: ${v(4)}</div>
+          ${filtroSolicitudes==='Reprobado'?`<div style="color:var(--danger);">Motivo: ${v(27)}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function filtrarHistorialApro(q){
+  if(!q.trim()){ renderHistorialApro(_historialApro); return; }
+  const query=q.trim().toUpperCase();
+  const filtrado=_historialApro.filter(r=>
+    String(r[7]||'').toUpperCase().includes(query)||  // nombre
+    String(r[9]||'').toUpperCase().includes(query)||  // cedula
+    String(r[0]||'').toUpperCase().includes(query)    // codigo
+  );
+  renderHistorialApro(filtrado);
+}
+
 function setFiltroApro(filtro){
   filtroSolicitudes=filtro;
   document.querySelectorAll('.sol-filter-btn').forEach(b=>{
@@ -2613,12 +2712,21 @@ function setFiltroApro(filtro){
 }
 
 let filtroSolicitudes='Pendiente';
+let _historialApro=[];
 
 async function cargarSolicitudes(filtro){
   if(filtro!==undefined) filtroSolicitudes=filtro;
   const listEl=document.getElementById('solicitudes-list');
   listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>`;
   try{
+    // Aprobadas y Reprobadas → leer de R.APROBACIONES
+    if(filtroSolicitudes==='Pagado'||filtroSolicitudes==='Reprobado'){
+      const data=await scriptGETjson({action:'leerHistorialAprobaciones',filtro:filtroSolicitudes});
+      _historialApro=(data.rows||[]).slice(-5).reverse();
+      renderHistorialApro(_historialApro);
+      return;
+    }
+    // Pendientes → leer de APROBACIONES
     const data=await scriptGETjson({action:'leerAprobaciones',filtro:filtroSolicitudes});
     const filtradas=data.rows||[];
     if(!filtradas.length){
@@ -2694,8 +2802,12 @@ async function cargarSolicitudes(filtro){
       }
       if(filtroSolicitudes==='Pendiente'){
         const allCodigos=packs.map(pk=>String(pk[0]||'').trim());
+        // Datos de pago del cliente (cols AC=28, AD=29, AE=30)
+        const pagoMoneda=String(r[28]||'').trim();
+        const pagoMonto=String(r[29]||'').trim();
+        const pagoRef=String(r[30]||'').trim();
         html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
-          <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigos:allCodigos,codigo:base})})'
+          <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigos:allCodigos,codigo:base,pago_moneda:pagoMoneda,pago_monto:pagoMonto,pago_ref:pagoRef})})'
             style="width:100%;padding:13px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✅ Aprobar</button>
           <button onclick='abrirModalReprobar(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigos:allCodigos,codigo:base})})'
             style="width:100%;padding:13px;background:transparent;border:2px solid var(--danger);border-radius:10px;color:var(--danger);font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✗ Reprobar</button>
@@ -2770,27 +2882,33 @@ async function confirmarReprobar(){
 
 function abrirModalAprobacion(data){
   pendingSolicitud=data;
+  // Mostrar resumen del pedido
   document.getElementById('apro-resumen').innerHTML=`
     <b style="color:var(--text)">${data.nombre}</b><br>
-    <span style="color:var(--text);font-weight:700;">${data.codigo||''}</span><br>
+    <span style="color:var(--accent);font-weight:700;">${data.codigo||''}</span><br>
     Cédula: <span>${data.cedula}</span> · Correo: <span>${data.correo}</span><br>
     Solicitud: <span>${data.fecha}</span>`;
-  document.getElementById('apro-banco').value='';
-  document.getElementById('apro-cod').value='';
+  // Mostrar datos de pago del cliente (cols AC=28, AD=29, AE=30)
+  const codigos=data.codigos||[data.codigo];
+  const firstCod=Array.isArray(codigos)?codigos[0]:codigos;
+  // Los datos de pago vienen en pago_moneda, pago_monto, pago_ref del objeto data
+  document.getElementById('apro-pago-moneda').textContent=data.pago_moneda||'—';
+  document.getElementById('apro-pago-monto').textContent=data.pago_monto||'—';
+  document.getElementById('apro-pago-ref').textContent=data.pago_ref||'—';
   document.getElementById('apro-unlock').value='';
   document.getElementById('apro-error').textContent='';
   document.getElementById('modal-aprobacion').classList.remove('hidden');
-  setTimeout(()=>document.getElementById('apro-banco').focus(),100);
+  setTimeout(()=>document.getElementById('apro-unlock').focus(),100);
 }
 
 async function confirmarAprobacion(){
-  const banco=document.getElementById('apro-banco').value;
-  const codPago=document.getElementById('apro-cod').value.trim();
   const unlock=document.getElementById('apro-unlock').value.trim().toUpperCase();
   const errEl=document.getElementById('apro-error');
-  if(!banco){errEl.textContent='Selecciona el banco / método de pago';return;}
-  if(!codPago){errEl.textContent='Ingresa el código de referencia';return;}
   if(!USUARIOS[unlock]){errEl.textContent='❌ Código incorrecto — acceso denegado';document.getElementById('apro-unlock').value='';return;}
+
+  // Tomar datos de pago del cliente
+  const banco=pendingSolicitud.pago_moneda||'';
+  const codPago=pendingSolicitud.pago_ref||'';
 
   document.getElementById('modal-aprobacion').classList.add('hidden');
   const fechaApro=getFechaHora();
@@ -2802,7 +2920,6 @@ async function confirmarAprobacion(){
   msgEl.innerHTML='<span class="spinner">↻</span> Registrando aprobación...';
 
   try{
-    // Asegurar que codigos es un array válido
     let codigos=pendingSolicitud.codigos||[pendingSolicitud.codigo];
     if(typeof codigos==='string') try{ codigos=JSON.parse(codigos); }catch(e){ codigos=[codigos]; }
     if(!Array.isArray(codigos)) codigos=[codigos];
