@@ -2509,7 +2509,7 @@ async function cargarCola(){
             <div><span style="color:var(--muted);">Tela:</span> ${vp(15)}</div>
             <div><span style="color:var(--muted);">Vinil:</span> ${vp(16)}</div>
           </div>
-          ${vp(17)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">COMFY MEGA PROMO<br>${vp(17).split(' | ').join('<br>')}</div>`:''}
+          ${vp(17)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${vp(11)||'COMFY MEGA PROMO'} ${vp(12)||''}<br>${vp(17).split(' | ').join('<br>')}</div>`:''}
         </div>`;
       });
       if(filtroCola==='Pagado'){
@@ -2619,7 +2619,7 @@ async function confirmarPlanificacion(){
     // 4. Enviar UNA SOLA llamada a Make con todos los packs consolidados
     const packsTexto=allPacks.map((pk,i)=>{
       const piezasLineas=(pk.piezas||'').split(' | ').map(p=>`  • ${p}`).join('\n');
-      return `── Pack ${i+1} ──\n${pk.pack} COMFY MEGA PROMO MANGA LARGA SIN CAPUCHA\nTela: ${pk.tela}\nVinil: ${pk.vinil}\nPiezas:\n${piezasLineas}`;
+      return `── Pack ${i+1} ──\n${pk.pack} ${pk.modelo||'COMFY MEGA PROMO'} MANGA LARGA SIN CAPUCHA\nTela: ${pk.tela}\nVinil: ${pk.vinil}\nPiezas:\n${piezasLineas}`;
     }).join('\n\n');
 
     const makeBody=new FormData();
@@ -2789,7 +2789,7 @@ async function cargarSolicitudes(filtro){
         html+=`<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);">
           <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Pack ${idx+1} · ${vp(14)} · <span style="color:var(--muted);font-size:13px;">${vp(0)}</span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:8px;">
-            <div><span style="color:var(--muted);">Modelo:</span> COMFY MEGA PROMO</div>
+            <div><span style="color:var(--muted);">Modelo:</span> ${v(11)||'—'}</div>
             <div><span style="color:var(--muted);">Manga:</span> ${vp(12)}</div>
             <div><span style="color:var(--muted);">Tela:</span> ${vp(15)}</div>
             <div><span style="color:var(--muted);">Vinil:</span> ${vp(16)}</div>
