@@ -499,13 +499,17 @@ async function verificarToken(){
   if(!token){ mostrarBloqueo('🚫','Link inválido','Solicita uno nuevo a IKOA & BEKATE.'); return; }
   try{
     const data=await scriptGETjson({action:'verificarToken',token});
-    if(data.ok){ tokenActual=token; bl.style.display='none'; cargarAgencias(); }
-    else{
+    if(data && data.ok){ tokenActual=token; bl.style.display='none'; cargarAgencias(); }
+    else if(data){
       const m={'usado':['✅','Link ya utilizado','Este link ya fue usado.'],'expirado':['⏰','Link expirado','Venció (4h). Solicita uno nuevo.'],'invalido':['🚫','Link inválido','No es válido.']};
       const [i,t,x]=m[data.error]||m['invalido'];
       mostrarBloqueo(i,t,x);
+    } else {
+      mostrarBloqueo('⚠️','Error de respuesta','El servidor no respondió correctamente. Intenta de nuevo.');
     }
-  }catch(e){ mostrarBloqueo('⚠️','Error de conexión','Verifica tu conexión.'); }
+  }catch(e){ 
+    mostrarBloqueo('⚠️','Error de conexión','Verifica tu conexión e intenta de nuevo. ('+e.message+')'); 
+  }
 }
 function mostrarBloqueo(i,t,x){
   document.getElementById('bloqueo-icon').textContent=i;
