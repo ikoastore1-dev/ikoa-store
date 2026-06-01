@@ -2628,7 +2628,7 @@ async function confirmarPlanificacion(){
       });
     }catch(e){ console.warn('addPedido error:',e); }
 
-    // 4. Enviar UNA SOLA llamada a Make con todos los packs consolidados
+    // 4. Enviar a Make con FormData igual que flujo COD
     const packsTexto=allPacks.map((pk,i)=>{
       const piezasLineas=(pk.piezas||'').split(' | ').map(p=>`  • ${p}`).join('\n');
       return `── Pack ${i+1} ──\n${pk.pack} ${pk.modelo||'COMFY MEGA PROMO'} MANGA LARGA SIN CAPUCHA\nTela: ${pk.tela}\nVinil: ${pk.vinil}\nPiezas:\n${piezasLineas}`;
@@ -2652,8 +2652,10 @@ async function confirmarPlanificacion(){
     makeBody.append('packs_detalle',packsTexto);
     makeBody.append('usuario',USUARIOS[unlock]);
     makeBody.append('fecha',fechaProd);
+    msgEl.innerHTML='<span class="spinner">↻</span> Notificando a Make...';
     try{
       await fetch(WEBHOOK_URL,{method:'POST',body:makeBody,mode:'no-cors'});
+      console.log('Make webhook enviado OK');
     }catch(makeErr){ console.warn('Make webhook error:',makeErr); }
 
     msgEl.style.background='var(--surface2)';
@@ -3506,7 +3508,7 @@ async function confirmarEnvioSeleccion(){
     makeBody.append('nombre_arte','');
     makeBody.append('usuario',USUARIOS[unlock]);
     makeBody.append('fecha',fecha);
-    const makeResponse=await fetch(WEBHOOK_URL,{method:'POST',body:makeBody});
+    const makeResponse=await fetch(WEBHOOK_URL,{method:'POST',body:makeBody,mode:'no-cors'});
     console.log('Make status:',makeResponse.status);
     msgEl.style.background='var(--surface2)';
     msgEl.style.border='1px solid #1a4a2a';
