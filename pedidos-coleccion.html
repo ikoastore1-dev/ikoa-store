@@ -200,10 +200,11 @@ window.addEventListener('load',function(){
     <div class="step-header"><div class="step-num">Paso 2 de 6</div><div class="step-title">Selecciona el producto</div></div>
     <div class="card">
       <div class="card-title">Serie</div>
-      <div class="option-grid cols3" id="serie-grid">
+      <div class="option-grid cols2" id="serie-grid">
         <button class="opt-btn" onclick="selectSerie(this,'Camping')">CAMPING<span class="sub">Outdoor</span></button>
         <button class="opt-btn" onclick="selectSerie(this,'Nautica')">NÁUTICA<span class="sub">Colección</span></button>
         <button class="opt-btn" onclick="selectSerie(this,'Alpha')">ALPHA<span class="sub">Colección</span></button>
+        <button class="opt-btn" onclick="selectSerie(this,'Unicolor')">UNICOLOR<span class="sub">Color sólido</span></button>
       </div>
       <div id="color-serie-wrap" style="display:none;margin-top:12px;">
         <div class="card-title">Color</div>
@@ -212,21 +213,6 @@ window.addEventListener('load',function(){
       <div id="variante-wrap" style="display:none;margin-top:12px;">
         <div class="card-title">Variante</div>
         <div class="option-grid cols2" id="variante-grid"></div>
-      </div>
-      <!-- Short Serie unicolor -->
-      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
-        <div class="card-title">Short Serie Unicolor</div>
-        <div class="option-grid cols3" id="short-serie-grid">
-          <button class="opt-btn" onclick="selectShortSerie(this,'Blanco')">BLANCO</button>
-          <button class="opt-btn" onclick="selectShortSerie(this,'Negro')">NEGRO</button>
-          <button class="opt-btn" onclick="selectShortSerie(this,'Azul Rey')">AZUL REY</button>
-          <button class="opt-btn" onclick="selectShortSerie(this,'Azul Marino')">AZUL MARINO</button>
-          <button class="opt-btn" onclick="selectShortSerie(this,'Menta')">MENTA</button>
-          <button class="opt-btn" onclick="selectShortSerie(this,'Gris')">GRIS</button>
-          <button class="opt-btn" onclick="selectShortSerie(this,'Rojo')">ROJO</button>
-          <button class="opt-btn" onclick="selectShortSerie(this,'Rosa Bebé')">ROSA BEBÉ</button>
-          <button class="opt-btn" onclick="selectShortSerie(this,'Verde Militar')">VERDE MILITAR</button>
-        </div>
       </div>
     </div>
     <div id="producto-seleccionado" style="display:none;background:#0f2b1a;border:1px solid var(--accent);border-radius:10px;padding:12px 16px;text-align:center;margin-bottom:12px;">
@@ -859,7 +845,20 @@ const SERIES_COLECCION={
     codigos:{Verde:{Playera:'AlphaSelva',Dress:'AlphaSelvaDress',Cortaviento:'AlphaSelvaCortaviento'},
              Gris:{Playera:'AlphaGris',Dress:'AlphaGrisDress',Cortaviento:'AlphaGrisCortaviento'},
              Azul:{Playera:'AlphaMarino',Dress:'AlphaMarinoDress',Cortaviento:'AlphaMarinoCortaviento'},
-             Pink:{Playera:'AlphaPink',Dress:'AlphaPinkDress',Cortaviento:'AlphaPinkCortaviento'}}}
+             Pink:{Playera:'AlphaPink',Dress:'AlphaPinkDress',Cortaviento:'AlphaPinkCortaviento'}}},
+  Unicolor:{nombre:'Unicolor',colores:['Blanco','Negro','Azul Rey','Azul Marino','Menta','Gris','Rojo','Rosa Bebé','Verde Militar'],
+    codigos:{
+      Blanco:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
+      Negro:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
+      'Azul Rey':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
+      'Azul Marino':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
+      Menta:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
+      Gris:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
+      Rojo:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
+      'Rosa Bebé':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
+      'Verde Militar':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'}
+    }
+  }
 };
 let selectedSerie='',selectedColorSerie='',selectedVariante='';
 
@@ -872,7 +871,6 @@ function selectSerie(btn,serie){
   document.getElementById('color-serie-wrap').style.display='block';
   document.getElementById('variante-wrap').style.display='none';
   document.getElementById('producto-seleccionado').style.display='none';
-  document.querySelectorAll('#short-serie-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
 }
 
 function selectColorSerie(btn,color){
@@ -880,7 +878,8 @@ function selectColorSerie(btn,color){
   document.querySelectorAll('#color-serie-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   const s=SERIES_COLECCION[selectedSerie];
-  document.getElementById('variante-grid').innerHTML=s.variantes?s.variantes.map(v=>`<button class="opt-btn" onclick="selectVariante(this,'${v}')">${v.toUpperCase()}</button>`).join(''):'';
+  const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short']:['Playera','Dress','Cortaviento'];
+  document.getElementById('variante-grid').innerHTML=variantes.map(v=>`<button class="opt-btn" onclick="selectVariante(this,'${v}')">${v.toUpperCase()}</button>`).join('');
   document.getElementById('variante-wrap').style.display='block';
   document.getElementById('producto-seleccionado').style.display='none';
 }
@@ -891,16 +890,15 @@ function selectVariante(btn,variante){
   btn.classList.add('selected');
   const s=SERIES_COLECCION[selectedSerie];
   const codigo=s.codigos[selectedColorSerie][variante];
-  const nombre=`${variante} ${s.nombre} ${selectedColorSerie}`;
+  const nombre=selectedSerie==='Unicolor'?`${variante} Serie ${selectedColorSerie}`:`${variante} ${s.nombre} ${selectedColorSerie}`;
   pedido.codigoProducto=codigo; pedido.nombreProducto=nombre; pedido.variante=variante; pedido.pack=1;
+  // For Unicolor, store color as tela
+  if(selectedSerie==='Unicolor') pedido.tela=selectedColorSerie;
   document.getElementById('producto-label').textContent=nombre+' · '+codigo;
   document.getElementById('producto-seleccionado').style.display='block';
-  document.querySelectorAll('#short-serie-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
 }
 
 function selectShortSerie(btn,color){
-  document.querySelectorAll('#short-serie-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
   document.querySelectorAll('#serie-grid .opt-btn,#color-serie-grid .opt-btn,#variante-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
   selectedSerie=''; selectedColorSerie=''; selectedVariante='Short';
   pedido.codigoProducto='ShortSerie'; pedido.nombreProducto=`Short Serie ${color}`; pedido.variante='Short'; pedido.tela=color; pedido.pack=1;
