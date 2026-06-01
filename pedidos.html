@@ -225,7 +225,7 @@ window.addEventListener('load',function(){
 
   <!-- STEP 3: MODELO -->
   <div class="step" id="step3">
-    <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title">Modelo y colores</div></div>
+    <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title">Modelo · Color de Tela · Vinil</div></div>
     <div class="card">
       <!-- MODELO FIJO - solo informativo -->
       <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center;">
@@ -235,8 +235,8 @@ window.addEventListener('load',function(){
       </div>
     </div>
     <div class="card">
-      <div class="card-title">Colores</div>
-      <div class="card-title" style="margin-top:4px;">Color de Tela</div>
+      
+      <div class="card-title">Color de Tela</div>
       <div class="option-grid cols2" id="tela-opts">
         <button class="opt-btn" onclick="selectColor(this,'tela','Negro')">NEGRO</button>
         <button class="opt-btn" onclick="selectColor(this,'tela','Verde Militar')">VERDE MILITAR</button>
@@ -1125,7 +1125,7 @@ function buildMensaje(){
   const retiraText=pedido.mismoEnvio?'Mismo titular':`${pedido.eNombre} | C.I: ${pedido.eCi} | Cel: ${pedido.eCel}`;
   const packsText=pedido.packs.map((pk,i)=>{
     const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla} — ${p.nombre}`).join('\n');
-    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: ${pk.modelo} ${pk.manga} ${pk.capucha}\nColor tela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
+    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: ${pk.modelo} ${pk.manga} ${pk.capucha}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
   }).join('\n\n');
   return `🛍️ *PEDIDO IKOA & BEKATE*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Bs'?'Bs':'$'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
 }

@@ -207,7 +207,7 @@ window.addEventListener('load',function(){
         <button class="opt-btn" onclick="selectSerie(this,'Unicolor')">UNICOLOR<span class="sub">Color sólido</span></button>
       </div>
       <div id="color-serie-wrap" style="display:none;margin-top:12px;">
-        <div class="card-title">Color</div>
+        <div class="card-title">Color de la Serie</div>
         <div class="option-grid cols3" id="color-serie-grid"></div>
       </div>
       <div id="variante-wrap" style="display:none;margin-top:12px;">
@@ -226,7 +226,7 @@ window.addEventListener('load',function(){
 
   <!-- STEP 3: OPCIONES -->
   <div class="step" id="step3">
-    <div class="step-header"><div class="step-num">Paso 3 de 6</div><div class="step-title">Opciones del producto</div></div>
+    <div class="step-header"><div class="step-num">Paso 3 de 6</div><div class="step-title">Capucha · Color de Vinil</div></div>
     <div class="card">
       <!-- Producto seleccionado informativo -->
       <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center;">
@@ -282,7 +282,11 @@ window.addEventListener('load',function(){
   <!-- STEP 4: PIEZAS -->
   <div class="step" id="step4">
     <div class="step-header"><div class="step-num">Paso 4 de 6</div><div class="step-title">Tallas y nombres</div></div>
-    <div class="nota" style="margin-bottom:14px;">📌 Nombre en <b>manga derecha</b>, sin iniciales ni logos.<br>Selecciona el producto y completa los datos.<br>Usa el contador <b>+/−</b> para repetir franelas iguales.</div>
+    <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;text-align:center;margin-bottom:12px;">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Producto</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="step4-producto-label">—</div>
+    </div>
+    <div class="nota" style="margin-bottom:14px;">📌 Nombre en <b>manga derecha</b>, sin iniciales ni logos.</div>
     <div id="franelas-progreso" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;color:var(--warn);"></div>
     <div class="alerta-min" id="alerta-min"></div>
     <div id="piezas-container"></div>
@@ -933,15 +937,19 @@ function setMismoEnvio(val){
 
 // ── PIEZAS ────────────────────────────────────────────────────
 function inicializarPiezas(){
-  if(!pedido.pack||pedido.pack<1){ alert('Selecciona el tamaño del pack primero'); goStep(2); return; }
-  document.getElementById('pack-total-lbl').textContent=pedido.pack+' franelas';
+  if(!pedido.pack||pedido.pack<1){ alert('Selecciona el producto primero'); goStep(2); return; }
+  // Show product label in step4
+  const lbl=document.getElementById('step4-producto-label');
+  if(lbl) lbl.textContent=pedido.nombreProducto||'—';
+  const packLbl=document.getElementById('pack-total-lbl');
+  if(packLbl) packLbl.textContent=pedido.pack===1?'1 prenda':pedido.pack+' franelas';
   const container=document.getElementById('piezas-container');
-  // Limpiar siempre para el pack actual
   container.innerHTML='';
   piezaCount=0;
   pedido.piezas=[];
   for(let i=0;i<pedido.pack;i++) addPieza();
   actualizarBotonesMult();
+  actualizarContadorFranelas();
 }
 
 function addPieza(copiarDe=null){
@@ -1242,7 +1250,7 @@ function buildMensaje(){
   const packsText=pedido.packs.map((pk,i)=>{
     const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conCapucha?' 🧢':''} — ${p.nombre}`).join('\n');
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
-    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: LICRA COLECCIÓN ${pk.manga}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nColor tela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
+    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: LICRA COLECCIÓN ${pk.manga}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
   }).join('\n\n');
   return `🛍️ *PEDIDO IKOA & BEKATE — LICRA COLECCIÓN*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Bs'?'Bs':'$'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
 }
