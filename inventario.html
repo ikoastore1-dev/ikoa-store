@@ -2429,6 +2429,11 @@ function renderEnviados(rows){
           <div>${v(11)} · ${v(14)} · Tela: ${v(15)} / Vinil: ${v(16)}</div>
           <div>Agencia: ${v(18)} · Fecha: ${v(6)}</div>
         </div>
+        <div style="background:var(--surface2);border:1px solid #1a4a2a;border-radius:8px;padding:6px 12px;font-size:12px;margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <div><span style="color:var(--muted);">Moneda:</span> <b>${v(28)||'—'}</b></div>
+          <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent2);">${v(28)==='Bs'?'Bs':'$'}${v(29)||'—'}</b></div>
+          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Ref:</span> <b style="color:var(--warn);">${v(30)||'—'}</b></div>
+        </div>
       </div>`;
     }).join('');
 }
@@ -2497,8 +2502,12 @@ async function cargarCola(){
           <div><span style="color:var(--muted);">Cédula:</span> ${v(9)}</div>
           <div><span style="color:var(--muted);">Celular:</span> ${v(10)}</div>
           <div><span style="color:var(--muted);">Agencia:</span> ${v(18)}</div>
-          <div><span style="color:var(--muted);">Banco:</span> ${v(22)}</div>
-          <div><span style="color:var(--muted);">Ref:</span> ${v(23)}</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid #1a4a2a;border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <div style="grid-column:1/-1;font-size:11px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">💳 Pago</div>
+          <div><span style="color:var(--muted);">Moneda:</span> <b>${v(28)||'—'}</b></div>
+          <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent);">${v(28)==='Bs'?'Bs':'$'}${v(29)||'—'}</b></div>
+          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Ref:</span> <b style="color:var(--warn);">${v(30)||'—'}</b></div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
           <span style="color:var(--muted);">Retira:</span> ${v(19)}${v(20)?` · C.I: ${v(20)}`:''}${v(21)?` · Cel: ${v(21)}`:''}
@@ -2685,6 +2694,11 @@ function renderHistorialApro(rows){
           <div>Tela: ${v(15)} · Vinil: ${v(16)}</div>
           <div>Agencia: ${v(18)} · Fecha: ${v(4)}</div>
           ${filtroSolicitudes==='Reprobado'?`<div style="color:var(--danger);">Motivo: ${v(27)}</div>`:''}
+        </div>
+        <div style="background:var(--surface2);border:1px solid #1a4a2a;border-radius:8px;padding:8px 12px;font-size:12px;margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <div><span style="color:var(--muted);">Moneda:</span> <b>${v(28)||'—'}</b></div>
+          <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent);">${v(28)==='Bs'?'Bs':'$'}${v(29)||'—'}</b></div>
+          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Ref:</span> <b style="color:var(--warn);">${v(30)||'—'}</b></div>
         </div>
       </div>`;
     }).join('');
