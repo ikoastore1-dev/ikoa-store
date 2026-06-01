@@ -385,13 +385,16 @@ window.addEventListener('load',function(){
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
           <span><span style="color:var(--muted);">Celular:</span> <b id="pm-cel">04149450742</b></span>
-          <button onclick="copiarDato('04149450742','btn-copy-cel')" id="btn-copy-cel" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
+          <div style="display:flex;gap:4px;">
+            <button onclick="copiarDato('04149450742','btn-copy-cel')" id="btn-copy-cel" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Completo</button>
+            <button onclick="copiarDato('9450742','btn-copy-cel2')" id="btn-copy-cel2" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Sin código</button>
+          </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
           <span><span style="color:var(--muted);">Cédula:</span> <b id="pm-ci">18265345</b></span>
           <button onclick="copiarDato('18265345','btn-copy-ci')" id="btn-copy-ci" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
         </div>
-        <div style="font-size:14px;"><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-bs" style="color:var(--accent);">—</b></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;"><span><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-bs" style="color:var(--accent);">—</b></span><button onclick="copiarMonto('bs','btn-copy-monto-bs')" id="btn-copy-monto-bs" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button></div>
       </div>
       <div class="field-group" style="margin-top:14px;margin-bottom:0;">
         <div class="field-label">Número de referencia * <span style="color:var(--danger);">(obligatorio)</span></div>
@@ -410,7 +413,7 @@ window.addEventListener('load',function(){
           <span><span style="color:var(--muted);">Correo:</span> <b id="bin-correo">johancazorla@gmail.com</b></span>
           <button onclick="copiarDato('johancazorla@gmail.com','btn-copy-bin')" id="btn-copy-bin" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
         </div>
-        <div style="font-size:14px;"><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-usd" style="color:var(--warn);">—</b></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;"><span><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-usd" style="color:var(--warn);">—</b></span><button onclick="copiarMonto('usd','btn-copy-monto-usd')" id="btn-copy-monto-usd" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--warn);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button></div>
       </div>
       <div class="field-group" style="margin-top:14px;margin-bottom:0;">
         <div class="field-label">Código de confirmación * <span style="color:var(--danger);">(obligatorio)</span></div>
@@ -1071,6 +1074,21 @@ function irAlResumen(){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
+function copiarMonto(moneda, btnId){
+  const el=document.getElementById(moneda==='bs'?'pm-monto-bs':'pm-monto-usd');
+  if(!el) return;
+  // Extract numeric value only
+  const texto=el.textContent.replace('Bs ','').replace('$','').trim();
+  navigator.clipboard.writeText(texto).then(()=>{
+    const btn=document.getElementById(btnId);
+    if(btn){ btn.textContent='✅ Copiado'; setTimeout(()=>{ btn.textContent='📋 Copiar'; },2000); }
+  }).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=texto; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    const btn=document.getElementById(btnId);
+    if(btn){ btn.textContent='✅ Copiado'; setTimeout(()=>{ btn.textContent='📋 Copiar'; },2000); }
+  });
+}
 function copiarDato(texto, btnId){
   navigator.clipboard.writeText(texto).then(()=>{
     const btn=document.getElementById(btnId);

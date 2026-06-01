@@ -97,27 +97,6 @@ window.addEventListener('load',function(){
   },2000);
 });
 </script>
-<!-- SPLASH SCREEN -->
-<div id="splash" style="position:fixed;inset:0;background:#0a0a0f;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s ease;">
-  <div style="text-align:center;animation:splashIn .8s cubic-bezier(.16,1,.3,1) forwards;">
-    <div style="font-family:'Rajdhani',sans-serif;font-size:64px;font-weight:700;letter-spacing:.25em;color:#00e5b0;line-height:1;">IKOA</div>
-    <div style="width:40px;height:2px;background:#00e5b0;margin:12px auto 14px;border-radius:2px;animation:splashLine 1s ease .4s both;transform:scaleX(0);transform-origin:center;"></div>
-    <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:400;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;animation:splashIn 1s ease .6s both;opacity:0;">Ropa Técnica · vivir el sol sin límites</div>
-  </div>
-</div>
-<style>
-@keyframes splashIn{from{opacity:0;transform:scale(.92) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
-@keyframes splashLine{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-</style>
-<script>
-window.addEventListener('load',function(){
-  setTimeout(function(){
-    const s=document.getElementById('splash');
-    s.style.opacity='0';
-    setTimeout(function(){ s.style.display='none'; },600);
-  },2000);
-});
-</script>
 
 
 <!-- MODAL CONFIRMACIÓN DATOS -->
@@ -442,13 +421,16 @@ window.addEventListener('load',function(){
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
           <span><span style="color:var(--muted);">Celular:</span> <b id="pm-cel">04149450742</b></span>
-          <button onclick="copiarDato('04149450742','btn-copy-cel')" id="btn-copy-cel" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
+          <div style="display:flex;gap:4px;">
+            <button onclick="copiarDato('04149450742','btn-copy-cel')" id="btn-copy-cel" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Completo</button>
+            <button onclick="copiarDato('9450742','btn-copy-cel2')" id="btn-copy-cel2" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Sin código</button>
+          </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
           <span><span style="color:var(--muted);">Cédula:</span> <b id="pm-ci">18265345</b></span>
           <button onclick="copiarDato('18265345','btn-copy-ci')" id="btn-copy-ci" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
         </div>
-        <div style="font-size:14px;"><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-bs" style="color:var(--accent);">—</b></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;"><span><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-bs" style="color:var(--accent);">—</b></span><button onclick="copiarMonto('bs','btn-copy-monto-bs')" id="btn-copy-monto-bs" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button></div>
       </div>
       <div class="field-group" style="margin-top:14px;margin-bottom:0;">
         <div class="field-label">Número de referencia * <span style="color:var(--danger);">(obligatorio)</span></div>
@@ -467,7 +449,7 @@ window.addEventListener('load',function(){
           <span><span style="color:var(--muted);">Correo:</span> <b id="bin-correo">johancazorla@gmail.com</b></span>
           <button onclick="copiarDato('johancazorla@gmail.com','btn-copy-bin')" id="btn-copy-bin" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
         </div>
-        <div style="font-size:14px;"><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-usd" style="color:var(--warn);">—</b></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;"><span><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-usd" style="color:var(--warn);">—</b></span><button onclick="copiarMonto('usd','btn-copy-monto-usd')" id="btn-copy-monto-usd" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--warn);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button></div>
       </div>
       <div class="field-group" style="margin-top:14px;margin-bottom:0;">
         <div class="field-label">Código de confirmación * <span style="color:var(--danger);">(obligatorio)</span></div>
@@ -1210,6 +1192,21 @@ function irAlResumen(){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
+function copiarMonto(moneda, btnId){
+  const el=document.getElementById(moneda==='bs'?'pm-monto-bs':'pm-monto-usd');
+  if(!el) return;
+  // Extract numeric value only
+  const texto=el.textContent.replace('Bs ','').replace('$','').trim();
+  navigator.clipboard.writeText(texto).then(()=>{
+    const btn=document.getElementById(btnId);
+    if(btn){ btn.textContent='✅ Copiado'; setTimeout(()=>{ btn.textContent='📋 Copiar'; },2000); }
+  }).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=texto; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    const btn=document.getElementById(btnId);
+    if(btn){ btn.textContent='✅ Copiado'; setTimeout(()=>{ btn.textContent='📋 Copiar'; },2000); }
+  });
+}
 function copiarDato(texto, btnId){
   navigator.clipboard.writeText(texto).then(()=>{
     const btn=document.getElementById(btnId);
