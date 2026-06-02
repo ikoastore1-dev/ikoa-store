@@ -2564,7 +2564,7 @@ async function cargarCola(){
           piezas:String(pk[17]||'').trim()
         }));
         html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
-          <button onclick='abrirEditarCola(${JSON.stringify({codigoC:base,nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),tela:vp(15),vinil:vp(16),piezas:vp(17)})})'
+          <button onclick='abrirEditarCola(${JSON.stringify({codigoC:base,nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),tela:v(15),vinil:v(16),piezas:v(17)})})'
             style="padding:13px;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:10px;color:var(--accent2);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">✏️ EDITAR</button>
           <button onclick='abrirModalPlanificacion(${JSON.stringify({
           codigoCBase:base,
