@@ -2558,6 +2558,9 @@ async function cargarCola(){
         const allPacks=packs.map((pk,idx)=>({
           codigoC:String(pk[1]||'').trim(),
           codigoS:String(pk[0]||'').trim(),
+          modelo:String(pk[11]||'').trim(),
+          manga:String(pk[12]||'').trim(),
+          capucha:String(pk[13]||'').trim(),
           pack:String(pk[14]||'').trim(),
           tela:String(pk[15]||'').trim(),
           vinil:String(pk[16]||'').trim(),
@@ -2691,7 +2694,8 @@ async function confirmarPlanificacion(){
     msgEl.innerHTML='<span class="spinner">↻</span> Enviando...';
     const packsTexto=allPacks.map((pk,i)=>{
       const piezasLineas=(pk.piezas||'').split(' | ').map(p=>`  • ${p}`).join('\n');
-      return `── Pack ${i+1} ──\n${pk.pack} ${pk.modelo||'COMFY MEGA PROMO'} MANGA LARGA\nTela: ${pk.tela}\nVinil: ${pk.vinil}\nPiezas:\n${piezasLineas}`;
+      const capuchaInfo=pk.capucha&&pk.capucha!=='Sin Capucha'?' CON CAPUCHA':'';
+      return `── Pack ${i+1} ──\n${pk.pack} ${pk.modelo||''} ${pk.manga||''}${capuchaInfo}\nColor de Tela: ${pk.tela}\nColor de Vinil: ${pk.vinil}\nPiezas:\n${piezasLineas}`;
     }).join('\n\n');
 
     const agenciaRaw=pendingCola.agencia||'';
