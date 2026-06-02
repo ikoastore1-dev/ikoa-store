@@ -2694,22 +2694,37 @@ async function confirmarPlanificacion(){
       return `── Pack ${i+1} ──\n${pk.pack} ${pk.modelo||'COMFY MEGA PROMO'} MANGA LARGA\nTela: ${pk.tela}\nVinil: ${pk.vinil}\nPiezas:\n${piezasLineas}`;
     }).join('\n\n');
 
+    const agenciaRaw=pendingCola.agencia||'';
+    const agenciaParts=agenciaRaw.split('—');
+    const agenciaNombre=agenciaParts[0].trim();
+    const agenciaDireccion=agenciaParts.length>1?agenciaParts[1].trim():'';
+
     const makeBody=new FormData();
-    makeBody.append('tipo_operacion','Planificacion');
-    makeBody.append('codigo_cola',allCodigosC.join(', '));
+    makeBody.append('tipo_operacion','COD');
+    makeBody.append('status','COD');
+    makeBody.append('selector_agregar_arte','no');
+    makeBody.append('nombre_arte','');
     makeBody.append('nombre',pendingCola.nombre||'');
     makeBody.append('correo',pendingCola.correo||'');
     makeBody.append('cedula',pendingCola.cedula||'');
     makeBody.append('celular',pendingCola.celular||'');
-    makeBody.append('agencia',pendingCola.agencia||'');
-    makeBody.append('retira',pendingCola.retira||'');
-    makeBody.append('retira_ci',pendingCola.retiraCi||'');
-    makeBody.append('retira_cel',pendingCola.retiraCel||'');
-    makeBody.append('total_packs',String(allPacks.length));
+    const diferenteEnvio=(pendingCola.retira&&pendingCola.retira!==pendingCola.nombre)?'si':'no';
+    makeBody.append('agencia',agenciaNombre);
+    makeBody.append('direccion_agencia',agenciaDireccion);
+    makeBody.append('diferente_envio',diferenteEnvio);
+    if(diferenteEnvio==='si'){
+      makeBody.append('nombre_envio',pendingCola.retira||'');
+      makeBody.append('ci_envio',pendingCola.retiraCi||'');
+      makeBody.append('cel_envio',pendingCola.retiraCel||'');
+    } else {
+      makeBody.append('nombre_envio','');
+      makeBody.append('ci_envio','');
+      makeBody.append('cel_envio','');
+    }
+    makeBody.append('codigo','');
+    makeBody.append('numero_guia','');
     makeBody.append('packs_detalle',packsTexto);
-    makeBody.append('usuario',USUARIOS[unlock]);
     makeBody.append('fecha',fechaProd);
-    if(codMake) makeBody.append('cod_make',codMake);
 
     const response=await fetch(WEBHOOK_URL,{method:'POST',body:makeBody,mode:'no-cors'});
 
