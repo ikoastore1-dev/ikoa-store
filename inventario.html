@@ -2566,17 +2566,19 @@ async function cargarCola(){
           vinil:String(pk[16]||'').trim(),
           piezas:String(pk[17]||'').trim()
         }));
-        html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
-          <button onclick='abrirEditarCola(${JSON.stringify({codigoC:base,nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),tela:v(15),vinil:v(16),piezas:v(17)})})'
-            style="padding:13px;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:10px;color:var(--accent2);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">✏️ EDITAR</button>
-          <button onclick='abrirModalPlanificacion(${JSON.stringify({
+        const colaKey='cola_'+base.replace('-','_');
+        window['_colaData_'+colaKey]={
           codigoCBase:base,
           allCodigosC:allCodigosC,
           allPacks:allPacks,
           nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),
           agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),
           banco:v(22),codpago:v(23)
-        })})'
+        };
+        html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+          <button onclick='abrirEditarCola(${JSON.stringify({codigoC:base,nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),tela:v(15),vinil:v(16),piezas:v(17)})})'
+            style="padding:13px;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:10px;color:var(--accent2);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">✏️ EDITAR</button>
+          <button onclick='abrirModalPlanificacion(window["_colaData_${colaKey}"])'
           style="padding:13px;background:linear-gradient(135deg,var(--warn),#c07010);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">
           🚀 PRODUCCIÓN
         </button></div>`;
@@ -2681,6 +2683,8 @@ async function confirmarPlanificacion(){
     const fechaProd=getFechaHora();
     const allCodigosC=pendingCola.allCodigosC||[pendingCola.codigoC];
     const allPacks=pendingCola.allPacks||[];
+    console.log('allPacks:', JSON.stringify(allPacks));
+    console.log('piezas sample:', allPacks[0]?.piezas);
 
     // 1. Leer COD — igual que COD
     msgEl.innerHTML='<span class="spinner">↻</span> Leyendo COD...';
