@@ -2732,6 +2732,7 @@ async function confirmarPlanificacion(){
     makeBody.append('codigo','');
     makeBody.append('numero_guia','');
     makeBody.append('packs_detalle',packsTexto);
+    makeBody.append('descripcion',packsTexto);
     makeBody.append('fecha',fechaProd);
 
     const response=await fetch(WEBHOOK_URL,{method:'POST',body:makeBody,mode:'no-cors'});
