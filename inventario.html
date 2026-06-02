@@ -306,6 +306,42 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </div>
 
 
+<!-- MODAL EDITAR APROBACION -->
+<div class="modal-overlay hidden" id="modal-editar-apro">
+  <div class="modal" style="max-width:480px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-icon">✏️</div>
+    <div class="modal-title">Editar Pedido Pendiente</div>
+    <div class="modal-subtitle" id="edit-apro-codigo" style="color:var(--warn);font-weight:700;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div class="field-group"><div class="field-label">Nombre</div><input class="field-input" id="ea-nombre" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Cédula</div><input class="field-input" id="ea-cedula" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Correo</div><input class="field-input" id="ea-correo" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Celular</div><input class="field-input" id="ea-celular" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Modelo</div><input class="field-input" id="ea-modelo" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Pack</div><input class="field-input" id="ea-pack" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Color de Tela</div><input class="field-input" id="ea-tela" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Color de Vinil</div><input class="field-input" id="ea-vinil" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Manga</div><input class="field-input" id="ea-manga" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Capucha</div><input class="field-input" id="ea-capucha" type="text" style="width:100%;"></div>
+      <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Piezas</div><textarea class="field-input" id="ea-piezas" rows="4" style="width:100%;resize:vertical;font-size:12px;"></textarea></div>
+      <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Agencia</div><input class="field-input" id="ea-agencia" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Retira Nombre</div><input class="field-input" id="ea-retira" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Retira CI</div><input class="field-input" id="ea-retira-ci" type="text" style="width:100%;"></div>
+      <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Retira Celular</div><input class="field-input" id="ea-retira-cel" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Pago Moneda</div><input class="field-input" id="ea-pago-moneda" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Pago Monto</div><input class="field-input" id="ea-pago-monto" type="text" style="width:100%;"></div>
+      <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Pago Referencia</div><input class="field-input" id="ea-pago-ref" type="text" style="width:100%;"></div>
+    </div>
+    <div class="field-label" style="margin-bottom:6px;">Código de autorización</div>
+    <input class="modal-cod-input" type="password" id="ea-unlock" placeholder="Tu código personal" maxlength="20">
+    <div class="modal-error" id="ea-error"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="document.getElementById('modal-editar-apro').classList.add('hidden')">Cancelar</button>
+      <button class="modal-confirm" onclick="guardarEdicionApro()">💾 GUARDAR</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL EDITAR COLA -->
 <div class="modal-overlay hidden" id="modal-editar-cola">
   <div class="modal" style="max-width:480px;max-height:90vh;overflow-y:auto;">
@@ -958,7 +994,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6qiL7joz9tvsBDRio4p4-_fE7Rwhi0GzBDjIN_J7jFWBkr216Y0NnLgahbNNohEHBpw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-o0gTdVGrVYJ54ox7XNYVHSyZazQ-4QIXZ-EbKlS_Uxepgorqyq-KMm8PV5ok2LxR/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -2943,15 +2979,30 @@ async function cargarSolicitudes(filtro){
       }
       if(filtroSolicitudes==='Pendiente'){
         const allCodigos=packs.map(pk=>String(pk[0]||'').trim());
-        // Datos de pago del cliente (cols AC=28, AD=29, AE=30)
         const pagoMoneda=String(r[28]||'').trim();
         const pagoMonto=String(r[29]||'').trim();
         const pagoRef=String(r[30]||'').trim();
-        html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+        // Store data globally to avoid JSON corruption
+        const aproKey='apro_'+base.replace(/[^a-zA-Z0-9]/g,'_');
+        window['_aproData_'+aproKey]={
+          codigoS:base, allCodigos:allCodigos,
+          nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),
+          modelo:v(11),manga:packs[0]?String(packs[0][12]||''):'',
+          capucha:packs[0]?String(packs[0][13]||''):'',
+          pack:packs[0]?String(packs[0][14]||''):'',
+          tela:packs[0]?String(packs[0][15]||''):'',
+          vinil:packs[0]?String(packs[0][16]||''):'',
+          piezas:packs[0]?String(packs[0][17]||''):'',
+          agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),
+          pagoMoneda:pagoMoneda,pagoMonto:pagoMonto,pagoRef:pagoRef
+        };
+        html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px;">
+          <button onclick='abrirEditarApro(window["_aproData_${aproKey}"])'
+            style="padding:10px;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:10px;color:var(--accent2);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✏️ EDITAR</button>
           <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigos:allCodigos,codigo:base,pago_moneda:pagoMoneda,pago_monto:pagoMonto,pago_ref:pagoRef})})'
-            style="width:100%;padding:13px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✅ Aprobar</button>
+            style="padding:10px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✅ APROBAR</button>
           <button onclick='abrirModalReprobar(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigos:allCodigos,codigo:base})})'
-            style="width:100%;padding:13px;background:transparent;border:2px solid var(--danger);border-radius:10px;color:var(--danger);font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">✗ Reprobar</button>
+            style="padding:10px;background:transparent;border:2px solid var(--danger);border-radius:10px;color:var(--danger);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✗ REPROBAR</button>
         </div>`;
       }
       card.innerHTML=html;
@@ -2959,6 +3010,82 @@ async function cargarSolicitudes(filtro){
     });
   }catch(e){
     listEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--danger);">✗ Error: ${e.message}</div>`;
+  }
+}
+
+let pendingEditApro=null;
+
+function abrirEditarApro(data){
+  pendingEditApro=data;
+  document.getElementById('edit-apro-codigo').textContent='Código: '+data.codigoS;
+  document.getElementById('ea-nombre').value=data.nombre||'';
+  document.getElementById('ea-cedula').value=data.cedula||'';
+  document.getElementById('ea-correo').value=data.correo||'';
+  document.getElementById('ea-celular').value=data.celular||'';
+  document.getElementById('ea-modelo').value=data.modelo||'';
+  document.getElementById('ea-pack').value=data.pack||'';
+  document.getElementById('ea-tela').value=data.tela||'';
+  document.getElementById('ea-vinil').value=data.vinil||'';
+  document.getElementById('ea-manga').value=data.manga||'';
+  document.getElementById('ea-capucha').value=data.capucha||'';
+  document.getElementById('ea-piezas').value=(data.piezas||'').split(' | ').join('\n');
+  document.getElementById('ea-agencia').value=data.agencia||'';
+  document.getElementById('ea-retira').value=data.retira||'';
+  document.getElementById('ea-retira-ci').value=data.retiraCi||'';
+  document.getElementById('ea-retira-cel').value=data.retiraCel||'';
+  document.getElementById('ea-pago-moneda').value=data.pagoMoneda||'';
+  document.getElementById('ea-pago-monto').value=data.pagoMonto||'';
+  document.getElementById('ea-pago-ref').value=data.pagoRef||'';
+  document.getElementById('ea-unlock').value='';
+  document.getElementById('ea-error').textContent='';
+  document.getElementById('modal-editar-apro').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('ea-nombre').focus(),100);
+}
+
+async function guardarEdicionApro(){
+  const unlock=document.getElementById('ea-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('ea-error');
+  if(!USUARIOS[unlock]){errEl.textContent='❌ Código incorrecto';document.getElementById('ea-unlock').value='';return;}
+  document.getElementById('modal-editar-apro').classList.add('hidden');
+  const msgEl=document.getElementById('apro-msg');
+  msgEl.style.display='block';
+  msgEl.style.background='var(--surface2)';
+  msgEl.style.color='var(--muted)';
+  msgEl.innerHTML='<span class="spinner">↻</span> Guardando cambios...';
+  try{
+    const piezasText=document.getElementById('ea-piezas').value.trim().split('\n').filter(l=>l.trim()).join(' | ');
+    const res=await scriptGETjson({
+      action:'editarAprobacion',
+      codigoS:pendingEditApro.codigoS,
+      nombre:document.getElementById('ea-nombre').value.trim(),
+      cedula:document.getElementById('ea-cedula').value.trim(),
+      correo:document.getElementById('ea-correo').value.trim(),
+      celular:document.getElementById('ea-celular').value.trim(),
+      modelo:document.getElementById('ea-modelo').value.trim(),
+      pack:document.getElementById('ea-pack').value.trim(),
+      tela:document.getElementById('ea-tela').value.trim(),
+      vinil:document.getElementById('ea-vinil').value.trim(),
+      manga:document.getElementById('ea-manga').value.trim(),
+      capucha:document.getElementById('ea-capucha').value.trim(),
+      piezas:piezasText,
+      agencia:document.getElementById('ea-agencia').value.trim(),
+      retira_nombre:document.getElementById('ea-retira').value.trim(),
+      retira_ci:document.getElementById('ea-retira-ci').value.trim(),
+      retira_cel:document.getElementById('ea-retira-cel').value.trim(),
+      pago_moneda:document.getElementById('ea-pago-moneda').value.trim(),
+      pago_monto:document.getElementById('ea-pago-monto').value.trim(),
+      pago_ref:document.getElementById('ea-pago-ref').value.trim()
+    });
+    if(res.ok){
+      msgEl.style.border='1px solid var(--accent)';
+      msgEl.style.color='var(--accent)';
+      msgEl.innerHTML='✅ Cambios guardados · '+USUARIOS[unlock];
+      setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},3000);
+    } else throw new Error(res.error||'Error al guardar');
+  }catch(e){
+    msgEl.style.background='#2a1010';
+    msgEl.style.color='var(--danger)';
+    msgEl.innerHTML='✗ Error: '+e.message;
   }
 }
 
