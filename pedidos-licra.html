@@ -781,7 +781,7 @@ function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidCel(c){ return c.replace(/\D/g,'').length>=7; }
 
 function validateStep(n){
-  if(n===2){ if(!pedido.pack||pedido.pack<2){ alert('Selecciona la cantidad de franelas'); return false; } return true; }
+  if(n===2){ if(!pedido.pack||pedido.pack<1){ alert('Selecciona la cantidad de franelas'); return false; } return true; }
   if(n===3){
     if(!pedido.modelo){ alert('Selecciona el modelo'); return false; }
     if(!pedido.manga){ alert('Selecciona el tipo de manga'); return false; }
