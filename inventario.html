@@ -306,6 +306,35 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </div>
 
 
+<!-- MODAL EDITAR COLA -->
+<div class="modal-overlay hidden" id="modal-editar-cola">
+  <div class="modal" style="max-width:480px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-icon">✏️</div>
+    <div class="modal-title">Editar Pedido en Cola</div>
+    <div class="modal-subtitle" id="edit-cola-codigo" style="color:var(--accent);font-weight:700;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div class="field-group"><div class="field-label">Nombre</div><input class="field-input" id="ec-nombre" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Cédula</div><input class="field-input" id="ec-cedula" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Correo</div><input class="field-input" id="ec-correo" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Celular</div><input class="field-input" id="ec-celular" type="text" style="width:100%;"></div>
+      <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Agencia</div><input class="field-input" id="ec-agencia" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Retira Nombre</div><input class="field-input" id="ec-retira" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Retira CI</div><input class="field-input" id="ec-retira-ci" type="text" style="width:100%;"></div>
+      <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Retira Celular</div><input class="field-input" id="ec-retira-cel" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Color de Tela</div><input class="field-input" id="ec-tela" type="text" style="width:100%;"></div>
+      <div class="field-group"><div class="field-label">Color de Vinil</div><input class="field-input" id="ec-vinil" type="text" style="width:100%;"></div>
+      <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Piezas</div><textarea class="field-input" id="ec-piezas" rows="4" style="width:100%;resize:vertical;font-size:12px;"></textarea></div>
+    </div>
+    <div class="field-label" style="margin-bottom:6px;">Código de autorización</div>
+    <input class="modal-cod-input" type="password" id="ec-unlock" placeholder="Tu código personal" maxlength="20">
+    <div class="modal-error" id="ec-error"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="document.getElementById('modal-editar-cola').classList.add('hidden')">Cancelar</button>
+      <button class="modal-confirm" onclick="guardarEdicionCola()">💾 GUARDAR</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay hidden" id="modal-aprobacion">
   <div class="modal">
     <div class="modal-icon">✅</div>
@@ -929,7 +958,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxAkZbbS8b-OE-YZK1FVXSHcf3sKoCn-TP9uFeqtsZQUxEThCg7JNmyWXr1V9va9RHdPg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7l2yRBxhE3TML6ZhKBVm2VVUe2K8D3Q6fWSVcjMwCbTqQRnzl9GbBPozHiFsBl44WbQ/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -2534,7 +2563,10 @@ async function cargarCola(){
           vinil:String(pk[16]||'').trim(),
           piezas:String(pk[17]||'').trim()
         }));
-        html+=`<button onclick='abrirModalPlanificacion(${JSON.stringify({
+        html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+          <button onclick='abrirEditarCola(${JSON.stringify({codigoC:base,nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),tela:vp(15),vinil:vp(16),piezas:vp(17)})})'
+            style="padding:13px;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:10px;color:var(--accent2);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">✏️ EDITAR</button>
+          <button onclick='abrirModalPlanificacion(${JSON.stringify({
           codigoCBase:base,
           allCodigosC:allCodigosC,
           allPacks:allPacks,
@@ -2542,9 +2574,9 @@ async function cargarCola(){
           agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),
           banco:v(22),codpago:v(23)
         })})'
-          style="width:100%;padding:13px;background:linear-gradient(135deg,var(--warn),#c07010);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;">
-          🚀 Enviar a Producción
-        </button>`;
+          style="padding:13px;background:linear-gradient(135deg,var(--warn),#c07010);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">
+          🚀 PRODUCCIÓN
+        </button></div>`;
       }
       card.innerHTML=html;
       listEl.appendChild(card);
@@ -2553,6 +2585,70 @@ async function cargarCola(){
     listEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--danger);">✗ Error: ${e.message}</div>`;
   }
 }
+let pendingEditCola=null;
+
+function abrirEditarCola(data){
+  pendingEditCola=data;
+  document.getElementById('edit-cola-codigo').textContent='Código: '+data.codigoC;
+  document.getElementById('ec-nombre').value=data.nombre||'';
+  document.getElementById('ec-cedula').value=data.cedula||'';
+  document.getElementById('ec-correo').value=data.correo||'';
+  document.getElementById('ec-celular').value=data.celular||'';
+  document.getElementById('ec-agencia').value=data.agencia||'';
+  document.getElementById('ec-retira').value=data.retira||'';
+  document.getElementById('ec-retira-ci').value=data.retiraCi||'';
+  document.getElementById('ec-retira-cel').value=data.retiraCel||'';
+  document.getElementById('ec-tela').value=data.tela||'';
+  document.getElementById('ec-vinil').value=data.vinil||'';
+  document.getElementById('ec-piezas').value=(data.piezas||'').split(' | ').join('\n');
+  document.getElementById('ec-unlock').value='';
+  document.getElementById('ec-error').textContent='';
+  document.getElementById('modal-editar-cola').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('ec-nombre').focus(),100);
+}
+
+async function guardarEdicionCola(){
+  const unlock=document.getElementById('ec-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('ec-error');
+  if(!USUARIOS[unlock]){errEl.textContent='❌ Código incorrecto';document.getElementById('ec-unlock').value='';return;}
+  document.getElementById('modal-editar-cola').classList.add('hidden');
+  const msgEl=document.getElementById('cola-msg');
+  msgEl.style.display='block';
+  msgEl.style.background='var(--surface2)';
+  msgEl.style.color='var(--muted)';
+  msgEl.innerHTML='<span class="spinner">↻</span> Guardando cambios...';
+  try{
+    const piezasText=document.getElementById('ec-piezas').value.trim().split('\n').filter(l=>l.trim()).join(' | ');
+    const res=await scriptGETjson({
+      action:'editarCola',
+      codigoC:pendingEditCola.codigoC,
+      nombre:document.getElementById('ec-nombre').value.trim(),
+      cedula:document.getElementById('ec-cedula').value.trim(),
+      correo:document.getElementById('ec-correo').value.trim(),
+      celular:document.getElementById('ec-celular').value.trim(),
+      agencia:document.getElementById('ec-agencia').value.trim(),
+      retira:document.getElementById('ec-retira').value.trim(),
+      retira_ci:document.getElementById('ec-retira-ci').value.trim(),
+      retira_cel:document.getElementById('ec-retira-cel').value.trim(),
+      tela:document.getElementById('ec-tela').value.trim(),
+      vinil:document.getElementById('ec-vinil').value.trim(),
+      piezas:piezasText
+    });
+    if(res.ok){
+      msgEl.style.border='1px solid var(--accent)';
+      msgEl.style.color='var(--accent)';
+      msgEl.innerHTML='✅ Cambios guardados · '+USUARIOS[unlock];
+      setTimeout(()=>{msgEl.style.display='none';cargarCola();},3000);
+    } else {
+      throw new Error(res.error||'Error al guardar');
+    }
+  }catch(e){
+    msgEl.style.background='#2a1010';
+    msgEl.style.color='var(--danger)';
+    msgEl.innerHTML='✗ Error: '+e.message;
+  }
+}
+
 function abrirModalPlanificacion(data){
   pendingCola=data;
   const packs=data.allPacks||[];
@@ -2577,21 +2673,48 @@ async function confirmarPlanificacion(){
   msgEl.style.display='block';
   msgEl.style.background='var(--surface2)';
   msgEl.style.color='var(--muted)';
-  msgEl.innerHTML='<span class="spinner">↻</span> Leyendo COD...';
 
   try{
-    // 1. Leer COD de Make
-    const codData=await scriptGETjson({action:'leerCOD'});
-    const codMake=codData.ok?String(codData.codSiguiente):'';
-
-    msgEl.innerHTML='<span class="spinner">↻</span> Enviando a producción...';
-
     const fechaProd=getFechaHora();
     const allCodigosC=pendingCola.allCodigosC||[pendingCola.codigoC];
     const allPacks=pendingCola.allPacks||[];
-    let lastCodigoP='';
 
-    // 2. Registrar cada pack en R.COLA.P y borrar de COLA.P
+    // 1. Leer COD — igual que COD
+    msgEl.innerHTML='<span class="spinner">↻</span> Leyendo COD...';
+    let codMake='';
+    try{
+      const dataCod=await scriptGETjson({action:'leerCOD'});
+      if(dataCod.ok) codMake=String(dataCod.codSiguiente);
+    }catch(e){ console.warn('leerCOD error:',e); }
+
+    // 2. Enviar a Make — igual que COD (fetch ANTES de Sheets)
+    msgEl.innerHTML='<span class="spinner">↻</span> Enviando...';
+    const packsTexto=allPacks.map((pk,i)=>{
+      const piezasLineas=(pk.piezas||'').split(' | ').map(p=>`  • ${p}`).join('\n');
+      return `── Pack ${i+1} ──\n${pk.pack} ${pk.modelo||'COMFY MEGA PROMO'} MANGA LARGA\nTela: ${pk.tela}\nVinil: ${pk.vinil}\nPiezas:\n${piezasLineas}`;
+    }).join('\n\n');
+
+    const makeBody=new FormData();
+    makeBody.append('tipo_operacion','Planificacion');
+    makeBody.append('codigo_cola',allCodigosC.join(', '));
+    makeBody.append('nombre',pendingCola.nombre||'');
+    makeBody.append('correo',pendingCola.correo||'');
+    makeBody.append('cedula',pendingCola.cedula||'');
+    makeBody.append('celular',pendingCola.celular||'');
+    makeBody.append('agencia',pendingCola.agencia||'');
+    makeBody.append('retira',pendingCola.retira||'');
+    makeBody.append('retira_ci',pendingCola.retiraCi||'');
+    makeBody.append('retira_cel',pendingCola.retiraCel||'');
+    makeBody.append('total_packs',String(allPacks.length));
+    makeBody.append('packs_detalle',packsTexto);
+    makeBody.append('usuario',USUARIOS[unlock]);
+    makeBody.append('fecha',fechaProd);
+    if(codMake) makeBody.append('cod_make',codMake);
+
+    const response=await fetch(WEBHOOK_URL,{method:'POST',body:makeBody,mode:'no-cors'});
+
+    // 3. Guardar en Sheets — igual que COD (DESPUÉS del fetch)
+    let lastCodigoP='';
     for(const codigoC of allCodigosC){
       const res=await scriptGETjson({
         action:'enviarProduccion',
@@ -2604,8 +2727,6 @@ async function confirmarPlanificacion(){
       else throw new Error(res.error||'Error en '+codigoC);
     }
 
-    // 3. Guardar en PEDIDOS para búsquedas futuras (Envío por Selección)
-    const codMakeStr=String(codMake||'');
     const descripcionPacks=allPacks.map((pk,i)=>`Pack ${i+1}: ${pk.pack} ${pk.tela}/${pk.vinil}`).join(' | ');
     try{
       await scriptGETjson({
@@ -2613,7 +2734,7 @@ async function confirmarPlanificacion(){
         nombre:pendingCola.nombre||'',
         cedula:pendingCola.cedula||'',
         correo:pendingCola.correo||'',
-        cod:codMakeStr,
+        cod:codMake,
         numero_guia:'',
         agencia:pendingCola.agencia||'',
         status:'En Producción',
@@ -2628,41 +2749,16 @@ async function confirmarPlanificacion(){
       });
     }catch(e){ console.warn('addPedido error:',e); }
 
-    // 4. Enviar a Make con FormData igual que flujo COD
-    const packsTexto=allPacks.map((pk,i)=>{
-      const piezasLineas=(pk.piezas||'').split(' | ').map(p=>`  • ${p}`).join('\n');
-      return `── Pack ${i+1} ──\n${pk.pack} ${pk.modelo||'COMFY MEGA PROMO'} MANGA LARGA SIN CAPUCHA\nTela: ${pk.tela}\nVinil: ${pk.vinil}\nPiezas:\n${piezasLineas}`;
-    }).join('\n\n');
-
-    const makeBody=new FormData();
-    makeBody.append('tipo_operacion','Planificacion');
-    makeBody.append('codigo_prod',lastCodigoP||'');
-    makeBody.append('codigo_cola',allCodigosC.join(', '));
-    makeBody.append('nombre',pendingCola.nombre||'');
-    makeBody.append('correo',pendingCola.correo||'');
-    makeBody.append('cedula',pendingCola.cedula||'');
-    makeBody.append('celular',pendingCola.celular||'');
-    makeBody.append('agencia',pendingCola.agencia||'');
-    makeBody.append('retira',pendingCola.retira||'');
-    makeBody.append('retira_ci',pendingCola.retiraCi||'');
-    makeBody.append('retira_cel',pendingCola.retiraCel||'');
-    makeBody.append('banco',pendingCola.banco||'');
-    makeBody.append('cod_pago',pendingCola.codpago||'');
-    makeBody.append('total_packs',String(allPacks.length));
-    makeBody.append('packs_detalle',packsTexto);
-    makeBody.append('usuario',USUARIOS[unlock]);
-    makeBody.append('fecha',fechaProd);
-    msgEl.innerHTML='<span class="spinner">↻</span> Notificando a Make...';
-    try{
-      await fetch(WEBHOOK_URL,{method:'POST',body:makeBody,mode:'no-cors'});
-      console.log('Make webhook enviado OK');
-    }catch(makeErr){ console.warn('Make webhook error:',makeErr); }
-
-    msgEl.style.background='var(--surface2)';
-    msgEl.style.border='1px solid #1a4a2a';
-    msgEl.style.color='var(--accent)';
-    msgEl.innerHTML=`✅ Enviado a producción · <b>${lastCodigoP}</b> · ${allPacks.length} pack(s) · ${USUARIOS[unlock]}`;
-    setTimeout(()=>{msgEl.style.display='none';cargarCola();},5000);
+    // 4. Resultado — igual que COD
+    if(response.ok||response.type==='opaque'){
+      msgEl.style.background='var(--surface2)';
+      msgEl.style.border='1px solid #1a4a2a';
+      msgEl.style.color='var(--accent)';
+      msgEl.innerHTML=`✅ Enviado a producción · <b>${lastCodigoP}</b> · COD: ${codMake||'—'} · ${USUARIOS[unlock]}`;
+      setTimeout(()=>{msgEl.style.display='none';cargarCola();},5000);
+    } else {
+      throw new Error('Error del servidor');
+    }
   }catch(e){
     msgEl.style.background='#2a1010';
     msgEl.style.border='1px solid #4a1a1a';
