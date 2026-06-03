@@ -3040,7 +3040,7 @@ async function cargarSolicitudes(filtro){
         html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;">
           <button onclick='abrirEditarApro(window["_aproData_${aproKey}"])'
             style="padding:10px;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:10px;color:var(--accent2);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✏️ EDITAR</button>
-          <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigos:allCodigos,codigo:base,pago_moneda:pagoMoneda,pago_monto:pagoMonto,pago_ref:pagoRef})})'
+          <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),fecha:v(4),codigos:allCodigos,codigo:base,pago_moneda:pagoMoneda,pago_monto:pagoMonto,pago_ref:pagoRef,modelo:v(11),manga:packs[0]?String(packs[0][12]||''):'',capucha:packs[0]?String(packs[0][13]||''):'',pack:packs[0]?String(packs[0][14]||''):'',tela:packs[0]?String(packs[0][15]||''):'',vinil:packs[0]?String(packs[0][16]||''):'',piezas:packs[0]?String(packs[0][17]||''):'',agencia:v(18)})})'
             style="padding:10px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✅ APROBAR</button>
           <button onclick='abrirModalReprobar(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigos:allCodigos,codigo:base})})'
             style="padding:10px;background:transparent;border:2px solid var(--danger);border-radius:10px;color:var(--danger);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✗ REPROBAR</button>
@@ -3251,6 +3251,18 @@ async function confirmarAprobacion(){
     msgEl.style.border='1px solid #1a4a2a';
     msgEl.style.color='var(--accent)';
     msgEl.innerHTML=`✅ Pago aprobado · <b>${lastCodigoC||''}</b> en cola · ${USUARIOS[unlock]} · ${fechaApro}`;
+
+    // Notificar al cliente por WhatsApp
+    try{
+      const piezasLineas=(pendingSolicitud.piezas||'').split(' | ').map(p=>`• ${p}`).join('\n');
+      const resumen=`¡Hola ${pendingSolicitud.nombre||''}! ✅ Tu pedido fue aprobado.\n\n📦 ${pendingSolicitud.pack||''} ${pendingSolicitud.modelo||''} ${pendingSolicitud.manga||''}${pendingSolicitud.capucha&&pendingSolicitud.capucha!=='Sin Capucha'?' CON CAPUCHA':''}\nColor de Tela: ${pendingSolicitud.tela||''} · Color de Vinil: ${pendingSolicitud.vinil||''}\n\n👕 Tus franelas:\n${piezasLineas}\n\n🚚 Agencia: ${pendingSolicitud.agencia||''}\n\nProto comenzaremos a prepararlo. 💚\n— IKOA & BeKate`;
+      const waBody=new FormData();
+      waBody.append('celular', pendingSolicitud.celular||'');
+      waBody.append('nombre', pendingSolicitud.nombre||'');
+      waBody.append('mensaje', resumen);
+      await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:waBody,mode:'no-cors'});
+    }catch(waErr){ console.warn('WhatsApp webhook error:',waErr); }
+
     setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},4000);
   }catch(e){
     msgEl.style.background='#2a1010';
