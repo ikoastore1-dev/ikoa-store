@@ -994,7 +994,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfs7lidTcJ96HxsvAsv9V3SkpFZBt7g3z8tjSN11MnERTheAIpEP6qUyReFKCVIwIE/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVai4KN8GodELNcz6P1I2wH7JZX3QS6kgC6tz2GBAVK969Ckgwt8ATz3Gzo3MTKdhdSw/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -2836,7 +2836,8 @@ async function confirmarPlanificacion(){
         cel_envio:pendingCola.retiraCel||'',
         ci_envio:pendingCola.retiraCi||'',
         direccion:'',
-        usuario:USUARIOS[unlock]
+        usuario:USUARIOS[unlock],
+        urgente:pendingCola.urgente||''
       });
     }catch(e){ console.warn('addPedido error:',e); }
 
@@ -3702,6 +3703,10 @@ async function buscarPedidoCOD(){
         </div>
         <div id="es-dir-texto" style="font-size:13px;color:var(--text);">${data.direccion||'<span style="color:var(--muted);">Sin dirección registrada</span>'}</div>
         <input class="field-input" type="text" id="es-dir-input" value="${data.direccion||''}" placeholder="Escribe la dirección..." style="display:none;margin-top:8px;text-transform:uppercase;" oninput="pedidoEncontrado.direccion=this.value">
+      </div>
+      <div style="background:#1a1a10;border:1.5px solid var(--warn);border-radius:8px;padding:12px;margin-top:8px;">
+        <div style="color:var(--warn);font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px;">⚡ Urgencia</div>
+        <div style="font-size:13px;color:var(--text);font-weight:600;">${data.urgente||'<span style="color:var(--muted);font-weight:400;">Sin urgencia registrada</span>'}</div>
       </div>`;
     document.getElementById('es-cupon-wrap').style.display=necesitaCupon?'block':'none';
     document.getElementById('es-unlock').value='';
