@@ -994,7 +994,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwRp-SRQyM7Wb4Oji-iEN5nQsxjIGykNOv7aYwITgruJHxYTIOCTDocGluSON0Leax6Ng/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfs7lidTcJ96HxsvAsv9V3SkpFZBt7g3z8tjSN11MnERTheAIpEP6qUyReFKCVIwIE/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -2609,9 +2609,19 @@ async function cargarCola(){
           allPacks:allPacks,
           nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),
           agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),
-          banco:v(22),codpago:v(23)
+          banco:v(22),codpago:v(23),
+          urgente:v(31)||''
         };
-        html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+        html+=`<div style="margin-top:8px;">
+          <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="urgente-cola-${base}" placeholder="Ej: URGENTE - Entregar 15/06" value="${v(31)||''}"
+              style="flex:1;background:var(--surface3);border:1.5px solid var(--warn);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;text-transform:uppercase;">
+            <button onclick="guardarUrgente('cola','${base}','urgente-cola-${base}')"
+              style="padding:8px 14px;background:#1a1a10;border:1.5px solid var(--warn);border-radius:8px;color:var(--warn);font-size:13px;font-weight:700;cursor:pointer;">💾</button>
+          </div>
+        </div>`;
+        html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
           <button onclick='abrirEditarCola(${JSON.stringify({codigoC:base,nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),tela:v(15),vinil:v(16),piezas:v(17)})})'
             style="padding:13px;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:10px;color:var(--accent2);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">✏️ EDITAR</button>
           <button onclick='abrirModalPlanificacion(window["_colaData_${colaKey}"])'
@@ -2626,6 +2636,26 @@ async function cargarCola(){
     listEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--danger);">✗ Error: ${e.message}</div>`;
   }
 }
+async function guardarUrgente(tipo, codigo, inputId){
+  const val=document.getElementById(inputId)?.value.trim()||'';
+  // Pedir código de autorización
+  const unlock=prompt('Código de autorización:');
+  if(!unlock) return;
+  const unlockUp=unlock.trim().toUpperCase();
+  if(!USUARIOS[unlockUp]){ alert('❌ Código incorrecto'); return; }
+  const hoja=tipo==='cola'?'COLA.P':'APROBACIONES';
+  const msgEl=tipo==='cola'?document.getElementById('cola-msg'):document.getElementById('apro-msg');
+  if(msgEl){ msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)'; msgEl.innerHTML='<span class="spinner">↻</span> Guardando urgencia...'; }
+  try{
+    const res=await scriptGETjson({action:'editarUrgente',hoja:hoja,codigo:codigo,urgente:val});
+    if(res.ok){
+      if(msgEl){ msgEl.style.color='var(--accent)'; msgEl.innerHTML=`✅ Urgencia guardada · ${USUARIOS[unlockUp]}`; setTimeout(()=>{ msgEl.style.display='none'; },2500); }
+    } else throw new Error(res.error||'Error');
+  }catch(e){
+    if(msgEl){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='✗ Error: '+e.message; }
+  }
+}
+
 let pendingEditCola=null;
 
 function abrirEditarCola(data){
@@ -2769,6 +2799,7 @@ async function confirmarPlanificacion(){
     makeBody.append('numero_guia','');
     makeBody.append('packs_detalle',packsTexto);
     makeBody.append('descripcion',packsTexto);
+    makeBody.append('urgente',pendingCola.urgente||'');
     makeBody.append('fecha',fechaProd);
 
     const response=await fetch(WEBHOOK_URL,{method:'POST',body:makeBody,mode:'no-cors'});
@@ -2996,7 +3027,16 @@ async function cargarSolicitudes(filtro){
           agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),
           pagoMoneda:pagoMoneda,pagoMonto:pagoMonto,pagoRef:pagoRef
         };
-        html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px;">
+        html+=`<div style="margin-top:8px;">
+          <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="urgente-apro-${base}" placeholder="Ej: URGENTE - Entregar 15/06" value="${v(31)||''}"
+              style="flex:1;background:var(--surface3);border:1.5px solid var(--warn);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;text-transform:uppercase;">
+            <button onclick="guardarUrgente('apro','${base}','urgente-apro-${base}')"
+              style="padding:8px 14px;background:#1a1a10;border:1.5px solid var(--warn);border-radius:8px;color:var(--warn);font-size:13px;font-weight:700;cursor:pointer;">💾</button>
+          </div>
+        </div>`;
+        html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;">
           <button onclick='abrirEditarApro(window["_aproData_${aproKey}"])'
             style="padding:10px;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:10px;color:var(--accent2);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✏️ EDITAR</button>
           <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),fecha:v(4),codigos:allCodigos,codigo:base,pago_moneda:pagoMoneda,pago_monto:pagoMonto,pago_ref:pagoRef})})'
