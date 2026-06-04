@@ -3544,6 +3544,20 @@ document.getElementById('gestion-form').addEventListener('submit',async function
       msg.innerHTML=tipo==='COD'&&codMake
         ? `✅ Gestión enviada · COD: <b>${codMake}</b> · ${nombreUsuario}`
         : `✅ Gestión enviada · ${nombreUsuario}`;
+
+      // Notificar al cliente por WhatsApp
+      try{
+        const celularEnvio=formData.get('celular')||'';
+        const nombreEnvio=formData.get('nombre')||'';
+        if(celularEnvio){
+          const waBody=new FormData();
+          waBody.append('celular', celularEnvio);
+          waBody.append('nombre', nombreEnvio);
+          waBody.append('mensaje', `Hola ${nombreEnvio}! Somos IKOA & BeKate. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias!`);
+          await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:waBody,mode:'no-cors'});
+        }
+      }catch(waErr){ console.warn('WhatsApp webhook error:',waErr); }
+
       setTimeout(()=>{
         this.reset();
         document.getElementById('g-auth-code').value='';
@@ -3820,6 +3834,18 @@ async function confirmarEnvioSeleccion(){
     msgEl.style.border='1px solid #1a4a2a';
     msgEl.style.color='var(--accent)';
     msgEl.innerHTML=`✅ Enviado · COD ${pedidoEncontrado.cod} · ${USUARIOS[unlock]}`;
+
+    // Notificar al cliente por WhatsApp
+    try{
+      if(pedidoEncontrado.celular){
+        const waBody=new FormData();
+        waBody.append('celular', pedidoEncontrado.celular||'');
+        waBody.append('nombre', pedidoEncontrado.nombre||'');
+        waBody.append('mensaje', `Hola ${pedidoEncontrado.nombre||''}! Somos IKOA & BeKate. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias!`);
+        await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:waBody,mode:'no-cors'});
+      }
+    }catch(waErr){ console.warn('WhatsApp webhook error:',waErr); }
+
     setTimeout(()=>cancelarEnvioSeleccion(),4000);
   }catch(e){
     msgEl.style.background='#2a1010';
