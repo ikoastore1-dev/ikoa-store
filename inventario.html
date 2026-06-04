@@ -3897,7 +3897,7 @@ async function confirmarModeloLink(modelo){
   btn.disabled=true; btn.textContent='⏳ Generando...';
   msg.style.display='none';
   try{
-    const data=await scriptGETjson({action:'generarToken'});
+    const data=await scriptGETjson({action:'generarToken',modelo:modelo});
     if(data.ok){
       currentToken=data.token;
       const baseUrl=BASE_URLS[modelo]||BASE_URLS.comfy;
@@ -3905,6 +3905,17 @@ async function confirmarModeloLink(modelo){
       document.getElementById('link-text').textContent=link;
       document.getElementById('link-result').style.display='block';
       msg.style.display='none';
+
+      // Notificar a Johan por WhatsApp
+      const nombresModelo={comfy:'COMFY MEGA PROMO',fullcomfy:'COMFY PROTECT',licra:'LICRA PROTECT',coleccion:'LICRA COLECCION'};
+      try{
+        const waBody=new FormData();
+        waBody.append('celular','584149450742');
+        waBody.append('nombre','Johan');
+        waBody.append('mensaje',`IKOA & BeKate: Se genero un nuevo link de venta para ${nombresModelo[modelo]||modelo.toUpperCase()}.`);
+        await fetch('https://hook.us2.make.com/dnr1w1wd8vaf9k8uym9p6taaf6icb30r',{method:'POST',body:waBody,mode:'no-cors'});
+      }catch(waErr){ console.warn('WhatsApp notify error:',waErr); }
+
     } else {
       throw new Error('No se pudo generar');
     }
