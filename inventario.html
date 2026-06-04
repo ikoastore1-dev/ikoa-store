@@ -3261,7 +3261,7 @@ async function confirmarAprobacion(){
       const waBody=new FormData();
       waBody.append('celular', pendingSolicitud.celular||'');
       waBody.append('nombre', pendingSolicitud.nombre||'');
-      waBody.append('mensaje', resumen);
+      waBody.append('mensaje', resumen.replace(/\r?\n/g,' | '));
       await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{
         method:'POST',
         body:waBody,
