@@ -3254,14 +3254,10 @@ async function confirmarAprobacion(){
 
     // Notificar al cliente por WhatsApp
     try{
-      const piezasLineas=(pendingSolicitud.piezas||'').split(' | ').map(px=>`- ${px}`).join('\n');
-      const agenciaNombre=(pendingSolicitud.agencia||'').split('—')[0].trim();
-      const capuchaInfo=pendingSolicitud.capucha&&pendingSolicitud.capucha!=='Sin Capucha'?' CON CAPUCHA':'';
-      const resumen=`Hola ${pendingSolicitud.nombre||''}! Tu pedido fue aprobado.\n\n${pendingSolicitud.pack||''} ${pendingSolicitud.modelo||''} ${pendingSolicitud.manga||''}${capuchaInfo}\nTela: ${pendingSolicitud.tela||''} - Vinil: ${pendingSolicitud.vinil||''}\n\nFranelas:\n${piezasLineas}\n\nAgencia: ${agenciaNombre}\n\nProto comenzaremos a prepararlo.\n- IKOA & BeKate`;
       const waBody=new FormData();
       waBody.append('celular', pendingSolicitud.celular||'');
       waBody.append('nombre', pendingSolicitud.nombre||'');
-      waBody.append('mensaje', resumen.replace(/\r?\n/g,'{{SALTO}}'));
+      waBody.append('mensaje', `Hola ${pendingSolicitud.nombre||''}! Somos IKOA & BeKate. Tu pedido fue procesado correctamente. Recibiras una copia mas detallada por correo. Gracias por tu preferencia!`);
       await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{
         method:'POST',
         body:waBody,
