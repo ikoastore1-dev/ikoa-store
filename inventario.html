@@ -3258,15 +3258,13 @@ async function confirmarAprobacion(){
       const agenciaNombre=(pendingSolicitud.agencia||'').split('—')[0].trim();
       const capuchaInfo=pendingSolicitud.capucha&&pendingSolicitud.capucha!=='Sin Capucha'?' CON CAPUCHA':'';
       const resumen=`Hola ${pendingSolicitud.nombre||''}! Tu pedido fue aprobado.\n\n${pendingSolicitud.pack||''} ${pendingSolicitud.modelo||''} ${pendingSolicitud.manga||''}${capuchaInfo}\nTela: ${pendingSolicitud.tela||''} - Vinil: ${pendingSolicitud.vinil||''}\n\nFranelas:\n${piezasLineas}\n\nAgencia: ${agenciaNombre}\n\nProto comenzaremos a prepararlo.\n- IKOA & BeKate`;
-      const waPayload={
-        celular: pendingSolicitud.celular||'',
-        nombre: pendingSolicitud.nombre||'',
-        mensaje: resumen
-      };
+      const waBody=new FormData();
+      waBody.append('celular', pendingSolicitud.celular||'');
+      waBody.append('nombre', pendingSolicitud.nombre||'');
+      waBody.append('mensaje', resumen);
       await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{
         method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(waPayload),
+        body:waBody,
         mode:'no-cors'
       });
     }catch(waErr){ console.warn('WhatsApp webhook error:',waErr); }
