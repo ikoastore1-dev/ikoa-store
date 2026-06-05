@@ -1001,6 +1001,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <button class="tab" id="ptab-fullcomfy" onclick="switchProg('fullcomfy')" style="font-size:13px;padding:8px 14px;">🔵 COMFY PROTECT</button>
       <button class="tab" id="ptab-licra" onclick="switchProg('licra')" style="font-size:13px;padding:8px 14px;">🟠 LICRA PROTECT</button>
       <button class="tab" id="ptab-coleccion" onclick="switchProg('coleccion')" style="font-size:13px;padding:8px 14px;">🟣 COLECCIÓN</button>
+      <button class="tab" id="ptab-celapi" onclick="switchProg('celapi')" style="font-size:13px;padding:8px 14px;">📱 CEL - API</button>
     </div>
 
     <div id="prog-msg" style="display:none;padding:12px;border-radius:10px;text-align:center;font-size:14px;font-weight:600;margin-bottom:12px;"></div>
@@ -1014,7 +1015,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw_tldeWrq_p2j3BvCjT7idBS_W3NmabYVWc1PVJvpCUL7XetmNI3uUAV9yq66mbY5hjw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxUB8ibV520d1jjzGfpZMpElqmYlZhJBQgSDVDf-y1ZrM068kmKmZaduJXPLBbIyz-1Bw/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1881,7 +1882,88 @@ async function switchProg(app){
   document.querySelectorAll('[id^="ptab-"]').forEach(b=>b.classList.remove('active'));
   const btn=document.getElementById('ptab-'+app);
   if(btn) btn.classList.add('active');
-  await cargarColores(app);
+  if(app==='celapi') await cargarCelApi();
+  else await cargarColores(app);
+}
+
+async function cargarCelApi(q='', fecha=''){
+  const cont=document.getElementById('prog-content');
+  cont.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">⏳ Cargando...</div>';
+  try{
+    const data=await scriptGETjson({action:'leerCelApi', q, fecha});
+    if(!data.ok) throw new Error(data.error||'Error');
+    const stats=data.stats||{};
+    const rows=data.rows||[];
+
+    let html=`
+    <!-- Estadísticas -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Interacciones hoy</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;color:var(--accent);">${stats.totalHoy||0}</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--accent2);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Numeros unicos hoy</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;color:var(--accent2);">${stats.uniqueHoy||0}</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--warn);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Total registros</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;color:var(--warn);">${stats.totalRegistros||0}</div>
+      </div>
+    </div>
+
+    <!-- Búsqueda -->
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:16px;">
+      <input type="text" id="cel-api-q" placeholder="Buscar número..." value="${q}"
+        style="background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;outline:none;">
+      <input type="date" id="cel-api-fecha" value="${fecha}"
+        style="background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;outline:none;">
+      <button onclick="cargarCelApi(document.getElementById('cel-api-q').value, document.getElementById('cel-api-fecha').value)"
+        style="padding:10px 16px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">🔍</button>
+    </div>
+
+    <!-- Lista -->
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">
+      ${q||fecha ? `Resultados (${rows.length})` : 'Ultimas 5 interacciones'}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;">`;
+
+    if(rows.length===0){
+      html+=`<div style="text-align:center;color:var(--muted);padding:20px;">Sin registros</div>`;
+    } else {
+      rows.forEach(r=>{
+        html+=`<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:10px 14px;">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);">📱 ${r[0]}</div>
+            <div style="font-size:12px;color:var(--muted);">${r[1]}</div>
+          </div>
+          <button onclick="eliminarCelApi('${r[0].replace(/'/g,"\\'")}','${r[1].replace(/'/g,"\\'")}')"
+            style="background:transparent;border:1.5px solid var(--danger);border-radius:6px;color:var(--danger);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;">✕</button>
+        </div>`;
+      });
+    }
+    html+=`</div>`;
+    cont.innerHTML=html;
+  }catch(e){
+    cont.innerHTML=`<div style="color:var(--danger);text-align:center;padding:20px;">✗ Error: ${e.message}</div>`;
+  }
+}
+
+async function eliminarCelApi(celular, fecha){
+  if(!confirm(`Eliminar registro de ${celular}?`)) return;
+  const unlock=prompt('Codigo de autorizacion:');
+  if(!unlock) return;
+  if(!USUARIOS[unlock.trim().toUpperCase()]){ alert('Codigo incorrecto'); return; }
+  const msgEl=document.getElementById('prog-msg');
+  msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
+  msgEl.innerHTML='<span class="spinner">↻</span> Eliminando...';
+  try{
+    const res=await scriptGETjson({action:'eliminarCelApi', celular, fecha});
+    if(res.ok){
+      msgEl.style.color='var(--accent)'; msgEl.innerHTML='Registro eliminado';
+      setTimeout(()=>{ msgEl.style.display='none'; cargarCelApi(); },1500);
+    } else throw new Error(res.error||'Error');
+  }catch(e){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='Error: '+e.message; }
 }
 
 async function cargarColores(app){
@@ -3370,7 +3452,7 @@ async function confirmarAprobacion(){
       const waBody=new FormData();
       waBody.append('celular', pendingSolicitud.celular||'');
       waBody.append('nombre', pendingSolicitud.nombre||'');
-      waBody.append('mensaje', `Hola ${pendingSolicitud.nombre||''}! Somos IKOA & BeKate. Tu pedido fue procesado correctamente. Recibiras una copia mas detallada por correo. Gracias por tu preferencia!`);
+      waBody.append('mensaje', `Hola ${pendingSolicitud.nombre||''} Somos IKOA BeKate. Tu pedido fue procesado correctamente. Recibiras una copia mas detallada por correo. Gracias por tu preferencia`);
       await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{
         method:'POST',
         body:waBody,
@@ -3666,7 +3748,7 @@ document.getElementById('gestion-form').addEventListener('submit',async function
           const waBody=new FormData();
           waBody.append('celular', celularEnvio);
           waBody.append('nombre', nombreEnvio);
-          waBody.append('mensaje', `Hola ${nombreEnvio}! Somos IKOA & BeKate. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias!`);
+          waBody.append('mensaje', `Hola ${nombreEnvio} Somos IKOA BeKate. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias`);
           await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:waBody,mode:'no-cors'});
         }
       }catch(waErr){ console.warn('WhatsApp webhook error:',waErr); }
@@ -3954,7 +4036,7 @@ async function confirmarEnvioSeleccion(){
         const waBody=new FormData();
         waBody.append('celular', pedidoEncontrado.celular||'');
         waBody.append('nombre', pedidoEncontrado.nombre||'');
-        waBody.append('mensaje', `Hola ${pedidoEncontrado.nombre||''}! Somos IKOA & BeKate. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias!`);
+        waBody.append('mensaje', `Hola ${pedidoEncontrado.nombre||''} Somos IKOA BeKate. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias`);
         await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:waBody,mode:'no-cors'});
       }
     }catch(waErr){ console.warn('WhatsApp webhook error:',waErr); }
@@ -4025,7 +4107,7 @@ async function confirmarModeloLink(modelo){
         const waBody=new FormData();
         waBody.append('celular','584149450742');
         waBody.append('nombre','Johan');
-        waBody.append('mensaje',`IKOA & BeKate: Se genero un nuevo link de venta para ${nombresModelo[modelo]||modelo.toUpperCase()}.`);
+        waBody.append('mensaje',`IKOA BeKate Se genero un nuevo link de venta para ${nombresModelo[modelo]||modelo.toUpperCase()}`);
         await fetch('https://hook.us2.make.com/dnr1w1wd8vaf9k8uym9p6taaf6icb30r',{method:'POST',body:waBody,mode:'no-cors'});
       }catch(waErr){ console.warn('WhatsApp notify error:',waErr); }
 
