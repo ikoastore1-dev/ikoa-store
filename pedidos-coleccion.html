@@ -469,7 +469,7 @@ window.addEventListener('load',function(){
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbxoezGtJBVBl7UxQQtWIrBAiRqsxl_qGFwSeaYdIeVXhTVaLq7Vu1y1xbla1SCk-7sPwA/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbxTQhbBySU8w0fUsPT2fbBIkIvbX9k8-FqUKuhLQWNOv7NjPvBMupzltBa6Gweo1u3ihQ/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
@@ -850,15 +850,15 @@ const SERIES_COLECCION={
              Pink:{Playera:'AlphaPink',Dress:'AlphaPinkDress',Cortaviento:'AlphaPinkCortaviento'}}},
   Unicolor:{nombre:'Unicolor',colores:['Blanco','Negro','Azul Rey','Azul Marino','Menta','Gris','Rojo','Rosa Bebé','Verde Militar'],
     codigos:{
-      Blanco:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
-      Negro:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
-      'Azul Rey':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
-      'Azul Marino':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
-      Menta:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
-      Gris:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
-      Rojo:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
-      'Rosa Bebé':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'},
-      'Verde Militar':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie'}
+      Blanco:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      Negro:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      'Azul Rey':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      'Azul Marino':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      Menta:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      Gris:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      Rojo:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      'Rosa Bebé':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      'Verde Militar':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'}
     }
   }
 };
@@ -880,7 +880,7 @@ function selectColorSerie(btn,color){
   document.querySelectorAll('#color-serie-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   const s=SERIES_COLECCION[selectedSerie];
-  const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short']:['Playera','Dress','Cortaviento'];
+  const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short','Cotton Licra']:['Playera','Dress','Cortaviento'];
   document.getElementById('variante-grid').innerHTML=variantes.map(v=>`<button class="opt-btn" onclick="selectVariante(this,'${v}')">${v.toUpperCase()}</button>`).join('');
   document.getElementById('variante-wrap').style.display='block';
   document.getElementById('producto-seleccionado').style.display='none';
@@ -894,6 +894,12 @@ function selectVariante(btn,variante){
   const codigo=s.codigos[selectedColorSerie][variante];
   const nombre=selectedSerie==='Unicolor'?`${variante} Serie ${selectedColorSerie}`:`${variante} ${s.nombre} ${selectedColorSerie}`;
   pedido.codigoProducto=codigo; pedido.nombreProducto=nombre; pedido.variante=variante; pedido.pack=1;
+  // Cotton Licra: manga corta, sin capucha fijo
+  if(variante==='Cotton Licra'){
+    pedido.manga='Manga Corta'; pedido.capucha='Sin Capucha';
+  } else {
+    pedido.manga=''; pedido.capucha='';
+  }
   // For Unicolor, store color as tela
   if(selectedSerie==='Unicolor') pedido.tela=selectedColorSerie;
   document.getElementById('producto-label').textContent=nombre+' · '+codigo;

@@ -1001,6 +1001,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <button class="tab" id="ptab-fullcomfy" onclick="switchProg('fullcomfy')" style="font-size:13px;padding:8px 14px;">🔵 COMFY PROTECT</button>
       <button class="tab" id="ptab-licra" onclick="switchProg('licra')" style="font-size:13px;padding:8px 14px;">🟠 LICRA PROTECT</button>
       <button class="tab" id="ptab-coleccion" onclick="switchProg('coleccion')" style="font-size:13px;padding:8px 14px;">🟣 COLECCIÓN</button>
+      <button class="tab" id="ptab-unicolor" onclick="switchProg('unicolor')" style="font-size:13px;padding:8px 14px;">⚪ UNICOLOR</button>
       <button class="tab" id="ptab-celapi" onclick="switchProg('celapi')" style="font-size:13px;padding:8px 14px;">📱 CEL - API</button>
     </div>
 
@@ -1015,7 +1016,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxoezGtJBVBl7UxQQtWIrBAiRqsxl_qGFwSeaYdIeVXhTVaLq7Vu1y1xbla1SCk-7sPwA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTQhbBySU8w0fUsPT2fbBIkIvbX9k8-FqUKuhLQWNOv7NjPvBMupzltBa6Gweo1u3ihQ/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1873,7 +1874,7 @@ function switchTab(tab){
 
 // ── TASAS ─────────────────────────────────────────────────────
 // ── PROGRAMACION ──────────────────────────────────────────────
-const HOJAS_COLORES={comfy:'COLORES.COMFY',fullcomfy:'COLORES.FULLCOMFY',licra:'COLORES.LICRA',coleccion:'COLORES.COLECCION'};
+const HOJAS_COLORES={comfy:'COLORES.COMFY',fullcomfy:'COLORES.FULLCOMFY',licra:'COLORES.LICRA',coleccion:'COLORES.COLECCION',unicolor:'COLORES.COLECCION.UNICOLOR'};
 const NOMBRES_PROG={comfy:'COMFY MEGA PROMO',fullcomfy:'COMFY PROTECT',licra:'LICRA PROTECT',coleccion:'LICRA COLECCIÓN'};
 let progActual='comfy';
 
