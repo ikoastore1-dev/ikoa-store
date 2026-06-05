@@ -238,18 +238,12 @@ window.addEventListener('load',function(){
       
       <div class="card-title">Color de Tela</div>
       <div class="option-grid cols2" id="tela-opts">
-        <button class="opt-btn" onclick="selectColor(this,'tela','Negro')">NEGRO</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Verde Militar')">VERDE MILITAR</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Lila')">LILA</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Azul Rey')">AZUL REY</button>
-        <button class="opt-btn" onclick="selectColor(this,'tela','Azul Marino')">AZUL MARINO</button>
+        <div style="color:var(--muted);font-size:13px;padding:8px;">⏳ Cargando colores...</div>
       </div>
       <div class="card-title" style="margin-top:4px;">Color de Vinil</div>
       <div id="vinil-warn" style="display:none;background:#1a1a10;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--warn);margin-bottom:8px;">⚠️ Este color de vinil puede no contrastar bien con la tela seleccionada.</div>
       <div class="option-grid cols2" id="vinil-opts">
-        <button class="opt-btn" onclick="selectColor(this,'vinil','Blanco')">BLANCO</button>
-        <button class="opt-btn" onclick="selectColor(this,'vinil','Fucsia')">FUCSIA</button>
-        <button class="opt-btn" onclick="selectColor(this,'vinil','Turquesa')">TURQUESA</button>
+        <div style="color:var(--muted);font-size:13px;padding:8px;">⏳ Cargando colores...</div>
       </div>
     </div>
     <div class="nav-row">
@@ -453,7 +447,7 @@ window.addEventListener('load',function(){
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwVai4KN8GodELNcz6P1I2wH7JZX3QS6kgC6tz2GBAVK969Ckgwt8ATz3Gzo3MTKdhdSw/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbw_tldeWrq_p2j3BvCjT7idBS_W3NmabYVWc1PVJvpCUL7XetmNI3uUAV9yq66mbY5hjw/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
@@ -501,7 +495,7 @@ async function verificarToken(){
   if(!token){ mostrarBloqueo('🚫','Link inválido','Solicita uno nuevo a IKOA & BEKATE.'); return; }
   try{
     const data=await scriptGETjson({action:'verificarToken',token});
-    if(data && data.ok){ tokenActual=token; bl.style.display='none'; cargarAgencias(); }
+    if(data && data.ok){ tokenActual=token; bl.style.display='none'; cargarAgencias(); cargarColoresApp(); }
     else if(data){
       const m={'usado':['✅','Link ya utilizado','Este link ya fue usado.'],'expirado':['⏰','Link expirado','Venció (4h). Solicita uno nuevo.'],'invalido':['🚫','Link inválido','No es válido.']};
       const [i,t,x]=m[data.error]||m['invalido'];
@@ -522,6 +516,17 @@ function mostrarBloqueo(i,t,x){
 async function marcarTokenUsado(){ if(tokenActual) try{ await scriptGETjson({action:'usarToken',token:tokenActual}); }catch(e){} }
 
 // ── AGENCIAS ──────────────────────────────────────────────────
+async function cargarColoresApp(){
+  try{
+    const data=await scriptGETjson({action:'leerColores',hoja:'COLORES.COMFY'});
+    if(!data.ok) return;
+    const telaOpts=document.getElementById('tela-opts');
+    const vinilOpts=document.getElementById('vinil-opts');
+    telaOpts.innerHTML=(data.telas||[]).map(t=>`<button class="opt-btn" onclick="selectColor(this,'tela','${t}')">${t.toUpperCase()}</button>`).join('');
+    vinilOpts.innerHTML=(data.viniles||[]).map(v=>`<button class="opt-btn" onclick="selectColor(this,'vinil','${v}')">${v.toUpperCase()}</button>`).join('');
+  }catch(e){ console.warn('Error cargando colores:',e); }
+}
+
 async function cargarAgencias(){
   try{
     const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=AGENCIAS&cachebust=${Date.now()}`;

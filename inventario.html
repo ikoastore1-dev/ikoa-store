@@ -434,6 +434,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <button class="tab" onclick="switchTab('aprobaciones')">✅ Aprobaciones</button>
     <button class="tab" onclick="switchTab('respaldo')">💬 Respaldo</button>
     <button class="tab" onclick="switchTab('gestion')">📋 Gestión</button>
+    <button class="tab" onclick="switchTab('programacion')">📅 Programación</button>
   </div>
 
   <!-- TAB TASA -->
@@ -990,11 +991,30 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     </div>
   </div>
 
+  <!-- TAB PROGRAMACION -->
+  <div id="tab-programacion" style="display:none;padding:16px;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;">📅 Programación de Colores</div>
+
+    <!-- Sub-pestañas apps -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      <button class="tab" id="ptab-comfy" onclick="switchProg('comfy')" style="font-size:13px;padding:8px 14px;">🟢 COMFY MEGA</button>
+      <button class="tab" id="ptab-fullcomfy" onclick="switchProg('fullcomfy')" style="font-size:13px;padding:8px 14px;">🔵 COMFY PROTECT</button>
+      <button class="tab" id="ptab-licra" onclick="switchProg('licra')" style="font-size:13px;padding:8px 14px;">🟠 LICRA PROTECT</button>
+      <button class="tab" id="ptab-coleccion" onclick="switchProg('coleccion')" style="font-size:13px;padding:8px 14px;">🟣 COLECCIÓN</button>
+    </div>
+
+    <div id="prog-msg" style="display:none;padding:12px;border-radius:10px;text-align:center;font-size:14px;font-weight:600;margin-bottom:12px;"></div>
+
+    <div id="prog-content">
+      <!-- Se genera dinámicamente -->
+    </div>
+  </div>
+
   <!-- TAB HISTORIAL -->
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVai4KN8GodELNcz6P1I2wH7JZX3QS6kgC6tz2GBAVK969Ckgwt8ATz3Gzo3MTKdhdSw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw_tldeWrq_p2j3BvCjT7idBS_W3NmabYVWc1PVJvpCUL7XetmNI3uUAV9yq66mbY5hjw/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1826,20 +1846,18 @@ function stopScanner(){
 
 // ── TABS ──────────────────────────────────────────────────────
 function switchTab(tab){
-  ['tasa','stock','etiquetas','aprobaciones','respaldo','gestion'].forEach(t=>{
+  ['tasa','stock','etiquetas','aprobaciones','respaldo','gestion','programacion'].forEach(t=>{
     const el=document.getElementById('tab-'+t);
     if(el) el.style.display=t===tab?'block':'none';
   });
   document.querySelectorAll('.tab').forEach((b,i)=>{
-    b.classList.toggle('active',['tasa','stock','etiquetas','aprobaciones','respaldo','gestion'][i]===tab);
+    b.classList.toggle('active',['tasa','stock','etiquetas','aprobaciones','respaldo','gestion','programacion'][i]===tab);
   });
-  // Limpiar áreas de contenido al cambiar pestaña
   ['product-area','msg-area','historial-list','solicitudes-list','cola-list',
    'rv-list','rv-historial-list','apro-msg','cola-msg'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.innerHTML='';
   });
-  // Ocultar mensaje de estado
   ['apro-msg','cola-msg'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display='none';
@@ -1849,9 +1867,104 @@ function switchTab(tab){
   if(tab==='tasa') cargarTasas();
   if(tab==='stock') switchStock('inventario');
   if(tab==='etiquetas') switchEtiqueta('nuevo');
+  if(tab==='programacion'){ switchProg('comfy'); }
 }
 
 // ── TASAS ─────────────────────────────────────────────────────
+// ── PROGRAMACION ──────────────────────────────────────────────
+const HOJAS_COLORES={comfy:'COLORES.COMFY',fullcomfy:'COLORES.FULLCOMFY',licra:'COLORES.LICRA',coleccion:'COLORES.COLECCION'};
+const NOMBRES_PROG={comfy:'COMFY MEGA PROMO',fullcomfy:'COMFY PROTECT',licra:'LICRA PROTECT',coleccion:'LICRA COLECCIÓN'};
+let progActual='comfy';
+
+async function switchProg(app){
+  progActual=app;
+  document.querySelectorAll('[id^="ptab-"]').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('ptab-'+app);
+  if(btn) btn.classList.add('active');
+  await cargarColores(app);
+}
+
+async function cargarColores(app){
+  const cont=document.getElementById('prog-content');
+  cont.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">⏳ Cargando...</div>';
+  try{
+    const data=await scriptGETjson({action:'leerColores',hoja:HOJAS_COLORES[app]});
+    if(!data.ok) throw new Error(data.error||'Error');
+    const telas=data.telas||[], viniles=data.viniles||[];
+    const esColeccion=app==='coleccion';
+    let html=`<div style="display:grid;grid-template-columns:${esColeccion?'1fr':'1fr 1fr'};gap:16px;">`;
+    if(!esColeccion){
+      html+=`<div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;margin-bottom:10px;">🎨 Color de Tela</div>
+        <div id="lista-tela-${app}" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+          ${telas.map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:8px 12px;">
+            <span style="font-size:14px;font-weight:600;">${t}</span>
+            <button onclick="eliminarColorProg('${app}','tela','${t.replace(/'/g,"\\'")}')" style="background:transparent;border:1.5px solid var(--danger);border-radius:6px;color:var(--danger);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;">✕</button>
+          </div>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="nuevo-tela-${app}" placeholder="Nuevo color tela..." style="flex:1;background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;text-transform:uppercase;">
+          <button onclick="agregarColorProg('${app}','tela')" style="padding:8px 14px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">+ Agregar</button>
+        </div>
+      </div>`;
+    }
+    html+=`<div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent2);text-transform:uppercase;margin-bottom:10px;">🖨️ Color de Vinil</div>
+      <div id="lista-vinil-${app}" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+        ${viniles.map(v=>`<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:8px 12px;">
+          <span style="font-size:14px;font-weight:600;">${v}</span>
+          <button onclick="eliminarColorProg('${app}','vinil','${v.replace(/'/g,"\\'")}')" style="background:transparent;border:1.5px solid var(--danger);border-radius:6px;color:var(--danger);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;">✕</button>
+        </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="nuevo-vinil-${app}" placeholder="Nuevo color vinil..." style="flex:1;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;text-transform:uppercase;">
+        <button onclick="agregarColorProg('${app}','vinil')" style="padding:8px 14px;background:var(--accent2);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">+ Agregar</button>
+      </div>
+    </div>`;
+    html+='</div>';
+    cont.innerHTML=html;
+  }catch(e){
+    cont.innerHTML=`<div style="color:var(--danger);text-align:center;padding:20px;">✗ Error: ${e.message}</div>`;
+  }
+}
+
+async function agregarColorProg(app, tipo){
+  const inputId=`nuevo-${tipo}-${app}`;
+  const val=document.getElementById(inputId)?.value.trim().toUpperCase();
+  if(!val){ alert('Escribe un color primero'); return; }
+  const unlock=prompt('Código de autorización:');
+  if(!unlock) return;
+  if(!USUARIOS[unlock.trim().toUpperCase()]){ alert('❌ Código incorrecto'); return; }
+  const msgEl=document.getElementById('prog-msg');
+  msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
+  msgEl.innerHTML='<span class="spinner">↻</span> Guardando...';
+  try{
+    const res=await scriptGETjson({action:'agregarColor',hoja:HOJAS_COLORES[app],tipo,color:val});
+    if(res.ok){
+      document.getElementById(inputId).value='';
+      msgEl.style.color='var(--accent)'; msgEl.innerHTML=`✅ Color agregado: ${val}`;
+      setTimeout(()=>{ msgEl.style.display='none'; cargarColores(app); },1500);
+    } else throw new Error(res.error||'Error');
+  }catch(e){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='✗ '+e.message; }
+}
+
+async function eliminarColorProg(app, tipo, color){
+  if(!confirm(`¿Eliminar "${color}" de ${tipo}?`)) return;
+  const unlock=prompt('Código de autorización:');
+  if(!unlock) return;
+  if(!USUARIOS[unlock.trim().toUpperCase()]){ alert('❌ Código incorrecto'); return; }
+  const msgEl=document.getElementById('prog-msg');
+  msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
+  msgEl.innerHTML='<span class="spinner">↻</span> Eliminando...';
+  try{
+    const res=await scriptGETjson({action:'eliminarColor',hoja:HOJAS_COLORES[app],tipo,color});
+    if(res.ok){
+      msgEl.style.color='var(--accent)'; msgEl.innerHTML=`✅ Color eliminado: ${color}`;
+      setTimeout(()=>{ msgEl.style.display='none'; cargarColores(app); },1500);
+    } else throw new Error(res.error||'Error');
+  }catch(e){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='✗ '+e.message; }
+}
+
 async function cargarTasas(){
   try{
     const t=await loadSheetGviz('TASA');
