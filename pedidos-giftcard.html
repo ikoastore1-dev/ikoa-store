@@ -6,18 +6,18 @@
 <title>IKOA & BeKate · GiftCard</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--surface3:#252533;--accent:#00e5b0;--accent2:#0099ff;--warn:#e8a020;--danger:#ff4444;--gift:#cc66ff;--text:#f0f0f5;--muted:#7a7a99;--border:#2a2a3a;--radius:14px;}
+:root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--surface3:#252533;--accent:#00e5b0;--accent2:#0099ff;--warn:#e8a020;--danger:#ff4444;--gift:#0088ff;--text:#f0f0f5;--muted:#7a7a99;--border:#2a2a3a;--radius:14px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 20px;text-align:center;}
 .logo{font-family:'Barlow',sans-serif;font-size:26px;font-weight:700;letter-spacing:.15em;}
 .logo .i{color:var(--accent)}.logo .sep{color:var(--muted);margin:0 8px;font-weight:300}.logo .b{color:var(--text)}
-.gift-badge{display:inline-block;background:linear-gradient(135deg,#cc66ff,#9933cc);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.1em;margin-top:4px;}
+.gift-badge{display:inline-block;background:linear-gradient(135deg,#0088ff,#0055cc);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.1em;margin-top:4px;}
 main{max-width:480px;margin:0 auto;padding:16px;}
 .prog{display:flex;gap:4px;margin-bottom:20px;}
 .prog-dot{flex:1;height:4px;border-radius:2px;background:var(--surface2);transition:background .3s;}
-.prog-dot.done{background:linear-gradient(135deg,var(--gift) 0%,#9933cc 100%);}
-.prog-dot.active{background:linear-gradient(135deg,var(--gift) 0%,#9933cc 100%);opacity:.5;}
+.prog-dot.done{background:linear-gradient(135deg,var(--gift) 0%,#0055cc 100%);}
+.prog-dot.active{background:linear-gradient(135deg,var(--gift) 0%,#0055cc 100%);opacity:.5;}
 .step{display:none;}
 .step.active{display:block;}
 .step-header{margin-bottom:18px;}
@@ -30,12 +30,12 @@ main{max-width:480px;margin:0 auto;padding:16px;}
 .field-input{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:border-color .2s;width:100%;}
 .field-input:focus{border-color:var(--gift);}.field-input::placeholder{color:var(--muted);}.field-input.error{border-color:var(--danger);}
 .opt-btn{padding:14px 10px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;letter-spacing:.03em;width:100%;}
-.opt-btn:hover{border-color:var(--gift);}.opt-btn.selected{border-color:var(--gift);background:#1a0f2b;color:var(--gift);}
+.opt-btn:hover{border-color:var(--gift);}.opt-btn.selected{border-color:var(--gift);background:#0a1a2b;color:var(--gift);}
 .opt-btn .sub{font-size:11px;font-weight:400;color:var(--muted);margin-top:3px;display:block;}
 .opt-btn.selected .sub{color:var(--gift);opacity:.7;}
 .option-grid{display:grid;gap:10px;}.cols2{grid-template-columns:1fr 1fr;}.cols1{grid-template-columns:1fr;}
 .nav-row{display:flex;gap:10px;margin-top:18px;}
-.btn-next{flex:1;padding:16px;background:linear-gradient(135deg,var(--gift) 0%,#9933cc 100%);border:none;border-radius:14px;color:#fff;font-family:'Barlow',sans-serif;font-size:19px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;}
+.btn-next{flex:1;padding:16px;background:linear-gradient(135deg,var(--gift) 0%,#0055cc 100%);border:none;border-radius:14px;color:#fff;font-family:'Barlow',sans-serif;font-size:19px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;}
 .btn-back{padding:16px 20px;background:transparent;border:2px solid var(--border);border-radius:14px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;}
 .btn-send{width:100%;padding:18px;background:linear-gradient(135deg,#25d366,#128c7e);border:none;border-radius:14px;color:#fff;font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;}
 .spinner{display:inline-block;animation:spin 1s linear infinite;}
@@ -52,9 +52,9 @@ main{max-width:480px;margin:0 auto;padding:16px;}
 .total-box .val{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;color:var(--gift);}
 #splash{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
 #splash .s-logo{font-family:'Barlow',sans-serif;font-size:38px;font-weight:700;letter-spacing:.2em;}
-#splash .s-line{width:60px;height:3px;background:linear-gradient(135deg,var(--gift),#9933cc);border-radius:2px;}
+#splash .s-line{width:60px;height:3px;background:linear-gradient(135deg,var(--gift),#0055cc);border-radius:2px;}
 #splash .s-sub{font-size:13px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
-#splash .s-badge{background:linear-gradient(135deg,#cc66ff,#9933cc);color:#fff;font-size:13px;font-weight:700;padding:6px 18px;border-radius:20px;letter-spacing:.1em;}
+#splash .s-badge{background:linear-gradient(135deg,#0088ff,#0055cc);color:#fff;font-size:13px;font-weight:700;padding:6px 18px;border-radius:20px;letter-spacing:.1em;}
 #bloq{position:fixed;inset:0;z-index:998;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;gap:16px;}
 #pantalla-exito{display:none;position:fixed;inset:0;z-index:999;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;}
 </style>
@@ -88,13 +88,47 @@ main{max-width:480px;margin:0 auto;padding:16px;}
   <div class="step active" id="step1">
     <div class="step-header">
       <div class="step-num">Paso 1 de 7</div>
-      <div class="step-title">Tus datos</div>
+      <div class="step-title">Tus datos personales</div>
     </div>
     <div class="card">
-      <div class="field-group"><div class="field-label">Nombre completo</div><input class="field-input" id="s1-nombre" type="text" placeholder="NOMBRE APELLIDO" style="text-transform:uppercase;"></div>
-      <div class="field-group"><div class="field-label">Cédula</div><input class="field-input" id="s1-cedula" type="text" placeholder="V-XXXXXXXX" style="text-transform:uppercase;"></div>
-      <div class="field-group"><div class="field-label">Celular</div><input class="field-input" id="s1-celular" type="tel" placeholder="04XX-XXXXXXX"></div>
-      <div class="field-group"><div class="field-label">Correo</div><input class="field-input" id="s1-correo" type="email" placeholder="correo@ejemplo.com"></div>
+      <div class="field-group">
+        <div class="field-label">Nombre y Apellido *</div>
+        <input class="field-input" type="text" id="p-nombre" placeholder="Nombre Apellido">
+        <div class="err-msg" id="err-nombre" style="display:none;color:var(--danger);font-size:12px;margin-top:4px;">Ingresa tu nombre y apellido</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Correo electrónico *</div>
+        <input class="field-input" type="email" id="p-correo" placeholder="ejemplo@correo.com">
+        <div class="err-msg" id="err-correo" style="display:none;color:var(--danger);font-size:12px;margin-top:4px;">Ingresa un correo válido</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Cédula / RIF *</div>
+        <div style="display:flex;gap:8px;">
+          <select class="field-input" id="p-cedula-tipo" style="flex:0 0 80px;">
+            <option value="V-">V-</option>
+            <option value="E-">E-</option>
+            <option value="J-">J-</option>
+          </select>
+          <input class="field-input" type="text" id="p-cedula-num" placeholder="12345678" inputmode="numeric">
+        </div>
+        <div class="err-msg" id="err-cedula" style="display:none;color:var(--danger);font-size:12px;margin-top:4px;">Ingresa tu número de cédula</div>
+      </div>
+      <div class="field-group" style="margin-bottom:0">
+        <div class="field-label">WhatsApp *</div>
+        <div style="display:flex;gap:8px;">
+          <select class="field-input" id="p-cel-pais" style="flex:0 0 110px;">
+            <option value="+58">🇻🇪 +58</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+57">🇨🇴 +57</option>
+            <option value="+51">🇵🇪 +51</option>
+            <option value="+52">🇲🇽 +52</option>
+            <option value="+34">🇪🇸 +34</option>
+          </select>
+          <input class="field-input" type="tel" id="p-celular-num" placeholder="4141234567" inputmode="numeric">
+        </div>
+        <div style="font-size:11px;color:var(--warn);margin-top:3px;">📱 Preferiblemente número de WhatsApp</div>
+        <div class="err-msg" id="err-celular" style="display:none;color:var(--danger);font-size:12px;margin-top:4px;">Ingresa un número válido</div>
+      </div>
     </div>
     <div class="nav-row">
       <button class="btn-next" style="flex:1;" onclick="validarStep1()">Siguiente →</button>
@@ -161,16 +195,9 @@ main{max-width:480px;margin:0 auto;padding:16px;}
       <div class="step-num">Paso 4 de 7</div>
       <div class="step-title">Seleccionar Productos</div>
     </div>
-    <div class="nota">Busca y agrega los productos que incluirá la GiftCard.</div>
-    <div class="card">
-      <div class="field-group">
-        <div class="field-label">Buscar por código o nombre</div>
-        <div style="display:flex;gap:8px;">
-          <input class="field-input" id="s4-buscar" type="text" placeholder="Ej: COMFY01" style="text-transform:uppercase;">
-          <button onclick="buscarProductoGC()" style="padding:12px 16px;background:var(--gift);border:none;border-radius:8px;color:#fff;font-weight:700;cursor:pointer;white-space:nowrap;">🔍</button>
-        </div>
-      </div>
-      <div id="s4-resultado" style="margin-top:8px;"></div>
+    <div class="nota">Toca los productos que deseas incluir en la GiftCard. Puedes agregar varios.</div>
+    <div id="s4-productos-lista" style="margin-bottom:12px;">
+      <div style="text-align:center;color:var(--muted);padding:20px;">⏳ Cargando productos...</div>
     </div>
     <div id="s4-carrito" style="margin-top:4px;"></div>
     <div class="total-box" id="s4-total-box" style="display:none;">
@@ -190,9 +217,31 @@ main{max-width:480px;margin:0 auto;padding:16px;}
       <div class="step-title">¿Para quién es?</div>
     </div>
     <div class="card">
-      <div class="field-group"><div class="field-label">Nombre del beneficiario</div><input class="field-input" id="s5-nombre" type="text" placeholder="NOMBRE APELLIDO" style="text-transform:uppercase;"></div>
-      <div class="field-group"><div class="field-label">Celular del beneficiario</div><input class="field-input" id="s5-celular" type="tel" placeholder="04XX-XXXXXXX"></div>
-      <div class="field-group"><div class="field-label">Correo del beneficiario</div><input class="field-input" id="s5-correo" type="email" placeholder="correo@ejemplo.com"></div>
+      <div class="field-group">
+        <div class="field-label">Nombre del beneficiario *</div>
+        <input class="field-input" type="text" id="s5-nombre" placeholder="Nombre Apellido">
+        <div class="err-msg" id="err-ben-nombre" style="display:none;color:var(--danger);font-size:12px;margin-top:4px;">Ingresa el nombre del beneficiario</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">WhatsApp del beneficiario *</div>
+        <div style="display:flex;gap:8px;">
+          <select class="field-input" id="s5-cel-pais" style="flex:0 0 110px;">
+            <option value="+58">🇻🇪 +58</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+57">🇨🇴 +57</option>
+            <option value="+51">🇵🇪 +51</option>
+            <option value="+52">🇲🇽 +52</option>
+            <option value="+34">🇪🇸 +34</option>
+          </select>
+          <input class="field-input" type="tel" id="s5-celular-num" placeholder="4141234567" inputmode="numeric">
+        </div>
+        <div class="err-msg" id="err-ben-celular" style="display:none;color:var(--danger);font-size:12px;margin-top:4px;">Ingresa un número válido</div>
+      </div>
+      <div class="field-group" style="margin-bottom:0;">
+        <div class="field-label">Correo del beneficiario *</div>
+        <input class="field-input" type="email" id="s5-correo" placeholder="correo@ejemplo.com">
+        <div class="err-msg" id="err-ben-correo" style="display:none;color:var(--danger);font-size:12px;margin-top:4px;">Ingresa un correo válido</div>
+      </div>
     </div>
     <div class="nav-row">
       <button class="btn-back" id="step5-back" onclick="volverDesde5()">← Atrás</button>
@@ -204,34 +253,96 @@ main{max-width:480px;margin:0 auto;padding:16px;}
   <div class="step" id="step6">
     <div class="step-header">
       <div class="step-num">Paso 6 de 7</div>
-      <div class="step-title">Pago</div>
+      <div class="step-title">💳 Pago</div>
     </div>
     <div class="card">
       <div class="card-title">Total a pagar</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-        <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Bs</div>
-          <div id="s6-total-bs" style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--warn);">—</div>
+        <div style="background:#0a1520;border:1.5px solid var(--warn);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:11px;color:#aaaaaa;margin-bottom:4px;">Bs</div>
+          <div id="s6-total-bs" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:#ffcc44;">—</div>
         </div>
-        <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">USD</div>
-          <div id="s6-total-usd" style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);">—</div>
+        <div style="background:#0a1520;border:1.5px solid var(--gift);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:11px;color:#aaaaaa;margin-bottom:4px;">USD</div>
+          <div id="s6-total-usd" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:#44aaff;">—</div>
         </div>
       </div>
-
-      <div class="card-title">Método de pago</div>
-      <div class="option-grid cols2" style="margin-bottom:14px;">
-        <button class="opt-btn" id="pm-bs" onclick="selectPagoGC('bs')">🏦 Bs<span class="sub" id="pm-monto-bs">—</span></button>
+      <div class="card-title">¿Cómo deseas pagar?</div>
+      <div class="option-grid cols2">
+        <button class="opt-btn" id="pm-bs" onclick="selectPagoGC('bs')">🏦 Bolívares<span class="sub" id="pm-monto-bs">—</span></button>
         <button class="opt-btn" id="pm-usd" onclick="selectPagoGC('usd')">💵 Divisa<span class="sub" id="pm-monto-usd">—</span></button>
       </div>
+    </div>
 
-      <div id="pago-ref-wrap" style="display:none;">
-        <div class="field-group">
-          <div class="field-label" id="pago-ref-label">Número de referencia</div>
-          <input class="field-input" id="s6-ref" type="text" placeholder="Número de confirmación">
+    <div id="pago-bs-card" style="display:none;">
+      <div class="card" style="background:#0d1f0d;border:1.5px solid #00cc66;">
+        <div style="font-size:13px;font-weight:700;color:#00cc66;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">📱 Datos para Pago Móvil</div>
+        <div style="background:#0a2a0a;border-radius:8px;padding:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1a4a1a;">
+            <span style="color:#aaaaaa;font-size:13px;">Banco</span>
+            <span style="color:#ffffff;font-size:15px;font-weight:700;">Banesco</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1a4a1a;">
+            <span style="color:#aaaaaa;font-size:13px;">Celular</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="color:#ffffff;font-size:15px;font-weight:700;">04149450742</span>
+              <button onclick="copiarTexto('04149450742',this)" style="background:#1a4a1a;border:none;border-radius:5px;color:#00cc66;padding:4px 8px;font-size:11px;cursor:pointer;">📋</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1a4a1a;">
+            <span style="color:#aaaaaa;font-size:13px;">Cédula</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="color:#ffffff;font-size:15px;font-weight:700;">18265345</span>
+              <button onclick="copiarTexto('18265345',this)" style="background:#1a4a1a;border:none;border-radius:5px;color:#00cc66;padding:4px 8px;font-size:11px;cursor:pointer;">📋</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;">
+            <span style="color:#aaaaaa;font-size:13px;">Monto</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span id="bs-monto-display" style="color:#ffcc44;font-size:18px;font-weight:700;">—</span>
+              <button onclick="copiarTexto(document.getElementById('bs-monto-raw').value,this)" style="background:#1a4a1a;border:none;border-radius:5px;color:#00cc66;padding:4px 8px;font-size:11px;cursor:pointer;">📋</button>
+            </div>
+          </div>
+          <input type="hidden" id="bs-monto-raw" value="">
+        </div>
+        <div class="field-group" style="margin-top:14px;margin-bottom:0;">
+          <div class="field-label">Número de referencia * <span style="color:var(--danger);">(obligatorio)</span></div>
+          <input class="field-input" type="text" id="s6-ref-bs" placeholder="Ingresa el número de referencia" inputmode="numeric">
         </div>
       </div>
     </div>
+
+    <div id="pago-usd-card" style="display:none;">
+      <div class="card" style="background:#0d1520;border:1.5px solid #0088ff;">
+        <div style="font-size:13px;font-weight:700;color:#44aaff;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">💵 Datos para pago en Divisa</div>
+        <div style="background:#0a152a;border-radius:8px;padding:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1a3a5a;">
+            <span style="color:#aaaaaa;font-size:13px;">Plataforma</span>
+            <span style="color:#ffffff;font-size:15px;font-weight:700;">Binance</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1a3a5a;">
+            <span style="color:#aaaaaa;font-size:13px;">Correo</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="color:#ffffff;font-size:13px;font-weight:700;">johancazorla@gmail.com</span>
+              <button onclick="copiarTexto('johancazorla@gmail.com',this)" style="background:#1a3a5a;border:none;border-radius:5px;color:#44aaff;padding:4px 8px;font-size:11px;cursor:pointer;">📋</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;">
+            <span style="color:#aaaaaa;font-size:13px;">Monto</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span id="usd-monto-display" style="color:#44aaff;font-size:18px;font-weight:700;">—</span>
+              <button onclick="copiarTexto(document.getElementById('usd-monto-raw').value,this)" style="background:#1a3a5a;border:none;border-radius:5px;color:#44aaff;padding:4px 8px;font-size:11px;cursor:pointer;">📋</button>
+            </div>
+          </div>
+          <input type="hidden" id="usd-monto-raw" value="">
+        </div>
+        <div class="field-group" style="margin-top:14px;margin-bottom:0;">
+          <div class="field-label">Código de confirmación * <span style="color:var(--danger);">(obligatorio)</span></div>
+          <input class="field-input" type="text" id="s6-ref-usd" placeholder="Ingresa el código de confirmación">
+        </div>
+      </div>
+    </div>
+
     <div class="nav-row">
       <button class="btn-back" onclick="goStep(5)">← Atrás</button>
       <button class="btn-next" onclick="validarStep6()">Siguiente →</button>
@@ -351,16 +462,33 @@ function goStep(n){
   document.getElementById('step'+n).classList.add('active');
   updateProg(n);
   window.scrollTo(0,0);
+  if(n===4) cargarProductosGC();
 }
 
 // ── STEP 1 ────────────────────────────────────────────────────
+function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function isValidCel(c){ return c.replace(/\D/g,'').length>=7; }
+
 function validarStep1(){
-  const nombre=document.getElementById('s1-nombre').value.trim();
-  const cedula=document.getElementById('s1-cedula').value.trim();
-  const celular=document.getElementById('s1-celular').value.trim();
-  const correo=document.getElementById('s1-correo').value.trim();
-  if(!nombre||!cedula||!celular||!correo){ alert('Completa todos los campos'); return; }
-  gc.nombre=nombre; gc.cedula=cedula; gc.celular=celular; gc.correo=correo;
+  let ok=true;
+  document.querySelectorAll('.err-msg').forEach(e=>e.style.display='none');
+  document.querySelectorAll('.field-input').forEach(e=>e.classList.remove('error'));
+
+  const nombre=document.getElementById('p-nombre').value.trim();
+  const correo=document.getElementById('p-correo').value.trim();
+  const cedula=document.getElementById('p-cedula-num').value.trim();
+  const celular=document.getElementById('p-celular-num').value.trim();
+
+  if(!nombre){ document.getElementById('err-nombre').style.display='block'; document.getElementById('p-nombre').classList.add('error'); ok=false; }
+  if(!isValidEmail(correo)){ document.getElementById('err-correo').style.display='block'; document.getElementById('p-correo').classList.add('error'); ok=false; }
+  if(!cedula){ document.getElementById('err-cedula').style.display='block'; ok=false; }
+  if(!isValidCel(celular)){ document.getElementById('err-celular').style.display='block'; ok=false; }
+  if(!ok) return;
+
+  gc.nombre=nombre.toUpperCase();
+  gc.correo=correo;
+  gc.cedula=document.getElementById('p-cedula-tipo').value+cedula;
+  gc.celular=document.getElementById('p-cel-pais').value+celular;
   goStep(2);
 }
 
@@ -398,45 +526,39 @@ function validarStep3(){
   }
 }
 
-// ── STEP 4 ────────────────────────────────────────────────────
+// ── STEP 4 PRODUCTOS ─────────────────────────────────────────
 let carritoGC=[];
-async function buscarProductoGC(){
-  const q=document.getElementById('s4-buscar').value.trim().toUpperCase();
-  if(!q) return;
-  const res=document.getElementById('s4-resultado');
-  res.innerHTML='<div style="color:var(--muted);font-size:13px;">⏳ Buscando...</div>';
+
+async function cargarProductosGC(){
+  const lista=document.getElementById('s4-productos-lista');
+  if(!lista) return;
+  lista.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">⏳ Cargando productos...</div>';
   try{
-    const data=await scriptGETjson({action:'leerPreciosColeccion'});
-    // Search in CODIGOS via leerPrecios — use a generic search
-    const data2=await scriptGETjson({action:'buscarProductoGC',q});
-    if(data2.ok&&data2.productos&&data2.productos.length>0){
-      res.innerHTML=data2.productos.slice(0,5).map(p=>`
-        <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:6px;">
-          <div><div style="font-size:14px;font-weight:700;">${p.nombre}</div><div style="font-size:12px;color:var(--muted);">${p.codigo} · $${p.precio_usd}</div></div>
-          <button onclick="agregarAlCarrito('${p.codigo}','${p.nombre.replace(/'/g,"\\'")}',${p.precio_usd})" style="padding:6px 12px;background:var(--gift);border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">+ Agregar</button>
-        </div>`).join('');
+    const data=await scriptGETjson({action:'buscarProductoGC',q:''});
+    if(data.ok && data.productos && data.productos.length>0){
+      lista.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px;">${
+        data.productos.map(p=>`
+          <button onclick="agregarAlCarrito('${p.codigo}','${(p.nombre||p.codigo).replace(/'/g,"\\'")}',${p.precio_usd})"
+            style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;cursor:pointer;text-align:left;width:100%;transition:border-color .2s;"
+            onmouseover="this.style.borderColor='var(--gift)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div>
+              <div style="font-size:15px;font-weight:700;color:#ffffff;">${p.nombre||p.codigo}</div>
+              <div style="font-size:12px;color:var(--muted);">${p.codigo}</div>
+            </div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--gift);">$${Number(p.precio_usd).toFixed(2)}</div>
+          </button>`).join('')
+      }</div>`;
     } else {
-      // Fallback: search in pack_precios
-      const pp=data.pack_precios||{};
-      const found=Object.entries(pp).filter(([k])=>k.toUpperCase().includes(q)).slice(0,5);
-      if(found.length>0){
-        res.innerHTML=found.map(([cod,val])=>`
-          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:6px;">
-            <div><div style="font-size:14px;font-weight:700;">${cod}</div><div style="font-size:12px;color:var(--muted);">$${val.usd}</div></div>
-            <button onclick="agregarAlCarrito('${cod}','${cod}',${val.usd})" style="padding:6px 12px;background:var(--gift);border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">+ Agregar</button>
-          </div>`).join('');
-      } else {
-        res.innerHTML='<div style="color:var(--muted);font-size:13px;">Sin resultados</div>';
-      }
+      lista.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">Sin productos disponibles</div>';
     }
-  }catch(e){ res.innerHTML='<div style="color:var(--danger);font-size:13px;">Error buscando</div>'; }
+  }catch(e){
+    lista.innerHTML='<div style="text-align:center;color:var(--danger);padding:20px;">Error cargando productos</div>';
+  }
 }
 
-function agregarAlCarrito(codigo,nombre,precioUsd){
-  carritoGC.push({codigo,nombre,precioUsd});
+function agregarAlCarrito(codigo, nombre, precioUsd){
+  carritoGC.push({codigo, nombre, precioUsd:Number(precioUsd)});
   renderCarrito();
-  document.getElementById('s4-buscar').value='';
-  document.getElementById('s4-resultado').innerHTML='';
 }
 
 function quitarDelCarrito(idx){
@@ -448,27 +570,28 @@ function renderCarrito(){
   const cont=document.getElementById('s4-carrito');
   if(carritoGC.length===0){ cont.innerHTML=''; document.getElementById('s4-total-box').style.display='none'; return; }
   let totalUsd=0;
-  cont.innerHTML=carritoGC.map((p,i)=>{
+  cont.innerHTML=`<div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:700;">Seleccionados (${carritoGC.length})</div>`+
+  carritoGC.map((p,i)=>{
     totalUsd+=p.precioUsd;
-    return `<div class="producto-row">
-      <div><div class="nombre">${p.nombre}</div><div style="font-size:12px;color:var(--muted);">${p.codigo}</div></div>
+    return `<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:6px;">
+      <div><div style="font-size:14px;font-weight:700;color:#ffffff;">${p.nombre}</div><div style="font-size:12px;color:var(--muted);">${p.codigo}</div></div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="precio">$${p.precioUsd}</span>
-        <button class="remove" onclick="quitarDelCarrito(${i})">✕</button>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--gift);">$${p.precioUsd.toFixed(2)}</span>
+        <button onclick="quitarDelCarrito(${i})" style="background:transparent;border:1.5px solid var(--danger);border-radius:6px;color:var(--danger);padding:4px 10px;font-size:12px;cursor:pointer;">✕</button>
       </div>
     </div>`;
   }).join('');
   const totalBs=tasaBCV?Math.round(totalUsd*tasaBCV*100)/100:0;
   document.getElementById('s4-total-val').textContent=`$${totalUsd.toFixed(2)}${totalBs?' · Bs '+totalBs.toFixed(2):''}`;
   document.getElementById('s4-total-box').style.display='block';
-  gc.productos=carritoGC.map(p=>p);
+  gc.productos=[...carritoGC];
   gc.totalUsd=totalUsd;
   gc.totalBs=totalBs;
   actualizarTotalesPago();
 }
 
 function validarStep4(){
-  if(carritoGC.length===0){ alert('Agrega al menos un producto'); return; }
+  if(carritoGC.length===0){ alert('Selecciona al menos un producto'); return; }
   goStep(5);
 }
 
@@ -478,11 +601,21 @@ function volverDesde5(){
 
 // ── STEP 5 ────────────────────────────────────────────────────
 function validarStep5(){
+  let ok=true;
+  ['err-ben-nombre','err-ben-celular','err-ben-correo'].forEach(id=>document.getElementById(id).style.display='none');
+
   const nombre=document.getElementById('s5-nombre').value.trim();
-  const celular=document.getElementById('s5-celular').value.trim();
+  const celular=document.getElementById('s5-celular-num').value.trim();
   const correo=document.getElementById('s5-correo').value.trim();
-  if(!nombre||!celular||!correo){ alert('Completa todos los campos del beneficiario'); return; }
-  gc.benNombre=nombre; gc.benCelular=celular; gc.benCorreo=correo;
+
+  if(!nombre){ document.getElementById('err-ben-nombre').style.display='block'; ok=false; }
+  if(!isValidCel(celular)){ document.getElementById('err-ben-celular').style.display='block'; ok=false; }
+  if(!isValidEmail(correo)){ document.getElementById('err-ben-correo').style.display='block'; ok=false; }
+  if(!ok) return;
+
+  gc.benNombre=nombre.toUpperCase();
+  gc.benCelular=document.getElementById('s5-cel-pais').value+celular;
+  gc.benCorreo=correo;
   goStep(6);
 }
 
@@ -494,18 +627,33 @@ function actualizarTotalesPago(){
   document.getElementById('pm-monto-usd').textContent='$'+gc.totalUsd.toFixed(2);
 }
 
+function copiarTexto(txt, btn){
+  navigator.clipboard.writeText(txt).then(()=>{
+    const orig=btn.innerHTML; btn.innerHTML='✅'; setTimeout(()=>btn.innerHTML=orig,1500);
+  }).catch(()=>{ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); const orig=btn.innerHTML; btn.innerHTML='✅'; setTimeout(()=>btn.innerHTML=orig,1500); });
+}
+
 let pagoSeleccionado='';
 function selectPagoGC(tipo){
   pagoSeleccionado=tipo;
   document.getElementById('pm-bs').classList.toggle('selected',tipo==='bs');
   document.getElementById('pm-usd').classList.toggle('selected',tipo==='usd');
-  document.getElementById('pago-ref-wrap').style.display='block';
-  document.getElementById('pago-ref-label').textContent=tipo==='bs'?'N° Referencia (Bs)':'N° Referencia (Divisa)';
+  document.getElementById('pago-bs-card').style.display=tipo==='bs'?'block':'none';
+  document.getElementById('pago-usd-card').style.display=tipo==='usd'?'block':'none';
+  if(tipo==='bs'){
+    document.getElementById('bs-monto-display').textContent=gc.totalBs?'Bs '+gc.totalBs.toFixed(2):'—';
+    document.getElementById('bs-monto-raw').value=gc.totalBs?gc.totalBs.toFixed(2):'';
+  } else {
+    document.getElementById('usd-monto-display').textContent=gc.totalUsd?'$'+gc.totalUsd.toFixed(2):'—';
+    document.getElementById('usd-monto-raw').value=gc.totalUsd?gc.totalUsd.toFixed(2):'';
+  }
 }
 
 function validarStep6(){
   if(!pagoSeleccionado){ alert('Selecciona el método de pago'); return; }
-  const ref=document.getElementById('s6-ref').value.trim();
+  const ref=pagoSeleccionado==='bs'
+    ? document.getElementById('s6-ref-bs').value.trim()
+    : document.getElementById('s6-ref-usd').value.trim();
   if(!ref||ref.length<3){ alert('Ingresa el número de referencia'); return; }
   gc.pagoMoneda=pagoSeleccionado==='bs'?'Bs':'Divisa';
   gc.pagoRef=ref;
