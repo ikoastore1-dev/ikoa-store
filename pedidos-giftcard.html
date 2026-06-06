@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-<title>IKOA & BeKate · GiftCard</title>
+<title>IKOA · GiftCard</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--surface3:#252533;--accent:#00e5b0;--accent2:#0099ff;--warn:#e8a020;--danger:#ff4444;--gift:#0088ff;--text:#f0f0f5;--muted:#7a7a99;--border:#2a2a3a;--radius:14px;}
@@ -63,7 +63,7 @@ main{max-width:480px;margin:0 auto;padding:16px;}
 
 <!-- SPLASH -->
 <div id="splash">
-  <div class="s-logo"><span style="color:var(--accent)">I</span>KOA <span style="color:var(--muted);font-weight:300;margin:0 6px;">·</span> BeKate</div>
+  <div class="s-logo"><span style="color:var(--accent)">I</span>KOA</div>
   <div class="s-line"></div>
   <div class="s-badge">🎁 GiftCard</div>
   <div class="s-sub">Ropa Técnica · vivir el sol sin límites</div>
@@ -77,7 +77,7 @@ main{max-width:480px;margin:0 auto;padding:16px;}
 </div>
 
 <header style="display:none;" id="main-header">
-  <div class="logo"><span class="i">I</span>KOA<span class="sep">·</span><span class="b">BeKate</span></div>
+  <div class="logo"><span class="i">I</span>KOA</div>
   <div class="gift-badge">🎁 GiftCard</div>
 </header>
 
@@ -371,7 +371,7 @@ main{max-width:480px;margin:0 auto;padding:16px;}
   <div style="font-size:64px;margin-bottom:16px;">🎁</div>
   <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:700;color:var(--gift);margin-bottom:8px;">GiftCard Registrada</div>
   <div style="color:var(--muted);font-size:15px;max-width:300px;line-height:1.6;">Tu GiftCard ha sido registrada correctamente. Pronto recibirás los detalles.</div>
-  <div style="margin-top:20px;font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--muted);">IKOA & BeKate · vivir el sol sin límites</div>
+  <div style="margin-top:20px;font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--muted);">IKOA · vivir el sol sin límites</div>
 </div>
 
 <script>
@@ -680,7 +680,7 @@ function buildMensaje(){
   const productosDesc=gc.modalidad==='monto'
     ? `Monto Fijo $${gc.totalUsd}`
     : gc.productos.map(p=>`${p.nombre} $${p.precioUsd}`).join(', ');
-  return `*🎁 GiftCard IKOA & BeKate*\n\n*Comprador:* ${gc.nombre}\n*Cédula:* ${gc.cedula}\n*Celular:* ${gc.celular}\n\n*Ocasión:* ${gc.ocasion}\n*GiftCard:* ${productosDesc}\n*Total:* $${gc.totalUsd}\n\n*Beneficiario:* ${gc.benNombre}\n*Cel Beneficiario:* ${gc.benCelular}\n\n*Pago:* ${gc.pagoMoneda} ${gc.pagoMonto}\n*Ref:* ${gc.pagoRef}`;
+  return `*🎁 GiftCard IKOA*\n\n*Comprador:* ${gc.nombre}\n*Cédula:* ${gc.cedula}\n*Celular:* ${gc.celular}\n\n*Ocasión:* ${gc.ocasion}\n*GiftCard:* ${productosDesc}\n*Total:* $${gc.totalUsd}\n\n*Beneficiario:* ${gc.benNombre}\n*Cel Beneficiario:* ${gc.benCelular}\n\n*Pago:* ${gc.pagoMoneda} ${gc.pagoMonto}\n*Ref:* ${gc.pagoRef}`;
 }
 
 async function guardarGiftCard(){
