@@ -496,6 +496,51 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <button onclick="guardarTasas()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;">💾 GUARDAR TASAS</button>
       <div id="tasa-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:10px;"></div>
     </div>
+
+    <!-- FACTOR DE AJUSTE -->
+    <div style="background:var(--surface);border:1.5px solid var(--warn);border-radius:var(--radius);padding:18px;">
+      <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--warn);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">📊 Correlación de Ajuste de Precio</div>
+
+      <!-- Factor 1: IKOA / BCV -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Factor IKOA (Euro)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Tasa IKOA</div>
+            <div id="ajuste-ikoa" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:#cc88ff;">—</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Tasa BCV</div>
+            <div id="ajuste-bcv" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--accent);">—</div>
+          </div>
+        </div>
+        <div style="background:var(--surface2);border:1.5px solid var(--warn);border-radius:10px;padding:16px;text-align:center;">
+          <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Factor de Ajuste IKOA</div>
+          <div id="ajuste-factor" style="font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:700;color:var(--warn);">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">((IKOA / BCV) - 1) × 100</div>
+        </div>
+      </div>
+
+      <!-- Factor 2: Shoes / BCV -->
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Factor Shoes</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Tasa Shoes</div>
+            <div id="ajuste-shoes" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:#44aaff;">—</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Tasa BCV</div>
+            <div id="ajuste-bcv2" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--accent);">—</div>
+          </div>
+        </div>
+        <div style="background:var(--surface2);border:1.5px solid #44aaff;border-radius:10px;padding:16px;text-align:center;">
+          <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Factor de Ajuste Shoes</div>
+          <div id="ajuste-factor2" style="font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:700;color:#44aaff;">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">((Shoes / BCV) - 1) × 100</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- TAB STOCK -->
@@ -2061,7 +2106,40 @@ async function cargarTasas(){
       const inp=document.getElementById('tasa-inp-'+k);
       if(inp&&v) inp.value=Number(v).toFixed(2);
     });
+    actualizarFactorAjuste(vals.IKOA, vals.BCV, vals.Shoes);
   }catch(e){ console.error('Error cargando tasas:',e); }
+}
+
+function actualizarFactorAjuste(ikoa, bcv, shoes){
+  const elIkoa=document.getElementById('ajuste-ikoa');
+  const elBcv=document.getElementById('ajuste-bcv');
+  const elFactor=document.getElementById('ajuste-factor');
+  const elShoes=document.getElementById('ajuste-shoes');
+  const elBcv2=document.getElementById('ajuste-bcv2');
+  const elFactor2=document.getElementById('ajuste-factor2');
+  const i=parseFloat(ikoa), b=parseFloat(bcv), s=parseFloat(shoes);
+
+  if(elIkoa) elIkoa.textContent=i?i.toFixed(2):'—';
+  if(elBcv) elBcv.textContent=b?b.toFixed(2):'—';
+  if(elShoes) elShoes.textContent=s?s.toFixed(2):'—';
+  if(elBcv2) elBcv2.textContent=b?b.toFixed(2):'—';
+
+  // Factor IKOA
+  if(elFactor){
+    if(i&&b&&b>0){
+      const f=((i/b)-1)*100;
+      elFactor.style.color=f>0?'var(--warn)':f<0?'var(--danger)':'var(--accent)';
+      elFactor.textContent=(f>0?'+':'')+f.toFixed(2)+'%';
+    } else { elFactor.textContent='—'; }
+  }
+  // Factor Shoes
+  if(elFactor2){
+    if(s&&b&&b>0){
+      const f2=((s/b)-1)*100;
+      elFactor2.style.color=f2>0?'#44aaff':f2<0?'var(--danger)':'var(--accent)';
+      elFactor2.textContent=(f2>0?'+':'')+f2.toFixed(2)+'%';
+    } else { elFactor2.textContent='—'; }
+  }
 }
 
 async function guardarTasas(){
