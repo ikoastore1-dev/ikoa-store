@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>IKOA & BeKate · GiftCard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--surface3:#252533;--accent:#00e5b0;--accent2:#0099ff;--warn:#e8a020;--danger:#ff4444;--gift:#cc66ff;--text:#f0f0f5;--muted:#7a7a99;--border:#2a2a3a;--radius:14px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 20px;text-align:center;}
+.logo{font-family:'Barlow',sans-serif;font-size:26px;font-weight:700;letter-spacing:.15em;}
+.logo .i{color:var(--accent)}.logo .sep{color:var(--muted);margin:0 8px;font-weight:300}.logo .b{color:var(--text)}
+.gift-badge{display:inline-block;background:linear-gradient(135deg,#cc66ff,#9933cc);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.1em;margin-top:4px;}
+main{max-width:480px;margin:0 auto;padding:16px;}
+.prog{display:flex;gap:4px;margin-bottom:20px;}
+.prog-dot{flex:1;height:4px;border-radius:2px;background:var(--surface2);transition:background .3s;}
+.prog-dot.done{background:linear-gradient(135deg,var(--gift) 0%,#9933cc 100%);}
+.prog-dot.active{background:linear-gradient(135deg,var(--gift) 0%,#9933cc 100%);opacity:.5;}
+.step{display:none;}
+.step.active{display:block;}
+.step-header{margin-bottom:18px;}
+.step-num{font-size:12px;color:var(--gift);text-transform:uppercase;letter-spacing:.1em;font-weight:700;}
+.step-title{font-family:'Barlow',sans-serif;font-size:26px;font-weight:700;color:var(--text);}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;}
+.card-title{font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;color:var(--gift);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;}
+.field-group{margin-bottom:14px;}
+.field-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-weight:600;}
+.field-input{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:border-color .2s;width:100%;}
+.field-input:focus{border-color:var(--gift);}.field-input::placeholder{color:var(--muted);}.field-input.error{border-color:var(--danger);}
+.opt-btn{padding:14px 10px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;letter-spacing:.03em;width:100%;}
+.opt-btn:hover{border-color:var(--gift);}.opt-btn.selected{border-color:var(--gift);background:#1a0f2b;color:var(--gift);}
+.opt-btn .sub{font-size:11px;font-weight:400;color:var(--muted);margin-top:3px;display:block;}
+.opt-btn.selected .sub{color:var(--gift);opacity:.7;}
+.option-grid{display:grid;gap:10px;}.cols2{grid-template-columns:1fr 1fr;}.cols1{grid-template-columns:1fr;}
+.nav-row{display:flex;gap:10px;margin-top:18px;}
+.btn-next{flex:1;padding:16px;background:linear-gradient(135deg,var(--gift) 0%,#9933cc 100%);border:none;border-radius:14px;color:#fff;font-family:'Barlow',sans-serif;font-size:19px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;}
+.btn-back{padding:16px 20px;background:transparent;border:2px solid var(--border);border-radius:14px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;}
+.btn-send{width:100%;padding:18px;background:linear-gradient(135deg,#25d366,#128c7e);border:none;border-radius:14px;color:#fff;font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;}
+.spinner{display:inline-block;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.nota{background:var(--surface2);border-left:3px solid var(--gift);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;color:var(--muted);margin-bottom:12px;}
+.resumen-block{background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:10px;font-size:14px;line-height:1.8;}
+.resumen-block b{color:var(--gift);}
+.producto-row{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:8px;}
+.producto-row .nombre{font-size:14px;font-weight:700;}
+.producto-row .precio{color:var(--accent);font-weight:700;}
+.producto-row .remove{background:transparent;border:1.5px solid var(--danger);border-radius:6px;color:var(--danger);padding:4px 10px;font-size:12px;cursor:pointer;}
+.total-box{background:var(--surface2);border:1.5px solid var(--gift);border-radius:10px;padding:14px;text-align:center;margin-top:12px;}
+.total-box .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.total-box .val{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;color:var(--gift);}
+#splash{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+#splash .s-logo{font-family:'Barlow',sans-serif;font-size:38px;font-weight:700;letter-spacing:.2em;}
+#splash .s-line{width:60px;height:3px;background:linear-gradient(135deg,var(--gift),#9933cc);border-radius:2px;}
+#splash .s-sub{font-size:13px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+#splash .s-badge{background:linear-gradient(135deg,#cc66ff,#9933cc);color:#fff;font-size:13px;font-weight:700;padding:6px 18px;border-radius:20px;letter-spacing:.1em;}
+#bloq{position:fixed;inset:0;z-index:998;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;gap:16px;}
+#pantalla-exito{display:none;position:fixed;inset:0;z-index:999;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="s-logo"><span style="color:var(--accent)">I</span>KOA <span style="color:var(--muted);font-weight:300;margin:0 6px;">·</span> BeKate</div>
+  <div class="s-line"></div>
+  <div class="s-badge">🎁 GiftCard</div>
+  <div class="s-sub">Ropa Técnica · vivir el sol sin límites</div>
+</div>
+
+<!-- BLOQUEADO -->
+<div id="bloq" style="display:none;">
+  <div style="font-size:48px;">🔒</div>
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--danger);">Link Inválido</div>
+  <div style="color:var(--muted);font-size:14px;" id="bloq-msg">Este link no es válido o ha expirado.</div>
+</div>
+
+<header style="display:none;" id="main-header">
+  <div class="logo"><span class="i">I</span>KOA<span class="sep">·</span><span class="b">BeKate</span></div>
+  <div class="gift-badge">🎁 GiftCard</div>
+</header>
+
+<main id="main-content" style="display:none;">
+  <div class="prog" id="prog-bar"></div>
+
+  <!-- STEP 1: DATOS COMPRADOR -->
+  <div class="step active" id="step1">
+    <div class="step-header">
+      <div class="step-num">Paso 1 de 7</div>
+      <div class="step-title">Tus datos</div>
+    </div>
+    <div class="card">
+      <div class="field-group"><div class="field-label">Nombre completo</div><input class="field-input" id="s1-nombre" type="text" placeholder="NOMBRE APELLIDO" style="text-transform:uppercase;"></div>
+      <div class="field-group"><div class="field-label">Cédula</div><input class="field-input" id="s1-cedula" type="text" placeholder="V-XXXXXXXX" style="text-transform:uppercase;"></div>
+      <div class="field-group"><div class="field-label">Celular</div><input class="field-input" id="s1-celular" type="tel" placeholder="04XX-XXXXXXX"></div>
+      <div class="field-group"><div class="field-label">Correo</div><input class="field-input" id="s1-correo" type="email" placeholder="correo@ejemplo.com"></div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-next" style="flex:1;" onclick="validarStep1()">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: OCASION -->
+  <div class="step" id="step2">
+    <div class="step-header">
+      <div class="step-num">Paso 2 de 7</div>
+      <div class="step-title">¿Para qué ocasión?</div>
+    </div>
+    <div class="card">
+      <div class="option-grid cols1" style="gap:10px;">
+        <button class="opt-btn" onclick="selectOcasion(this,'Cumpleaños')">🎂 Cumpleaños</button>
+        <button class="opt-btn" onclick="selectOcasion(this,'Amistad')">🤝 Amistad</button>
+        <button class="opt-btn" onclick="selectOcasion(this,'Fecha Especial')">💝 Fecha Especial</button>
+        <button class="opt-btn" onclick="selectOcasion(this,'Por Colaboraciones')">🌟 Por Colaboraciones</button>
+        <button class="opt-btn" onclick="selectOcasion(this,'Otro')">🎁 Otro</button>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goStep(1)">← Atrás</button>
+      <button class="btn-next" onclick="validarStep2()">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: MODALIDAD -->
+  <div class="step" id="step3">
+    <div class="step-header">
+      <div class="step-num">Paso 3 de 7</div>
+      <div class="step-title">Modalidad</div>
+    </div>
+    <div class="card">
+      <div class="option-grid cols1" style="gap:10px;">
+        <button class="opt-btn" onclick="selectModalidad(this,'monto')">
+          💵 Monto Fijo
+          <span class="sub">Elige un monto en dólares (mín. $30)</span>
+        </button>
+        <button class="opt-btn" onclick="selectModalidad(this,'productos')">
+          🛍️ Por Productos
+          <span class="sub">Selecciona prendas del catálogo</span>
+        </button>
+      </div>
+    </div>
+    <div id="monto-fijo-wrap" style="display:none;">
+      <div class="card">
+        <div class="card-title">Monto en dólares</div>
+        <div class="field-group">
+          <div class="field-label">Monto ($) — mínimo $30</div>
+          <input class="field-input" id="s3-monto" type="number" min="30" placeholder="Ej: 50" style="font-size:20px;">
+        </div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goStep(2)">← Atrás</button>
+      <button class="btn-next" onclick="validarStep3()">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: PRODUCTOS (solo modalidad productos) -->
+  <div class="step" id="step4">
+    <div class="step-header">
+      <div class="step-num">Paso 4 de 7</div>
+      <div class="step-title">Seleccionar Productos</div>
+    </div>
+    <div class="nota">Busca y agrega los productos que incluirá la GiftCard.</div>
+    <div class="card">
+      <div class="field-group">
+        <div class="field-label">Buscar por código o nombre</div>
+        <div style="display:flex;gap:8px;">
+          <input class="field-input" id="s4-buscar" type="text" placeholder="Ej: COMFY01" style="text-transform:uppercase;">
+          <button onclick="buscarProductoGC()" style="padding:12px 16px;background:var(--gift);border:none;border-radius:8px;color:#fff;font-weight:700;cursor:pointer;white-space:nowrap;">🔍</button>
+        </div>
+      </div>
+      <div id="s4-resultado" style="margin-top:8px;"></div>
+    </div>
+    <div id="s4-carrito" style="margin-top:4px;"></div>
+    <div class="total-box" id="s4-total-box" style="display:none;">
+      <div class="lbl">Total GiftCard</div>
+      <div class="val" id="s4-total-val">$0.00</div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goStep(3)">← Atrás</button>
+      <button class="btn-next" onclick="validarStep4()">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: BENEFICIARIO -->
+  <div class="step" id="step5">
+    <div class="step-header">
+      <div class="step-num">Paso 5 de 7</div>
+      <div class="step-title">¿Para quién es?</div>
+    </div>
+    <div class="card">
+      <div class="field-group"><div class="field-label">Nombre del beneficiario</div><input class="field-input" id="s5-nombre" type="text" placeholder="NOMBRE APELLIDO" style="text-transform:uppercase;"></div>
+      <div class="field-group"><div class="field-label">Celular del beneficiario</div><input class="field-input" id="s5-celular" type="tel" placeholder="04XX-XXXXXXX"></div>
+      <div class="field-group"><div class="field-label">Correo del beneficiario</div><input class="field-input" id="s5-correo" type="email" placeholder="correo@ejemplo.com"></div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" id="step5-back" onclick="volverDesde5()">← Atrás</button>
+      <button class="btn-next" onclick="validarStep5()">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- STEP 6: PAGO -->
+  <div class="step" id="step6">
+    <div class="step-header">
+      <div class="step-num">Paso 6 de 7</div>
+      <div class="step-title">Pago</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Total a pagar</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Bs</div>
+          <div id="s6-total-bs" style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--warn);">—</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">USD</div>
+          <div id="s6-total-usd" style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);">—</div>
+        </div>
+      </div>
+
+      <div class="card-title">Método de pago</div>
+      <div class="option-grid cols2" style="margin-bottom:14px;">
+        <button class="opt-btn" id="pm-bs" onclick="selectPagoGC('bs')">🏦 Bs<span class="sub" id="pm-monto-bs">—</span></button>
+        <button class="opt-btn" id="pm-usd" onclick="selectPagoGC('usd')">💵 Divisa<span class="sub" id="pm-monto-usd">—</span></button>
+      </div>
+
+      <div id="pago-ref-wrap" style="display:none;">
+        <div class="field-group">
+          <div class="field-label" id="pago-ref-label">Número de referencia</div>
+          <input class="field-input" id="s6-ref" type="text" placeholder="Número de confirmación">
+        </div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goStep(5)">← Atrás</button>
+      <button class="btn-next" onclick="validarStep6()">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- STEP 7: CONFIRMACION -->
+  <div class="step" id="step7">
+    <div class="step-header">
+      <div class="step-num">Paso 7 de 7</div>
+      <div class="step-title">Confirmar Pedido</div>
+    </div>
+    <div id="resumen-gc" style="margin-bottom:16px;"></div>
+    <button class="btn-send" id="btn-whatsapp" onclick="enviarWhatsApp()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Enviar por WhatsApp
+    </button>
+    <button id="btn-sin-whatsapp" onclick="enviarSinWhatsApp()" style="width:100%;padding:16px;background:transparent;border:2px solid var(--border);border-radius:14px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-top:10px;">
+      Continuar sin WhatsApp
+    </button>
+  </div>
+</main>
+
+<!-- PANTALLA EXITO -->
+<div id="pantalla-exito">
+  <div style="font-size:64px;margin-bottom:16px;">🎁</div>
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:700;color:var(--gift);margin-bottom:8px;">GiftCard Registrada</div>
+  <div style="color:var(--muted);font-size:15px;max-width:300px;line-height:1.6;">Tu GiftCard ha sido registrada correctamente. Pronto recibirás los detalles.</div>
+  <div style="margin-top:20px;font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--muted);">IKOA & BeKate · vivir el sol sin límites</div>
+</div>
+
+<script>
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbx4VMyrXJtLuuMdDkM1YS7B65OH5bULYhaxHmsbzyliBZfLGnUd_A89PtZfucaLsvKzOg/exec';
+const WHATSAPP_NUM='584149450742';
+const WEBHOOK_NOTIFY='https://hook.us2.make.com/f3mbneb3oliah6tv4ut64rb6x1pamiwa';
+const TOTAL_STEPS=7;
+
+let tokenActual='';
+let tasaBCV=0;
+let gc={
+  nombre:'',cedula:'',celular:'',correo:'',
+  ocasion:'',
+  modalidad:'', // 'monto' o 'productos'
+  montoUsd:0,
+  productos:[], // [{codigo,nombre,precioUsd}]
+  totalUsd:0, totalBs:0,
+  benNombre:'',benCelular:'',benCorreo:'',
+  pagoMoneda:'',pagoRef:'',pagoMonto:0
+};
+
+// ── INIT ──────────────────────────────────────────────────────
+async function scriptGETjson(params){
+  return new Promise((resolve,reject)=>{
+    const cb='cb_'+Math.random().toString(36).slice(2);
+    const qs=Object.entries({...params,callback:cb}).map(([k,v])=>`${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+    const script=document.createElement('script');
+    script.src=`${SCRIPT_URL}?${qs}`;
+    window[cb]=(data)=>{ delete window[cb]; script.remove(); resolve(data); };
+    script.onerror=()=>reject(new Error('Script error'));
+    document.head.appendChild(script);
+    setTimeout(()=>{ if(window[cb]){ delete window[cb]; script.remove(); reject(new Error('Timeout')); } },15000);
+  });
+}
+
+function getFechaHora(){
+  const n=new Date();
+  const dd=String(n.getDate()).padStart(2,'0');
+  const mm=String(n.getMonth()+1).padStart(2,'0');
+  const yy=n.getFullYear();
+  let h=n.getHours(), min=String(n.getMinutes()).padStart(2,'0');
+  const ampm=h>=12?'PM':'AM'; h=h%12||12;
+  return `${dd}.${mm}.${yy} ${String(h).padStart(2,'0')}:${min} ${ampm}`;
+}
+
+window.addEventListener('DOMContentLoaded',async()=>{
+  setTimeout(async()=>{
+    document.getElementById('splash').style.display='none';
+    const params=new URLSearchParams(window.location.search);
+    const token=params.get('token');
+    if(!token){ showBloq('No se encontró el token en el link.'); return; }
+    try{
+      const v=await scriptGETjson({action:'verificarToken',token});
+      if(!v.ok){ showBloq(v.error==='usado'?'Este link ya fue utilizado.':v.error==='expirado'?'Este link ha expirado.':'Link inválido.'); return; }
+      tokenActual=token;
+      document.getElementById('main-header').style.display='block';
+      document.getElementById('main-content').style.display='block';
+      updateProg(1);
+      // Cargar tasa BCV
+      try{ const td=await scriptGETjson({action:'leerColores',hoja:'TASA'}); }catch(e){}
+      // Cargar tasa BCV via leerPrecios
+      try{
+        const pd=await scriptGETjson({action:'leerPrecios'});
+        if(pd.ok) tasaBCV=pd.tasa_bcv||0;
+      }catch(e){}
+    }catch(e){ showBloq('Error al verificar el link.'); }
+  },1800);
+});
+
+function showBloq(msg){
+  document.getElementById('splash').style.display='none';
+  document.getElementById('bloq').style.display='flex';
+  document.getElementById('bloq-msg').textContent=msg;
+}
+
+function updateProg(step){
+  const bar=document.getElementById('prog-bar');
+  bar.innerHTML='';
+  for(let i=1;i<=TOTAL_STEPS;i++){
+    const d=document.createElement('div');
+    d.className='prog-dot'+(i<step?' done':i===step?' active':'');
+    bar.appendChild(d);
+  }
+}
+
+function goStep(n){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('step'+n).classList.add('active');
+  updateProg(n);
+  window.scrollTo(0,0);
+}
+
+// ── STEP 1 ────────────────────────────────────────────────────
+function validarStep1(){
+  const nombre=document.getElementById('s1-nombre').value.trim();
+  const cedula=document.getElementById('s1-cedula').value.trim();
+  const celular=document.getElementById('s1-celular').value.trim();
+  const correo=document.getElementById('s1-correo').value.trim();
+  if(!nombre||!cedula||!celular||!correo){ alert('Completa todos los campos'); return; }
+  gc.nombre=nombre; gc.cedula=cedula; gc.celular=celular; gc.correo=correo;
+  goStep(2);
+}
+
+// ── STEP 2 ────────────────────────────────────────────────────
+function selectOcasion(btn,val){
+  document.querySelectorAll('#step2 .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  gc.ocasion=val;
+}
+function validarStep2(){
+  if(!gc.ocasion){ alert('Selecciona la ocasión'); return; }
+  goStep(3);
+}
+
+// ── STEP 3 ────────────────────────────────────────────────────
+function selectModalidad(btn,val){
+  document.querySelectorAll('#step3 .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  gc.modalidad=val;
+  document.getElementById('monto-fijo-wrap').style.display=val==='monto'?'block':'none';
+}
+function validarStep3(){
+  if(!gc.modalidad){ alert('Selecciona la modalidad'); return; }
+  if(gc.modalidad==='monto'){
+    const monto=parseFloat(document.getElementById('s3-monto').value);
+    if(!monto||monto<30){ alert('El monto mínimo es $30'); return; }
+    gc.montoUsd=monto;
+    gc.totalUsd=monto;
+    gc.totalBs=tasaBCV?Math.round(monto*tasaBCV*100)/100:0;
+    gc.productos=[];
+    actualizarTotalesPago();
+    goStep(5); // Monto fijo salta a paso 5
+  } else {
+    goStep(4); // Productos va a paso 4
+  }
+}
+
+// ── STEP 4 ────────────────────────────────────────────────────
+let carritoGC=[];
+async function buscarProductoGC(){
+  const q=document.getElementById('s4-buscar').value.trim().toUpperCase();
+  if(!q) return;
+  const res=document.getElementById('s4-resultado');
+  res.innerHTML='<div style="color:var(--muted);font-size:13px;">⏳ Buscando...</div>';
+  try{
+    const data=await scriptGETjson({action:'leerPreciosColeccion'});
+    // Search in CODIGOS via leerPrecios — use a generic search
+    const data2=await scriptGETjson({action:'buscarProductoGC',q});
+    if(data2.ok&&data2.productos&&data2.productos.length>0){
+      res.innerHTML=data2.productos.slice(0,5).map(p=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:6px;">
+          <div><div style="font-size:14px;font-weight:700;">${p.nombre}</div><div style="font-size:12px;color:var(--muted);">${p.codigo} · $${p.precio_usd}</div></div>
+          <button onclick="agregarAlCarrito('${p.codigo}','${p.nombre.replace(/'/g,"\\'")}',${p.precio_usd})" style="padding:6px 12px;background:var(--gift);border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">+ Agregar</button>
+        </div>`).join('');
+    } else {
+      // Fallback: search in pack_precios
+      const pp=data.pack_precios||{};
+      const found=Object.entries(pp).filter(([k])=>k.toUpperCase().includes(q)).slice(0,5);
+      if(found.length>0){
+        res.innerHTML=found.map(([cod,val])=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:6px;">
+            <div><div style="font-size:14px;font-weight:700;">${cod}</div><div style="font-size:12px;color:var(--muted);">$${val.usd}</div></div>
+            <button onclick="agregarAlCarrito('${cod}','${cod}',${val.usd})" style="padding:6px 12px;background:var(--gift);border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">+ Agregar</button>
+          </div>`).join('');
+      } else {
+        res.innerHTML='<div style="color:var(--muted);font-size:13px;">Sin resultados</div>';
+      }
+    }
+  }catch(e){ res.innerHTML='<div style="color:var(--danger);font-size:13px;">Error buscando</div>'; }
+}
+
+function agregarAlCarrito(codigo,nombre,precioUsd){
+  carritoGC.push({codigo,nombre,precioUsd});
+  renderCarrito();
+  document.getElementById('s4-buscar').value='';
+  document.getElementById('s4-resultado').innerHTML='';
+}
+
+function quitarDelCarrito(idx){
+  carritoGC.splice(idx,1);
+  renderCarrito();
+}
+
+function renderCarrito(){
+  const cont=document.getElementById('s4-carrito');
+  if(carritoGC.length===0){ cont.innerHTML=''; document.getElementById('s4-total-box').style.display='none'; return; }
+  let totalUsd=0;
+  cont.innerHTML=carritoGC.map((p,i)=>{
+    totalUsd+=p.precioUsd;
+    return `<div class="producto-row">
+      <div><div class="nombre">${p.nombre}</div><div style="font-size:12px;color:var(--muted);">${p.codigo}</div></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="precio">$${p.precioUsd}</span>
+        <button class="remove" onclick="quitarDelCarrito(${i})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+  const totalBs=tasaBCV?Math.round(totalUsd*tasaBCV*100)/100:0;
+  document.getElementById('s4-total-val').textContent=`$${totalUsd.toFixed(2)}${totalBs?' · Bs '+totalBs.toFixed(2):''}`;
+  document.getElementById('s4-total-box').style.display='block';
+  gc.productos=carritoGC.map(p=>p);
+  gc.totalUsd=totalUsd;
+  gc.totalBs=totalBs;
+  actualizarTotalesPago();
+}
+
+function validarStep4(){
+  if(carritoGC.length===0){ alert('Agrega al menos un producto'); return; }
+  goStep(5);
+}
+
+function volverDesde5(){
+  goStep(gc.modalidad==='monto'?3:4);
+}
+
+// ── STEP 5 ────────────────────────────────────────────────────
+function validarStep5(){
+  const nombre=document.getElementById('s5-nombre').value.trim();
+  const celular=document.getElementById('s5-celular').value.trim();
+  const correo=document.getElementById('s5-correo').value.trim();
+  if(!nombre||!celular||!correo){ alert('Completa todos los campos del beneficiario'); return; }
+  gc.benNombre=nombre; gc.benCelular=celular; gc.benCorreo=correo;
+  goStep(6);
+}
+
+// ── STEP 6 PAGO ───────────────────────────────────────────────
+function actualizarTotalesPago(){
+  document.getElementById('s6-total-bs').textContent=gc.totalBs?'Bs '+gc.totalBs.toFixed(2):'—';
+  document.getElementById('s6-total-usd').textContent='$'+gc.totalUsd.toFixed(2);
+  document.getElementById('pm-monto-bs').textContent=gc.totalBs?'Bs '+gc.totalBs.toFixed(2):'—';
+  document.getElementById('pm-monto-usd').textContent='$'+gc.totalUsd.toFixed(2);
+}
+
+let pagoSeleccionado='';
+function selectPagoGC(tipo){
+  pagoSeleccionado=tipo;
+  document.getElementById('pm-bs').classList.toggle('selected',tipo==='bs');
+  document.getElementById('pm-usd').classList.toggle('selected',tipo==='usd');
+  document.getElementById('pago-ref-wrap').style.display='block';
+  document.getElementById('pago-ref-label').textContent=tipo==='bs'?'N° Referencia (Bs)':'N° Referencia (Divisa)';
+}
+
+function validarStep6(){
+  if(!pagoSeleccionado){ alert('Selecciona el método de pago'); return; }
+  const ref=document.getElementById('s6-ref').value.trim();
+  if(!ref||ref.length<3){ alert('Ingresa el número de referencia'); return; }
+  gc.pagoMoneda=pagoSeleccionado==='bs'?'Bs':'Divisa';
+  gc.pagoRef=ref;
+  gc.pagoMonto=pagoSeleccionado==='bs'?gc.totalBs:gc.totalUsd;
+  renderResumenGC();
+  goStep(7);
+}
+
+// ── STEP 7 RESUMEN ────────────────────────────────────────────
+function renderResumenGC(){
+  const productosDesc=gc.modalidad==='monto'
+    ? `Monto Fijo: $${gc.totalUsd}`
+    : gc.productos.map(p=>`${p.nombre} ($${p.precioUsd})`).join(', ');
+
+  document.getElementById('resumen-gc').innerHTML=`
+    <div class="resumen-block"><b>Comprador:</b> ${gc.nombre} · ${gc.cedula}<br><b>Celular:</b> ${gc.celular}<br><b>Correo:</b> ${gc.correo}</div>
+    <div class="resumen-block"><b>Ocasión:</b> ${gc.ocasion}<br><b>Modalidad:</b> ${gc.modalidad==='monto'?'Monto Fijo':'Por Productos'}</div>
+    <div class="resumen-block"><b>GiftCard:</b> ${productosDesc}<br><b>Total:</b> $${gc.totalUsd}${gc.totalBs?' · Bs '+gc.totalBs:''}</div>
+    <div class="resumen-block"><b>Beneficiario:</b> ${gc.benNombre}<br><b>Cel:</b> ${gc.benCelular}<br><b>Correo:</b> ${gc.benCorreo}</div>
+    <div class="resumen-block"><b>Pago:</b> ${gc.pagoMoneda} ${gc.pagoMonto}<br><b>Ref:</b> ${gc.pagoRef}</div>`;
+}
+
+function buildMensaje(){
+  const productosDesc=gc.modalidad==='monto'
+    ? `Monto Fijo $${gc.totalUsd}`
+    : gc.productos.map(p=>`${p.nombre} $${p.precioUsd}`).join(', ');
+  return `*🎁 GiftCard IKOA & BeKate*\n\n*Comprador:* ${gc.nombre}\n*Cédula:* ${gc.cedula}\n*Celular:* ${gc.celular}\n\n*Ocasión:* ${gc.ocasion}\n*GiftCard:* ${productosDesc}\n*Total:* $${gc.totalUsd}\n\n*Beneficiario:* ${gc.benNombre}\n*Cel Beneficiario:* ${gc.benCelular}\n\n*Pago:* ${gc.pagoMoneda} ${gc.pagoMonto}\n*Ref:* ${gc.pagoRef}`;
+}
+
+async function guardarGiftCard(){
+  const productosDesc=gc.modalidad==='monto'
+    ? `Monto Fijo $${gc.totalUsd}`
+    : gc.productos.map(p=>`${p.nombre}(${p.codigo}) $${p.precioUsd}`).join(' | ');
+  try{
+    await scriptGETjson({
+      action:'crearGiftCard',
+      fecha:getFechaHora(),
+      modalidad:gc.modalidad==='monto'?'Monto Fijo':'Por Productos',
+      monto_bs:String(gc.totalBs||''),
+      monto_usd:String(gc.totalUsd||''),
+      productos:productosDesc,
+      comprador:gc.nombre,
+      comprador_cel:gc.celular,
+      comprador_correo:gc.correo,
+      comprador_cedula:gc.cedula,
+      ben_nombre:gc.benNombre,
+      ben_cel:gc.benCelular,
+      ben_correo:gc.benCorreo,
+      ocasion:gc.ocasion,
+      pago_moneda:gc.pagoMoneda,
+      pago_monto:String(gc.pagoMonto||''),
+      pago_ref:gc.pagoRef
+    });
+  }catch(e){ console.warn('Error guardando GiftCard:',e); }
+}
+
+async function notificarGiftCard(){
+  try{
+    const msg=`Nueva GiftCard. Comprador ${gc.nombre}. Revisar pago: ${gc.pagoMoneda} ${gc.pagoMonto}. Nombre: ${gc.nombre}. Ref: ${gc.pagoRef}`;
+    const wb=new FormData();
+    wb.append('celular',gc.celular);
+    wb.append('nombre',gc.nombre);
+    wb.append('mensaje',msg);
+    await fetch(WEBHOOK_NOTIFY,{method:'POST',body:wb,mode:'no-cors'});
+  }catch(e){ console.warn('Notify error:',e); }
+}
+
+async function marcarTokenUsado(){
+  if(tokenActual) try{ await scriptGETjson({action:'usarToken',token:tokenActual}); }catch(e){}
+}
+
+async function enviarSinWhatsApp(){
+  const btn=document.getElementById('btn-sin-whatsapp');
+  const btnWA=document.getElementById('btn-whatsapp');
+  btn.disabled=true; btnWA.disabled=true;
+  btn.innerHTML='<span class="spinner">↻</span> Registrando...';
+  await guardarGiftCard();
+  await notificarGiftCard();
+  await marcarTokenUsado();
+  document.getElementById('pantalla-exito').style.display='flex';
+}
+
+async function enviarWhatsApp(){
+  const btn=document.getElementById('btn-whatsapp');
+  const btnSin=document.getElementById('btn-sin-whatsapp');
+  btn.disabled=true; if(btnSin) btnSin.disabled=true;
+  btn.innerHTML='<span class="spinner">↻</span> Enviando...';
+  await guardarGiftCard();
+  await notificarGiftCard();
+  await marcarTokenUsado();
+  window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(buildMensaje())}`,'_blank');
+  document.getElementById('pantalla-exito').style.display='flex';
+}
+
+// Auto-uppercase
+document.addEventListener('input',function(e){
+  const el=e.target;
+  if(el.tagName==='INPUT'&&el.type==='text'&&!el.id.includes('correo')&&!el.id.includes('email')){
+    const pos=el.selectionStart; el.value=el.value.toUpperCase(); el.setSelectionRange(pos,pos);
+  }
+});
+</script>
+</body>
+</html>

@@ -245,6 +245,9 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <button onclick="confirmarModeloLink('coleccion')" style="width:100%;padding:14px;background:#1a1a2a;border:2px solid #aa88ff;border-radius:10px;color:#aa88ff;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
         🟣 LICRA COLECCIÓN
       </button>
+      <button onclick="confirmarModeloLink('giftcard')" style="width:100%;padding:14px;background:#1a0f2b;border:2px solid #cc66ff;border-radius:10px;color:#cc66ff;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
+        🎁 GIFTCARD
+      </button>
     </div>
     <button class="modal-cancel" onclick="document.getElementById('modal-modelo-link').classList.add('hidden')">Cancelar</button>
   </div>
@@ -1050,7 +1053,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz0k1ddb_J0eltHuke46sOMjEtQru6dP2Lf7oY3zagMroMNbW5lRBddUGSxtyHo06disg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx4VMyrXJtLuuMdDkM1YS7B65OH5bULYhaxHmsbzyliBZfLGnUd_A89PtZfucaLsvKzOg/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1909,7 +1912,7 @@ function switchTab(tab){
 // ── TASAS ─────────────────────────────────────────────────────
 // ── PROGRAMACION ──────────────────────────────────────────────
 const HOJAS_COLORES={comfy:'COLORES.COMFY',fullcomfy:'COLORES.FULLCOMFY',licra:'COLORES.LICRA',coleccion:'COLORES.COLECCION',unicolor:'COLORES.COLECCION.UNICOLOR'};
-const NOMBRES_PROG={comfy:'COMFY MEGA PROMO',fullcomfy:'COMFY PROTECT',licra:'LICRA PROTECT',coleccion:'LICRA COLECCIÓN'};
+const NOMBRES_PROG={comfy:'COMFY MEGA PROMO',fullcomfy:'COMFY PROTECT',licra:'LICRA PROTECT',coleccion:'LICRA COLECCION',giftcard:'GIFTCARD'};
 let progActual='comfy';
 
 async function switchProg(app){
@@ -4161,7 +4164,8 @@ const BASE_URLS={
   comfy:    'https://ikoastore1-dev.github.io/ikoa-store/pedidos.html',
   fullcomfy:'https://ikoastore1-dev.github.io/ikoa-store/pedidos-fullcomfy.html',
   licra:    'https://ikoastore1-dev.github.io/ikoa-store/pedidos-licra.html',
-  coleccion:'https://ikoastore1-dev.github.io/ikoa-store/pedidos-coleccion.html'
+  coleccion:'https://ikoastore1-dev.github.io/ikoa-store/pedidos-coleccion.html',
+  giftcard: 'https://ikoastore1-dev.github.io/ikoa-store/pedidos-giftcard.html'
 };
 const BASE_URL=BASE_URLS.comfy;
 let currentToken='';
