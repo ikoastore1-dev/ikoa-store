@@ -2108,10 +2108,16 @@ function calcFactor(tasa, bcv){
   return ((tasa/bcv)-1)*100;
 }
 
+function calcFactorAnt(tasaAct, bcvAnt, bcvAct, tasaAnt){
+  // ((IKOA actual × BCV anterior) / (BCV actual × IKOA anterior) - 1) × 100
+  if(!tasaAct||!bcvAnt||!bcvAct||!tasaAnt||bcvAct==0||tasaAnt==0) return null;
+  return ((tasaAct * bcvAnt) / (bcvAct * tasaAnt) - 1) * 100;
+}
+
 function fmtFactor(val){
   if(val===null) return {txt:'—', color:'var(--muted)'};
   const color=val>0?'var(--warn)':val<0?'var(--danger)':'var(--accent)';
-  return {txt:(val>0?'+':'')+val.toFixed(2)+'%', color};
+  return {txt:(val>0?'+':'')+val.toFixed(6)+'%', color};
 }
 
 function actualizarFactorAjuste(ikoa, bcv, shoes, ikoaAnt, bcvAnt, shoesAnt){
@@ -2130,7 +2136,7 @@ function actualizarFactorAjuste(ikoa, bcv, shoes, ikoaAnt, bcvAnt, shoesAnt){
   setEl('c-ikoa-act', fIkoaAct.txt, fIkoaAct.color);
 
   // Factor IKOA anterior vs BCV anterior
-  const fIkoaAnt=fmtFactor(calcFactor(vIkoaAnt,vBcvAnt));
+  const fIkoaAnt=fmtFactor(calcFactorAnt(vIkoa, vBcvAnt, vBcv, vIkoaAnt));
   setEl('c-ikoa-ant', fIkoaAnt.txt, fIkoaAnt.color);
 
   // Factor Shoes actual vs BCV actual
@@ -2138,7 +2144,7 @@ function actualizarFactorAjuste(ikoa, bcv, shoes, ikoaAnt, bcvAnt, shoesAnt){
   setEl('c-shoes-act', fShoesAct.txt, fShoesAct.color);
 
   // Factor Shoes anterior vs BCV anterior
-  const fShoesAnt=fmtFactor(calcFactor(vShoesAnt,vBcvAnt));
+  const fShoesAnt=fmtFactor(calcFactorAnt(vShoes, vBcvAnt, vBcv, vShoesAnt));
   setEl('c-shoes-ant', fShoesAnt.txt, fShoesAnt.color);
 }
 
