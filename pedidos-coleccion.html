@@ -469,7 +469,7 @@ window.addEventListener('load',function(){
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbxTQhbBySU8w0fUsPT2fbBIkIvbX9k8-FqUKuhLQWNOv7NjPvBMupzltBa6Gweo1u3ihQ/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbz0k1ddb_J0eltHuke46sOMjEtQru6dP2Lf7oY3zagMroMNbW5lRBddUGSxtyHo06disg/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
@@ -1298,12 +1298,24 @@ async function guardarEnSheets(){
   }
 }
 
+
+async function notificarNuevoPedido(){
+  try{
+    const msg=`Nuevo pedido recibido. Cliente ${pedido.nombre||''}. Revisar pago: ${pedido.pagoMoneda||''} ${pedido.pagoMonto||''}. Nombre: ${pedido.nombre||''}. Ref: ${pedido.pagoRef||''}`;
+    const wb=new FormData();
+    wb.append('celular','584149450742');
+    wb.append('nombre',pedido.nombre||'');
+    wb.append('mensaje',msg);
+    await fetch('https://hook.us2.make.com/f3mbneb3oliah6tv4ut64rb6x1pamiwa',{method:'POST',body:wb,mode:'no-cors'});
+  }catch(e){ console.warn('Notify error:',e); }
+}
 async function enviarSinWhatsApp(){
   const btn=document.getElementById('btn-sin-whatsapp');
   const btnWA=document.getElementById('btn-whatsapp');
   btn.disabled=true; btnWA.disabled=true;
   btn.innerHTML='<span class="spinner">↻</span> Registrando pedido...';
   await guardarEnSheets();
+  await notificarNuevoPedido();
   await marcarTokenUsado();
   document.getElementById('pantalla-exito').style.display='flex';
 }
@@ -1314,6 +1326,7 @@ async function enviarWhatsApp(){
   btn.disabled=true; if(btnSin) btnSin.disabled=true;
   btn.innerHTML='<span class="spinner">↻</span> Enviando...';
   await guardarEnSheets();
+  await notificarNuevoPedido();
   await marcarTokenUsado();
   window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(buildMensaje())}`,'_blank');
   document.getElementById('pantalla-exito').style.display='flex';
