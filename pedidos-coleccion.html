@@ -205,6 +205,7 @@ window.addEventListener('load',function(){
         <button class="opt-btn" onclick="selectSerie(this,'Nautica')">NÁUTICA<span class="sub">Colección</span></button>
         <button class="opt-btn" onclick="selectSerie(this,'Alpha')">ALPHA<span class="sub">Colección</span></button>
         <button class="opt-btn" onclick="selectSerie(this,'Unicolor')">UNICOLOR<span class="sub">Color sólido</span></button>
+        <button class="opt-btn" onclick="selectSerie(this,'Toalla')">🏖️ TOALLA<span class="sub">Playa</span></button>
       </div>
       <div id="color-serie-wrap" style="display:none;margin-top:12px;">
         <div class="card-title">Color de la Serie</div>
@@ -545,6 +546,14 @@ async function cargarColoresApp(){
     const vinilOpts=document.getElementById('vinil-opts');
     if(vinilOpts) vinilOpts.innerHTML=(data.viniles||[]).map(v=>`<button class="opt-btn" onclick="selectColor(this,'vinil','${v}')">${v.toUpperCase()}</button>`).join('');
   }catch(e){ console.warn('Error cargando colores:',e); }
+  // Cargar colores de Toalla dinámicamente
+  try{
+    const dt=await scriptGETjson({action:'leerColores',hoja:'COLORES.TOALLA'});
+    if(dt.ok && dt.telas && dt.telas.length>0){
+      SERIES_COLECCION.Toalla.colores=dt.telas;
+      dt.telas.forEach(col=>{ SERIES_COLECCION.Toalla.codigos[col]={Toalla:'TOALLA.01'}; });
+    }
+  }catch(e){ console.warn('Error cargando colores Toalla:',e); }
 }
 
 async function cargarAgencias(){
@@ -860,6 +869,9 @@ const SERIES_COLECCION={
       'Rosa Bebé':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
       'Verde Militar':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'}
     }
+  },
+  Toalla:{nombre:'Toalla',colores:[],
+    codigos:{}
   }
 };
 let selectedSerie='',selectedColorSerie='',selectedVariante='';
@@ -880,6 +892,19 @@ function selectColorSerie(btn,color){
   document.querySelectorAll('#color-serie-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   const s=SERIES_COLECCION[selectedSerie];
+
+  // Toalla: no tiene variante, selección directa
+  if(selectedSerie==='Toalla'){
+    const codigo='TOALLA.01';
+    const nombre=`Toalla ${color}`;
+    pedido.codigoProducto=codigo; pedido.nombreProducto=nombre; pedido.variante='Toalla';
+    pedido.pack=1; pedido.manga=''; pedido.capucha=''; pedido.tela=color;
+    document.getElementById('producto-label').textContent=nombre+' · '+codigo;
+    document.getElementById('producto-seleccionado').style.display='block';
+    document.getElementById('variante-wrap').style.display='none';
+    return;
+  }
+
   const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short','Cotton Licra']:['Playera','Dress','Cortaviento'];
   document.getElementById('variante-grid').innerHTML=variantes.map(v=>`<button class="opt-btn" onclick="selectVariante(this,'${v}')">${v.toUpperCase()}</button>`).join('');
   document.getElementById('variante-wrap').style.display='block';

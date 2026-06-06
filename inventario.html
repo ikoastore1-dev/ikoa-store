@@ -1039,6 +1039,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <button class="tab" id="ptab-licra" onclick="switchProg('licra')" style="font-size:13px;padding:8px 14px;">🟠 LICRA PROTECT</button>
       <button class="tab" id="ptab-coleccion" onclick="switchProg('coleccion')" style="font-size:13px;padding:8px 14px;">🟣 COLECCIÓN</button>
       <button class="tab" id="ptab-unicolor" onclick="switchProg('unicolor')" style="font-size:13px;padding:8px 14px;">⚪ UNICOLOR</button>
+      <button class="tab" id="ptab-toalla" onclick="switchProg('toalla')" style="font-size:13px;padding:8px 14px;">🏖️ TOALLA</button>
       <button class="tab" id="ptab-celapi" onclick="switchProg('celapi')" style="font-size:13px;padding:8px 14px;">📱 CEL - API</button>
     </div>
 
@@ -1911,7 +1912,7 @@ function switchTab(tab){
 
 // ── TASAS ─────────────────────────────────────────────────────
 // ── PROGRAMACION ──────────────────────────────────────────────
-const HOJAS_COLORES={comfy:'COLORES.COMFY',fullcomfy:'COLORES.FULLCOMFY',licra:'COLORES.LICRA',coleccion:'COLORES.COLECCION',unicolor:'COLORES.COLECCION.UNICOLOR'};
+const HOJAS_COLORES={comfy:'COLORES.COMFY',fullcomfy:'COLORES.FULLCOMFY',licra:'COLORES.LICRA',coleccion:'COLORES.COLECCION',unicolor:'COLORES.COLECCION.UNICOLOR',toalla:'COLORES.TOALLA'};
 const NOMBRES_PROG={comfy:'COMFY MEGA PROMO',fullcomfy:'COMFY PROTECT',licra:'LICRA PROTECT',coleccion:'LICRA COLECCION',giftcard:'GIFTCARD'};
 let progActual='comfy';
 
@@ -2012,8 +2013,9 @@ async function cargarColores(app){
     if(!data.ok) throw new Error(data.error||'Error');
     const telas=data.telas||[], viniles=data.viniles||[];
     const esColeccion=app==='coleccion';
-    let html=`<div style="display:grid;grid-template-columns:${esColeccion?'1fr':'1fr 1fr'};gap:16px;">`;
-    if(!esColeccion){
+    const soloTela=app==='toalla'||app==='unicolor';
+    let html=`<div style="display:grid;grid-template-columns:${esColeccion||soloTela?'1fr':'1fr 1fr'};gap:16px;">`;
+    if(!esColeccion&&!soloTela){
       html+=`<div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;margin-bottom:10px;">🎨 Color de Tela</div>
         <div id="lista-tela-${app}" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
@@ -2028,6 +2030,7 @@ async function cargarColores(app){
         </div>
       </div>`;
     }
+    if(!soloTela){
     html+=`<div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent2);text-transform:uppercase;margin-bottom:10px;">🖨️ Color de Vinil</div>
       <div id="lista-vinil-${app}" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
@@ -2041,6 +2044,7 @@ async function cargarColores(app){
         <button onclick="agregarColorProg('${app}','vinil')" style="padding:8px 14px;background:var(--accent2);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">+ Agregar</button>
       </div>
     </div>`;
+    }
     html+='</div>';
     cont.innerHTML=html;
   }catch(e){
@@ -4196,7 +4200,7 @@ async function confirmarModeloLink(modelo){
         const waBody=new FormData();
         waBody.append('celular','584149450742');
         waBody.append('nombre','Johan');
-        waBody.append('mensaje',`IKOA BeKate Se genero un nuevo link de venta para ${nombresModelo[modelo]||modelo.toUpperCase()}`);
+        waBody.append('mensaje',`Link de venta ${nombresModelo[modelo]||modelo.toUpperCase()}`);
         await fetch('https://hook.us2.make.com/dnr1w1wd8vaf9k8uym9p6taaf6icb30r',{method:'POST',body:waBody,mode:'no-cors'});
       }catch(waErr){ console.warn('WhatsApp notify error:',waErr); }
 
