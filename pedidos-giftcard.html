@@ -256,6 +256,11 @@ main{max-width:480px;margin:0 auto;padding:16px;}
   </main>
 </div>
 
+<!-- FLUJO COMPRA -->
+<div id="flujo-compra" style="display:none;">
+<main style="max-width:480px;margin:0 auto;padding:16px;">
+  <div class="prog" id="prog-bar"></div>
+
   <!-- STEP 1: DATOS COMPRADOR -->
   <div class="step active" id="step1">
     <div class="step-header">
@@ -551,6 +556,7 @@ main{max-width:480px;margin:0 auto;padding:16px;}
     </button>
   </div>
 </main>
+</div>
 
 <!-- PANTALLA EXITO -->
 <div id="pantalla-exito">
@@ -965,7 +971,7 @@ async function enviarWhatsApp(){
 // ── SELECCION INICIAL ─────────────────────────────────────────
 function iniciarCompra(){
   document.getElementById('pantalla-seleccion').style.display='none';
-  document.getElementById('main-content').style.display='block';
+  document.getElementById('flujo-compra').style.display='block';
   updateProg(1);
 }
 
@@ -977,7 +983,7 @@ function iniciarReclamar(){
 
 function volverSeleccion(){
   document.getElementById('flujo-reclamar').style.display='none';
-  document.getElementById('main-content').style.display='none';
+  document.getElementById('flujo-compra').style.display='none';
   document.getElementById('pantalla-seleccion').style.display='block';
 }
 
