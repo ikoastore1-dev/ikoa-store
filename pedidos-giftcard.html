@@ -63,7 +63,7 @@ main{max-width:480px;margin:0 auto;padding:16px;}
 
 <!-- SPLASH -->
 <div id="splash">
-  <div class="s-logo"><span style="color:var(--accent)">I</span>KOA</div>
+  <div class="s-logo">IKOA</div>
   <div class="s-line"></div>
   <div class="s-badge">🎁 GiftCard</div>
   <div class="s-sub">Ropa Técnica · vivir el sol sin límites</div>
@@ -77,7 +77,7 @@ main{max-width:480px;margin:0 auto;padding:16px;}
 </div>
 
 <header style="display:none;" id="main-header">
-  <div class="logo"><span class="i">I</span>KOA</div>
+  <div class="logo">IKOA</div>
   <div class="gift-badge">🎁 GiftCard</div>
 </header>
 
@@ -195,10 +195,25 @@ main{max-width:480px;margin:0 auto;padding:16px;}
       <div class="step-num">Paso 4 de 7</div>
       <div class="step-title">Seleccionar Productos</div>
     </div>
-    <div class="nota">Toca los productos que deseas incluir en la GiftCard. Puedes agregar varios.</div>
-    <div id="s4-productos-lista" style="margin-bottom:12px;">
-      <div style="text-align:center;color:var(--muted);padding:20px;">⏳ Cargando productos...</div>
+    <div class="nota">Selecciona una categoría y agrega los productos a la GiftCard.</div>
+
+    <!-- Secciones -->
+    <div id="s4-secciones" style="margin-bottom:12px;">
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:700;">Categorías</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button class="opt-btn" id="sec-comfy" onclick="selectSeccion('comfy')">👕 COMFY</button>
+        <button class="opt-btn" id="sec-fullcomfy" onclick="selectSeccion('fullcomfy')">🛡️ FULL COMFY</button>
+        <button class="opt-btn" id="sec-licra" onclick="selectSeccion('licra')">🌊 LICRA</button>
+        <button class="opt-btn" id="sec-coleccion" onclick="selectSeccion('coleccion')">🎨 COLECCIÓN</button>
+        <button class="opt-btn" id="sec-zapatos" onclick="selectSeccion('zapatos')">👟 ZAPATOS</button>
+        <button class="opt-btn" id="sec-toalla" onclick="selectSeccion('toalla')">🏖️ TOALLA</button>
+      </div>
     </div>
+
+    <!-- Productos de la sección -->
+    <div id="s4-productos-lista" style="margin-bottom:12px;display:none;"></div>
+
+    <!-- Carrito -->
     <div id="s4-carrito" style="margin-top:4px;"></div>
     <div class="total-box" id="s4-total-box" style="display:none;">
       <div class="lbl">Total GiftCard</div>
@@ -375,7 +390,7 @@ main{max-width:480px;margin:0 auto;padding:16px;}
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbx4VMyrXJtLuuMdDkM1YS7B65OH5bULYhaxHmsbzyliBZfLGnUd_A89PtZfucaLsvKzOg/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbw0vym1YuSfr2PBq84Xd7Rrr02l3ehKvT9VnMBVXVKMDBDpiG3Td_B-s5SYBroAmYNX8g/exec';
 const WHATSAPP_NUM='584149450742';
 const WEBHOOK_NOTIFY='https://hook.us2.make.com/f3mbneb3oliah6tv4ut64rb6x1pamiwa';
 const TOTAL_STEPS=7;
@@ -430,13 +445,12 @@ window.addEventListener('DOMContentLoaded',async()=>{
       document.getElementById('main-header').style.display='block';
       document.getElementById('main-content').style.display='block';
       updateProg(1);
-      // Cargar tasa BCV
-      try{ const td=await scriptGETjson({action:'leerColores',hoja:'TASA'}); }catch(e){}
-      // Cargar tasa BCV via leerPrecios
+      // Precargar productos y tasa BCV
       try{
         const pd=await scriptGETjson({action:'leerPrecios'});
         if(pd.ok) tasaBCV=pd.tasa_bcv||0;
       }catch(e){}
+      cargarProductosGC();
     }catch(e){ showBloq('Error al verificar el link.'); }
   },1800);
 });
@@ -462,7 +476,11 @@ function goStep(n){
   document.getElementById('step'+n).classList.add('active');
   updateProg(n);
   window.scrollTo(0,0);
-  if(n===4) cargarProductosGC();
+  if(n===4){
+    if(todosProductosGC.length===0) cargarProductosGC();
+    document.getElementById('s4-productos-lista').style.display='none';
+    document.querySelectorAll('[id^="sec-"]').forEach(b=>b.classList.remove('selected'));
+  }
 }
 
 // ── STEP 1 ────────────────────────────────────────────────────
@@ -528,32 +546,56 @@ function validarStep3(){
 
 // ── STEP 4 PRODUCTOS ─────────────────────────────────────────
 let carritoGC=[];
+const DEPTOS_MAP={
+  comfy:['COMFY','Comfy','comfy'],
+  fullcomfy:['FULL COMFY','Full Comfy','fullcomfy','FULLCOMFY'],
+  licra:['LICRA','Licra','licra'],
+  coleccion:['COLECCION','Coleccion','coleccion','COLECCIÓN','Colección'],
+  zapatos:['ZAPATOS','Zapatos','zapatos','SHOES','Shoes'],
+  toalla:['TOALLA','Toalla','toalla']
+};
+
+let todosProductosGC=[];
 
 async function cargarProductosGC(){
-  const lista=document.getElementById('s4-productos-lista');
-  if(!lista) return;
-  lista.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">⏳ Cargando productos...</div>';
   try{
     const data=await scriptGETjson({action:'buscarProductoGC',q:''});
-    if(data.ok && data.productos && data.productos.length>0){
-      lista.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px;">${
-        data.productos.map(p=>`
-          <button onclick="agregarAlCarrito('${p.codigo}','${(p.nombre||p.codigo).replace(/'/g,"\\'")}',${p.precio_usd})"
-            style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;cursor:pointer;text-align:left;width:100%;transition:border-color .2s;"
-            onmouseover="this.style.borderColor='var(--gift)'" onmouseout="this.style.borderColor='var(--border)'">
-            <div>
-              <div style="font-size:15px;font-weight:700;color:#ffffff;">${p.nombre||p.codigo}</div>
-              <div style="font-size:12px;color:var(--muted);">${p.codigo}</div>
-            </div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--gift);">$${Number(p.precio_usd).toFixed(2)}</div>
-          </button>`).join('')
-      }</div>`;
-    } else {
-      lista.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">Sin productos disponibles</div>';
-    }
-  }catch(e){
-    lista.innerHTML='<div style="text-align:center;color:var(--danger);padding:20px;">Error cargando productos</div>';
+    if(data.ok) todosProductosGC=data.productos||[];
+  }catch(e){ console.warn('Error cargando productos:',e); }
+}
+
+function selectSeccion(sec){
+  document.querySelectorAll('[id^="sec-"]').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('sec-'+sec).classList.add('selected');
+  const lista=document.getElementById('s4-productos-lista');
+  lista.style.display='block';
+
+  const keywords=DEPTOS_MAP[sec]||[sec];
+  const filtrados=todosProductosGC.filter(p=>{
+    const depto=String(p.depto||p.codigo||'').toUpperCase();
+    const nombre=String(p.nombre||'').toUpperCase();
+    const cod=String(p.codigo||'').toUpperCase();
+    return keywords.some(k=>depto.includes(k.toUpperCase())||nombre.includes(k.toUpperCase())||cod.includes(k.toUpperCase()));
+  });
+
+  if(filtrados.length===0){
+    lista.innerHTML='<div style="text-align:center;color:var(--muted);padding:16px;font-size:13px;">Sin productos en esta categoría</div>';
+    return;
   }
+
+  lista.innerHTML=`<div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:700;">Productos</div>`+
+  `<div style="display:flex;flex-direction:column;gap:8px;">${
+    filtrados.map(p=>`
+      <button onclick="agregarAlCarrito('${p.codigo}','${(p.nombre||p.codigo).replace(/'/g,"\\'")}',${p.precio_usd})"
+        style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;cursor:pointer;text-align:left;width:100%;transition:border-color .2s;"
+        onmouseover="this.style.borderColor='var(--gift)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#ffffff;">${p.nombre||p.codigo}</div>
+          <div style="font-size:12px;color:var(--muted);">${p.codigo}</div>
+        </div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--gift);">$${Number(p.precio_usd).toFixed(2)}</div>
+      </button>`).join('')
+  }</div>`;
 }
 
 function agregarAlCarrito(codigo, nombre, precioUsd){
