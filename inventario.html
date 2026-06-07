@@ -121,6 +121,13 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </head>
 <body>
 
+<!-- SPLASH -->
+<div id="splash-inv" style="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+  <div style="font-family:'Barlow',sans-serif;font-size:38px;font-weight:700;letter-spacing:.2em;color:#ffffff;">IKOA</div>
+  <div style="width:60px;height:3px;background:linear-gradient(135deg,var(--accent),#00b890);border-radius:2px;"></div>
+  <div style="font-size:12px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;">Sistema de Gestión</div>
+</div>
+
 <!-- MODAL REPROBAR -->
 <div class="modal-overlay hidden" id="modal-reprobar">
   <div class="modal">
@@ -432,7 +439,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 <main>
   <div class="tabs">
     <button class="tab" onclick="switchTab('tasa')">💱 Tasa</button>
-    <button class="tab active" onclick="switchTab('stock')">📦 Stock</button>
+    <button class="tab" onclick="switchTab('stock')">📦 Stock</button>
     <button class="tab" onclick="switchTab('etiquetas')">🆕 Productos Nuevos</button>
     <button class="tab" onclick="switchTab('aprobaciones')">✅ Aprobaciones</button>
     <button class="tab" onclick="switchTab('respaldo')">💬 Respaldo</button>
@@ -729,11 +736,12 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <div id="link-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:10px;"></div>
     </div>
     <!-- SUB-PESTAÑAS -->
-    <div style="display:flex;gap:6px;margin-bottom:14px;">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
       <button class="apro-sub-btn" data-sub="Pendiente" onclick="switchAprobaciones('Pendiente')" style="flex:1;padding:8px;border:2px solid var(--warn);border-radius:8px;background:#1a1a10;color:var(--warn);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Pendientes</button>
       <button class="apro-sub-btn" data-sub="Pagado" onclick="switchAprobaciones('Pagado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✅ Aprobadas</button>
       <button class="apro-sub-btn" data-sub="Reprobado" onclick="switchAprobaciones('Reprobado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✗ Reprobadas</button>
       <button class="apro-sub-btn" data-sub="Cola" onclick="switchAprobaciones('Cola')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Cola</button>
+      <button class="apro-sub-btn" data-sub="GiftCard" onclick="switchAprobaciones('GiftCard')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🎁 GiftCard</button>
     </div>
     <!-- Búsqueda para Aprobadas/Reprobadas -->
     <div id="historial-apro-search" style="display:none;margin-bottom:12px;">
@@ -745,6 +753,16 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div id="aprosec-solicitudes">
       <div id="apro-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
       <div id="solicitudes-list"></div>
+    </div>
+
+    <!-- GIFTCARD (sub-sección) -->
+    <div id="aprosec-giftcard" style="display:none;">
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input class="search-input" type="text" id="gc-search-input" placeholder="Buscar por código o comprador..." style="flex:1;" oninput="cargarGiftCards(this.value)">
+        <button onclick="cargarGiftCards('')" style="padding:10px 14px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">🔄</button>
+      </div>
+      <div id="gc-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
+      <div id="gc-list"></div>
     </div>
 
     <!-- COLA (sub-sección) -->
@@ -1054,7 +1072,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw0vym1YuSfr2PBq84Xd7Rrr02l3ehKvT9VnMBVXVKMDBDpiG3Td_B-s5SYBroAmYNX8g/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby4Ca00JsSSrfxPO11XYUQymJRvmlpKmMdOIuB3a7qxMW4pvTYdnYh3Zq2hch2JWkXKuw/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -1132,6 +1150,12 @@ function enviarAlScript(data){
 }
 
 async function init(){
+  // Splash screen
+  setTimeout(()=>{
+    const splash=document.getElementById('splash-inv');
+    if(splash){ splash.style.transition='opacity .5s'; splash.style.opacity='0'; setTimeout(()=>splash.style.display='none',500); }
+  }, 1600);
+
   showMsg('loading','<span class="spinner">↻</span> Cargando...');
   try{
     const [t1,t2,t3]=await Promise.all([
@@ -1160,6 +1184,8 @@ async function init(){
     setSyncTimestamp();
     showMsg('ok','✓ '+PRODUCTOS.length+' productos cargados');
     setTimeout(()=>clearMsg(),3000);
+    // Iniciar en pestaña Tasa
+    switchTab('tasa');
   }catch(e){showMsg('err','✗ Error: '+e.message);}
 }
 
@@ -2455,23 +2481,22 @@ function switchStock(sub){
 function switchAprobaciones(sub){
   document.querySelectorAll('.apro-sub-btn').forEach(b=>{
     const active=b.dataset.sub===sub;
-    const colors={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)',Cola:'var(--warn)'};
-    const bgs={Pendiente:'#2a1f0a',Pagado:'var(--surface2)',Reprobado:'#2a1010',Cola:'#2a1f0a'};
+    const colors={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)',Cola:'var(--warn)',GiftCard:'#cc66ff'};
+    const bgs={Pendiente:'#2a1f0a',Pagado:'var(--surface2)',Reprobado:'#2a1010',Cola:'#2a1f0a',GiftCard:'#1a0f2b'};
     b.style.borderColor=active?colors[sub]:'var(--border)';
     b.style.background=active?bgs[sub]:'var(--surface2)';
     b.style.color=active?colors[sub]:'var(--muted)';
   });
-  // Mostrar búsqueda solo para Aprobadas y Reprobadas
   const searchEl=document.getElementById('historial-apro-search');
   if(searchEl){
     searchEl.style.display=(sub==='Pagado'||sub==='Reprobado')?'block':'none';
-    if(sub==='Pagado'||sub==='Reprobado'){
-      document.getElementById('historial-apro-input').value='';
-    }
+    if(sub==='Pagado'||sub==='Reprobado') document.getElementById('historial-apro-input').value='';
   }
-  document.getElementById('aprosec-solicitudes').style.display=sub==='Cola'?'none':'block';
+  document.getElementById('aprosec-solicitudes').style.display=(sub==='Cola'||sub==='GiftCard')?'none':'block';
   document.getElementById('aprosec-cola').style.display=sub==='Cola'?'block':'none';
+  document.getElementById('aprosec-giftcard').style.display=sub==='GiftCard'?'block':'none';
   if(sub==='Cola') cargarCola();
+  else if(sub==='GiftCard') cargarGiftCards('');
   else cargarSolicitudes(sub);
 }
 
@@ -2481,7 +2506,104 @@ function refreshAprobaciones(){
   switchAprobaciones(sub);
 }
 
-// ── RESPALDO VENTA ────────────────────────────────────────────
+// ── GIFTCARD MANAGEMENT ──────────────────────────────────────
+async function cargarGiftCards(q=''){
+  const list=document.getElementById('gc-list');
+  const msg=document.getElementById('gc-msg');
+  list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">⏳ Cargando...</div>';
+  try{
+    const data=await scriptGETjson({action:'leerGiftCards', q});
+    if(!data.ok) throw new Error(data.error||'Error');
+    const rows=data.rows||[];
+    if(rows.length===0){ list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">Sin GiftCards</div>'; return; }
+    list.innerHTML=rows.map(r=>{
+      const [codigo,fecha,modalidad,montoBs,montoUsd,productos,status,comprador,,benNombre,benCel,pagoMoneda,pagoMonto,pagoRef]=r;
+      const statusColor=status==='Pendiente'?'var(--warn)':status==='Pagado'?'var(--accent)':status==='Usado'?'var(--muted)':'var(--danger)';
+      return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#cc66ff;">${codigo}</span>
+          <span style="font-size:12px;font-weight:700;color:${statusColor};background:var(--surface2);padding:4px 10px;border-radius:20px;">${status}</span>
+        </div>
+        <div style="font-size:13px;color:var(--muted);line-height:2;">
+          <div>📅 <b style="color:var(--text);">${fecha}</b></div>
+          <div>📦 <b style="color:var(--text);">${modalidad}</b> · $${montoUsd} · Bs ${montoBs}</div>
+          <div>🛍️ <b style="color:var(--text);">${productos||'—'}</b></div>
+          <div>👤 Comprador: <b style="color:var(--text);">${comprador}</b></div>
+          <div>🎁 Beneficiario: <b style="color:var(--text);">${benNombre}</b> · ${benCel}</div>
+          <div>💳 Pago: <b style="color:var(--text);">${pagoMoneda} ${pagoMonto}</b> · Ref: ${pagoRef}</div>
+        </div>
+        ${status==='Pendiente'?`
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button onclick="aprobarPagoGC('${codigo}')" style="flex:1;padding:10px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">✅ Aprobar Pago</button>
+          <button onclick="editarGC('${codigo}',${JSON.stringify(r).replace(/'/g,"&apos;")})" style="padding:10px 14px;background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;">✏️</button>
+        </div>`:''}
+        ${status==='Pagado'?`
+        <div style="margin-top:12px;">
+          <button onclick="marcarUsadaGC('${codigo}')" style="width:100%;padding:10px;background:var(--surface2);border:1.5px solid var(--muted);border-radius:8px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">✓ Marcar como Usada</button>
+        </div>`:''}
+      </div>`;
+    }).join('');
+  }catch(e){
+    list.innerHTML=`<div style="color:var(--danger);text-align:center;padding:20px;">✗ ${e.message}</div>`;
+  }
+}
+
+async function aprobarPagoGC(codigo){
+  const unlock=prompt('Código de autorización:');
+  if(!unlock) return;
+  if(!USUARIOS[unlock.trim().toUpperCase()]){ alert('❌ Código incorrecto'); return; }
+  const msg=document.getElementById('gc-msg');
+  msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
+  msg.innerHTML='<span class="spinner">↻</span> Aprobando...';
+  try{
+    const fecha=new Date().toLocaleString('es-VE');
+    const res=await scriptGETjson({action:'aprobarGiftCard', codigo, usuario:USUARIOS[unlock.trim().toUpperCase()], fecha_aprobacion:fecha});
+    if(!res.ok) throw new Error(res.error||'Error');
+    // Notificar comprador
+    try{
+      const wb1=new FormData();
+      wb1.append('celular',res.comp_cel||'');
+      wb1.append('nombre',res.comprador||'');
+      wb1.append('mensaje',`Hola ${res.comprador||''} Somos IKOA Tu GiftCard fue procesada correctamente`);
+      await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:wb1,mode:'no-cors'});
+    }catch(e){}
+    // Notificar beneficiario WhatsApp
+    try{
+      const wb2=new FormData();
+      wb2.append('celular',res.ben_cel||'');
+      wb2.append('nombre',res.ben_nombre||'');
+      wb2.append('mensaje',`Hola ${res.ben_nombre||''} Somos IKOA Tienes una GiftCard disponible Recibiras los detalles por correo`);
+      await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:wb2,mode:'no-cors'});
+    }catch(e){}
+    // Notificar beneficiario correo
+    try{
+      const wb3=new FormData();
+      wb3.append('nombre',res.ben_nombre||'');
+      wb3.append('celular',res.ben_correo||'');
+      wb3.append('mensaje',`GiftCard ${codigo} aprobada para ${res.ben_nombre||''}`);
+      await fetch('https://hook.us2.make.com/gb8kns1v2r16u068i2qxmxsa6zfq8h76',{method:'POST',body:wb3,mode:'no-cors'});
+    }catch(e){}
+    msg.style.color='var(--accent)'; msg.innerHTML=`✅ GiftCard ${codigo} aprobada`;
+    setTimeout(()=>{ msg.style.display='none'; cargarGiftCards(''); },2000);
+  }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
+}
+
+async function marcarUsadaGC(codigo){
+  const unlock=prompt('Código de autorización:');
+  if(!unlock) return;
+  if(!USUARIOS[unlock.trim().toUpperCase()]){ alert('❌ Código incorrecto'); return; }
+  const msg=document.getElementById('gc-msg');
+  msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
+  msg.innerHTML='<span class="spinner">↻</span> Procesando...';
+  try{
+    const res=await scriptGETjson({action:'marcarGiftCardUsada', codigo, fecha_uso:new Date().toLocaleString('es-VE')});
+    if(!res.ok) throw new Error(res.error||'Error');
+    msg.style.color='var(--accent)'; msg.innerHTML=`✅ GiftCard ${codigo} marcada como usada`;
+    setTimeout(()=>{ msg.style.display='none'; cargarGiftCards(''); },2000);
+  }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
+}
+
+// ── FIN GIFTCARD MANAGEMENT ──────────────────────────────────
 let rvCodigoPendiente=null;
 
 function switchRespaldo(sub){
