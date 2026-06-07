@@ -201,12 +201,11 @@ main{max-width:480px;margin:0 auto;padding:16px;}
     <div id="s4-secciones" style="margin-bottom:12px;">
       <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:700;">Categorías</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <button class="opt-btn" id="sec-comfy" onclick="selectSeccion('comfy')">👕 COMFY</button>
+        <button class="opt-btn" id="sec-comfy" onclick="selectSeccion('comfy')">👕 MEGA PROMO COMFY</button>
         <button class="opt-btn" id="sec-fullcomfy" onclick="selectSeccion('fullcomfy')">🛡️ FULL COMFY</button>
-        <button class="opt-btn" id="sec-licra" onclick="selectSeccion('licra')">🌊 LICRA</button>
-        <button class="opt-btn" id="sec-coleccion" onclick="selectSeccion('coleccion')">🎨 COLECCIÓN</button>
-        <button class="opt-btn" id="sec-zapatos" onclick="selectSeccion('zapatos')">👟 ZAPATOS</button>
-        <button class="opt-btn" id="sec-toalla" onclick="selectSeccion('toalla')">🏖️ TOALLA</button>
+        <button class="opt-btn" id="sec-licra" onclick="selectSeccion('licra')">🌊 LICRA PROTECT</button>
+        <button class="opt-btn" id="sec-coleccion" onclick="selectSeccion('coleccion')">🎨 LICRA COLECCIÓN</button>
+        <button class="opt-btn" id="sec-toalla" onclick="selectSeccion('toalla')" style="grid-column:1/-1;">🏖️ TOALLA</button>
       </div>
     </div>
 
@@ -547,12 +546,11 @@ function validarStep3(){
 // ── STEP 4 PRODUCTOS ─────────────────────────────────────────
 let carritoGC=[];
 const DEPTOS_MAP={
-  comfy:['COMFY','Comfy','comfy'],
-  fullcomfy:['FULL COMFY','Full Comfy','fullcomfy','FULLCOMFY'],
-  licra:['LICRA','Licra','licra'],
-  coleccion:['COLECCION','Coleccion','coleccion','COLECCIÓN','Colección'],
-  zapatos:['ZAPATOS','Zapatos','zapatos','SHOES','Shoes'],
-  toalla:['TOALLA','Toalla','toalla']
+  comfy:['COMFY11','2PACK.COMFY','3PACK.COMFY','4PACK.COMFY'],
+  fullcomfy:['COMFY01','2PACK.C.01.40OFF','3PACK.C.01.40OFF','4PACK.C.01.40OFF'],
+  licra:['LICRA01','2PACK.L.01','3PACK.L.01','4PACK.L.01'],
+  coleccion:['CAMPINGBLACK','CAMPINGCAMO','CAMPINGSELVA','CAMPINGBLACKDRESS','CAMPINGCAMODRESS','CAMPINGSELVADRESS','CAMPINGBLACKCORTAVIENTO','CAMPINGCAMOCORTAVIENTO','CAMPINGSELVACORTAVIENTO','NAUTICAPINK','NAUTICAMARINO','NAUTICAMINTJACK','NAUTICABLACKJACK','NAUTICAPINKDRESS','NAUTICAMARINODRESS','NAUTICAMINTJACKDRESS','NAUTICABLACKJACKDRESS','NAUTICAPINKCORTAVIENTO','NAUTICAMARINOC ORTAVIENTO','NAUTICAMINTJACKCORTAVIENTO','NAUTICABLACKJACKCORTAVIENTO','ALPHASELVA','ALPHAGRIS','ALPHAMARINO','ALPHAPINK','ALPHASELVADRESS','ALPHAGRISDRESS','ALPHAMARINODRESS','ALPHAPINKDRESS','ALPHASELVACORTAVIENTO','ALPHAGRISCORTAVIENTO','ALPHAMARINOCORTAVIENTO','ALPHAPIN KCORTAVIENTO','LICRA01','LICRA07','DRESSSER IE','CORTAVIENTOSERIE','SHORTSERIE'],
+  toalla:['TOALLA.01']
 };
 
 let todosProductosGC=[];
@@ -566,22 +564,25 @@ async function cargarProductosGC(){
 
 function selectSeccion(sec){
   document.querySelectorAll('[id^="sec-"]').forEach(b=>b.classList.remove('selected'));
-  document.getElementById('sec-'+sec).classList.add('selected');
+  const btn=document.getElementById('sec-'+sec);
+  if(btn) btn.classList.add('selected');
   const lista=document.getElementById('s4-productos-lista');
   lista.style.display='block';
 
-  const keywords=DEPTOS_MAP[sec]||[sec];
-  const filtrados=todosProductosGC.filter(p=>{
-    const depto=String(p.depto||p.codigo||'').toUpperCase();
-    const nombre=String(p.nombre||'').toUpperCase();
-    const cod=String(p.codigo||'').toUpperCase();
-    return keywords.some(k=>depto.includes(k.toUpperCase())||nombre.includes(k.toUpperCase())||cod.includes(k.toUpperCase()));
-  });
+  const codigos=(DEPTOS_MAP[sec]||[]).map(c=>c.toUpperCase().trim());
+  const filtrados=todosProductosGC.filter(p=>codigos.includes(String(p.codigo||'').toUpperCase().trim()));
 
   if(filtrados.length===0){
     lista.innerHTML='<div style="text-align:center;color:var(--muted);padding:16px;font-size:13px;">Sin productos en esta categoría</div>';
     return;
   }
+
+  // Ordenar según el orden definido en DEPTOS_MAP
+  filtrados.sort((a,b)=>{
+    const ia=codigos.indexOf(String(a.codigo||'').toUpperCase().trim());
+    const ib=codigos.indexOf(String(b.codigo||'').toUpperCase().trim());
+    return ia-ib;
+  });
 
   lista.innerHTML=`<div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:700;">Productos</div>`+
   `<div style="display:flex;flex-direction:column;gap:8px;">${
