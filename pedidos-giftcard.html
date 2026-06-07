@@ -81,8 +81,180 @@ main{max-width:480px;margin:0 auto;padding:16px;}
   <div class="gift-badge">🎁 GiftCard</div>
 </header>
 
-<main id="main-content" style="display:none;">
-  <div class="prog" id="prog-bar"></div>
+<!-- PANTALLA SELECCION -->
+<div id="pantalla-seleccion" style="display:none;padding:32px 20px;max-width:480px;margin:0 auto;">
+  <div style="text-align:center;margin-bottom:32px;">
+    <div style="font-size:48px;margin-bottom:12px;">🎁</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--text);">GiftCard IKOA</div>
+    <div style="font-size:13px;color:var(--muted);margin-top:6px;">¿Qué deseas hacer?</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <button onclick="iniciarCompra()" style="padding:20px;background:linear-gradient(135deg,var(--gift),#0055cc);border:none;border-radius:14px;color:#fff;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;">
+      <span style="font-size:32px;">🛍️</span>
+      <div>
+        <div>Comprar GiftCard</div>
+        <div style="font-size:12px;font-weight:400;opacity:.8;margin-top:2px;">Regala una GiftCard a alguien especial</div>
+      </div>
+    </button>
+    <button onclick="iniciarReclamar()" style="padding:20px;background:var(--surface);border:2px solid var(--gift);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;">
+      <span style="font-size:32px;">🎁</span>
+      <div>
+        <div style="color:var(--gift);">Reclamar GiftCard</div>
+        <div style="font-size:12px;font-weight:400;color:var(--muted);margin-top:2px;">Tienes un código GiftCard y quieres usarlo</div>
+      </div>
+    </button>
+  </div>
+</div>
+
+<!-- FLUJO RECLAMAR -->
+<div id="flujo-reclamar" style="display:none;">
+  <main style="max-width:480px;margin:0 auto;padding:16px;">
+    <div class="prog" id="prog-bar-r"></div>
+
+    <!-- R-STEP 1: CODIGO -->
+    <div class="step active" id="rstep1">
+      <div class="step-header">
+        <div class="step-num">Paso 1 de 5</div>
+        <div class="step-title">Ingresa tu código</div>
+      </div>
+      <div class="card">
+        <div class="field-group">
+          <div class="field-label">Código GiftCard *</div>
+          <input class="field-input" type="text" id="r-codigo" placeholder="GC-0001" style="text-transform:uppercase;font-size:20px;letter-spacing:3px;text-align:center;">
+          <div id="r-codigo-err" style="display:none;color:var(--danger);font-size:13px;margin-top:6px;text-align:center;"></div>
+        </div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="volverSeleccion()">← Atrás</button>
+        <button class="btn-next" onclick="verificarCodigoGC()">Verificar →</button>
+      </div>
+    </div>
+
+    <!-- R-STEP 2: INFO GIFTCARD -->
+    <div class="step" id="rstep2">
+      <div class="step-header">
+        <div class="step-num">Paso 2 de 5</div>
+        <div class="step-title">Tu GiftCard</div>
+      </div>
+      <!-- Saldo / productos se renderizan dinámicamente -->
+      <div id="r-info-gc" style="margin-bottom:12px;"></div>
+      <!-- Categorías para monto fijo -->
+      <div id="r-secciones" style="display:none;margin-bottom:12px;">
+        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:700;">Selecciona categoría</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button class="opt-btn" id="rsec-comfy" onclick="rSelectSeccion('comfy')">👕 MEGA PROMO COMFY</button>
+          <button class="opt-btn" id="rsec-fullcomfy" onclick="rSelectSeccion('fullcomfy')">🛡️ FULL COMFY</button>
+          <button class="opt-btn" id="rsec-licra" onclick="rSelectSeccion('licra')">🌊 LICRA PROTECT</button>
+          <button class="opt-btn" id="rsec-coleccion" onclick="rSelectSeccion('coleccion')">🎨 LICRA COLECCIÓN</button>
+          <button class="opt-btn" id="rsec-toalla" onclick="rSelectSeccion('toalla')" style="grid-column:1/-1;">🏖️ TOALLA</button>
+        </div>
+      </div>
+      <!-- Lista productos -->
+      <div id="r-productos-lista" style="display:none;margin-bottom:12px;"></div>
+      <!-- Carrito -->
+      <div id="r-carrito" style="margin-bottom:12px;"></div>
+      <!-- Saldo restante -->
+      <div id="r-saldo-box" style="display:none;background:var(--surface2);border:1.5px solid var(--gift);border-radius:10px;padding:14px;text-align:center;margin-bottom:12px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Saldo restante</div>
+        <div id="r-saldo-val" style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;color:var(--gift);">$0.00</div>
+        <div id="r-diferencia-wrap" style="display:none;margin-top:6px;">
+          <div style="font-size:11px;color:var(--danger);text-transform:uppercase;letter-spacing:.06em;">Diferencia a pagar</div>
+          <div id="r-diferencia-val" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--danger);">$0.00</div>
+        </div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="rGoStep(1)">← Atrás</button>
+        <button class="btn-next" onclick="rValidarStep2()">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- R-STEP 3: DATOS PERSONALES -->
+    <div class="step" id="rstep3">
+      <div class="step-header">
+        <div class="step-num">Paso 3 de 5</div>
+        <div class="step-title">Tus datos personales</div>
+      </div>
+      <div class="card">
+        <div class="field-group">
+          <div class="field-label">Nombre y Apellido *</div>
+          <input class="field-input" type="text" id="r-nombre" placeholder="Nombre Apellido">
+          <div class="err-msg" id="err-r-nombre" style="display:none;color:var(--danger);font-size:12px;margin-top:4px;">Ingresa tu nombre</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Correo electrónico *</div>
+          <input class="field-input" type="email" id="r-correo" placeholder="ejemplo@correo.com">
+          <div class="err-msg" id="err-r-correo" style="display:none;color:var(--danger);font-size:12px;margin-top:4px;">Ingresa un correo válido</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Cédula *</div>
+          <div style="display:flex;gap:8px;">
+            <select class="field-input" id="r-cedula-tipo" style="flex:0 0 80px;">
+              <option value="V-">V-</option><option value="E-">E-</option><option value="J-">J-</option>
+            </select>
+            <input class="field-input" type="text" id="r-cedula-num" placeholder="12345678" inputmode="numeric">
+          </div>
+          <div class="err-msg" id="err-r-cedula" style="display:none;color:var(--danger);font-size:12px;margin-top:4px;">Ingresa tu cédula</div>
+        </div>
+        <div class="field-group" style="margin-bottom:0;">
+          <div class="field-label">WhatsApp *</div>
+          <div style="display:flex;gap:8px;">
+            <select class="field-input" id="r-cel-pais" style="flex:0 0 110px;">
+              <option value="+58">🇻🇪 +58</option><option value="+1">🇺🇸 +1</option><option value="+57">🇨🇴 +57</option>
+            </select>
+            <input class="field-input" type="tel" id="r-celular-num" placeholder="4141234567" inputmode="numeric">
+          </div>
+          <div class="err-msg" id="err-r-celular" style="display:none;color:var(--danger);font-size:12px;margin-top:4px;">Ingresa un número válido</div>
+        </div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="rGoStep(2)">← Atrás</button>
+        <button class="btn-next" onclick="rValidarStep3()">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- R-STEP 4: AGENCIA -->
+    <div class="step" id="rstep4">
+      <div class="step-header">
+        <div class="step-num">Paso 4 de 5</div>
+        <div class="step-title">Entrega</div>
+      </div>
+      <div id="r-agencia-content" style="font-size:13px;color:var(--muted);padding:12px;">⏳ Cargando agencias...</div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="rGoStep(3)">← Atrás</button>
+        <button class="btn-next" onclick="rValidarStep4()">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- R-STEP 5: PAGO / CONFIRMACION -->
+    <div class="step" id="rstep5">
+      <div class="step-header">
+        <div class="step-num">Paso 5 de 5</div>
+        <div class="step-title">Confirmar</div>
+      </div>
+      <div id="r-resumen" style="margin-bottom:16px;"></div>
+      <div id="r-pago-wrap" style="display:none;margin-bottom:16px;">
+        <div class="card" style="background:#0d1520;border:1.5px solid #0088ff;">
+          <div style="font-size:13px;font-weight:700;color:#44aaff;margin-bottom:12px;">💵 Diferencia a pagar</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+            <button class="opt-btn" id="r-pm-bs" onclick="rSelectPago('bs')">🏦 Bolívares</button>
+            <button class="opt-btn" id="r-pm-usd" onclick="rSelectPago('usd')">💵 Divisa</button>
+          </div>
+          <div id="r-pago-ref-wrap" style="display:none;">
+            <div class="field-label" style="margin-bottom:6px;" id="r-pago-ref-label">Número de referencia</div>
+            <input class="field-input" type="text" id="r-pago-ref" placeholder="Número de confirmación">
+          </div>
+        </div>
+      </div>
+      <button class="btn-send" id="r-btn-whatsapp" onclick="rEnviarWhatsApp()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Enviar por WhatsApp
+      </button>
+      <button id="r-btn-sin-whatsapp" onclick="rEnviarSinWhatsApp()" style="width:100%;padding:16px;background:transparent;border:2px solid var(--border);border-radius:14px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;margin-top:10px;">
+        Continuar sin WhatsApp
+      </button>
+    </div>
+  </main>
+</div>
 
   <!-- STEP 1: DATOS COMPRADOR -->
   <div class="step active" id="step1">
@@ -389,7 +561,7 @@ main{max-width:480px;margin:0 auto;padding:16px;}
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbw0vym1YuSfr2PBq84Xd7Rrr02l3ehKvT9VnMBVXVKMDBDpiG3Td_B-s5SYBroAmYNX8g/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycby4Ca00JsSSrfxPO11XYUQymJRvmlpKmMdOIuB3a7qxMW4pvTYdnYh3Zq2hch2JWkXKuw/exec';
 const WHATSAPP_NUM='584149450742';
 const WEBHOOK_NOTIFY='https://hook.us2.make.com/f3mbneb3oliah6tv4ut64rb6x1pamiwa';
 const TOTAL_STEPS=7;
@@ -442,8 +614,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
       if(!v.ok){ showBloq(v.error==='usado'?'Este link ya fue utilizado.':v.error==='expirado'?'Este link ha expirado.':'Link inválido.'); return; }
       tokenActual=token;
       document.getElementById('main-header').style.display='block';
-      document.getElementById('main-content').style.display='block';
-      updateProg(1);
+      document.getElementById('pantalla-seleccion').style.display='block';
       // Precargar productos y tasa BCV
       try{
         const pd=await scriptGETjson({action:'leerPrecios'});
@@ -791,7 +962,334 @@ async function enviarWhatsApp(){
   document.getElementById('pantalla-exito').style.display='flex';
 }
 
-// Auto-uppercase
+// ── SELECCION INICIAL ─────────────────────────────────────────
+function iniciarCompra(){
+  document.getElementById('pantalla-seleccion').style.display='none';
+  document.getElementById('main-content').style.display='block';
+  updateProg(1);
+}
+
+function iniciarReclamar(){
+  document.getElementById('pantalla-seleccion').style.display='none';
+  document.getElementById('flujo-reclamar').style.display='block';
+  rUpdateProg(1);
+}
+
+function volverSeleccion(){
+  document.getElementById('flujo-reclamar').style.display='none';
+  document.getElementById('main-content').style.display='none';
+  document.getElementById('pantalla-seleccion').style.display='block';
+}
+
+// ── RECLAMAR GIFTCARD ─────────────────────────────────────────
+let gcData=null; // datos de la GiftCard verificada
+let rCarrito=[];
+let rPagoSel='';
+
+function rUpdateProg(step){
+  const bar=document.getElementById('prog-bar-r');
+  if(!bar) return;
+  bar.innerHTML='';
+  for(let i=1;i<=5;i++){
+    const d=document.createElement('div');
+    d.className='prog-dot'+(i<step?' done':i===step?' active':'');
+    bar.appendChild(d);
+  }
+}
+
+function rGoStep(n){
+  document.querySelectorAll('#flujo-reclamar .step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('rstep'+n).classList.add('active');
+  rUpdateProg(n);
+  window.scrollTo(0,0);
+  if(n===4) rCargarAgencias();
+  if(n===5) rRenderResumen();
+}
+
+async function verificarCodigoGC(){
+  const cod=document.getElementById('r-codigo').value.trim().toUpperCase();
+  const errEl=document.getElementById('r-codigo-err');
+  errEl.style.display='none';
+  if(!cod){ errEl.textContent='Ingresa tu código GiftCard'; errEl.style.display='block'; return; }
+  const btn=document.querySelector('#rstep1 .btn-next');
+  btn.disabled=true; btn.textContent='⏳ Verificando...';
+  try{
+    const data=await scriptGETjson({action:'verificarGiftCard', codigo:cod});
+    if(!data.ok){
+      errEl.textContent=data.error||'Código no válido';
+      errEl.style.display='block';
+      btn.disabled=false; btn.textContent='Verificar →';
+      return;
+    }
+    gcData=data;
+    renderInfoGC();
+    rGoStep(2);
+  }catch(e){
+    errEl.textContent='Error al verificar. Intenta de nuevo.';
+    errEl.style.display='block';
+  }
+  btn.disabled=false; btn.textContent='Verificar →';
+}
+
+function renderInfoGC(){
+  const cont=document.getElementById('r-info-gc');
+  const esMonto=gcData.modalidad==='Monto Fijo';
+  cont.innerHTML=`
+    <div class="card" style="background:#0a1520;border:1.5px solid var(--gift);">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Tu GiftCard</div>
+      <div style="font-size:24px;font-weight:700;color:var(--gift);letter-spacing:3px;">${gcData.codigo}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px;">Modalidad: <b style="color:var(--text);">${gcData.modalidad}</b></div>
+      ${esMonto?`<div style="font-size:13px;color:var(--muted);margin-top:4px;">Saldo disponible: <b style="color:#44aaff;font-size:18px;">$${Number(gcData.monto_usd).toFixed(2)}</b></div>`:`<div style="font-size:13px;color:var(--muted);margin-top:4px;">Incluye: <b style="color:var(--text);">${gcData.productos}</b></div>`}
+    </div>`;
+
+  if(esMonto){
+    // Mostrar secciones para seleccionar productos
+    document.getElementById('r-secciones').style.display='block';
+    document.getElementById('r-saldo-box').style.display='block';
+    document.getElementById('r-saldo-val').textContent='$'+Number(gcData.monto_usd).toFixed(2);
+    rCarrito=[];
+  } else {
+    // Mostrar productos incluidos
+    document.getElementById('r-secciones').style.display='none';
+    document.getElementById('r-saldo-box').style.display='none';
+    const prods=gcData.productos.split(' | ').filter(p=>p.trim());
+    document.getElementById('r-productos-lista').style.display='block';
+    document.getElementById('r-productos-lista').innerHTML=`
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:700;">Productos incluidos</div>
+      ${prods.map(p=>`<div style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:14px;font-weight:600;color:var(--text);">✅ ${p}</div>`).join('')}`;
+  }
+}
+
+function rSelectSeccion(sec){
+  document.querySelectorAll('[id^="rsec-"]').forEach(b=>b.classList.remove('selected'));
+  const btn=document.getElementById('rsec-'+sec);
+  if(btn) btn.classList.add('selected');
+  const lista=document.getElementById('r-productos-lista');
+  lista.style.display='block';
+  const codigos=(DEPTOS_MAP[sec]||[]).map(c=>c.toUpperCase().trim());
+  const filtrados=todosProductosGC.filter(p=>codigos.includes(String(p.codigo||'').toUpperCase().trim()));
+  if(filtrados.length===0){ lista.innerHTML='<div style="color:var(--muted);padding:12px;font-size:13px;">Sin productos</div>'; return; }
+  lista.innerHTML=`<div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:700;">Productos</div>`+
+  `<div style="display:flex;flex-direction:column;gap:8px;">${filtrados.map(p=>`
+    <button onclick="rAgregarAlCarrito('${p.codigo}','${(p.nombre||p.codigo).replace(/'/g,"\\'")}',${p.precio_usd})"
+      style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;cursor:pointer;text-align:left;width:100%;"
+      onmouseover="this.style.borderColor='var(--gift)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div><div style="font-size:15px;font-weight:700;color:#fff;">${p.nombre||p.codigo}</div><div style="font-size:12px;color:var(--muted);">${p.codigo}</div></div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--gift);">$${Number(p.precio_usd).toFixed(2)}</div>
+    </button>`).join('')}</div>`;
+}
+
+function rAgregarAlCarrito(codigo, nombre, precioUsd){
+  rCarrito.push({codigo, nombre, precioUsd:Number(precioUsd)});
+  rRenderCarrito();
+}
+
+function rQuitarDelCarrito(idx){
+  rCarrito.splice(idx,1);
+  rRenderCarrito();
+}
+
+function rRenderCarrito(){
+  const cont=document.getElementById('r-carrito');
+  if(rCarrito.length===0){ cont.innerHTML=''; }
+  else {
+    let total=0;
+    cont.innerHTML=`<div style="font-size:12px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;font-weight:700;">Seleccionados</div>`+
+    rCarrito.map((p,i)=>{
+      total+=p.precioUsd;
+      return `<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:6px;">
+        <div><div style="font-size:14px;font-weight:700;">${p.nombre}</div></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--gift);">$${p.precioUsd.toFixed(2)}</span>
+          <button onclick="rQuitarDelCarrito(${i})" style="background:transparent;border:1.5px solid var(--danger);border-radius:6px;color:var(--danger);padding:4px 8px;font-size:11px;cursor:pointer;">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+    // Actualizar saldo
+    const saldo=Number(gcData.monto_usd)-total;
+    const saldoEl=document.getElementById('r-saldo-val');
+    const difWrap=document.getElementById('r-diferencia-wrap');
+    const difVal=document.getElementById('r-diferencia-val');
+    if(saldoEl){
+      if(saldo>=0){
+        saldoEl.textContent='$'+saldo.toFixed(2);
+        saldoEl.style.color='var(--gift)';
+        difWrap.style.display='none';
+      } else {
+        saldoEl.textContent='$0.00';
+        difWrap.style.display='block';
+        difVal.textContent='$'+Math.abs(saldo).toFixed(2);
+      }
+    }
+  }
+}
+
+function rValidarStep2(){
+  const esMonto=gcData.modalidad==='Monto Fijo';
+  if(esMonto && rCarrito.length===0){ alert('Selecciona al menos un producto'); return; }
+  rGoStep(3);
+}
+
+function rValidarStep3(){
+  let ok=true;
+  ['err-r-nombre','err-r-correo','err-r-cedula','err-r-celular'].forEach(id=>document.getElementById(id).style.display='none');
+  const nombre=document.getElementById('r-nombre').value.trim();
+  const correo=document.getElementById('r-correo').value.trim();
+  const cedula=document.getElementById('r-cedula-num').value.trim();
+  const celular=document.getElementById('r-celular-num').value.trim();
+  if(!nombre){ document.getElementById('err-r-nombre').style.display='block'; ok=false; }
+  if(!isValidEmail(correo)){ document.getElementById('err-r-correo').style.display='block'; ok=false; }
+  if(!cedula){ document.getElementById('err-r-cedula').style.display='block'; ok=false; }
+  if(!isValidCel(celular)){ document.getElementById('err-r-celular').style.display='block'; ok=false; }
+  if(!ok) return;
+  rGoStep(4);
+}
+
+let rAgencias=[], rAgenciaSeleccionada='';
+async function rCargarAgencias(){
+  const cont=document.getElementById('r-agencia-content');
+  cont.innerHTML='<div style="color:var(--muted);font-size:13px;">⏳ Cargando agencias...</div>';
+  try{
+    const url=`https://docs.google.com/spreadsheets/d/1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0/gviz/tq?tqx=out:json&sheet=AGENCIAS&cachebust=${Date.now()}`;
+    const res=await fetch(url);
+    const text=await res.text();
+    const json=JSON.parse(text.replace(/^[^(]+\(/,'').replace(/\);\s*$/,''));
+    rAgencias=(json.table.rows||[]).filter(r=>r.c&&r.c[0]).map(r=>({
+      estado:String(r.c[0]?.v||'').trim(), transportista:String(r.c[1]?.v||'').trim(),
+      nombre:String(r.c[2]?.v||'').trim(), ciudad:String(r.c[3]?.v||'').trim()
+    }));
+    const estados=[...new Set(rAgencias.map(a=>a.estado))].sort();
+    cont.innerHTML=`
+      <div class="card">
+        <div class="card-title">Estado</div>
+        <select class="field-input" id="r-estado-sel" onchange="rFiltrarAgencias(this.value)">
+          <option value="">Selecciona estado...</option>
+          ${estados.map(e=>`<option value="${e}">${e}</option>`).join('')}
+        </select>
+      </div>
+      <div id="r-agencias-lista" style="margin-top:8px;"></div>`;
+  }catch(e){ cont.innerHTML='<div style="color:var(--danger);font-size:13px;">Error cargando agencias</div>'; }
+}
+
+function rFiltrarAgencias(estado){
+  const lista=document.getElementById('r-agencias-lista');
+  const filtradas=rAgencias.filter(a=>a.estado===estado);
+  lista.innerHTML=filtradas.map(a=>`
+    <button onclick="rSeleccionarAgencia('${a.transportista}','${a.nombre}','${a.ciudad}')"
+      class="opt-btn ${rAgenciaSeleccionada===a.transportista+'—'+a.nombre+' ('+a.ciudad+')'?'selected':''}"
+      style="margin-bottom:8px;text-align:left;padding:12px;">
+      <b>${a.transportista}</b> · ${a.nombre} (${a.ciudad})
+    </button>`).join('');
+}
+
+function rSeleccionarAgencia(transportista, nombre, ciudad){
+  rAgenciaSeleccionada=`${transportista} — ${nombre} (${ciudad})`;
+  rFiltrarAgencias(document.getElementById('r-estado-sel').value);
+}
+
+function rValidarStep4(){
+  if(!rAgenciaSeleccionada){ alert('Selecciona una agencia'); return; }
+  rGoStep(5);
+}
+
+function rRenderResumen(){
+  const nombre=document.getElementById('r-nombre').value.trim().toUpperCase();
+  const correo=document.getElementById('r-correo').value.trim();
+  const cedula=document.getElementById('r-cedula-tipo').value+document.getElementById('r-cedula-num').value.trim();
+  const celular=document.getElementById('r-cel-pais').value+document.getElementById('r-celular-num').value.trim();
+  const esMonto=gcData.modalidad==='Monto Fijo';
+  let totalCarrito=esMonto?rCarrito.reduce((s,p)=>s+p.precioUsd,0):0;
+  const diferencia=esMonto?Math.max(0,totalCarrito-Number(gcData.monto_usd)):0;
+  const productosDesc=esMonto?rCarrito.map(p=>`${p.nombre}($${p.precioUsd})`).join(', '):gcData.productos;
+
+  document.getElementById('r-resumen').innerHTML=`
+    <div class="resumen-block"><b>GiftCard:</b> ${gcData.codigo}<br><b>Modalidad:</b> ${gcData.modalidad}</div>
+    <div class="resumen-block"><b>Productos:</b> ${productosDesc}</div>
+    <div class="resumen-block"><b>Nombre:</b> ${nombre}<br><b>Cédula:</b> ${cedula}<br><b>Celular:</b> ${celular}</div>
+    <div class="resumen-block"><b>Agencia:</b> ${rAgenciaSeleccionada}</div>
+    ${diferencia>0?`<div class="resumen-block" style="border-left:3px solid var(--danger);"><b style="color:var(--danger);">Diferencia a pagar:</b> $${diferencia.toFixed(2)}</div>`:'<div class="resumen-block" style="border-left:3px solid var(--gift);"><b style="color:var(--gift);">GiftCard cubre el total ✅</b></div>'}`;
+
+  // Mostrar sección de pago si hay diferencia
+  if(diferencia>0){
+    document.getElementById('r-pago-wrap').style.display='block';
+  } else {
+    document.getElementById('r-pago-wrap').style.display='none';
+  }
+}
+
+function rSelectPago(tipo){
+  rPagoSel=tipo;
+  document.getElementById('r-pm-bs').classList.toggle('selected',tipo==='bs');
+  document.getElementById('r-pm-usd').classList.toggle('selected',tipo==='usd');
+  document.getElementById('r-pago-ref-wrap').style.display='block';
+  document.getElementById('r-pago-ref-label').textContent=tipo==='bs'?'N° Referencia (Bs)':'N° Referencia (Divisa)';
+}
+
+async function rGuardarPedido(){
+  const nombre=document.getElementById('r-nombre').value.trim().toUpperCase();
+  const correo=document.getElementById('r-correo').value.trim();
+  const cedula=document.getElementById('r-cedula-tipo').value+document.getElementById('r-cedula-num').value.trim();
+  const celular=document.getElementById('r-cel-pais').value+document.getElementById('r-celular-num').value.trim();
+  const esMonto=gcData.modalidad==='Monto Fijo';
+  let totalCarrito=esMonto?rCarrito.reduce((s,p)=>s+p.precioUsd,0):0;
+  const diferencia=esMonto?Math.max(0,totalCarrito-Number(gcData.monto_usd)):0;
+  const productosDesc=esMonto?rCarrito.map(p=>`${p.nombre}(${p.codigo})`).join(' | '):gcData.productos;
+  let pagoMoneda='GiftCard', pagoMonto='0', pagoRef=gcData.codigo;
+  if(diferencia>0){
+    pagoMoneda=rPagoSel==='bs'?'Bs':'Divisa';
+    pagoMonto=diferencia.toFixed(2);
+    pagoRef=document.getElementById('r-pago-ref').value.trim();
+  }
+  try{
+    await scriptGETjson({
+      action:'addSolicitud',
+      fecha:getFechaHora(),
+      nombre, correo, cedula, celular,
+      modelo:'GiftCard',
+      manga:'', capucha:'', pack:'1',
+      tela:gcData.codigo, vinil:'',
+      piezas:productosDesc,
+      agencia:rAgenciaSeleccionada,
+      retira_nombre:nombre, retira_ci:cedula, retira_cel:celular,
+      pago_moneda:pagoMoneda, pago_monto:pagoMonto, pago_ref:pagoRef
+    });
+  }catch(e){ console.warn('Error guardando pedido:',e); }
+  // Notificar webhook
+  try{
+    const msg=`Nueva solicitud GiftCard. Cliente ${nombre}. Codigo: ${gcData.codigo}. Agencia: ${rAgenciaSeleccionada}`;
+    const wb=new FormData();
+    wb.append('celular',celular); wb.append('nombre',nombre); wb.append('mensaje',msg);
+    await fetch('https://hook.us2.make.com/f3mbneb3oliah6tv4ut64rb6x1pamiwa',{method:'POST',body:wb,mode:'no-cors'});
+  }catch(e){}
+}
+
+async function rEnviarSinWhatsApp(){
+  const diferencia=gcData.modalidad==='Monto Fijo'?Math.max(0,rCarrito.reduce((s,p)=>s+p.precioUsd,0)-Number(gcData.monto_usd)):0;
+  if(diferencia>0 && !rPagoSel){ alert('Selecciona el método de pago'); return; }
+  if(diferencia>0 && !document.getElementById('r-pago-ref').value.trim()){ alert('Ingresa el número de referencia'); return; }
+  document.getElementById('r-btn-sin-whatsapp').disabled=true;
+  document.getElementById('r-btn-whatsapp').disabled=true;
+  await rGuardarPedido();
+  await marcarTokenUsado();
+  document.getElementById('pantalla-exito').style.display='flex';
+}
+
+async function rEnviarWhatsApp(){
+  const diferencia=gcData.modalidad==='Monto Fijo'?Math.max(0,rCarrito.reduce((s,p)=>s+p.precioUsd,0)-Number(gcData.monto_usd)):0;
+  if(diferencia>0 && !rPagoSel){ alert('Selecciona el método de pago'); return; }
+  if(diferencia>0 && !document.getElementById('r-pago-ref').value.trim()){ alert('Ingresa el número de referencia'); return; }
+  document.getElementById('r-btn-whatsapp').disabled=true;
+  document.getElementById('r-btn-sin-whatsapp').disabled=true;
+  await rGuardarPedido();
+  await marcarTokenUsado();
+  const nombre=document.getElementById('r-nombre').value.trim().toUpperCase();
+  const celular=document.getElementById('r-cel-pais').value+document.getElementById('r-celular-num').value.trim();
+  const productosDesc=gcData.modalidad==='Monto Fijo'?rCarrito.map(p=>`${p.nombre}`).join(', '):gcData.productos;
+  const msg=`*GiftCard IKOA*\n\nCodigo: ${gcData.codigo}\nProductos: ${productosDesc}\nAgencia: ${rAgenciaSeleccionada}`;
+  window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(msg)}`,'_blank');
+  document.getElementById('pantalla-exito').style.display='flex';
+}
+
 document.addEventListener('input',function(e){
   const el=e.target;
   if(el.tagName==='INPUT'&&el.type==='text'&&!el.id.includes('correo')&&!el.id.includes('email')){
