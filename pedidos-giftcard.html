@@ -1330,6 +1330,8 @@ async function rEnviarSinWhatsApp(){
   document.getElementById('r-btn-sin-whatsapp').disabled=true;
   document.getElementById('r-btn-whatsapp').disabled=true;
   await rGuardarPedido();
+  // Marcar GiftCard como usada automáticamente
+  try{ await scriptGETjson({action:'marcarGiftCardUsada', codigo:gcData.codigo, fecha_uso:getFechaHora()}); }catch(e){}
   await marcarTokenUsado();
   document.getElementById('pantalla-exito').style.display='flex';
 }
@@ -1341,6 +1343,8 @@ async function rEnviarWhatsApp(){
   document.getElementById('r-btn-whatsapp').disabled=true;
   document.getElementById('r-btn-sin-whatsapp').disabled=true;
   await rGuardarPedido();
+  // Marcar GiftCard como usada automáticamente
+  try{ await scriptGETjson({action:'marcarGiftCardUsada', codigo:gcData.codigo, fecha_uso:getFechaHora()}); }catch(e){}
   await marcarTokenUsado();
   const nombre=document.getElementById('r-nombre').value.trim().toUpperCase();
   const celular=document.getElementById('r-cel-pais').value+document.getElementById('r-celular-num').value.trim();
