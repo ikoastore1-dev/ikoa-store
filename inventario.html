@@ -126,6 +126,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   <div style="font-family:'Barlow',sans-serif;font-size:38px;font-weight:700;letter-spacing:.2em;color:#ffffff;">IKOA</div>
   <div style="width:60px;height:3px;background:linear-gradient(135deg,var(--accent),#00b890);border-radius:2px;"></div>
   <div style="font-size:12px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;">Sistema de Gestión</div>
+  <div style="position:absolute;bottom:24px;font-size:10px;color:var(--muted);letter-spacing:.08em;text-align:center;">Designed by Ing. Johan Cazorla</div>
 </div>
 
 <!-- MODAL REPROBAR -->
@@ -377,6 +378,52 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div class="modal-btns">
       <button class="modal-cancel" onclick="document.getElementById('modal-editar-cola').classList.add('hidden')">Cancelar</button>
       <button class="modal-confirm" onclick="guardarEdicionCola()">💾 GUARDAR</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal-gc-aprobar">
+  <div class="modal">
+    <div class="modal-icon">🎁</div>
+    <div class="modal-title">Aprobar GiftCard</div>
+    <div class="modal-summary" id="gc-apro-resumen"></div>
+    <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div>
+    <input class="modal-cod-input" type="password" id="gc-apro-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarAprobarGC()">
+    <div class="modal-error" id="gc-apro-error"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="document.getElementById('modal-gc-aprobar').classList.add('hidden')">Cancelar</button>
+      <button class="modal-confirm" onclick="confirmarAprobarGC()">✓ APROBAR</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal-gc-usada">
+  <div class="modal">
+    <div class="modal-icon">✅</div>
+    <div class="modal-title">Marcar como Usada</div>
+    <div class="modal-summary" id="gc-usada-resumen"></div>
+    <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div>
+    <input class="modal-cod-input" type="password" id="gc-usada-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarUsadaGC()">
+    <div class="modal-error" id="gc-usada-error"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="document.getElementById('modal-gc-usada').classList.add('hidden')">Cancelar</button>
+      <button class="modal-confirm" onclick="confirmarUsadaGC()">✓ CONFIRMAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AUTH GENERICO -->
+<div class="modal-overlay hidden" id="modal-auth-gen">
+  <div class="modal">
+    <div class="modal-icon" id="auth-gen-icon">🔐</div>
+    <div class="modal-title" id="auth-gen-title">Autorización</div>
+    <div class="modal-subtitle" id="auth-gen-subtitle"></div>
+    <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div>
+    <input class="modal-cod-input" type="password" id="auth-gen-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarAuthGen()">
+    <div class="modal-error" id="auth-gen-error"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="cerrarAuthGen()">Cancelar</button>
+      <button class="modal-confirm" id="auth-gen-confirm" onclick="confirmarAuthGen()">✓ CONFIRMAR</button>
     </div>
   </div>
 </div>
@@ -1154,7 +1201,7 @@ async function init(){
   setTimeout(()=>{
     const splash=document.getElementById('splash-inv');
     if(splash){ splash.style.transition='opacity .5s'; splash.style.opacity='0'; setTimeout(()=>splash.style.display='none',500); }
-  }, 1600);
+  }, 2500);
 
   showMsg('loading','<span class="spinner">↻</span> Cargando...');
   try{
@@ -2015,10 +2062,8 @@ async function cargarCelApi(q='', fecha=''){
 }
 
 async function eliminarCelApi(celular, fecha){
-  if(!confirm(`Eliminar registro de ${celular}?`)) return;
-  const unlock=prompt('Codigo de autorizacion:');
+  const unlock=await mostrarAuthGen('📱','Eliminar Registro',`¿Eliminar registro de ${celular}?`);
   if(!unlock) return;
-  if(!USUARIOS[unlock.trim().toUpperCase()]){ alert('Codigo incorrecto'); return; }
   const msgEl=document.getElementById('prog-msg');
   msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
   msgEl.innerHTML='<span class="spinner">↻</span> Eliminando...';
@@ -2056,6 +2101,22 @@ async function cargarColores(app){
         </div>
       </div>`;
     }
+    if(soloTela){
+      const label=app==='toalla'?'🎨 Color':'🎨 Color de Tela';
+      html+=`<div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;margin-bottom:10px;">${label}</div>
+        <div id="lista-tela-${app}" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+          ${telas.length>0?telas.map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:8px 12px;">
+            <span style="font-size:14px;font-weight:600;">${t}</span>
+            <button onclick="eliminarColorProg('${app}','tela','${t.replace(/'/g,"\\'")}')" style="background:transparent;border:1.5px solid var(--danger);border-radius:6px;color:var(--danger);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;">✕</button>
+          </div>`).join(''):'<div style="color:var(--muted);font-size:13px;padding:8px;">Sin colores aún</div>'}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="nuevo-tela-${app}" placeholder="Nuevo color..." style="flex:1;background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;text-transform:uppercase;">
+          <button onclick="agregarColorProg('${app}','tela')" style="padding:8px 14px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">+ Agregar</button>
+        </div>
+      </div>`;
+    }
     if(!soloTela){
     html+=`<div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent2);text-transform:uppercase;margin-bottom:10px;">🖨️ Color de Vinil</div>
@@ -2082,9 +2143,8 @@ async function agregarColorProg(app, tipo){
   const inputId=`nuevo-${tipo}-${app}`;
   const val=document.getElementById(inputId)?.value.trim().toUpperCase();
   if(!val){ alert('Escribe un color primero'); return; }
-  const unlock=prompt('Código de autorización:');
+  const unlock=await mostrarAuthGen('🎨','Agregar Color',`Agregar "${val}" a ${tipo}`);
   if(!unlock) return;
-  if(!USUARIOS[unlock.trim().toUpperCase()]){ alert('❌ Código incorrecto'); return; }
   const msgEl=document.getElementById('prog-msg');
   msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
   msgEl.innerHTML='<span class="spinner">↻</span> Guardando...';
@@ -2099,10 +2159,8 @@ async function agregarColorProg(app, tipo){
 }
 
 async function eliminarColorProg(app, tipo, color){
-  if(!confirm(`¿Eliminar "${color}" de ${tipo}?`)) return;
-  const unlock=prompt('Código de autorización:');
+  const unlock=await mostrarAuthGen('🗑️','Eliminar Color',`¿Eliminar "${color}" de ${tipo}?`);
   if(!unlock) return;
-  if(!USUARIOS[unlock.trim().toUpperCase()]){ alert('❌ Código incorrecto'); return; }
   const msgEl=document.getElementById('prog-msg');
   msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
   msgEl.innerHTML='<span class="spinner">↻</span> Eliminando...';
@@ -2506,7 +2564,39 @@ function refreshAprobaciones(){
   switchAprobaciones(sub);
 }
 
-// ── GIFTCARD MANAGEMENT ──────────────────────────────────────
+// ── MODAL AUTH GENERICO ───────────────────────────────────────
+let authGenResolve=null;
+
+function mostrarAuthGen(icon, title, subtitle){
+  return new Promise(resolve=>{
+    authGenResolve=resolve;
+    document.getElementById('auth-gen-icon').textContent=icon||'🔐';
+    document.getElementById('auth-gen-title').textContent=title||'Autorización';
+    document.getElementById('auth-gen-subtitle').textContent=subtitle||'';
+    document.getElementById('auth-gen-unlock').value='';
+    document.getElementById('auth-gen-error').textContent='';
+    document.getElementById('modal-auth-gen').classList.remove('hidden');
+    setTimeout(()=>document.getElementById('auth-gen-unlock').focus(),100);
+  });
+}
+
+function confirmarAuthGen(){
+  const unlock=document.getElementById('auth-gen-unlock').value.trim().toUpperCase();
+  if(!USUARIOS[unlock]){
+    document.getElementById('auth-gen-error').textContent='❌ Código incorrecto';
+    document.getElementById('auth-gen-unlock').value='';
+    return;
+  }
+  cerrarAuthGen();
+  if(authGenResolve){ authGenResolve(unlock); authGenResolve=null; }
+}
+
+function cerrarAuthGen(){
+  document.getElementById('modal-auth-gen').classList.add('hidden');
+  if(authGenResolve){ authGenResolve(null); authGenResolve=null; }
+}
+
+// ── FIN MODAL AUTH GENERICO ───────────────────────────────────
 async function cargarGiftCards(q=''){
   const list=document.getElementById('gc-list');
   const msg=document.getElementById('gc-msg');
@@ -2534,7 +2624,7 @@ async function cargarGiftCards(q=''){
         </div>
         ${status==='Pendiente'?`
         <div style="display:flex;gap:8px;margin-top:12px;">
-          <button onclick="aprobarPagoGC('${codigo}')" style="flex:1;padding:10px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">✅ Aprobar Pago</button>
+          <button onclick="aprobarPagoGC('${codigo}',${JSON.stringify(r)})" style="flex:1;padding:10px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">✅ Aprobar Pago</button>
           <button onclick="editarGC('${codigo}',${JSON.stringify(r).replace(/'/g,"&apos;")})" style="padding:10px 14px;background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;">✏️</button>
         </div>`:''}
         ${status==='Pagado'?`
@@ -2548,57 +2638,61 @@ async function cargarGiftCards(q=''){
   }
 }
 
-async function aprobarPagoGC(codigo){
-  const unlock=prompt('Código de autorización:');
-  if(!unlock) return;
-  if(!USUARIOS[unlock.trim().toUpperCase()]){ alert('❌ Código incorrecto'); return; }
+let gcCodigoPendiente='';
+let gcDataPendiente=null;
+
+function aprobarPagoGC(codigo, rowData){
+  gcCodigoPendiente=codigo;
+  gcDataPendiente=rowData;
+  document.getElementById('gc-apro-resumen').innerHTML=
+    `<b style="color:#cc66ff;">${codigo}</b><br>Comprador: <b>${rowData[7]||''}</b><br>Pago: <b>${rowData[11]||''} ${rowData[12]||''}</b> · Ref: ${rowData[13]||''}`;
+  document.getElementById('gc-apro-unlock').value='';
+  document.getElementById('gc-apro-error').textContent='';
+  document.getElementById('modal-gc-aprobar').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('gc-apro-unlock').focus(),100);
+}
+
+async function confirmarAprobarGC(){
+  const unlock=document.getElementById('gc-apro-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('gc-apro-error');
+  if(!USUARIOS[unlock]){ errEl.textContent='❌ Código incorrecto'; document.getElementById('gc-apro-unlock').value=''; return; }
+  document.getElementById('modal-gc-aprobar').classList.add('hidden');
   const msg=document.getElementById('gc-msg');
   msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
   msg.innerHTML='<span class="spinner">↻</span> Aprobando...';
   try{
     const fecha=new Date().toLocaleString('es-VE');
-    const res=await scriptGETjson({action:'aprobarGiftCard', codigo, usuario:USUARIOS[unlock.trim().toUpperCase()], fecha_aprobacion:fecha});
+    const res=await scriptGETjson({action:'aprobarGiftCard', codigo:gcCodigoPendiente, usuario:USUARIOS[unlock], fecha_aprobacion:fecha});
     if(!res.ok) throw new Error(res.error||'Error');
-    // Notificar comprador
-    try{
-      const wb1=new FormData();
-      wb1.append('celular',res.comp_cel||'');
-      wb1.append('nombre',res.comprador||'');
-      wb1.append('mensaje',`Hola ${res.comprador||''} Somos IKOA Tu GiftCard fue procesada correctamente`);
-      await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:wb1,mode:'no-cors'});
-    }catch(e){}
-    // Notificar beneficiario WhatsApp
-    try{
-      const wb2=new FormData();
-      wb2.append('celular',res.ben_cel||'');
-      wb2.append('nombre',res.ben_nombre||'');
-      wb2.append('mensaje',`Hola ${res.ben_nombre||''} Somos IKOA Tienes una GiftCard disponible Recibiras los detalles por correo`);
-      await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:wb2,mode:'no-cors'});
-    }catch(e){}
-    // Notificar beneficiario correo
-    try{
-      const wb3=new FormData();
-      wb3.append('nombre',res.ben_nombre||'');
-      wb3.append('celular',res.ben_correo||'');
-      wb3.append('mensaje',`GiftCard ${codigo} aprobada para ${res.ben_nombre||''}`);
-      await fetch('https://hook.us2.make.com/gb8kns1v2r16u068i2qxmxsa6zfq8h76',{method:'POST',body:wb3,mode:'no-cors'});
-    }catch(e){}
-    msg.style.color='var(--accent)'; msg.innerHTML=`✅ GiftCard ${codigo} aprobada`;
+    try{ const wb1=new FormData(); wb1.append('celular',res.comp_cel||''); wb1.append('nombre',res.comprador||''); wb1.append('mensaje',`Hola ${res.comprador||''} Somos IKOA Tu GiftCard fue procesada correctamente`); await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:wb1,mode:'no-cors'}); }catch(e){}
+    try{ const wb2=new FormData(); wb2.append('celular',res.ben_cel||''); wb2.append('nombre',res.ben_nombre||''); wb2.append('mensaje',`Hola ${res.ben_nombre||''} Somos IKOA Tienes una GiftCard disponible Recibiras los detalles por correo`); await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:wb2,mode:'no-cors'}); }catch(e){}
+    try{ const wb3=new FormData(); wb3.append('nombre',res.ben_nombre||''); wb3.append('celular',res.ben_correo||''); wb3.append('mensaje',`GiftCard ${gcCodigoPendiente} aprobada para ${res.ben_nombre||''}`); await fetch('https://hook.us2.make.com/gb8kns1v2r16u068i2qxmxsa6zfq8h76',{method:'POST',body:wb3,mode:'no-cors'}); }catch(e){}
+    msg.style.color='var(--accent)'; msg.innerHTML=`✅ GiftCard ${gcCodigoPendiente} aprobada`;
     setTimeout(()=>{ msg.style.display='none'; cargarGiftCards(''); },2000);
   }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
 }
 
-async function marcarUsadaGC(codigo){
-  const unlock=prompt('Código de autorización:');
-  if(!unlock) return;
-  if(!USUARIOS[unlock.trim().toUpperCase()]){ alert('❌ Código incorrecto'); return; }
+function marcarUsadaGC(codigo){
+  gcCodigoPendiente=codigo;
+  document.getElementById('gc-usada-resumen').innerHTML=`<b style="color:#cc66ff;">${codigo}</b>`;
+  document.getElementById('gc-usada-unlock').value='';
+  document.getElementById('gc-usada-error').textContent='';
+  document.getElementById('modal-gc-usada').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('gc-usada-unlock').focus(),100);
+}
+
+async function confirmarUsadaGC(){
+  const unlock=document.getElementById('gc-usada-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('gc-usada-error');
+  if(!USUARIOS[unlock]){ errEl.textContent='❌ Código incorrecto'; document.getElementById('gc-usada-unlock').value=''; return; }
+  document.getElementById('modal-gc-usada').classList.add('hidden');
   const msg=document.getElementById('gc-msg');
   msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
   msg.innerHTML='<span class="spinner">↻</span> Procesando...';
   try{
-    const res=await scriptGETjson({action:'marcarGiftCardUsada', codigo, fecha_uso:new Date().toLocaleString('es-VE')});
+    const res=await scriptGETjson({action:'marcarGiftCardUsada', codigo:gcCodigoPendiente, fecha_uso:new Date().toLocaleString('es-VE')});
     if(!res.ok) throw new Error(res.error||'Error');
-    msg.style.color='var(--accent)'; msg.innerHTML=`✅ GiftCard ${codigo} marcada como usada`;
+    msg.style.color='var(--accent)'; msg.innerHTML=`✅ GiftCard ${gcCodigoPendiente} marcada como usada`;
     setTimeout(()=>{ msg.style.display='none'; cargarGiftCards(''); },2000);
   }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
 }
@@ -3047,11 +3141,9 @@ async function cargarCola(){
 }
 async function guardarUrgente(tipo, codigo, inputId){
   const val=document.getElementById(inputId)?.value.trim()||'';
-  // Pedir código de autorización
-  const unlock=prompt('Código de autorización:');
+  const unlock=await mostrarAuthGen('⚡','Cambiar Urgencia','Ingresa tu código para confirmar');
   if(!unlock) return;
   const unlockUp=unlock.trim().toUpperCase();
-  if(!USUARIOS[unlockUp]){ alert('❌ Código incorrecto'); return; }
   const hoja=tipo==='cola'?'COLA.P':'APROBACIONES';
   const msgEl=tipo==='cola'?document.getElementById('cola-msg'):document.getElementById('apro-msg');
   if(msgEl){ msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)'; msgEl.innerHTML='<span class="spinner">↻</span> Guardando urgencia...'; }
