@@ -804,6 +804,12 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
     <!-- GIFTCARD (sub-sección) -->
     <div id="aprosec-giftcard" style="display:none;">
+      <!-- Sub-pestañas GiftCard -->
+      <div style="display:flex;gap:6px;margin-bottom:12px;">
+        <button class="gc-sub-btn" id="gcbtn-pendiente" onclick="switchGCSub('pendiente')" style="flex:1;padding:8px;border:2px solid var(--warn);border-radius:8px;background:#1a1a10;color:var(--warn);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">⏳ Pendientes</button>
+        <button class="gc-sub-btn" id="gcbtn-espera" onclick="switchGCSub('espera')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">🎁 En Espera</button>
+        <button class="gc-sub-btn" id="gcbtn-reclamadas" onclick="switchGCSub('reclamadas')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">✅ Reclamadas</button>
+      </div>
       <div style="display:flex;gap:8px;margin-bottom:12px;">
         <input class="search-input" type="text" id="gc-search-input" placeholder="Buscar por código o comprador..." style="flex:1;" oninput="cargarGiftCards(this.value)">
         <button onclick="cargarGiftCards('')" style="padding:10px 14px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">🔄</button>
@@ -1119,7 +1125,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby4Ca00JsSSrfxPO11XYUQymJRvmlpKmMdOIuB3a7qxMW4pvTYdnYh3Zq2hch2JWkXKuw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUpyU9gfdiZ3mVhsHWMLwvQOE9SJSsYDaQJs6DWAwiPr7GO1_SKqHiSxfO1mQsZ7j5JQ/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -2554,7 +2560,7 @@ function switchAprobaciones(sub){
   document.getElementById('aprosec-cola').style.display=sub==='Cola'?'block':'none';
   document.getElementById('aprosec-giftcard').style.display=sub==='GiftCard'?'block':'none';
   if(sub==='Cola') cargarCola();
-  else if(sub==='GiftCard') cargarGiftCards('');
+  else if(sub==='GiftCard'){ gcSubActual='pendiente'; switchGCSub('pendiente'); }
   else cargarSolicitudes(sub);
 }
 
@@ -2597,18 +2603,37 @@ function cerrarAuthGen(){
 }
 
 // ── FIN MODAL AUTH GENERICO ───────────────────────────────────
+let gcSubActual='pendiente';
+
+function switchGCSub(sub){
+  gcSubActual=sub;
+  const colors={pendiente:'var(--warn)',espera:'#cc66ff',reclamadas:'var(--accent)'};
+  const bgs={pendiente:'#1a1a10',espera:'#1a0f2b',reclamadas:'var(--surface2)'};
+  document.querySelectorAll('.gc-sub-btn').forEach(b=>{
+    const id=b.id.replace('gcbtn-','');
+    const active=id===sub;
+    b.style.borderColor=active?colors[sub]:'var(--border)';
+    b.style.background=active?bgs[sub]:'var(--surface2)';
+    b.style.color=active?colors[sub]:'var(--muted)';
+  });
+  cargarGiftCards(document.getElementById('gc-search-input')?.value||'');
+}
+
 async function cargarGiftCards(q=''){
   const list=document.getElementById('gc-list');
-  const msg=document.getElementById('gc-msg');
   list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">⏳ Cargando...</div>';
+  const esPendiente=gcSubActual==='pendiente';
+  const accion=esPendiente?'leerGiftCards':'leerGiftCardsAprobadas';
+  const filtroStatus=gcSubActual==='espera'?'Pagado':'Usado';
   try{
-    const data=await scriptGETjson({action:'leerGiftCards', q});
+    const data=await scriptGETjson({action:accion, q});
     if(!data.ok) throw new Error(data.error||'Error');
-    const rows=data.rows||[];
-    if(rows.length===0){ list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">Sin GiftCards</div>'; return; }
+    let rows=data.rows||[];
+    if(!esPendiente) rows=rows.filter(r=>String(r[6]||'').trim()===filtroStatus);
+    if(rows.length===0){ list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">Sin registros</div>'; return; }
     list.innerHTML=rows.map(r=>{
       const [codigo,fecha,modalidad,montoBs,montoUsd,productos,status,comprador,,benNombre,benCel,pagoMoneda,pagoMonto,pagoRef]=r;
-      const statusColor=status==='Pendiente'?'var(--warn)':status==='Pagado'?'var(--accent)':status==='Usado'?'var(--muted)':'var(--danger)';
+      const statusColor=status==='Pendiente'?'var(--warn)':status==='Pagado'?'#cc66ff':status==='Usado'?'var(--accent)':'var(--muted)';
       return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
           <span style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#cc66ff;">${codigo}</span>

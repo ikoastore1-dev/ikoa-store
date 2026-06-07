@@ -40,6 +40,16 @@ main{max-width:480px;margin:0 auto;padding:16px;}
 .btn-send{width:100%;padding:18px;background:linear-gradient(135deg,#25d366,#128c7e);border:none;border-radius:14px;color:#fff;font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;}
 .spinner{display:inline-block;animation:spin 1s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.hidden{display:none;}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:26px 22px;width:100%;max-width:380px;}
+.modal-icon{font-size:36px;text-align:center;margin-bottom:10px;}
+.modal-title{font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;color:var(--text);text-align:center;margin-bottom:8px;}
+.modal-body{font-size:14px;color:var(--muted);text-align:center;margin-bottom:14px;line-height:1.6;}
+.modal-data{background:var(--surface2);border-radius:10px;padding:14px;font-size:14px;color:var(--text);line-height:2;margin-bottom:16px;}
+.modal-btns{display:flex;gap:10px;}
+.mbtn-cancel{flex:1;padding:13px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:16px;font-weight:600;cursor:pointer;}
+.mbtn-ok{flex:2;padding:13px;background:linear-gradient(135deg,var(--gift) 0%,#0055cc 100%);border:none;border-radius:10px;color:#fff;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;}
 .nota{background:var(--surface2);border-left:3px solid var(--gift);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;color:var(--muted);margin-bottom:12px;}
 .resumen-block{background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:10px;font-size:14px;line-height:1.8;}
 .resumen-block b{color:var(--gift);}
@@ -60,6 +70,20 @@ main{max-width:480px;margin:0 auto;padding:16px;}
 </style>
 </head>
 <body>
+
+<!-- MODAL CONFIRMACIÓN DATOS -->
+<div class="modal-overlay hidden" id="modal-confirmar-datos">
+  <div class="modal-box">
+    <div class="modal-icon">🔍</div>
+    <div class="modal-title">Confirma tus datos</div>
+    <div class="modal-body">¿Son correctos tu correo, cédula y número de WhatsApp?</div>
+    <div class="modal-data" id="modal-datos-content"></div>
+    <div class="modal-btns">
+      <button class="mbtn-cancel" onclick="cerrarModalDatos(false)">✏️ Corregir</button>
+      <button class="mbtn-ok" onclick="cerrarModalDatos(true)">✓ Sí, son correctos</button>
+    </div>
+  </div>
+</div>
 
 <!-- SPLASH -->
 <div id="splash">
@@ -567,7 +591,7 @@ main{max-width:480px;margin:0 auto;padding:16px;}
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycby4Ca00JsSSrfxPO11XYUQymJRvmlpKmMdOIuB3a7qxMW4pvTYdnYh3Zq2hch2JWkXKuw/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwUpyU9gfdiZ3mVhsHWMLwvQOE9SJSsYDaQJs6DWAwiPr7GO1_SKqHiSxfO1mQsZ7j5JQ/exec';
 const WHATSAPP_NUM='584149450742';
 const WEBHOOK_NOTIFY='https://hook.us2.make.com/f3mbneb3oliah6tv4ut64rb6x1pamiwa';
 const TOTAL_STEPS=7;
@@ -660,10 +684,34 @@ function goStep(n){
 }
 
 // ── STEP 1 ────────────────────────────────────────────────────
+function mostrarModalDatosBen(nombre, celular, correo){
+  return new Promise(resolve=>{
+    modalDatosResolve=resolve;
+    document.getElementById('modal-datos-content').innerHTML=
+      `👤 <b>Nombre:</b> <span style="color:var(--gift)">${nombre}</span><br>📱 <b>WhatsApp:</b> <span style="color:var(--gift)">${celular}</span><br>✉️ <b>Correo:</b> <span style="color:var(--gift)">${correo}</span>`;
+    document.getElementById('modal-confirmar-datos').classList.remove('hidden');
+  });
+}
+
+// ── MODAL CONFIRMACION DATOS ──────────────────────────────────
+let modalDatosResolve=null;
+function mostrarModalDatos(cedula, celular, correo){
+  return new Promise(resolve=>{
+    modalDatosResolve=resolve;
+    document.getElementById('modal-datos-content').innerHTML=
+      `✉️ <b>Correo:</b> <span style="color:var(--gift)">${correo}</span><br>📋 <b>Cédula:</b> <span style="color:var(--gift)">${cedula}</span><br>📱 <b>WhatsApp:</b> <span style="color:var(--gift)">${celular}</span>`;
+    document.getElementById('modal-confirmar-datos').classList.remove('hidden');
+  });
+}
+function cerrarModalDatos(ok){
+  document.getElementById('modal-confirmar-datos').classList.add('hidden');
+  if(modalDatosResolve){ modalDatosResolve(ok); modalDatosResolve=null; }
+}
+
 function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidCel(c){ return c.replace(/\D/g,'').length>=7; }
 
-function validarStep1(){
+async function validarStep1(){
   let ok=true;
   document.querySelectorAll('.err-msg').forEach(e=>e.style.display='none');
   document.querySelectorAll('.field-input').forEach(e=>e.classList.remove('error'));
@@ -683,6 +731,9 @@ function validarStep1(){
   gc.correo=correo;
   gc.cedula=document.getElementById('p-cedula-tipo').value+cedula;
   gc.celular=document.getElementById('p-cel-pais').value+celular;
+
+  const confirmado=await mostrarModalDatos(gc.cedula, gc.celular, gc.correo);
+  if(!confirmado) return;
   goStep(2);
 }
 
@@ -820,7 +871,7 @@ function volverDesde5(){
 }
 
 // ── STEP 5 ────────────────────────────────────────────────────
-function validarStep5(){
+async function validarStep5(){
   let ok=true;
   ['err-ben-nombre','err-ben-celular','err-ben-correo'].forEach(id=>document.getElementById(id).style.display='none');
 
@@ -836,6 +887,9 @@ function validarStep5(){
   gc.benNombre=nombre.toUpperCase();
   gc.benCelular=document.getElementById('s5-cel-pais').value+celular;
   gc.benCorreo=correo;
+
+  const confirmado=await mostrarModalDatosBen(gc.benNombre, gc.benCelular, gc.benCorreo);
+  if(!confirmado) return;
   goStep(6);
 }
 
