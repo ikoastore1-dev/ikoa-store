@@ -2145,39 +2145,75 @@ async function cargarColores(app){
   }
 }
 
-async function agregarColorProg(app, tipo){
+// Pendientes de color para operaciones en programacion
+let _colorPendiente={app:'',tipo:'',color:'',accion:''};
+
+function iniciarAgregarColor(app, tipo){
   const inputId=`nuevo-${tipo}-${app}`;
   const val=document.getElementById(inputId)?.value.trim().toUpperCase();
-  if(!val){ alert('Escribe un color primero'); return; }
-  const unlock=await mostrarAuthGen('🎨','Agregar Color',`Agregar "${val}" a ${tipo}`);
-  if(!unlock) return;
   const msgEl=document.getElementById('prog-msg');
-  msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
-  msgEl.innerHTML='<span class="spinner">↻</span> Guardando...';
-  try{
-    const res=await scriptGETjson({action:'agregarColor',hoja:HOJAS_COLORES[app],tipo,color:val});
-    if(res.ok){
-      document.getElementById(inputId).value='';
-      msgEl.style.color='var(--accent)'; msgEl.innerHTML=`✅ Color agregado: ${val}`;
-      setTimeout(()=>{ msgEl.style.display='none'; cargarColores(app); },1500);
-    } else throw new Error(res.error||'Error');
-  }catch(e){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='✗ '+e.message; }
+  if(!val){
+    msgEl.style.display='block'; msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)';
+    msgEl.innerHTML='✗ Escribe un color primero';
+    setTimeout(()=>msgEl.style.display='none',2000);
+    return;
+  }
+  _colorPendiente={app,tipo,color:val,accion:'agregar'};
+  document.getElementById('auth-gen-icon').textContent='🎨';
+  document.getElementById('auth-gen-title').textContent='Agregar Color';
+  document.getElementById('auth-gen-subtitle').textContent=`Agregar "${val}" a ${tipo}`;
+  document.getElementById('auth-gen-unlock').value='';
+  document.getElementById('auth-gen-error').textContent='';
+  document.getElementById('auth-gen-confirm').onclick=ejecutarColorProg;
+  document.getElementById('modal-auth-gen').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('auth-gen-unlock').focus(),100);
 }
 
-async function eliminarColorProg(app, tipo, color){
-  const unlock=await mostrarAuthGen('🗑️','Eliminar Color',`¿Eliminar "${color}" de ${tipo}?`);
-  if(!unlock) return;
+function iniciarEliminarColor(app, tipo, color){
+  _colorPendiente={app,tipo,color,accion:'eliminar'};
+  document.getElementById('auth-gen-icon').textContent='🗑️';
+  document.getElementById('auth-gen-title').textContent='Eliminar Color';
+  document.getElementById('auth-gen-subtitle').textContent=`¿Eliminar "${color}"?`;
+  document.getElementById('auth-gen-unlock').value='';
+  document.getElementById('auth-gen-error').textContent='';
+  document.getElementById('auth-gen-confirm').onclick=ejecutarColorProg;
+  document.getElementById('modal-auth-gen').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('auth-gen-unlock').focus(),100);
+}
+
+async function ejecutarColorProg(){
+  const unlock=document.getElementById('auth-gen-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('auth-gen-error');
+  if(!USUARIOS[unlock]){ errEl.textContent='❌ Código incorrecto'; document.getElementById('auth-gen-unlock').value=''; return; }
+  document.getElementById('modal-auth-gen').classList.add('hidden');
+  const {app,tipo,color,accion}=_colorPendiente;
   const msgEl=document.getElementById('prog-msg');
   msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
-  msgEl.innerHTML='<span class="spinner">↻</span> Eliminando...';
+  msgEl.innerHTML=`<span class="spinner">↻</span> ${accion==='agregar'?'Agregando':'Eliminando'} color...`;
   try{
-    const res=await scriptGETjson({action:'eliminarColor',hoja:HOJAS_COLORES[app],tipo,color});
+    const hoja=HOJAS_COLORES[app];
+    if(!hoja) throw new Error('Hoja no encontrada para '+app);
+    const action=accion==='agregar'?'agregarColor':'eliminarColor';
+    const res=await scriptGETjson({action, hoja, tipo, color});
     if(res.ok){
-      msgEl.style.color='var(--accent)'; msgEl.innerHTML=`✅ Color eliminado: ${color}`;
-      setTimeout(()=>{ msgEl.style.display='none'; cargarColores(app); },1500);
-    } else throw new Error(res.error||'Error');
-  }catch(e){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='✗ '+e.message; }
+      if(accion==='agregar'){
+        const inputEl=document.getElementById(`nuevo-${tipo}-${app}`);
+        if(inputEl) inputEl.value='';
+      }
+      msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)';
+      msgEl.innerHTML=`✅ Color ${accion==='agregar'?'agregado':'eliminado'}: ${color}`;
+      setTimeout(()=>{ msgEl.style.display='none'; cargarColores(app); },1800);
+    } else throw new Error(res.error||'Error desconocido');
+  }catch(e){
+    msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)';
+    msgEl.innerHTML='✗ '+e.message;
+    setTimeout(()=>msgEl.style.display='none',3000);
+  }
 }
+
+// Aliases para compatibilidad con onclick en HTML generado
+function agregarColorProg(app,tipo){ iniciarAgregarColor(app,tipo); }
+function eliminarColorProg(app,tipo,color){ iniciarEliminarColor(app,tipo,color); }
 
 async function cargarTasas(){
   try{
