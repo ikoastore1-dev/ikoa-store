@@ -195,62 +195,76 @@ window.addEventListener('load',function(){
     <div class="nav-row"><button class="btn-next" onclick="intentarPaso2()">Siguiente →</button></div>
   </div>
 
-  <!-- STEP 2: PACK -->
+  <!-- STEP 2: PRODUCTO Y PACK -->
   <div class="step" id="step2">
-    <div class="step-header"><div class="step-num">Paso 2 de 6</div><div class="step-title">¿Cuántas franelas deseas?</div></div>
+    <div class="step-header"><div class="step-num">Paso 2 de 6</div><div class="step-title">Selecciona tu producto</div></div>
     <div class="card">
-      <div class="card-title">Selecciona tu pack</div>
-      <div class="card-note">Cada pack incluye franelas del mismo color de tela y vinil.</div>
-      <div class="option-grid cols3" id="pack-grid">
-        <button class="opt-btn" onclick="selectPack(this,1)" id="btn-pack-1">1 PRENDA<span class="sub">prenda individual</span></button>
-        <button class="opt-btn" onclick="selectPack(this,2)">2 PACK<span class="sub">2 franelas</span></button>
-        <button class="opt-btn" onclick="selectPack(this,3)">3 PACK<span class="sub">3 franelas</span></button>
-        <button class="opt-btn" onclick="selectPack(this,4)">4 PACK<span class="sub">4 franelas</span></button>
-        <button class="opt-btn" onclick="selectPack(this,5)">5 PACK<span class="sub">5 franelas</span></button>
-        <button class="opt-btn" onclick="selectPack(this,6)">6 PACK<span class="sub">6 franelas</span></button>
-        <button class="opt-btn" onclick="selectPack(this,7)">7 PACK<span class="sub">7 franelas</span></button>
-      </div>
-      <div class="field-group" style="margin-bottom:0">
-        <div class="field-label">¿Otra cantidad?</div>
-        <input class="field-input" type="number" id="pack-custom" placeholder="Ej: 8, 10, 12..." min="2" max="50" oninput="setCustomPack(this.value)">
+      <div class="card-title">¿Qué deseas ordenar?</div>
+      <div class="option-grid cols1" style="gap:10px;">
+        <button class="opt-btn" id="btn-tipo-licra" onclick="selectTipoLicra(this,'licra')">🌊 LICRA PROTECT<span class="sub">Franela de compresión manga larga</span></button>
+        <button class="opt-btn" id="btn-tipo-toalla" onclick="selectTipoLicra(this,'toalla')">🏖️ TOALLA<span class="sub">Toalla de playa TOALLA.01</span></button>
       </div>
     </div>
-    <div id="pack-seleccionado" style="display:none;background:#0f2b1a;border:1px solid var(--accent);border-radius:10px;padding:12px 16px;text-align:center;margin-bottom:12px;">
-      <span style="font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="pack-label">—</span>
+    <!-- Pack (solo para licra) -->
+    <div id="pack-wrap" style="display:none;">
+      <div class="card">
+        <div class="card-title">Selecciona tu pack</div>
+        <div class="card-note">Cada pack incluye franelas del mismo color de tela y vinil.</div>
+        <div class="option-grid cols3" id="pack-grid">
+          <button class="opt-btn" onclick="selectPack(this,1)" id="btn-pack-1">1 PRENDA<span class="sub">prenda individual</span></button>
+          <button class="opt-btn" onclick="selectPack(this,2)">2 PACK<span class="sub">2 franelas</span></button>
+          <button class="opt-btn" onclick="selectPack(this,3)">3 PACK<span class="sub">3 franelas</span></button>
+          <button class="opt-btn" onclick="selectPack(this,4)">4 PACK<span class="sub">4 franelas</span></button>
+          <button class="opt-btn" onclick="selectPack(this,5)">5 PACK<span class="sub">5 franelas</span></button>
+          <button class="opt-btn" onclick="selectPack(this,6)">6 PACK<span class="sub">6 franelas</span></button>
+          <button class="opt-btn" onclick="selectPack(this,7)">7 PACK<span class="sub">7 franelas</span></button>
+        </div>
+        <div class="field-group" style="margin-bottom:0">
+          <div class="field-label">¿Otra cantidad?</div>
+          <input class="field-input" type="number" id="pack-custom" placeholder="Ej: 8, 10, 12..." min="2" max="50" oninput="setCustomPack(this.value)">
+        </div>
+      </div>
+      <div id="pack-seleccionado" style="display:none;background:#0f2b1a;border:1px solid var(--accent);border-radius:10px;padding:12px 16px;text-align:center;margin-bottom:12px;">
+        <span style="font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="pack-label">—</span>
+      </div>
     </div>
     <div class="nav-row">
       <button class="btn-back" onclick="goStep(1)">← Atrás</button>
-      <button class="btn-next" onclick="goStep(3)">Siguiente →</button>
+      <button class="btn-next" onclick="intentarDesdeStep2()">Siguiente →</button>
     </div>
   </div>
 
   <!-- STEP 3: MODELO -->
   <div class="step" id="step3">
-    <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title">Modelo · Color de Tela · Vinil</div></div>
-    <div class="card">
+    <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title" id="step3-title">Modelo · Color de Tela · Vinil</div></div>
+    <div class="card" id="capucha-card">
       <!-- MODELO FIJO - solo informativo -->
       <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center;">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Modelo seleccionado</div>
-        <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">LICRA PROTECT</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:2px;">Manga Larga</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;color:var(--accent);" id="modelo-display">LICRA PROTECT</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px;" id="modelo-sub">Manga Larga</div>
       </div>
-      <!-- CAPUCHA -->
-      <div class="card-title">¿Con o sin capucha?</div>
-      <div class="option-grid cols2">
-        <button class="opt-btn" id="btn-con-capucha" onclick="selectOpt(this,'capucha','Con Capucha')">CON CAPUCHA</button>
-        <button class="opt-btn" id="btn-sin-capucha" onclick="selectOpt(this,'capucha','Sin Capucha')">SIN CAPUCHA</button>
+      <!-- CAPUCHA - solo para licra -->
+      <div id="capucha-wrap">
+        <div class="card-title">¿Con o sin capucha?</div>
+        <div class="option-grid cols2">
+          <button class="opt-btn" id="btn-con-capucha" onclick="selectOpt(this,'capucha','Con Capucha')">CON CAPUCHA</button>
+          <button class="opt-btn" id="btn-sin-capucha" onclick="selectOpt(this,'capucha','Sin Capucha')">SIN CAPUCHA</button>
+        </div>
       </div>
     </div>
     <div class="card">
-      
       <div class="card-title">Color de Tela</div>
       <div class="option-grid cols2" id="tela-opts">
         <div style="color:var(--muted);font-size:13px;padding:8px;">⏳ Cargando colores...</div>
       </div>
-      <div class="card-title" style="margin-top:4px;">Color de Vinil</div>
-      <div id="vinil-warn" style="display:none;background:#1a1a10;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--warn);margin-bottom:8px;">⚠️ Este color de vinil puede no contrastar bien con la tela seleccionada.</div>
-      <div class="option-grid cols2" id="vinil-opts">
-        <div style="color:var(--muted);font-size:13px;padding:8px;">⏳ Cargando colores...</div>
+      <!-- Vinil - solo para licra -->
+      <div id="vinil-wrap">
+        <div class="card-title" style="margin-top:4px;">Color de Vinil</div>
+        <div id="vinil-warn" style="display:none;background:#1a1a10;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--warn);margin-bottom:8px;">⚠️ Este color de vinil puede no contrastar bien con la tela seleccionada.</div>
+        <div class="option-grid cols2" id="vinil-opts">
+          <div style="color:var(--muted);font-size:13px;padding:8px;">⏳ Cargando colores...</div>
+        </div>
       </div>
     </div>
     <div class="nav-row">
@@ -456,12 +470,64 @@ window.addEventListener('load',function(){
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwUpyU9gfdiZ3mVhsHWMLwvQOE9SJSsYDaQJs6DWAwiPr7GO1_SKqHiSxfO1mQsZ7j5JQ/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycby8HsJ82YbKJRoQaNa_QPzc9us78YNJbR_oixI-6IjdDddgkf83bHyxB8-SaDboO6N0eg/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
 let currentStep=1;
 let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:0,modelo:'Licra Protect',manga:'Manga Larga',capucha:'',tela:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:'',packs:[],pagoMoneda:'',pagoRef:'',pagoMonto:0};
+let tipoProductoLicra='licra'; // 'licra' o 'toalla'
+
+function selectTipoLicra(btn, tipo){
+  tipoProductoLicra=tipo;
+  document.querySelectorAll('[id^="btn-tipo-"]').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  // Mostrar/ocultar pack según tipo
+  document.getElementById('pack-wrap').style.display=tipo==='licra'?'block':'none';
+  if(tipo==='toalla'){
+    pedido.pack=1; pedido.modelo='Toalla'; pedido.manga=''; pedido.capucha=''; pedido.vinil='';
+  } else {
+    pedido.pack=0; pedido.modelo='Licra Protect'; pedido.manga='Manga Larga';
+  }
+}
+
+function intentarDesdeStep2(){
+  if(!tipoProductoLicra){ alert('Selecciona un producto'); return; }
+  if(tipoProductoLicra==='licra' && !pedido.pack){ alert('Selecciona la cantidad de franelas'); return; }
+  // Configurar step 3 según tipo
+  if(tipoProductoLicra==='toalla'){
+    // Toalla: solo color tela, sin capucha ni vinil
+    document.getElementById('capucha-wrap').style.display='none';
+    document.getElementById('vinil-wrap').style.display='none';
+    document.getElementById('step3-title').textContent='Color de Tela';
+    document.getElementById('modelo-display').textContent='TOALLA';
+    document.getElementById('modelo-sub').textContent='TOALLA.01';
+    // Cargar colores de toalla
+    cargarColoresParaTipo('toalla');
+  } else {
+    document.getElementById('capucha-wrap').style.display='block';
+    document.getElementById('vinil-wrap').style.display='block';
+    document.getElementById('step3-title').textContent='Modelo · Color de Tela · Vinil';
+    document.getElementById('modelo-display').textContent='LICRA PROTECT';
+    document.getElementById('modelo-sub').textContent='Manga Larga';
+    cargarColoresParaTipo('licra');
+  }
+  goStep(3);
+}
+
+async function cargarColoresParaTipo(tipo){
+  const hoja=tipo==='toalla'?'COLORES.TOALLA':'COLORES.LICRA';
+  try{
+    const data=await scriptGETjson({action:'leerColores',hoja});
+    if(!data.ok) return;
+    const telaOpts=document.getElementById('tela-opts');
+    if(telaOpts) telaOpts.innerHTML=(data.telas||[]).map(t=>`<button class="opt-btn" onclick="selectColor(this,'tela','${t}')">${t.toUpperCase()}</button>`).join('');
+    if(tipo==='licra'){
+      const vinilOpts=document.getElementById('vinil-opts');
+      if(vinilOpts) vinilOpts.innerHTML=(data.viniles||[]).map(v=>`<button class="opt-btn" onclick="selectColor(this,'vinil','${v}')">${v.toUpperCase()}</button>`).join('');
+    }
+  }catch(e){ console.warn('Error cargando colores:',e); }
+}
 // packs = [{pack, modelo, manga, capucha, tela, vinil, piezas:[]}]
 let piezaCount=0;
 let AGENCIAS_DATA=[];
@@ -739,11 +805,20 @@ function agregarOtroPack(){
 }
 async function intentarPaso4(){
   if(!validateStep(3))return;
-  const tela=pedido.tela||'';
-  const vinil=pedido.vinil||'';
-  if(sonColoresSimilares(tela,vinil)){
-    const continuar=await mostrarModalColores(tela,vinil);
-    if(!continuar) return;
+  if(tipoProductoLicra==='licra'){
+    const tela=pedido.tela||'';
+    const vinil=pedido.vinil||'';
+    if(sonColoresSimilares(tela,vinil)){
+      const continuar=await mostrarModalColores(tela,vinil);
+      if(!continuar) return;
+    }
+  }
+  // Para toalla: código fijo, 1 prenda, sin tallas individuales
+  if(tipoProductoLicra==='toalla'){
+    pedido.pack=1;
+    pedido.piezas=[{genero:'',talla:'',nombre:'',sinNombre:true,repeticiones:1}];
+    goStep(5); // Saltar paso 4 (tallas) directo a agencia
+    return;
   }
   document.getElementById('step3').classList.remove('active');
   currentStep=4;
@@ -770,10 +845,9 @@ function isValidCel(c){ return c.replace(/\D/g,'').length>=7; }
 function validateStep(n){
   if(n===2){ if(!pedido.pack||pedido.pack<1){ alert('Selecciona la cantidad de franelas'); return false; } return true; }
   if(n===3){
-    if(!pedido.modelo){ alert('Selecciona el modelo'); return false; }
-    if(!pedido.manga){ alert('Selecciona el tipo de manga'); return false; }
-    if(!pedido.capucha){ alert('Selecciona si deseas capucha'); return false; }
     if(!pedido.tela){ alert('Selecciona el color de tela'); return false; }
+    if(tipoProductoLicra==='toalla') return true; // Toalla no necesita capucha ni vinil
+    if(!pedido.capucha){ alert('Selecciona si deseas capucha'); return false; }
     if(!pedido.vinil){ alert('Selecciona el color del vinil'); return false; }
     return true;
   }
@@ -1176,18 +1250,43 @@ function buildResumen(){
 
 function buildMensaje(){
   const retiraText=pedido.mismoEnvio?'Mismo titular':`${pedido.eNombre} | C.I: ${pedido.eCi} | Cel: ${pedido.eCel}`;
-  const packsText=pedido.packs.map((pk,i)=>{
-    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conCapucha?' 🧢':''} — ${p.nombre}`).join('\n');
-    const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
-    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: LICRA PROTECT ${pk.manga}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
-  }).join('\n\n');
-  return `🛍️ *PEDIDO IKOA & BEKATE — LICRA PROTECT*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Bs'?'Bs':'$'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
+  let packsText='';
+  if(tipoProductoLicra==='toalla'){
+    packsText=`🏖️ *TOALLA*\nCodigo: TOALLA.01\nColor: ${pedido.tela}`;
+  } else {
+    packsText=pedido.packs.map((pk,i)=>{
+      const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conCapucha?' 🧢':''} — ${p.nombre}`).join('\n');
+      const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
+      return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: LICRA PROTECT ${pk.manga}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
+    }).join('\n\n');
+  }
+  return `🛍️ *PEDIDO IKOA & BEKATE — ${tipoProductoLicra==='toalla'?'TOALLA':'LICRA PROTECT'}*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Bs'?'Bs':'$'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
 }
 
 async function guardarEnSheets(){
   const retiraNombre=pedido.mismoEnvio?pedido.nombre:pedido.eNombre;
   const retiraCi=pedido.mismoEnvio?pedido.cedula:pedido.eCi;
   const retiraCel=pedido.mismoEnvio?pedido.celular:pedido.eCel;
+
+  // Toalla: guardar una sola solicitud simple
+  if(tipoProductoLicra==='toalla'){
+    try{
+      await scriptGETjson({
+        action:'addSolicitud',
+        fecha:new Date().toLocaleString('es-VE'),
+        nombre:pedido.nombre, correo:pedido.correo, cedula:pedido.cedula, celular:pedido.celular,
+        modelo:'TOALLA', manga:'', capucha:'', pack:'1',
+        tela:pedido.tela, vinil:'',
+        piezas:'TOALLA.01 - Color: '+pedido.tela,
+        agencia:pedido.agencia,
+        retira_nombre:retiraNombre, retira_ci:retiraCi, retira_cel:retiraCel,
+        subindex:'0', codigo_principal:'',
+        pago_moneda:pedido.pagoMoneda, pago_monto:String(pedido.pagoMonto||''), pago_ref:pedido.pagoRef
+      });
+    }catch(e){ console.warn('Error guardando toalla:',e); }
+    return;
+  }
+
   // Guardar una solicitud por cada pack, enlazadas por código S-N, S-N.2, S-N.3...
   let codigoPrincipal='';
   for(let i=0; i<pedido.packs.length; i++){

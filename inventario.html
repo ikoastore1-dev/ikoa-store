@@ -428,6 +428,30 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </div>
 </div>
 
+<!-- MODAL EDITAR GIFTCARD -->
+<div class="modal-overlay hidden" id="modal-editar-gc">
+  <div class="modal" style="max-width:420px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-icon">✏️</div>
+    <div class="modal-title">Editar GiftCard</div>
+    <div class="modal-subtitle" id="edit-gc-codigo" style="color:#cc66ff;font-size:16px;font-weight:700;"></div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin:14px 0;">
+      <div><div class="field-label" style="font-size:11px;color:var(--muted);margin-bottom:4px;">Comprador</div><input class="modal-cod-input" type="text" id="edit-gc-comprador" style="text-transform:uppercase;"></div>
+      <div><div class="field-label" style="font-size:11px;color:var(--muted);margin-bottom:4px;">Beneficiario Nombre</div><input class="modal-cod-input" type="text" id="edit-gc-ben-nombre" style="text-transform:uppercase;"></div>
+      <div><div class="field-label" style="font-size:11px;color:var(--muted);margin-bottom:4px;">Beneficiario Celular</div><input class="modal-cod-input" type="text" id="edit-gc-ben-cel"></div>
+      <div><div class="field-label" style="font-size:11px;color:var(--muted);margin-bottom:4px;">Beneficiario Correo</div><input class="modal-cod-input" type="email" id="edit-gc-ben-correo"></div>
+      <div><div class="field-label" style="font-size:11px;color:var(--muted);margin-bottom:4px;">Monto $</div><input class="modal-cod-input" type="number" id="edit-gc-monto-usd" step="0.01"></div>
+      <div><div class="field-label" style="font-size:11px;color:var(--muted);margin-bottom:4px;">Pago Moneda</div><input class="modal-cod-input" type="text" id="edit-gc-pago-moneda"></div>
+      <div><div class="field-label" style="font-size:11px;color:var(--muted);margin-bottom:4px;">Pago Monto</div><input class="modal-cod-input" type="text" id="edit-gc-pago-monto"></div>
+      <div><div class="field-label" style="font-size:11px;color:var(--muted);margin-bottom:4px;">Referencia</div><input class="modal-cod-input" type="text" id="edit-gc-pago-ref"></div>
+    </div>
+    <div class="modal-error" id="edit-gc-error"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="document.getElementById('modal-editar-gc').classList.add('hidden')">Cancelar</button>
+      <button class="modal-confirm" onclick="guardarEdicionGC()">✓ GUARDAR</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay hidden" id="modal-aprobacion">
   <div class="modal">
     <div class="modal-icon">✅</div>
@@ -1125,7 +1149,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUpyU9gfdiZ3mVhsHWMLwvQOE9SJSsYDaQJs6DWAwiPr7GO1_SKqHiSxfO1mQsZ7j5JQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby8HsJ82YbKJRoQaNa_QPzc9us78YNJbR_oixI-6IjdDddgkf83bHyxB8-SaDboO6N0eg/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -2689,8 +2713,9 @@ async function cargarGiftCards(q=''){
           <button onclick="editarGC('${codigo}',${JSON.stringify(r).replace(/'/g,"&apos;")})" style="padding:10px 14px;background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;">✏️</button>
         </div>`:''}
         ${status==='Pagado'?`
-        <div style="margin-top:12px;">
-          <button onclick="marcarUsadaGC('${codigo}')" style="width:100%;padding:10px;background:var(--surface2);border:1.5px solid var(--muted);border-radius:8px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">✓ Marcar como Usada</button>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button onclick="marcarUsadaGC('${codigo}')" style="flex:1;padding:10px;background:var(--surface2);border:1.5px solid var(--muted);border-radius:8px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">✓ Marcar como Usada</button>
+          <button onclick="editarGC('${codigo}',${JSON.stringify(r).replace(/'/g,"&apos;")})" style="padding:10px 14px;background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;">✏️</button>
         </div>`:''}
       </div>`;
     }).join('');
@@ -2756,6 +2781,57 @@ async function confirmarUsadaGC(){
     msg.style.color='var(--accent)'; msg.innerHTML=`✅ GiftCard ${gcCodigoPendiente} marcada como usada`;
     setTimeout(()=>{ msg.style.display='none'; cargarGiftCards(''); },2000);
   }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
+}
+
+let gcEditandoCodigo='';
+
+function editarGC(codigo, row){
+  gcEditandoCodigo=codigo;
+  document.getElementById('edit-gc-codigo').textContent=codigo;
+  document.getElementById('edit-gc-comprador').value=row[7]||'';
+  document.getElementById('edit-gc-ben-nombre').value=row[9]||'';
+  document.getElementById('edit-gc-ben-cel').value=row[10]||'';
+  document.getElementById('edit-gc-ben-correo').value=row[11]||'';
+  document.getElementById('edit-gc-monto-usd').value=row[4]||'';
+  document.getElementById('edit-gc-pago-moneda').value=row[12]||'';
+  document.getElementById('edit-gc-pago-monto').value=row[13]||'';
+  document.getElementById('edit-gc-pago-ref').value=row[14]||'';
+  document.getElementById('edit-gc-error').textContent='';
+  document.getElementById('modal-editar-gc').classList.remove('hidden');
+}
+
+async function guardarEdicionGC(){
+  const errEl=document.getElementById('edit-gc-error');
+  errEl.textContent='';
+  const msg=document.getElementById('gc-msg');
+  document.getElementById('modal-editar-gc').classList.add('hidden');
+  msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
+  msg.innerHTML='<span class="spinner">↻</span> Guardando cambios...';
+  // Si estamos en espera o reclamadas, editar A.GIFTCARD
+  const accion=gcSubActual==='pendiente'?'editarGiftCard':'editarGiftCardAprobada';
+  try{
+    const res=await scriptGETjson({
+      action:accion,
+      codigo:gcEditandoCodigo,
+      comprador:document.getElementById('edit-gc-comprador').value.trim().toUpperCase(),
+      ben_nombre:document.getElementById('edit-gc-ben-nombre').value.trim().toUpperCase(),
+      ben_cel:document.getElementById('edit-gc-ben-cel').value.trim(),
+      ben_correo:document.getElementById('edit-gc-ben-correo').value.trim(),
+      monto_usd:document.getElementById('edit-gc-monto-usd').value.trim(),
+      pago_moneda:document.getElementById('edit-gc-pago-moneda').value.trim(),
+      pago_monto:document.getElementById('edit-gc-pago-monto').value.trim(),
+      pago_ref:document.getElementById('edit-gc-pago-ref').value.trim()
+    });
+    if(res.ok){
+      msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
+      msg.innerHTML='✅ GiftCard actualizada';
+      setTimeout(()=>{ msg.style.display='none'; cargarGiftCards(''); },1800);
+    } else throw new Error(res.error||'Error');
+  }catch(e){
+    msg.style.background='#2a1010'; msg.style.color='var(--danger)';
+    msg.innerHTML='✗ '+e.message;
+    setTimeout(()=>msg.style.display='none',3000);
+  }
 }
 
 // ── FIN GIFTCARD MANAGEMENT ──────────────────────────────────
