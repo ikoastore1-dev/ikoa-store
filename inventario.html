@@ -960,10 +960,11 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <!-- TIPO DE GESTIÓN -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;">
         <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">📋 Tipo de Gestión</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">
           <button onclick="setTipoGestion('COD')" id="gbtn-COD" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">📦 COD</button>
           <button onclick="toggleEnvioModos()" id="gbtn-Enviado" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🚚 Enviado</button>
           <button onclick="setTipoGestion('Buscar')" id="gbtn-Buscar" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🔍 Buscar</button>
+          <button onclick="setTipoGestion('Imprenta')" id="gbtn-Imprenta" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🖨️ Imprenta</button>
         </div>
         <!-- Sub-modos Enviado -->
         <div id="envio-modos" style="display:none;margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -1013,6 +1014,45 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       </div>
 
       <!-- FORMULARIO DINÁMICO -->
+      <!-- IMPRENTA -->
+      <div id="imprenta-wrap" style="display:none;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
+          <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">🖨️ Buscar Documento</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <input class="field-input" type="text" id="imp-cod-input" placeholder="Ingresa el número (ej: 5294)" inputmode="numeric" style="flex:1;" onkeydown="if(event.key==='Enter')buscarDocDropbox()">
+            <button onclick="buscarDocDropbox()" style="padding:12px 18px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:14px;font-weight:700;cursor:pointer;">🔍 Buscar</button>
+          </div>
+          <div id="imp-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-bottom:8px;"></div>
+          <div id="imp-lista" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+        <!-- VISOR PDF -->
+        <div id="imp-visor-wrap" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:14px;font-weight:700;color:var(--text);" id="imp-visor-nombre"></div>
+            <button onclick="cerrarVisorPDF()" style="background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:6px 12px;font-size:12px;cursor:pointer;">✕ Cerrar</button>
+          </div>
+          <!-- Opciones de impresión -->
+          <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:12px;">
+            <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;font-weight:700;">Opciones de impresión</div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <div style="display:flex;gap:6px;align-items:center;">
+                <input type="radio" name="imp-tipo" id="imp-todo" value="todo" checked onchange="togglePaginaInput()">
+                <label for="imp-todo" style="font-size:14px;color:var(--text);cursor:pointer;">Todo el documento</label>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <input type="radio" name="imp-tipo" id="imp-pagina" value="pagina" onchange="togglePaginaInput()">
+                <label for="imp-pagina" style="font-size:14px;color:var(--text);cursor:pointer;">Página específica</label>
+              </div>
+              <div id="imp-pagina-wrap" style="display:none;display:flex;gap:6px;align-items:center;">
+                <input class="field-input" type="number" id="imp-pagina-num" min="1" placeholder="Nº página" style="width:100px;padding:8px;">
+              </div>
+            </div>
+          </div>
+          <button onclick="imprimirPDF()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:10px;color:#000;font-size:17px;font-weight:700;cursor:pointer;margin-bottom:12px;">🖨️ Imprimir</button>
+          <iframe id="imp-iframe" style="width:100%;height:600px;border:none;border-radius:8px;background:#fff;"></iframe>
+        </div>
+      </div>
+
       <div id="gestion-form-wrap" style="display:none;">
         <form id="gestion-form">
           <input type="hidden" name="tipo_operacion" id="g-tipo">
@@ -3918,18 +3958,15 @@ const WEBHOOK_URL='https://hook.us2.make.com/9vb6zab74fbbqkbv46c2coi8i7e4mnqs';
 const WEBHOOK_FOTO='https://hook.us2.make.com/6eprt8kp7xj3jj8t5ahsypbtz3hohf6c';
 
 function resetGestionBtns(){
-  // Deselecciona los 3 botones principales
-  ['COD','Enviado','Buscar'].forEach(t=>{
+  ['COD','Enviado','Buscar','Imprenta'].forEach(t=>{
     const b=document.getElementById('gbtn-'+t);
     if(b){ b.style.borderColor='var(--border)'; b.style.background='var(--surface2)'; b.style.color='var(--muted)'; }
   });
-  // Oculta sub-modos enviado
   const modos=document.getElementById('envio-modos');
   if(modos) modos.style.display='none';
-  // Oculta envio por seleccion
   document.getElementById('envio-seleccion-wrap').style.display='none';
-  // Oculta formulario
   document.getElementById('gestion-form-wrap').style.display='none';
+  document.getElementById('imprenta-wrap').style.display='none';
 }
 
 function setTipoGestion(tipo){
@@ -3975,7 +4012,13 @@ function setTipoGestion(tipo){
     buscarSec.style.display='flex'; submitBtn.style.display='none';
     clienteSec.style.display='none';
     if(authSec) authSec.style.display='none';
+  } else if(tipo==='Imprenta'){
+    document.getElementById('gestion-form-wrap').style.display='none';
+    document.getElementById('imprenta-wrap').style.display='block';
+    submitBtn.style.display='none';
+    return;
   }
+  document.getElementById('imprenta-wrap').style.display='none';
 }
 
 function toggleEnvioModos(){
@@ -4581,6 +4624,105 @@ function enviarLinkWhatsApp(){
   const link=document.getElementById('link-text').textContent;
   const msg=encodeURIComponent(`🛍️ *IKOA & BEKATE — Formulario de Pedido*\n\nHola, aquí tienes tu link personalizado para realizar tu pedido:\n\n${link}\n\n⏰ Este link es válido por *4 horas* y solo puede usarse *una vez*.\n\n_IKOA & BEKATE_`);
   window.open(`https://wa.me/?text=${msg}`,'_blank');
+}
+
+// ── IMPRENTA ──────────────────────────────────────────────────
+const DROPBOX_TOKEN='sl.u.AGjgd05o-msf8GFvg82TKRIxRnvRc76UV9faRhq517RyDIYBeCuMuHt0mwnIEa2B8idIQmwwSs-ZcqhQ7ptkDipQQlI35pN6lvT_WqvJR_J4jHjDEF_CM0CC-e7rFo-b6_HfJm8-zCPDaa0Aeb-9kQFMQ9k6_F5igGsGEAwfhs_8dMhA3oOAIrJIKaXGKY8UDtZSQZ7bB_8yAgKOwMp2DMKE65CanNc_3FpSVANykP9_krm6JaB3nyXduBt9KTsYCpOaOtOt2L9pEw2gcNsvlJog1L4jHh7GWi7JekNeCmxIFx3v47XlcxfgBvZMjfSUw_LbuVx0SrZamMWUgEcAS005i54czuBlQYw4PHMzPOQjejxDgHMUDp6uIySf1SlZZCE_HlcuJz3CWZ06yLX5lgRWjBZBDzK_IAljfGcoezPPP6GWOe-h94vzdakLtl6-tws-LhZh7VjUgaDwXKPW9e7PhinR20JsPb_TuYCK4_dL8cmcUFjBWs3tTZgP_wgsQYuIFjPvEmt7hBIiCcbkuJulpNW1RM6g563yklO5igozH45ndxFwMJR4yqyB1JnI4gyM467iJ25jIa62Vea4xOok_pTuvgtMfY4pxx_G2yEZywH2IC7jCoe5Kia4cbUL_crWIu1MpSevIKY8erGkrlAlKzobPYh0fuFCTtJEp8BVTkQl58Ol2WqaP6xS6U6l40uWF0g3p4BrPaPs_EJXanu4u5Kkd0DO8Kipr7Q3qY1LBqb9jWJvS0PKTzYKHUdwkd3l20jgyXKOdE8gfA4fH64i2gpp4BSoXpS-6-5eW_7I29kAU6CU_kcTcn285XDCy3RU45VEgHDbwFtD6baLLYPh7K1iEwqcHrgUCBb2IgdJPLxUgq05TWlyruE68VYW5kcs9pr34METJHZmGAsPJHObM4dDwPmZxGvVLQXj5-uxIL-ljqr3JvPrYB16lmW0GSXRmB4mTL6lTdQkmaF6muDo1eCC1qnKpq2x-RSwrBOXq4IfUUn2495BTQ8sRVKhHay41qj8ZTBjXnE8pGNhLr4mIrLoDuyA2aqX4uAz9fnY4j-VJZxgywknD-BCH2LRUuKQOFLV29eLZnUcw5M23z0-sFpsaqFEgot89Q-tJJepL03hFQZa6zaXfnsZnmGyGcgZCZamjzIhhrYGArlOMBZ4He7TQh-kFLUo3zItpIAsb7B5y8HwA3xvoPh-aTkUvaHrBC7mRk_L8_rZMwJhM5FZ0YJvkOuNkNQfBDazH84yyKq3XdsLvIHxDvOyQE5gVXJNsNEvPUsqlIOBYbkvqpXB';
+const DROPBOX_FOLDER='/IKOA/REGISTRO MANUFACTURA/COD RECORD';
+let impPDFUrl='';
+
+async function buscarDocDropbox(){
+  const cod=document.getElementById('imp-cod-input').value.trim();
+  const msg=document.getElementById('imp-msg');
+  const lista=document.getElementById('imp-lista');
+  if(!cod){ msg.style.display='block'; msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ Ingresa un número para buscar'; return; }
+  msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
+  msg.innerHTML='<span class="spinner">↻</span> Buscando en Dropbox...';
+  lista.innerHTML='';
+  document.getElementById('imp-visor-wrap').style.display='none';
+  try{
+    const res=await fetch('https://api.dropboxapi.com/2/files/list_folder',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+DROPBOX_TOKEN,'Content-Type':'application/json'},
+      body:JSON.stringify({path:DROPBOX_FOLDER,recursive:false})
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error_summary||'Error Dropbox');
+    const archivos=(data.entries||[]).filter(e=>
+      e['.tag']==='file' &&
+      e.name.toUpperCase().includes(cod.toUpperCase()) &&
+      e.name.toLowerCase().endsWith('.pdf')
+    );
+    if(archivos.length===0){
+      msg.style.background='#2a1010'; msg.style.color='var(--danger)';
+      msg.innerHTML=`✗ Sin archivos con "${cod}"`;
+      return;
+    }
+    msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
+    msg.innerHTML=`✅ ${archivos.length} archivo(s) encontrado(s)`;
+    lista.innerHTML=archivos.map(f=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);">📄 ${f.name}</div>
+          <div style="font-size:11px;color:var(--muted);">${(f.size/1024).toFixed(1)} KB</div>
+        </div>
+        <button onclick="abrirPDF('${f.path_lower.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}')" style="padding:10px 16px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">📂 Abrir</button>
+      </div>`).join('');
+  }catch(e){
+    msg.style.background='#2a1010'; msg.style.color='var(--danger)';
+    msg.innerHTML='✗ '+e.message;
+  }
+}
+
+async function abrirPDF(path, nombre){
+  const msg=document.getElementById('imp-msg');
+  msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
+  msg.innerHTML='<span class="spinner">↻</span> Cargando PDF...';
+  try{
+    const res=await fetch('https://content.dropboxapi.com/2/files/download',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+DROPBOX_TOKEN,'Dropbox-API-Arg':JSON.stringify({path})}
+    });
+    if(!res.ok) throw new Error('Error descargando archivo');
+    const blob=await res.blob();
+    if(impPDFUrl) URL.revokeObjectURL(impPDFUrl);
+    impPDFUrl=URL.createObjectURL(blob);
+    document.getElementById('imp-visor-nombre').textContent=nombre;
+    document.getElementById('imp-iframe').src=impPDFUrl;
+    document.getElementById('imp-visor-wrap').style.display='block';
+    document.getElementById('imp-visor-wrap').scrollIntoView({behavior:'smooth'});
+    msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
+    msg.innerHTML='✅ PDF cargado';
+    setTimeout(()=>msg.style.display='none',2000);
+  }catch(e){
+    msg.style.background='#2a1010'; msg.style.color='var(--danger)';
+    msg.innerHTML='✗ '+e.message;
+  }
+}
+
+function togglePaginaInput(){
+  const tipo=document.querySelector('input[name="imp-tipo"]:checked')?.value;
+  document.getElementById('imp-pagina-wrap').style.display=tipo==='pagina'?'flex':'none';
+}
+
+function imprimirPDF(){
+  if(!impPDFUrl){ alert('Abre un PDF primero'); return; }
+  const tipo=document.querySelector('input[name="imp-tipo"]:checked')?.value;
+  if(tipo==='pagina'){
+    const pag=parseInt(document.getElementById('imp-pagina-num').value)||1;
+    const win=window.open(impPDFUrl+'#page='+pag);
+    if(win) setTimeout(()=>win.print(),1500);
+  } else {
+    const iframe=document.getElementById('imp-iframe');
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+  }
+}
+
+function cerrarVisorPDF(){
+  document.getElementById('imp-visor-wrap').style.display='none';
+  document.getElementById('imp-iframe').src='';
+  if(impPDFUrl){ URL.revokeObjectURL(impPDFUrl); impPDFUrl=''; }
 }
 
 init();
