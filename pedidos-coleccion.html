@@ -859,15 +859,15 @@ const SERIES_COLECCION={
              Pink:{Playera:'AlphaPink',Dress:'AlphaPinkDress',Cortaviento:'AlphaPinkCortaviento'}}},
   Unicolor:{nombre:'Unicolor',colores:['Blanco','Negro','Azul Rey','Azul Marino','Menta','Gris','Rojo','Rosa Bebé','Verde Militar'],
     codigos:{
-      Blanco:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
-      Negro:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
-      'Azul Rey':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
-      'Azul Marino':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
-      Menta:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
-      Gris:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
-      Rojo:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
-      'Rosa Bebé':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
-      'Verde Militar':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'}
+      Blanco:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07','T-Shirt':'LICRA07'},
+      Negro:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07','T-Shirt':'LICRA07'},
+      'Azul Rey':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07','T-Shirt':'LICRA07'},
+      'Azul Marino':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07','T-Shirt':'LICRA07'},
+      Menta:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07','T-Shirt':'LICRA07'},
+      Gris:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07','T-Shirt':'LICRA07'},
+      Rojo:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07','T-Shirt':'LICRA07'},
+      'Rosa Bebé':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07','T-Shirt':'LICRA07'},
+      'Verde Militar':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07','T-Shirt':'LICRA07'}
     }
   },
   Toalla:{nombre:'Toalla',colores:[],
@@ -905,7 +905,7 @@ function selectColorSerie(btn,color){
     return;
   }
 
-  const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short','Cotton Licra']:['Playera','Dress','Cortaviento'];
+  const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short','Cotton Licra','T-Shirt']:['Playera','Dress','Cortaviento'];
   document.getElementById('variante-grid').innerHTML=variantes.map(v=>`<button class="opt-btn" onclick="selectVariante(this,'${v}')">${v.toUpperCase()}</button>`).join('');
   document.getElementById('variante-wrap').style.display='block';
   document.getElementById('producto-seleccionado').style.display='none';
@@ -919,8 +919,8 @@ function selectVariante(btn,variante){
   const codigo=s.codigos[selectedColorSerie][variante];
   const nombre=selectedSerie==='Unicolor'?`${variante} Serie ${selectedColorSerie}`:`${variante} ${s.nombre} ${selectedColorSerie}`;
   pedido.codigoProducto=codigo; pedido.nombreProducto=nombre; pedido.variante=variante; pedido.pack=1;
-  // Cotton Licra: manga corta, sin capucha fijo
-  if(variante==='Cotton Licra'){
+  // Cotton Licra y T-Shirt: manga corta, sin capucha
+  if(variante==='Cotton Licra'||variante==='T-Shirt'){
     pedido.manga='Manga Corta'; pedido.capucha='Sin Capucha';
   } else {
     pedido.manga=''; pedido.capucha='';
