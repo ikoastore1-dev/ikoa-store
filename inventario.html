@@ -3342,23 +3342,43 @@ async function cargarCola(){
     listEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--danger);">✗ Error: ${e.message}</div>`;
   }
 }
-async function guardarUrgente(tipo, codigo, inputId){
+let _urgentePendiente={tipo:'',codigo:'',inputId:''};
+
+function iniciarGuardarUrgente(tipo, codigo, inputId){
+  _urgentePendiente={tipo,codigo,inputId};
   const val=document.getElementById(inputId)?.value.trim()||'';
-  const unlock=await mostrarAuthGen('⚡','Cambiar Urgencia','Ingresa tu código para confirmar');
-  if(!unlock) return;
-  const unlockUp=unlock.trim().toUpperCase();
+  document.getElementById('auth-gen-icon').textContent='⚡';
+  document.getElementById('auth-gen-title').textContent='Cambiar Urgencia';
+  document.getElementById('auth-gen-subtitle').textContent=val?`Guardar: "${val}"`:'Limpiar urgencia';
+  document.getElementById('auth-gen-unlock').value='';
+  document.getElementById('auth-gen-error').textContent='';
+  document.getElementById('auth-gen-confirm').onclick=ejecutarGuardarUrgente;
+  document.getElementById('modal-auth-gen').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('auth-gen-unlock').focus(),100);
+}
+
+async function ejecutarGuardarUrgente(){
+  const unlock=document.getElementById('auth-gen-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('auth-gen-error');
+  if(!USUARIOS[unlock]){ errEl.textContent='❌ Código incorrecto'; document.getElementById('auth-gen-unlock').value=''; return; }
+  document.getElementById('modal-auth-gen').classList.add('hidden');
+  const {tipo,codigo,inputId}=_urgentePendiente;
+  const val=document.getElementById(inputId)?.value.trim()||'';
   const hoja=tipo==='cola'?'COLA.P':'APROBACIONES';
   const msgEl=tipo==='cola'?document.getElementById('cola-msg'):document.getElementById('apro-msg');
   if(msgEl){ msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)'; msgEl.innerHTML='<span class="spinner">↻</span> Guardando urgencia...'; }
   try{
-    const res=await scriptGETjson({action:'editarUrgente',hoja:hoja,codigo:codigo,urgente:val});
+    const res=await scriptGETjson({action:'editarUrgente',hoja,codigo,urgente:val});
     if(res.ok){
-      if(msgEl){ msgEl.style.color='var(--accent)'; msgEl.innerHTML=`✅ Urgencia guardada · ${USUARIOS[unlockUp]}`; setTimeout(()=>{ msgEl.style.display='none'; },2000); }
+      if(msgEl){ msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)'; msgEl.innerHTML=`✅ Urgencia guardada · ${USUARIOS[unlock]}`; setTimeout(()=>{ msgEl.style.display='none'; },2500); }
     } else throw new Error(res.error||'Error');
   }catch(e){
-    if(msgEl){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='✗ Error: '+e.message; }
+    if(msgEl){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='✗ '+e.message; setTimeout(()=>msgEl.style.display='none',3000); }
   }
 }
+
+// Alias para compatibilidad con onclick existente
+function guardarUrgente(tipo, codigo, inputId){ iniciarGuardarUrgente(tipo, codigo, inputId); }
 
 let pendingEditCola=null;
 
