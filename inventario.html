@@ -419,11 +419,11 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div class="modal-title" id="auth-gen-title">Autorización</div>
     <div class="modal-subtitle" id="auth-gen-subtitle"></div>
     <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div>
-    <input class="modal-cod-input" type="password" id="auth-gen-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarAuthGen()">
+    <input class="modal-cod-input" type="password" id="auth-gen-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter') document.getElementById('auth-gen-confirm').onclick()">
     <div class="modal-error" id="auth-gen-error"></div>
     <div class="modal-btns">
       <button class="modal-cancel" onclick="cerrarAuthGen()">Cancelar</button>
-      <button class="modal-confirm" id="auth-gen-confirm" onclick="confirmarAuthGen()">✓ CONFIRMAR</button>
+      <button class="modal-confirm" id="auth-gen-confirm">✓ CONFIRMAR</button>
     </div>
   </div>
 </div>
@@ -2681,6 +2681,7 @@ function mostrarAuthGen(icon, title, subtitle){
     document.getElementById('auth-gen-subtitle').textContent=subtitle||'';
     document.getElementById('auth-gen-unlock').value='';
     document.getElementById('auth-gen-error').textContent='';
+    document.getElementById('auth-gen-confirm').onclick=confirmarAuthGen;
     document.getElementById('modal-auth-gen').classList.remove('hidden');
     setTimeout(()=>document.getElementById('auth-gen-unlock').focus(),100);
   });
