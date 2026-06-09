@@ -3323,7 +3323,7 @@ async function cargarCola(){
           <div style="display:flex;gap:6px;">
             <input type="text" id="urgente-cola-${base}" placeholder="Ej: URGENTE - Entregar 15/06" value="${v(31)||''}"
               style="flex:1;background:var(--surface3);border:1.5px solid var(--warn);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;text-transform:uppercase;">
-            <button onclick="guardarUrgente('cola','${base}','urgente-cola-${base}')"
+            <button onclick="guardarUrgenteGrupo('cola','${packs.map(pk=>String(pk[1]||'').trim()).join(',')}','urgente-cola-${base}')"
               style="padding:8px 14px;background:#1a1a10;border:1.5px solid var(--warn);border-radius:8px;color:var(--warn);font-size:13px;font-weight:700;cursor:pointer;">💾</button>
           </div>
         </div>`;
@@ -3362,16 +3362,18 @@ async function ejecutarGuardarUrgente(){
   const errEl=document.getElementById('auth-gen-error');
   if(!USUARIOS[unlock]){ errEl.textContent='❌ Código incorrecto'; document.getElementById('auth-gen-unlock').value=''; return; }
   document.getElementById('modal-auth-gen').classList.add('hidden');
-  const {tipo,codigo,inputId}=_urgentePendiente;
+  const {tipo, codigo, inputId}=_urgentePendiente;
   const val=document.getElementById(inputId)?.value.trim()||'';
   const hoja=tipo==='cola'?'COLA.P':'APROBACIONES';
   const msgEl=tipo==='cola'?document.getElementById('cola-msg'):document.getElementById('apro-msg');
   if(msgEl){ msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)'; msgEl.innerHTML='<span class="spinner">↻</span> Guardando urgencia...'; }
   try{
-    const res=await scriptGETjson({action:'editarUrgente',hoja,codigo,urgente:val});
-    if(res.ok){
-      if(msgEl){ msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)'; msgEl.innerHTML=`✅ Urgencia guardada · ${USUARIOS[unlock]}`; setTimeout(()=>{ msgEl.style.display='none'; },2500); }
-    } else throw new Error(res.error||'Error');
+    // Puede ser un grupo de códigos separados por coma
+    const codigos=codigo.split(',').map(c=>c.trim()).filter(Boolean);
+    for(const cod of codigos){
+      await scriptGETjson({action:'editarUrgente', hoja, codigo:cod, urgente:val});
+    }
+    if(msgEl){ msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)'; msgEl.innerHTML=`✅ Urgencia guardada · ${USUARIOS[unlock]}`; setTimeout(()=>{ msgEl.style.display='none'; },2500); }
   }catch(e){
     if(msgEl){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='✗ '+e.message; setTimeout(()=>msgEl.style.display='none',3000); }
   }
@@ -3379,6 +3381,20 @@ async function ejecutarGuardarUrgente(){
 
 // Alias para compatibilidad con onclick existente
 function guardarUrgente(tipo, codigo, inputId){ iniciarGuardarUrgente(tipo, codigo, inputId); }
+
+// Guarda urgente para un grupo de códigos (ej: C-1, C-1.2, C-1.3)
+function guardarUrgenteGrupo(tipo, codigosStr, inputId){
+  _urgentePendiente={tipo, codigo:codigosStr, inputId, esGrupo:true};
+  const val=document.getElementById(inputId)?.value.trim()||'';
+  document.getElementById('auth-gen-icon').textContent='⚡';
+  document.getElementById('auth-gen-title').textContent='Cambiar Urgencia';
+  document.getElementById('auth-gen-subtitle').textContent=val?`Guardar: "${val}"`:'Limpiar urgencia';
+  document.getElementById('auth-gen-unlock').value='';
+  document.getElementById('auth-gen-error').textContent='';
+  document.getElementById('auth-gen-confirm').onclick=ejecutarGuardarUrgente;
+  document.getElementById('modal-auth-gen').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('auth-gen-unlock').focus(),100);
+}
 
 let pendingEditCola=null;
 
