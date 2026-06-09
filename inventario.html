@@ -1025,31 +1025,22 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <div id="imp-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-bottom:8px;"></div>
           <div id="imp-lista" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
-        <!-- VISOR PDF -->
+        <!-- VISOR PDF con navegación -->
         <div id="imp-visor-wrap" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;">
+          <!-- Navegación -->
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <div style="font-size:14px;font-weight:700;color:var(--text);" id="imp-visor-nombre"></div>
-            <button onclick="cerrarVisorPDF()" style="background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:6px 12px;font-size:12px;cursor:pointer;">✕ Cerrar</button>
-          </div>
-          <!-- Opciones de impresión -->
-          <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:12px;">
-            <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;font-weight:700;">Opciones de impresión</div>
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-              <div style="display:flex;gap:6px;align-items:center;">
-                <input type="radio" name="imp-tipo" id="imp-todo" value="todo" checked onchange="togglePaginaInput()">
-                <label for="imp-todo" style="font-size:14px;color:var(--text);cursor:pointer;">Todo el documento</label>
-              </div>
-              <div style="display:flex;gap:6px;align-items:center;">
-                <input type="radio" name="imp-tipo" id="imp-pagina" value="pagina" onchange="togglePaginaInput()">
-                <label for="imp-pagina" style="font-size:14px;color:var(--text);cursor:pointer;">Página específica</label>
-              </div>
-              <div id="imp-pagina-wrap" style="display:none;display:flex;gap:6px;align-items:center;">
-                <input class="field-input" type="number" id="imp-pagina-num" min="1" placeholder="Nº página" style="width:100px;padding:8px;">
-              </div>
+            <button onclick="impNavegar(-1)" id="imp-btn-prev" style="padding:8px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">← Anterior</button>
+            <div style="text-align:center;">
+              <div style="font-size:13px;font-weight:700;color:var(--text);" id="imp-visor-nombre"></div>
+              <div id="imp-nav-counter" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
             </div>
+            <button onclick="impNavegar(1)" id="imp-btn-next" style="padding:8px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">Siguiente →</button>
           </div>
-          <button onclick="imprimirPDF()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:10px;color:#000;font-size:17px;font-weight:700;cursor:pointer;margin-bottom:12px;">🖨️ Imprimir</button>
-          <iframe id="imp-iframe" style="width:100%;height:600px;border:none;border-radius:8px;background:#fff;"></iframe>
+          <!-- Botones acción -->
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <button onclick="imprimirActual()" style="flex:1;padding:14px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:10px;color:#000;font-size:16px;font-weight:700;cursor:pointer;">🖨️ Imprimir este</button>
+            <button onclick="cerrarVisorPDF()" style="padding:14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">✕</button>
+          </div>
         </div>
       </div>
 
@@ -4722,32 +4713,81 @@ async function buscarDocDropbox(){
     msg.innerHTML=`✅ ${archivos.length} archivo(s) encontrado(s)`;
     // Guardar en mapa por nombre
     window._impArchivos=archivos;
-    lista.innerHTML=archivos.map((f,i)=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;">
-        <div>
+    lista.innerHTML=`
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button onclick="impSeleccionarTodos()" style="flex:1;padding:10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">☑️ Seleccionar todos</button>
+        <button onclick="impImprimirSeleccionados()" style="flex:1;padding:10px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">🖨️ Imprimir seleccionados</button>
+      </div>
+      ${archivos.map((f,i)=>`
+      <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:6px;">
+        <input type="checkbox" id="imp-chk-${i}" checked style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+        <div style="flex:1;">
           <div style="font-size:14px;font-weight:700;color:var(--text);">📄 ${f.nombre||f.name||'Archivo '+i}</div>
         </div>
-        <button onclick="abrirPDF(${i})" style="padding:10px 16px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">📂 Abrir</button>
-      </div>`).join('');
+        <button onclick="impAbrirUno(${i})" style="padding:8px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">📂 Ver</button>
+      </div>`).join('')}`;
   }catch(e){
     msg.style.background='#2a1010'; msg.style.color='var(--danger)';
     msg.innerHTML='✗ '+e.message;
   }
 }
 
-function abrirPDF(idx){
-  const msg=document.getElementById('imp-msg');
-  const f=(window._impArchivos||[])[idx];
-  if(!f||!f.link){ msg.style.display='block'; msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ Link no disponible'; return; }
-  impPDFUrl=f.link;
+let impSeleccionados=[];
+let impActualIdx=0;
+
+function impSeleccionarTodos(){
+  const archivos=window._impArchivos||[];
+  archivos.forEach((_,i)=>{
+    const chk=document.getElementById('imp-chk-'+i);
+    if(chk) chk.checked=true;
+  });
+}
+
+function impImprimirSeleccionados(){
+  const archivos=window._impArchivos||[];
+  impSeleccionados=archivos.filter((_,i)=>{
+    const chk=document.getElementById('imp-chk-'+i);
+    return chk&&chk.checked;
+  });
+  if(impSeleccionados.length===0){ alert('Selecciona al menos un archivo'); return; }
+  impActualIdx=0;
+  impMostrarActual();
+}
+
+function impAbrirUno(idx){
+  impSeleccionados=[window._impArchivos[idx]];
+  impActualIdx=0;
+  impMostrarActual();
+}
+
+function impMostrarActual(){
+  const f=impSeleccionados[impActualIdx];
+  if(!f) return;
   document.getElementById('imp-visor-nombre').textContent=f.nombre||f.name||'Archivo';
-  // Abrir en nueva pestaña para evitar restricciones CORS de Dropbox
-  window.open(f.link,'_blank');
-  // También mostrar botón de imprimir
+  document.getElementById('imp-nav-counter').textContent=`${impActualIdx+1} de ${impSeleccionados.length}`;
+  document.getElementById('imp-btn-prev').disabled=impActualIdx===0;
+  document.getElementById('imp-btn-next').disabled=impActualIdx===impSeleccionados.length-1;
+  document.getElementById('imp-btn-prev').style.opacity=impActualIdx===0?'0.4':'1';
+  document.getElementById('imp-btn-next').style.opacity=impActualIdx===impSeleccionados.length-1?'0.4':'1';
+  impPDFUrl=f.link;
   document.getElementById('imp-visor-wrap').style.display='block';
   document.getElementById('imp-visor-wrap').scrollIntoView({behavior:'smooth'});
-  document.getElementById('imp-iframe').style.display='none';
 }
+
+function impNavegar(dir){
+  const nuevo=impActualIdx+dir;
+  if(nuevo<0||nuevo>=impSeleccionados.length) return;
+  impActualIdx=nuevo;
+  impMostrarActual();
+}
+
+function imprimirActual(){
+  if(!impPDFUrl){ alert('No hay archivo seleccionado'); return; }
+  window.open(impPDFUrl+'#page=1','_blank');
+}
+
+// Alias legacy
+function abrirPDF(idx){ impAbrirUno(idx); }
 
 function togglePaginaInput(){
   const tipo=document.querySelector('input[name="imp-tipo"]:checked')?.value;
