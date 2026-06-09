@@ -1004,7 +1004,6 @@ async function calcularPago(){
     if(data.ok){
       precioComfy={bs:parseFloat(data.comfy_bs)||0, usd:parseFloat(data.comfy_usd)||0};
       precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
-      // Mostrar tasa BCV
       if(data.tasa_bcv){
         document.getElementById('pago-tasa-bcv').textContent='Bs '+parseFloat(data.tasa_bcv).toFixed(2);
       }

@@ -1073,10 +1073,11 @@ function savePiezas(){
     const t=document.getElementById('pz-talla-'+id)?.value||'';
     const sinNombre=document.getElementById('pz-sinombre-'+id)?.checked||false;
     const n=sinNombre?'SIN NOMBRE EN MANGA':(document.getElementById('pz-nombre-'+id)?.value.trim()||'');
+    const conCapucha=document.getElementById('pz-capucha-'+id)?.checked||false;
     const rep=parseInt(document.getElementById('rep-count-'+id)?.textContent||'1');
     // Expandir repeticiones
     for(let i=0;i<rep;i++){
-      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre});
+      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre,conCapucha});
     }
   });
 }
