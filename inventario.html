@@ -4741,9 +4741,12 @@ function abrirPDF(idx){
   if(!f||!f.link){ msg.style.display='block'; msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ Link no disponible'; return; }
   impPDFUrl=f.link;
   document.getElementById('imp-visor-nombre').textContent=f.nombre||f.name||'Archivo';
-  document.getElementById('imp-iframe').src=f.link;
+  // Abrir en nueva pestaña para evitar restricciones CORS de Dropbox
+  window.open(f.link,'_blank');
+  // También mostrar botón de imprimir
   document.getElementById('imp-visor-wrap').style.display='block';
   document.getElementById('imp-visor-wrap').scrollIntoView({behavior:'smooth'});
+  document.getElementById('imp-iframe').style.display='none';
 }
 
 function togglePaginaInput(){
@@ -4756,12 +4759,9 @@ function imprimirPDF(){
   const tipo=document.querySelector('input[name="imp-tipo"]:checked')?.value;
   if(tipo==='pagina'){
     const pag=parseInt(document.getElementById('imp-pagina-num').value)||1;
-    const win=window.open(impPDFUrl+'#page='+pag);
-    if(win) setTimeout(()=>win.print(),1500);
+    window.open(impPDFUrl+'#page='+pag,'_blank');
   } else {
-    const iframe=document.getElementById('imp-iframe');
-    iframe.contentWindow.focus();
-    iframe.contentWindow.print();
+    window.open(impPDFUrl,'_blank');
   }
 }
 
