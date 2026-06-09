@@ -1017,13 +1017,38 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <!-- IMPRENTA -->
       <div id="imprenta-wrap" style="display:none;">
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
-          <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">🖨️ Buscar Documento</div>
-          <div style="display:flex;gap:8px;margin-bottom:12px;">
-            <input class="field-input" type="text" id="imp-cod-input" placeholder="Ingresa el número (ej: 5294)" inputmode="numeric" style="flex:1;" onkeydown="if(event.key==='Enter')buscarDocDropbox()">
-            <button onclick="buscarDocDropbox()" style="padding:12px 18px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:14px;font-weight:700;cursor:pointer;">🔍 Buscar</button>
+          <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">🖨️ Buscar Documentos</div>
+          
+          <!-- Modo búsqueda -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+            <button id="imp-modo-rango" onclick="impSetModo('rango')" style="padding:10px;background:#0a2a0a;border:2px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;">📊 Por Rango</button>
+            <button id="imp-modo-especifico" onclick="impSetModo('especifico')" style="padding:10px;background:var(--surface2);border:2px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">🔢 Específicos</button>
           </div>
-          <div id="imp-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-bottom:8px;"></div>
-          <div id="imp-lista" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+          <!-- Búsqueda por rango -->
+          <div id="imp-busq-rango">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+              <div style="flex:1;">
+                <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Desde</div>
+                <input class="field-input" type="number" id="imp-rango-desde" placeholder="5210" inputmode="numeric" onkeydown="if(event.key==='Enter')buscarDocDropbox()">
+              </div>
+              <div style="color:var(--muted);font-size:20px;padding-top:16px;">→</div>
+              <div style="flex:1;">
+                <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Hasta</div>
+                <input class="field-input" type="number" id="imp-rango-hasta" placeholder="5229" inputmode="numeric" onkeydown="if(event.key==='Enter')buscarDocDropbox()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Búsqueda específica -->
+          <div id="imp-busq-especifico" style="display:none;margin-bottom:10px;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Códigos separados por coma</div>
+            <input class="field-input" type="text" id="imp-cod-especifico" placeholder="5210, 5225, 5229" onkeydown="if(event.key==='Enter')buscarDocDropbox()">
+          </div>
+
+          <button onclick="buscarDocDropbox()" style="width:100%;padding:12px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:14px;font-weight:700;cursor:pointer;">🔍 Buscar</button>
+          <div id="imp-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:8px;"></div>
+          <div id="imp-lista" style="display:flex;flex-direction:column;gap:8px;margin-top:10px;"></div>
         </div>
         <!-- VISOR PDF con navegación -->
         <div id="imp-visor-wrap" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;">
@@ -4685,33 +4710,58 @@ function enviarLinkWhatsApp(){
 // ── IMPRENTA (via Make) ───────────────────────────────────────
 const WEBHOOK_IMPRENTA='https://hook.us2.make.com/dngto8spiobv5gwix6qhs1sjqx8ai021';
 let impPDFUrl='';
+let impModoActual='rango';
+
+function impSetModo(modo){
+  impModoActual=modo;
+  document.getElementById('imp-busq-rango').style.display=modo==='rango'?'block':'none';
+  document.getElementById('imp-busq-especifico').style.display=modo==='especifico'?'block':'none';
+  document.getElementById('imp-modo-rango').style.background=modo==='rango'?'#0a2a0a':'var(--surface2)';
+  document.getElementById('imp-modo-rango').style.borderColor=modo==='rango'?'var(--accent)':'var(--border)';
+  document.getElementById('imp-modo-rango').style.color=modo==='rango'?'var(--accent)':'var(--muted)';
+  document.getElementById('imp-modo-especifico').style.background=modo==='especifico'?'#0a2a0a':'var(--surface2)';
+  document.getElementById('imp-modo-especifico').style.borderColor=modo==='especifico'?'var(--accent)':'var(--border)';
+  document.getElementById('imp-modo-especifico').style.color=modo==='especifico'?'var(--accent)':'var(--muted)';
+}
 
 async function buscarDocDropbox(){
-  const cod=document.getElementById('imp-cod-input').value.trim();
   const msg=document.getElementById('imp-msg');
   const lista=document.getElementById('imp-lista');
-  if(!cod){ msg.style.display='block'; msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ Ingresa un número para buscar'; return; }
+  let numeros=[];
+
+  if(impModoActual==='rango'){
+    const desde=parseInt(document.getElementById('imp-rango-desde').value)||0;
+    const hasta=parseInt(document.getElementById('imp-rango-hasta').value)||0;
+    if(!desde||!hasta){ msg.style.display='block'; msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ Ingresa el rango completo'; return; }
+    if(desde>hasta){ msg.style.display='block'; msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ El número inicial debe ser menor'; return; }
+    for(let n=desde;n<=hasta;n++) numeros.push(String(n));
+  } else {
+    const input=document.getElementById('imp-cod-especifico').value.trim();
+    if(!input){ msg.style.display='block'; msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ Ingresa al menos un código'; return; }
+    numeros=input.split(',').map(n=>n.trim()).filter(Boolean);
+  }
+
   msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
-  msg.innerHTML='<span class="spinner">↻</span> Buscando archivos...';
+  msg.innerHTML=`<span class="spinner">↻</span> Buscando ${numeros.length} código(s)...`;
   lista.innerHTML='';
   document.getElementById('imp-visor-wrap').style.display='none';
+
   try{
     const res=await fetch(WEBHOOK_IMPRENTA,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({numero:cod})
+      body:JSON.stringify({numeros:numeros, modo:impModoActual})
     });
     if(!res.ok) throw new Error('Error Make: '+res.status);
     const data=await res.json();
     const archivos=data.archivos||[];
     if(archivos.length===0){
       msg.style.background='#2a1010'; msg.style.color='var(--danger)';
-      msg.innerHTML=`✗ Sin archivos con "${cod}"`;
+      msg.innerHTML=`✗ Sin archivos encontrados`;
       return;
     }
     msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
     msg.innerHTML=`✅ ${archivos.length} archivo(s) encontrado(s)`;
-    // Guardar en mapa por nombre
     window._impArchivos=archivos;
     lista.innerHTML=`
       <div style="display:flex;gap:8px;margin-bottom:10px;">
