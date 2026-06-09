@@ -1156,26 +1156,22 @@ async function calcularPago(){
     }
   }catch(e){ console.error('Error leyendo precios:',e); }
 
-  const tallasGrandes=['DAMA XL','DAMA XXL','DAMA 3XL','DAMA 2XL','CABALLERO XL','CABALLERO XXL','CABALLERO 3XL','CABALLERO 2XL'];
   let totalBs=0, totalUsd=0;
   let desglose=[];
 
   pedido.packs.forEach((pk,i)=>{
-    const recargas=pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase().trim())).length;
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
     const codigoProd=pk.codigoProducto||pedido.codigoProducto;
     const pp=window._packPrecios&&window._packPrecios[codigoProd];
     let packBs=pp?parseFloat(pp.bs)||0:0;
     let packUsd=pp?parseFloat(pp.usd)||0:0;
-    const recargaBs=recargas*precioRecarga.bs, recargaUsd=recargas*precioRecarga.usd;
     // Capucha solo aplica a Playera y Dress
     const v=pk.variante||pedido.variante;
     const capuchaBs=(v==='Playera'||v==='Dress')?capuchas*precioCapucha.bs:0;
     const capuchaUsd=(v==='Playera'||v==='Dress')?capuchas*precioCapucha.usd:0;
-    totalBs+=packBs+recargaBs+capuchaBs;
-    totalUsd+=packUsd+recargaUsd+capuchaUsd;
-    desglose.push(`${pk.modelo||codigoProd}${pk.largo?' · '+pk.largo:''}${pk.capucha&&pk.capucha!=='Sin Capucha'?' · Con capucha':''}`+
-      (recargas>0?` + ${recargas} plus`:''));
+    totalBs+=packBs+capuchaBs;
+    totalUsd+=packUsd+capuchaUsd;
+    desglose.push(`${pk.modelo||codigoProd}${pk.largo?' · '+pk.largo:''}${pk.capucha&&pk.capucha!=='Sin Capucha'?' · Con capucha':''}`);
   });
 
   pagoTotalBs=Math.round(totalBs*100)/100;

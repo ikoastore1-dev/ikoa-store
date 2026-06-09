@@ -1044,13 +1044,13 @@ async function calcularPago(){
 
   pedido.packs.forEach((pk,i)=>{
     const franelas=pk.piezas.length||pk.pack||0;
-    const recargas=pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase().trim())).length;
+    const recargas=franelas===1?0:pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase().trim())).length;
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
 
     let packBs=0, packUsd=0;
 
     if(franelas===1){
-      // Prenda individual → usar COMFY01
+      // Prenda individual → usar COMFY01, sin recarga talla plus
       const pp=window._packPrecios&&window._packPrecios['COMFY01'];
       if(pp){ packBs=parseFloat(pp.bs)||0; packUsd=parseFloat(pp.usd)||0; }
     } else {

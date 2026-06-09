@@ -1119,7 +1119,7 @@ async function calcularPago(){
 
   pedido.packs.forEach((pk,i)=>{
     const franelas=pk.piezas.length||pk.pack||0;
-    const recargas=pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase().trim())).length;
+    const recargas=franelas===1?0:pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase().trim())).length;
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
 
     let packBs=0, packUsd=0;
