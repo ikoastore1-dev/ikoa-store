@@ -3541,6 +3541,7 @@ async function confirmarPlanificacion(){
     makeBody.append('packs_detalle',packsTexto);
     makeBody.append('descripcion',packsTexto);
     makeBody.append('urgente',pendingCola.urgente||'');
+    makeBody.append('usuario',USUARIOS[unlock]||'');
     makeBody.append('fecha',fechaProd);
 
     const response=await fetch(WEBHOOK_URL,{method:'POST',body:makeBody,mode:'no-cors'});
