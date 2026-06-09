@@ -158,13 +158,22 @@ main{max-width:480px;margin:0 auto;padding:16px;}
     <div class="step" id="rstep2">
       <div class="step-header">
         <div class="step-num">Paso 2 de 5</div>
-        <div class="step-title">Tu GiftCard</div>
+        <div class="step-title">Selecciona tus productos</div>
       </div>
-      <!-- Saldo / productos se renderizan dinámicamente -->
+      <!-- Info GC + saldo destacado -->
       <div id="r-info-gc" style="margin-bottom:12px;"></div>
-      <!-- Categorías para monto fijo -->
+      <!-- Saldo disponible destacado -->
+      <div id="r-saldo-box" style="display:none;background:linear-gradient(135deg,#0a1a2a,#0a2040);border:2px solid var(--gift);border-radius:14px;padding:18px;text-align:center;margin-bottom:16px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Saldo disponible</div>
+        <div id="r-saldo-val" style="font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:700;color:var(--gift);">$0.00</div>
+        <div id="r-diferencia-wrap" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1);">
+          <div style="font-size:11px;color:var(--danger);text-transform:uppercase;letter-spacing:.06em;">Diferencia a pagar</div>
+          <div id="r-diferencia-val" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--danger);">$0.00</div>
+        </div>
+      </div>
+      <!-- Categorías principales -->
       <div id="r-secciones" style="display:none;margin-bottom:12px;">
-        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:700;">Selecciona categoría</div>
+        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;font-weight:700;">¿Qué categoría deseas?</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <button class="opt-btn" id="rsec-comfy" onclick="rSelectSeccion('comfy')">👕 MEGA PROMO COMFY</button>
           <button class="opt-btn" id="rsec-fullcomfy" onclick="rSelectSeccion('fullcomfy')">🛡️ FULL COMFY</button>
@@ -173,19 +182,10 @@ main{max-width:480px;margin:0 auto;padding:16px;}
           <button class="opt-btn" id="rsec-toalla" onclick="rSelectSeccion('toalla')" style="grid-column:1/-1;">🏖️ TOALLA</button>
         </div>
       </div>
-      <!-- Lista productos -->
+      <!-- Productos de la categoría seleccionada -->
       <div id="r-productos-lista" style="display:none;margin-bottom:12px;"></div>
       <!-- Carrito -->
       <div id="r-carrito" style="margin-bottom:12px;"></div>
-      <!-- Saldo restante -->
-      <div id="r-saldo-box" style="display:none;background:var(--surface2);border:1.5px solid var(--gift);border-radius:10px;padding:14px;text-align:center;margin-bottom:12px;">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Saldo restante</div>
-        <div id="r-saldo-val" style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;color:var(--gift);">$0.00</div>
-        <div id="r-diferencia-wrap" style="display:none;margin-top:6px;">
-          <div style="font-size:11px;color:var(--danger);text-transform:uppercase;letter-spacing:.06em;">Diferencia a pagar</div>
-          <div id="r-diferencia-val" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--danger);">$0.00</div>
-        </div>
-      </div>
       <div class="nav-row">
         <button class="btn-back" onclick="rGoStep(1)">← Atrás</button>
         <button class="btn-next" onclick="rValidarStep2()">Siguiente →</button>
@@ -258,10 +258,25 @@ main{max-width:480px;margin:0 auto;padding:16px;}
       <div id="r-resumen" style="margin-bottom:16px;"></div>
       <div id="r-pago-wrap" style="display:none;margin-bottom:16px;">
         <div class="card" style="background:#0d1520;border:1.5px solid #0088ff;">
-          <div style="font-size:13px;font-weight:700;color:#44aaff;margin-bottom:12px;">💵 Diferencia a pagar</div>
+          <div style="font-size:13px;font-weight:700;color:#44aaff;margin-bottom:4px;">💵 Diferencia a pagar</div>
+          <div id="r-diferencia-monto-txt" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--danger);margin-bottom:12px;">$0.00</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
             <button class="opt-btn" id="r-pm-bs" onclick="rSelectPago('bs')">🏦 Bolívares</button>
             <button class="opt-btn" id="r-pm-usd" onclick="rSelectPago('usd')">💵 Divisa</button>
+          </div>
+          <!-- Info pago Bs -->
+          <div id="r-pago-bs-info" style="display:none;background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:10px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Datos bancarios</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Banesco · 04149450742</div>
+            <div style="font-size:13px;color:var(--text);">CI: V-18265345</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px;">Monto en Bs (tasa IKOA):</div>
+            <div id="r-monto-bs-val" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--accent);">Bs 0.00</div>
+          </div>
+          <!-- Info pago Divisa -->
+          <div id="r-pago-usd-info" style="display:none;background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:10px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Pago en Divisa</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Binance · johancazorla@gmail.com</div>
+            <div id="r-monto-usd-val" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--accent);margin-top:4px;">$0.00</div>
           </div>
           <div id="r-pago-ref-wrap" style="display:none;">
             <div class="field-label" style="margin-bottom:6px;" id="r-pago-ref-label">Número de referencia</div>
@@ -1103,10 +1118,10 @@ function renderInfoGC(){
     </div>`;
 
   if(esMonto){
-    // Mostrar secciones para seleccionar productos
     document.getElementById('r-secciones').style.display='block';
     document.getElementById('r-saldo-box').style.display='block';
     document.getElementById('r-saldo-val').textContent='$'+Number(gcData.monto_usd).toFixed(2);
+    document.getElementById('r-productos-lista').style.display='none';
     rCarrito=[];
   } else {
     // Mostrar productos incluidos
@@ -1121,22 +1136,56 @@ function renderInfoGC(){
 }
 
 function rSelectSeccion(sec){
-  document.querySelectorAll('[id^="rsec-"]').forEach(b=>b.classList.remove('selected'));
-  const btn=document.getElementById('rsec-'+sec);
-  if(btn) btn.classList.add('selected');
+  // Ocultar categorías y mostrar productos
+  document.getElementById('r-secciones').style.display='none';
   const lista=document.getElementById('r-productos-lista');
   lista.style.display='block';
+  const nombres={comfy:'👕 MEGA PROMO COMFY',fullcomfy:'🛡️ FULL COMFY',licra:'🌊 LICRA PROTECT',coleccion:'🎨 LICRA COLECCIÓN',toalla:'🏖️ TOALLA'};
   const codigos=(DEPTOS_MAP[sec]||[]).map(c=>c.toUpperCase().trim());
   const filtrados=todosProductosGC.filter(p=>codigos.includes(String(p.codigo||'').toUpperCase().trim()));
-  if(filtrados.length===0){ lista.innerHTML='<div style="color:var(--muted);padding:12px;font-size:13px;">Sin productos</div>'; return; }
-  lista.innerHTML=`<div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:700;">Productos</div>`+
-  `<div style="display:flex;flex-direction:column;gap:8px;">${filtrados.map(p=>`
-    <button onclick="rAgregarAlCarrito('${p.codigo}','${(p.nombre||p.codigo).replace(/'/g,"\\'")}',${p.precio_usd})"
-      style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;cursor:pointer;text-align:left;width:100%;"
-      onmouseover="this.style.borderColor='var(--gift)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div><div style="font-size:15px;font-weight:700;color:#fff;">${p.nombre||p.codigo}</div><div style="font-size:12px;color:var(--muted);">${p.codigo}</div></div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--gift);">$${Number(p.precio_usd).toFixed(2)}</div>
-    </button>`).join('')}</div>`;
+  lista.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <button onclick="rVolverCategorias()" style="background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--muted);padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">← Volver</button>
+      <div style="font-size:14px;font-weight:700;color:var(--gift);">${nombres[sec]||sec}</div>
+    </div>
+    ${sec==='comfy'?`<div style="background:#1a1a10;border:1px solid var(--warn);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--warn);margin-bottom:10px;">⚠️ Mínimo 2 unidades para esta categoría</div>`:''}
+    ${filtrados.length===0?'<div style="color:var(--muted);padding:12px;font-size:13px;">Sin productos disponibles</div>':
+    `<div style="display:flex;flex-direction:column;gap:8px;">${filtrados.map(p=>{
+      const esComfy11=p.codigo.toUpperCase()==='COMFY11';
+      if(esComfy11){
+        return `<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div><div style="font-size:15px;font-weight:700;color:#fff;">${p.nombre||p.codigo}</div><div style="font-size:12px;color:var(--muted);">${p.codigo} · mín. 2 unds</div></div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--gift);">$${Number(p.precio_usd).toFixed(2)}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button onclick="this.nextElementSibling.value=Math.max(2,parseInt(this.nextElementSibling.value||2)-1)" style="width:36px;height:36px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:20px;cursor:pointer;font-weight:700;">−</button>
+            <input type="number" id="comfy11-qty" min="2" value="2" style="width:60px;text-align:center;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:16px;font-weight:700;" oninput="if(parseInt(this.value)<2||!this.value)this.value=2">
+            <button onclick="this.previousElementSibling.value=parseInt(this.previousElementSibling.value||2)+1" style="width:36px;height:36px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:20px;cursor:pointer;font-weight:700;">+</button>
+            <button onclick="rAgregarComfy11('${p.codigo}','${(p.nombre||p.codigo).replace(/'/g,"\\'")}',${p.precio_usd})" style="flex:1;padding:10px;background:var(--gift);border:none;border-radius:8px;color:#000;font-size:14px;font-weight:700;cursor:pointer;">+ Agregar</button>
+          </div>
+        </div>`;
+      }
+      return `<button onclick="rAgregarAlCarrito('${p.codigo}','${(p.nombre||p.codigo).replace(/'/g,"\\'")}',${p.precio_usd})"
+        style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;cursor:pointer;text-align:left;width:100%;"
+        onmouseover="this.style.borderColor='var(--gift)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div><div style="font-size:15px;font-weight:700;color:#fff;">${p.nombre||p.codigo}</div><div style="font-size:12px;color:var(--muted);">${p.codigo}</div></div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--gift);">$${Number(p.precio_usd).toFixed(2)}</div>
+      </button>`;
+    }).join('')}</div>`}`;
+}
+
+function rVolverCategorias(){
+  document.getElementById('r-productos-lista').style.display='none';
+  document.getElementById('r-secciones').style.display='block';
+}
+
+function rAgregarComfy11(codigo, nombre, precioUsd){
+  const qty=Math.max(2,parseInt(document.getElementById('comfy11-qty')?.value||2));
+  for(let i=0;i<qty;i++){
+    rCarrito.push({codigo, nombre, precioUsd:Number(precioUsd)});
+  }
+  rRenderCarrito();
 }
 
 function rAgregarAlCarrito(codigo, nombre, precioUsd){
@@ -1187,6 +1236,15 @@ function rRenderCarrito(){
 function rValidarStep2(){
   const esMonto=gcData.modalidad==='Monto Fijo';
   if(esMonto && rCarrito.length===0){ alert('Selecciona al menos un producto'); return; }
+  // Validar mínimo 2 unidades de Mega Promo Comfy
+  const COMFY_CODES=['COMFY11','2PACK.COMFY','3PACK.COMFY','4PACK.COMFY'];
+  const comfyCount=rCarrito.filter(p=>COMFY_CODES.includes(p.codigo.toUpperCase())).length;
+  const totalCount=rCarrito.length;
+  const soloComfy=rCarrito.every(p=>COMFY_CODES.includes(p.codigo.toUpperCase()));
+  if(comfyCount>0 && comfyCount<2 && totalCount===comfyCount){
+    alert('La categoría Mega Promo Comfy requiere mínimo 2 unidades');
+    return;
+  }
   rGoStep(3);
 }
 
@@ -1271,10 +1329,22 @@ function rRenderResumen(){
 
   // Mostrar sección de pago si hay diferencia
   if(diferencia>0){
+    document.getElementById('r-diferencia-monto-txt').textContent='$'+diferencia.toFixed(2);
     document.getElementById('r-pago-wrap').style.display='block';
+    // Precargar tasa IKOA
+    if(!rTasaIKOA) rCargarTasa();
   } else {
     document.getElementById('r-pago-wrap').style.display='none';
   }
+}
+
+let rTasaIKOA=0;
+
+async function rCargarTasa(){
+  try{
+    const data=await scriptGETjson({action:'leerUltimaTasa'});
+    if(data.ok) rTasaIKOA=parseFloat(data.IKOA)||0;
+  }catch(e){}
 }
 
 function rSelectPago(tipo){
@@ -1283,6 +1353,22 @@ function rSelectPago(tipo){
   document.getElementById('r-pm-usd').classList.toggle('selected',tipo==='usd');
   document.getElementById('r-pago-ref-wrap').style.display='block';
   document.getElementById('r-pago-ref-label').textContent=tipo==='bs'?'N° Referencia (Bs)':'N° Referencia (Divisa)';
+  // Mostrar info de pago correspondiente
+  document.getElementById('r-pago-bs-info').style.display=tipo==='bs'?'block':'none';
+  document.getElementById('r-pago-usd-info').style.display=tipo==='usd'?'block':'none';
+  // Calcular monto diferencia
+  const totalCarrito=rCarrito.reduce((s,p)=>s+p.precioUsd,0);
+  const diferencia=Math.max(0,totalCarrito-Number(gcData.monto_usd));
+  if(tipo==='bs'){
+    const montoBs=rTasaIKOA>0?(diferencia*rTasaIKOA).toFixed(2):'(cargando tasa...)';
+    document.getElementById('r-monto-bs-val').textContent=rTasaIKOA>0?`Bs ${montoBs}`:'⏳ Cargando tasa...';
+    if(!rTasaIKOA) rCargarTasa().then(()=>{
+      const mb=(diferencia*(rTasaIKOA||0)).toFixed(2);
+      document.getElementById('r-monto-bs-val').textContent=`Bs ${mb}`;
+    });
+  } else {
+    document.getElementById('r-monto-usd-val').textContent=`$${diferencia.toFixed(2)}`;
+  }
 }
 
 async function rGuardarPedido(){
@@ -1301,7 +1387,7 @@ async function rGuardarPedido(){
     pagoRef=document.getElementById('r-pago-ref').value.trim();
   }
   try{
-    await scriptGETjson({
+    const res=await scriptGETjson({
       action:'addSolicitud',
       fecha:getFechaHora(),
       nombre, correo, cedula, celular,
@@ -1311,8 +1397,10 @@ async function rGuardarPedido(){
       piezas:productosDesc,
       agencia:rAgenciaSeleccionada,
       retira_nombre:nombre, retira_ci:cedula, retira_cel:celular,
+      subindex:'0', codigo_principal:'',
       pago_moneda:pagoMoneda, pago_monto:pagoMonto, pago_ref:pagoRef
     });
+    if(!res.ok) console.error('Error addSolicitud:', res.error);
   }catch(e){ console.warn('Error guardando pedido:',e); }
   // Notificar webhook
   try{
