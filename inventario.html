@@ -4691,8 +4691,8 @@ function enviarLinkWhatsApp(){
 }
 
 // ── IMPRENTA ──────────────────────────────────────────────────
-const DROPBOX_TOKEN='sl.u.AGjgd05o-msf8GFvg82TKRIxRnvRc76UV9faRhq517RyDIYBeCuMuHt0mwnIEa2B8idIQmwwSs-ZcqhQ7ptkDipQQlI35pN6lvT_WqvJR_J4jHjDEF_CM0CC-e7rFo-b6_HfJm8-zCPDaa0Aeb-9kQFMQ9k6_F5igGsGEAwfhs_8dMhA3oOAIrJIKaXGKY8UDtZSQZ7bB_8yAgKOwMp2DMKE65CanNc_3FpSVANykP9_krm6JaB3nyXduBt9KTsYCpOaOtOt2L9pEw2gcNsvlJog1L4jHh7GWi7JekNeCmxIFx3v47XlcxfgBvZMjfSUw_LbuVx0SrZamMWUgEcAS005i54czuBlQYw4PHMzPOQjejxDgHMUDp6uIySf1SlZZCE_HlcuJz3CWZ06yLX5lgRWjBZBDzK_IAljfGcoezPPP6GWOe-h94vzdakLtl6-tws-LhZh7VjUgaDwXKPW9e7PhinR20JsPb_TuYCK4_dL8cmcUFjBWs3tTZgP_wgsQYuIFjPvEmt7hBIiCcbkuJulpNW1RM6g563yklO5igozH45ndxFwMJR4yqyB1JnI4gyM467iJ25jIa62Vea4xOok_pTuvgtMfY4pxx_G2yEZywH2IC7jCoe5Kia4cbUL_crWIu1MpSevIKY8erGkrlAlKzobPYh0fuFCTtJEp8BVTkQl58Ol2WqaP6xS6U6l40uWF0g3p4BrPaPs_EJXanu4u5Kkd0DO8Kipr7Q3qY1LBqb9jWJvS0PKTzYKHUdwkd3l20jgyXKOdE8gfA4fH64i2gpp4BSoXpS-6-5eW_7I29kAU6CU_kcTcn285XDCy3RU45VEgHDbwFtD6baLLYPh7K1iEwqcHrgUCBb2IgdJPLxUgq05TWlyruE68VYW5kcs9pr34METJHZmGAsPJHObM4dDwPmZxGvVLQXj5-uxIL-ljqr3JvPrYB16lmW0GSXRmB4mTL6lTdQkmaF6muDo1eCC1qnKpq2x-RSwrBOXq4IfUUn2495BTQ8sRVKhHay41qj8ZTBjXnE8pGNhLr4mIrLoDuyA2aqX4uAz9fnY4j-VJZxgywknD-BCH2LRUuKQOFLV29eLZnUcw5M23z0-sFpsaqFEgot89Q-tJJepL03hFQZa6zaXfnsZnmGyGcgZCZamjzIhhrYGArlOMBZ4He7TQh-kFLUo3zItpIAsb7B5y8HwA3xvoPh-aTkUvaHrBC7mRk_L8_rZMwJhM5FZ0YJvkOuNkNQfBDazH84yyKq3XdsLvIHxDvOyQE5gVXJNsNEvPUsqlIOBYbkvqpXB';
-const DROPBOX_FOLDER='/IKOA/REGISTRO MANUFACTURA/COD RECORD';
+// ── IMPRENTA (via Make) ───────────────────────────────────────
+const WEBHOOK_IMPRENTA='https://hook.us2.make.com/dngto8spiobv5gwix6qhs1sjqx8ai021';
 let impPDFUrl='';
 
 async function buscarDocDropbox(){
@@ -4701,22 +4701,18 @@ async function buscarDocDropbox(){
   const lista=document.getElementById('imp-lista');
   if(!cod){ msg.style.display='block'; msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ Ingresa un número para buscar'; return; }
   msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
-  msg.innerHTML='<span class="spinner">↻</span> Buscando en Dropbox...';
+  msg.innerHTML='<span class="spinner">↻</span> Buscando archivos...';
   lista.innerHTML='';
   document.getElementById('imp-visor-wrap').style.display='none';
   try{
-    const res=await fetch('https://api.dropboxapi.com/2/files/list_folder',{
+    const res=await fetch(WEBHOOK_IMPRENTA,{
       method:'POST',
-      headers:{'Authorization':'Bearer '+DROPBOX_TOKEN,'Content-Type':'application/json'},
-      body:JSON.stringify({path:DROPBOX_FOLDER,recursive:false})
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({numero:cod})
     });
+    if(!res.ok) throw new Error('Error Make: '+res.status);
     const data=await res.json();
-    if(!res.ok) throw new Error(data.error_summary||'Error Dropbox');
-    const archivos=(data.entries||[]).filter(e=>
-      e['.tag']==='file' &&
-      e.name.toUpperCase().includes(cod.toUpperCase()) &&
-      e.name.toLowerCase().endsWith('.pdf')
-    );
+    const archivos=data.archivos||[];
     if(archivos.length===0){
       msg.style.background='#2a1010'; msg.style.color='var(--danger)';
       msg.innerHTML=`✗ Sin archivos con "${cod}"`;
@@ -4724,13 +4720,14 @@ async function buscarDocDropbox(){
     }
     msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
     msg.innerHTML=`✅ ${archivos.length} archivo(s) encontrado(s)`;
-    lista.innerHTML=archivos.map(f=>`
+    // Guardar en mapa por nombre
+    window._impArchivos=archivos;
+    lista.innerHTML=archivos.map((f,i)=>`
       <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;">
         <div>
-          <div style="font-size:14px;font-weight:700;color:var(--text);">📄 ${f.name}</div>
-          <div style="font-size:11px;color:var(--muted);">${(f.size/1024).toFixed(1)} KB</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);">📄 ${f.nombre||f.name||'Archivo '+i}</div>
         </div>
-        <button onclick="abrirPDF('${f.path_lower.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}')" style="padding:10px 16px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">📂 Abrir</button>
+        <button onclick="abrirPDF(${i})" style="padding:10px 16px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">📂 Abrir</button>
       </div>`).join('');
   }catch(e){
     msg.style.background='#2a1010'; msg.style.color='var(--danger)';
@@ -4738,30 +4735,15 @@ async function buscarDocDropbox(){
   }
 }
 
-async function abrirPDF(path, nombre){
+function abrirPDF(idx){
   const msg=document.getElementById('imp-msg');
-  msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
-  msg.innerHTML='<span class="spinner">↻</span> Cargando PDF...';
-  try{
-    const res=await fetch('https://content.dropboxapi.com/2/files/download',{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+DROPBOX_TOKEN,'Dropbox-API-Arg':JSON.stringify({path})}
-    });
-    if(!res.ok) throw new Error('Error descargando archivo');
-    const blob=await res.blob();
-    if(impPDFUrl) URL.revokeObjectURL(impPDFUrl);
-    impPDFUrl=URL.createObjectURL(blob);
-    document.getElementById('imp-visor-nombre').textContent=nombre;
-    document.getElementById('imp-iframe').src=impPDFUrl;
-    document.getElementById('imp-visor-wrap').style.display='block';
-    document.getElementById('imp-visor-wrap').scrollIntoView({behavior:'smooth'});
-    msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
-    msg.innerHTML='✅ PDF cargado';
-    setTimeout(()=>msg.style.display='none',2000);
-  }catch(e){
-    msg.style.background='#2a1010'; msg.style.color='var(--danger)';
-    msg.innerHTML='✗ '+e.message;
-  }
+  const f=(window._impArchivos||[])[idx];
+  if(!f||!f.link){ msg.style.display='block'; msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ Link no disponible'; return; }
+  impPDFUrl=f.link;
+  document.getElementById('imp-visor-nombre').textContent=f.nombre||f.name||'Archivo';
+  document.getElementById('imp-iframe').src=f.link;
+  document.getElementById('imp-visor-wrap').style.display='block';
+  document.getElementById('imp-visor-wrap').scrollIntoView({behavior:'smooth'});
 }
 
 function togglePaginaInput(){
