@@ -652,7 +652,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
       }catch(e){}
       cargarProductosGC();
     }catch(e){ showBloq('Error al verificar el link.'); }
-  },1800);
+  },2000);
 });
 
 function showBloq(msg){
@@ -903,8 +903,8 @@ function actualizarTotalesPago(){
 
 function copiarTexto(txt, btn){
   navigator.clipboard.writeText(txt).then(()=>{
-    const orig=btn.innerHTML; btn.innerHTML='✅'; setTimeout(()=>btn.innerHTML=orig,1500);
-  }).catch(()=>{ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); const orig=btn.innerHTML; btn.innerHTML='✅'; setTimeout(()=>btn.innerHTML=orig,1500); });
+    const orig=btn.innerHTML; btn.innerHTML='✅'; setTimeout(()=>btn.innerHTML=orig,2000);
+  }).catch(()=>{ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); const orig=btn.innerHTML; btn.innerHTML='✅'; setTimeout(()=>btn.innerHTML=orig,2000); });
 }
 
 let pagoSeleccionado='';

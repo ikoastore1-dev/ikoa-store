@@ -1271,7 +1271,7 @@ async function init(){
   setTimeout(()=>{
     const splash=document.getElementById('splash-inv');
     if(splash){ splash.style.transition='opacity .5s'; splash.style.opacity='0'; setTimeout(()=>splash.style.display='none',500); }
-  }, 4000);
+  }, 2000);
 
   showMsg('loading','<span class="spinner">↻</span> Cargando...');
   try{
@@ -1736,7 +1736,7 @@ async function registrarCargaMasiva(){
   msgEl.innerHTML=`✅ ${ok} registro(s) guardado(s)${err?` · ⚠️ ${err} error(s)`:''}`;
   document.getElementById('cm-unlock').value='';
   document.getElementById('cm-filas').innerHTML=''; cmCount=0;
-  setTimeout(()=>{ msgEl.style.display='none'; showProduct(currentProduct); renderStockLista(); },3000);
+  setTimeout(()=>{ msgEl.style.display='none'; showProduct(currentProduct); renderStockLista(); },2000);
 }
 
 function addCustomTalla(){
@@ -1968,13 +1968,13 @@ async function leerQRdesdeImagen(event){
     msgEl.innerHTML='✅ QR leído: <b>'+decoded+'</b>';
     document.getElementById('search-input').value=decoded;
     doSearch();
-    setTimeout(()=>{ msgEl.style.display='none'; },3000);
+    setTimeout(()=>{ msgEl.style.display='none'; },2000);
   }catch(e){
     msgEl.style.background='#2a1010';
     msgEl.style.border='1px solid var(--danger)';
     msgEl.style.color='var(--danger)';
     msgEl.innerHTML='✗ No se encontró QR en la imagen — intenta con mejor luz o más cerca';
-    setTimeout(()=>{ msgEl.style.display='none'; },4000);
+    setTimeout(()=>{ msgEl.style.display='none'; },2000);
   }
   event.target.value='';
 }
@@ -2012,7 +2012,7 @@ async function toggleScanner(){
     msgEl.style.border='1px solid var(--danger)';
     msgEl.style.color='var(--danger)';
     msgEl.innerHTML='✗ No se pudo acceder a la cámara';
-    setTimeout(()=>msgEl.style.display='none',3000);
+    setTimeout(()=>msgEl.style.display='none',2000);
     stopScanner();
   }
 }
@@ -2141,7 +2141,7 @@ async function eliminarCelApi(celular, fecha){
     const res=await scriptGETjson({action:'eliminarCelApi', celular, fecha});
     if(res.ok){
       msgEl.style.color='var(--accent)'; msgEl.innerHTML='Registro eliminado';
-      setTimeout(()=>{ msgEl.style.display='none'; cargarCelApi(); },1500);
+      setTimeout(()=>{ msgEl.style.display='none'; cargarCelApi(); },2000);
     } else throw new Error(res.error||'Error');
   }catch(e){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='Error: '+e.message; }
 }
@@ -2266,12 +2266,12 @@ async function ejecutarColorProg(){
       }
       msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)';
       msgEl.innerHTML=`✅ Color ${accion==='agregar'?'agregado':'eliminado'}: ${color}`;
-      setTimeout(()=>{ msgEl.style.display='none'; cargarColores(app); },1800);
+      setTimeout(()=>{ msgEl.style.display='none'; cargarColores(app); },2000);
     } else throw new Error(res.error||'Error desconocido');
   }catch(e){
     msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)';
     msgEl.innerHTML='✗ '+e.message;
-    setTimeout(()=>msgEl.style.display='none',3000);
+    setTimeout(()=>msgEl.style.display='none',2000);
   }
 }
 
@@ -2374,7 +2374,7 @@ async function guardarTasas(){
       msgEl.innerHTML=`✅ Tasas actualizadas · ${USUARIOS[unlock]}`;
       document.getElementById('tasa-tab-unlock').value='';
       cargarTasas();
-      setTimeout(()=>{ msgEl.style.display='none'; },3000);
+      setTimeout(()=>{ msgEl.style.display='none'; },2000);
     } else { throw new Error(data.error||'Error desconocido'); }
   }catch(e){
     msgEl.style.background='#2a1010';
@@ -2703,6 +2703,7 @@ function cerrarAuthGen(){
 }
 
 // ── FIN MODAL AUTH GENERICO ───────────────────────────────────
+let _gcRowsMap={};
 let gcSubActual='pendiente';
 
 function switchGCSub(sub){
@@ -2731,6 +2732,9 @@ async function cargarGiftCards(q=''){
     let rows=data.rows||[];
     if(!esPendiente) rows=rows.filter(r=>String(r[6]||'').trim()===filtroStatus);
     if(rows.length===0){ list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">Sin registros</div>'; return; }
+    // Guardar rows en mapa para acceso por codigo
+    _gcRowsMap={};
+    rows.forEach(r=>{ _gcRowsMap[String(r[0]||'').trim()]=r; });
     list.innerHTML=rows.map(r=>{
       const [codigo,fecha,modalidad,montoBs,montoUsd,productos,status,comprador,,benNombre,benCel,pagoMoneda,pagoMonto,pagoRef]=r;
       const statusColor=status==='Pendiente'?'var(--warn)':status==='Pagado'?'#cc66ff':status==='Usado'?'var(--accent)':'var(--muted)';
@@ -2749,13 +2753,13 @@ async function cargarGiftCards(q=''){
         </div>
         ${status==='Pendiente'?`
         <div style="display:flex;gap:8px;margin-top:12px;">
-          <button onclick="aprobarPagoGC('${codigo}',${JSON.stringify(r)})" style="flex:1;padding:10px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">✅ Aprobar Pago</button>
-          <button onclick="editarGC('${codigo}',${JSON.stringify(r).replace(/'/g,"&apos;")})" style="padding:10px 14px;background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;">✏️</button>
+          <button onclick="aprobarPagoGC('${codigo}')" style="flex:1;padding:10px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">✅ Aprobar Pago</button>
+          <button onclick="editarGC('${codigo}')" style="padding:10px 14px;background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;">✏️</button>
         </div>`:''}
         ${status==='Pagado'?`
         <div style="display:flex;gap:8px;margin-top:12px;">
           <button onclick="marcarUsadaGC('${codigo}')" style="flex:1;padding:10px;background:var(--surface2);border:1.5px solid var(--muted);border-radius:8px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">✓ Marcar como Usada</button>
-          <button onclick="editarGC('${codigo}',${JSON.stringify(r).replace(/'/g,"&apos;")})" style="padding:10px 14px;background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;">✏️</button>
+          <button onclick="editarGC('${codigo}')" style="padding:10px 14px;background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;">✏️</button>
         </div>`:''}
       </div>`;
     }).join('');
@@ -2767,11 +2771,12 @@ async function cargarGiftCards(q=''){
 let gcCodigoPendiente='';
 let gcDataPendiente=null;
 
-function aprobarPagoGC(codigo, rowData){
+function aprobarPagoGC(codigo){
+  const rowData=_gcRowsMap[codigo]||[];
   gcCodigoPendiente=codigo;
   gcDataPendiente=rowData;
   document.getElementById('gc-apro-resumen').innerHTML=
-    `<b style="color:#cc66ff;">${codigo}</b><br>Comprador: <b>${rowData[7]||''}</b><br>Pago: <b>${rowData[11]||''} ${rowData[12]||''}</b> · Ref: ${rowData[13]||''}`;
+    `<b style="color:#cc66ff;">${codigo}</b><br>Comprador: <b>${rowData[7]||''}</b><br>Pago: <b>${rowData[12]||''} ${rowData[13]||''}</b> · Ref: ${rowData[14]||''}`;
   document.getElementById('gc-apro-unlock').value='';
   document.getElementById('gc-apro-error').textContent='';
   document.getElementById('modal-gc-aprobar').classList.remove('hidden');
@@ -2825,7 +2830,8 @@ async function confirmarUsadaGC(){
 
 let gcEditandoCodigo='';
 
-function editarGC(codigo, row){
+function editarGC(codigo){
+  const row=_gcRowsMap[codigo]||[];
   gcEditandoCodigo=codigo;
   document.getElementById('edit-gc-codigo').textContent=codigo;
   document.getElementById('edit-gc-comprador').value=row[7]||'';
@@ -2865,12 +2871,12 @@ async function guardarEdicionGC(){
     if(res.ok){
       msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
       msg.innerHTML='✅ GiftCard actualizada';
-      setTimeout(()=>{ msg.style.display='none'; cargarGiftCards(''); },1800);
+      setTimeout(()=>{ msg.style.display='none'; cargarGiftCards(''); },2000);
     } else throw new Error(res.error||'Error');
   }catch(e){
     msg.style.background='#2a1010'; msg.style.color='var(--danger)';
     msg.innerHTML='✗ '+e.message;
-    setTimeout(()=>msg.style.display='none',3000);
+    setTimeout(()=>msg.style.display='none',2000);
   }
 }
 
@@ -2934,7 +2940,7 @@ async function guardarRespaldo(){
       document.getElementById('rv-monto').value='';
       document.getElementById('rv-tasa').value='';
       document.getElementById('rv-unlock').value='';
-      setTimeout(()=>{ msgEl.style.display='none'; },3000);
+      setTimeout(()=>{ msgEl.style.display='none'; },2000);
     } else { throw new Error(data.error||'Error desconocido'); }
   }catch(e){
     msgEl.style.background='#2a1010';
@@ -3327,7 +3333,7 @@ async function guardarUrgente(tipo, codigo, inputId){
   try{
     const res=await scriptGETjson({action:'editarUrgente',hoja:hoja,codigo:codigo,urgente:val});
     if(res.ok){
-      if(msgEl){ msgEl.style.color='var(--accent)'; msgEl.innerHTML=`✅ Urgencia guardada · ${USUARIOS[unlockUp]}`; setTimeout(()=>{ msgEl.style.display='none'; },2500); }
+      if(msgEl){ msgEl.style.color='var(--accent)'; msgEl.innerHTML=`✅ Urgencia guardada · ${USUARIOS[unlockUp]}`; setTimeout(()=>{ msgEl.style.display='none'; },2000); }
     } else throw new Error(res.error||'Error');
   }catch(e){
     if(msgEl){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='✗ Error: '+e.message; }
@@ -3387,7 +3393,7 @@ async function guardarEdicionCola(){
       msgEl.style.border='1px solid var(--accent)';
       msgEl.style.color='var(--accent)';
       msgEl.innerHTML='✅ Cambios guardados · '+USUARIOS[unlock];
-      setTimeout(()=>{msgEl.style.display='none';cargarCola();},3000);
+      setTimeout(()=>{msgEl.style.display='none';cargarCola();},2000);
     } else {
       throw new Error(res.error||'Error al guardar');
     }
@@ -3799,7 +3805,7 @@ async function guardarEdicionApro(){
       msgEl.style.border='1px solid var(--accent)';
       msgEl.style.color='var(--accent)';
       msgEl.innerHTML='✅ Cambios guardados · '+USUARIOS[unlock];
-      setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},3000);
+      setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},2000);
     } else throw new Error(res.error||'Error al guardar');
   }catch(e){
     msgEl.style.background='#2a1010';
@@ -3858,7 +3864,7 @@ async function confirmarReprobar(){
     msgEl.style.border='1px solid #4a1a1a';
     msgEl.style.color='var(--danger)';
     msgEl.innerHTML=`✗ Solicitud reprobada · <b>${motivo}</b> · ${USUARIOS[unlock]}`;
-    setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},4000);
+    setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},2000);
   }catch(e){
     msgEl.style.background='#2a1010';
     msgEl.style.color='var(--danger)';
@@ -3943,7 +3949,7 @@ async function confirmarAprobacion(){
       });
     }catch(waErr){ console.warn('WhatsApp webhook error:',waErr); }
 
-    setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},4000);
+    setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},2000);
   }catch(e){
     msgEl.style.background='#2a1010';
     msgEl.style.border='1px solid #4a1a1a';
@@ -4248,7 +4254,7 @@ document.getElementById('gestion-form').addEventListener('submit',async function
           const b=document.getElementById('gbtn-'+t);
           if(b){b.style.borderColor='var(--border)';b.style.background='var(--surface2)';b.style.color='var(--muted)';}
         });
-      },4000);
+      },2000);
     } else {
       throw new Error('Error del servidor');
     }

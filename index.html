@@ -488,13 +488,13 @@ async function leerQRdesdeImagen(event){
     msgEl.innerHTML='✅ QR leído: <b>'+decoded+'</b>';
     document.getElementById('search-input').value=decoded;
     doSearch();
-    setTimeout(()=>{ msgEl.style.display='none'; },3000);
+    setTimeout(()=>{ msgEl.style.display='none'; },2000);
   }catch(e){
     msgEl.style.background='#2a1010';
     msgEl.style.border='1px solid var(--danger)';
     msgEl.style.color='var(--danger)';
     msgEl.innerHTML='✗ No se encontró QR — intenta con mejor luz o más cerca';
-    setTimeout(()=>{ msgEl.style.display='none'; },4000);
+    setTimeout(()=>{ msgEl.style.display='none'; },2000);
   }
   event.target.value='';
 }
@@ -653,7 +653,7 @@ loadData();
 setTimeout(()=>{
   const s=document.getElementById('splash-idx');
   if(s){ s.style.transition='opacity .5s'; s.style.opacity='0'; setTimeout(()=>s.style.display='none',500); }
-}, 4000);
+}, 2000);
 </script>
 </body>
 </html>
