@@ -2797,7 +2797,13 @@ async function confirmarAprobarGC(){
     if(!res.ok) throw new Error(res.error||'Error');
     try{ const wb1=new FormData(); wb1.append('celular',res.comp_cel||''); wb1.append('nombre',res.comprador||''); wb1.append('mensaje',`Hola ${res.comprador||''} Somos IKOA Tu GiftCard fue procesada correctamente`); await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:wb1,mode:'no-cors'}); }catch(e){}
     try{ const wb2=new FormData(); wb2.append('celular',res.ben_cel||''); wb2.append('nombre',res.ben_nombre||''); wb2.append('mensaje',`Hola ${res.ben_nombre||''} Somos IKOA Tienes una GiftCard disponible Recibiras los detalles por correo`); await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:wb2,mode:'no-cors'}); }catch(e){}
-    try{ const wb3=new FormData(); wb3.append('nombre',res.ben_nombre||''); wb3.append('celular',res.ben_correo||''); wb3.append('mensaje',`GiftCard ${gcCodigoPendiente} aprobada para ${res.ben_nombre||''}`); await fetch('https://hook.us2.make.com/gb8kns1v2r16u068i2qxmxsa6zfq8h76',{method:'POST',body:wb3,mode:'no-cors'}); }catch(e){}
+    try{ const wb3=new FormData(); 
+      const benCorreo=_gcRowsMap[gcCodigoPendiente]?String(_gcRowsMap[gcCodigoPendiente][11]||'').trim():'';
+      wb3.append('nombre',res.ben_nombre||''); 
+      wb3.append('celular', benCorreo||res.ben_correo||''); 
+      wb3.append('mensaje',`GiftCard ${gcCodigoPendiente} aprobada para ${res.ben_nombre||''}`); 
+      await fetch('https://hook.us2.make.com/gb8kns1v2r16u068i2qxmxsa6zfq8h76',{method:'POST',body:wb3,mode:'no-cors'}); 
+    }catch(e){}
     msg.style.color='var(--accent)'; msg.innerHTML=`✅ GiftCard ${gcCodigoPendiente} aprobada`;
     setTimeout(()=>{ msg.style.display='none'; cargarGiftCards(''); },2000);
   }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
