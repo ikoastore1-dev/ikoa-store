@@ -366,10 +366,9 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <div class="field-group"><div class="field-label">Retira Nombre</div><input class="field-input" id="ec-retira" type="text" style="width:100%;"></div>
       <div class="field-group"><div class="field-label">Retira CI</div><input class="field-input" id="ec-retira-ci" type="text" style="width:100%;"></div>
       <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Retira Celular</div><input class="field-input" id="ec-retira-cel" type="text" style="width:100%;"></div>
-      <div class="field-group"><div class="field-label">Color de Tela</div><input class="field-input" id="ec-tela" type="text" style="width:100%;"></div>
-      <div class="field-group"><div class="field-label">Color de Vinil</div><input class="field-input" id="ec-vinil" type="text" style="width:100%;"></div>
-      <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Piezas</div><textarea class="field-input" id="ec-piezas" rows="4" style="width:100%;resize:vertical;font-size:12px;"></textarea></div>
     </div>
+    <!-- Packs dinámicos -->
+    <div id="ec-packs-container"></div>
     <div class="field-label" style="margin-bottom:6px;">Código de autorización</div>
     <input class="modal-cod-input" type="password" id="ec-unlock" placeholder="Tu código personal" maxlength="20">
     <div class="modal-error" id="ec-error"></div>
@@ -3524,7 +3523,7 @@ async function cargarCola(){
           </div>
         </div>`;
         html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-          <button onclick='abrirEditarCola(${JSON.stringify({codigoC:base,nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),tela:v(15),vinil:v(16),piezas:v(17)})})'
+          <button onclick='abrirEditarCola(window["_colaData_${colaKey}"])'
             style="padding:13px;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:10px;color:var(--accent2);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">✏️ EDITAR</button>
           <button onclick='abrirModalPlanificacion(window["_colaData_${colaKey}"])'
           style="padding:13px;background:linear-gradient(135deg,var(--warn),#c07010);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">
@@ -3596,7 +3595,7 @@ let pendingEditCola=null;
 
 function abrirEditarCola(data){
   pendingEditCola=data;
-  document.getElementById('edit-cola-codigo').textContent='Código: '+data.codigoC;
+  document.getElementById('edit-cola-codigo').textContent='Código: '+(data.codigoCBase||data.codigoC||'');
   document.getElementById('ec-nombre').value=data.nombre||'';
   document.getElementById('ec-cedula').value=data.cedula||'';
   document.getElementById('ec-correo').value=data.correo||'';
@@ -3605,9 +3604,33 @@ function abrirEditarCola(data){
   document.getElementById('ec-retira').value=data.retira||'';
   document.getElementById('ec-retira-ci').value=data.retiraCi||'';
   document.getElementById('ec-retira-cel').value=data.retiraCel||'';
-  document.getElementById('ec-tela').value=data.tela||'';
-  document.getElementById('ec-vinil').value=data.vinil||'';
-  document.getElementById('ec-piezas').value=(data.piezas||'').split(' | ').join('\n');
+
+  // Renderizar packs dinámicamente
+  const packs=data.allPacks||[];
+  const codigos=data.allCodigosC||[data.codigoC||data.codigoCBase];
+  const container=document.getElementById('ec-packs-container');
+  if(packs.length===0){
+    container.innerHTML=`
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Pack único</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="field-group"><div class="field-label">Color Tela</div><input class="field-input" id="ec-tela-0" type="text" value="${data.tela||''}" style="width:100%;"></div>
+          <div class="field-group"><div class="field-label">Color Vinil</div><input class="field-input" id="ec-vinil-0" type="text" value="${data.vinil||''}" style="width:100%;"></div>
+          <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Piezas</div><textarea class="field-input" id="ec-piezas-0" rows="3" style="width:100%;resize:vertical;font-size:12px;">${(data.piezas||'').split(' | ').join('\n')}</textarea></div>
+        </div>
+      </div>`;
+  } else {
+    container.innerHTML=packs.map((pk,i)=>`
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Pack ${i+1} · ${codigos[i]||''}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="field-group"><div class="field-label">Color Tela</div><input class="field-input" id="ec-tela-${i}" type="text" value="${String(pk[15]||'')}" style="width:100%;"></div>
+          <div class="field-group"><div class="field-label">Color Vinil</div><input class="field-input" id="ec-vinil-${i}" type="text" value="${String(pk[16]||'')}" style="width:100%;"></div>
+          <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Piezas</div><textarea class="field-input" id="ec-piezas-${i}" rows="3" style="width:100%;resize:vertical;font-size:12px;">${String(pk[17]||'').split(' | ').join('\n')}</textarea></div>
+        </div>
+      </div>`).join('');
+  }
+
   document.getElementById('ec-unlock').value='';
   document.getElementById('ec-error').textContent='';
   document.getElementById('modal-editar-cola').classList.remove('hidden');
@@ -3620,15 +3643,12 @@ async function guardarEdicionCola(){
   if(!USUARIOS[unlock]){errEl.textContent='❌ Código incorrecto';document.getElementById('ec-unlock').value='';return;}
   document.getElementById('modal-editar-cola').classList.add('hidden');
   const msgEl=document.getElementById('cola-msg');
-  msgEl.style.display='block';
-  msgEl.style.background='var(--surface2)';
-  msgEl.style.color='var(--muted)';
+  msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
   msgEl.innerHTML='<span class="spinner">↻</span> Guardando cambios...';
   try{
-    const piezasText=document.getElementById('ec-piezas').value.trim().split('\n').filter(l=>l.trim()).join(' | ');
-    const res=await scriptGETjson({
-      action:'editarCola',
-      codigoC:pendingEditCola.codigoC,
+    const packs=pendingEditCola.allPacks||[];
+    const codigos=pendingEditCola.allCodigosC||[pendingEditCola.codigoC||pendingEditCola.codigoCBase];
+    const datosDatos={
       nombre:document.getElementById('ec-nombre').value.trim(),
       cedula:document.getElementById('ec-cedula').value.trim(),
       correo:document.getElementById('ec-correo').value.trim(),
@@ -3636,22 +3656,26 @@ async function guardarEdicionCola(){
       agencia:document.getElementById('ec-agencia').value.trim(),
       retira:document.getElementById('ec-retira').value.trim(),
       retira_ci:document.getElementById('ec-retira-ci').value.trim(),
-      retira_cel:document.getElementById('ec-retira-cel').value.trim(),
-      tela:document.getElementById('ec-tela').value.trim(),
-      vinil:document.getElementById('ec-vinil').value.trim(),
-      piezas:piezasText
-    });
-    if(res.ok){
-      msgEl.style.border='1px solid var(--accent)';
-      msgEl.style.color='var(--accent)';
-      msgEl.innerHTML='✅ Cambios guardados · '+USUARIOS[unlock];
-      setTimeout(()=>{msgEl.style.display='none';cargarCola();}, 2000);
-    } else {
-      throw new Error(res.error||'Error al guardar');
+      retira_cel:document.getElementById('ec-retira-cel').value.trim()
+    };
+    const total=packs.length||1;
+    for(let i=0;i<total;i++){
+      const codigoC=codigos[i]||codigos[0];
+      const piezasText=(document.getElementById('ec-piezas-'+i)?.value||'').trim().split('\n').filter(l=>l.trim()).join(' | ');
+      await scriptGETjson({
+        action:'editarCola',
+        codigoC,
+        ...datosDatos,
+        tela:document.getElementById('ec-tela-'+i)?.value.trim()||'',
+        vinil:document.getElementById('ec-vinil-'+i)?.value.trim()||'',
+        piezas:piezasText
+      });
     }
+    msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)';
+    msgEl.innerHTML='✅ Cambios guardados · '+USUARIOS[unlock];
+    setTimeout(()=>{msgEl.style.display='none'; cargarCola();}, 2000);
   }catch(e){
-    msgEl.style.background='#2a1010';
-    msgEl.style.color='var(--danger)';
+    msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)';
     msgEl.innerHTML='✗ Error: '+e.message;
   }
 }
