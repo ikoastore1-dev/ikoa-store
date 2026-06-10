@@ -94,7 +94,7 @@ window.addEventListener('load',function(){
     const s=document.getElementById('splash');
     s.style.opacity='0';
     setTimeout(function(){ s.style.display='none'; },600);
-  },2000);
+  }, 1950);
 });
 </script>
 
@@ -806,8 +806,8 @@ function validateStep(n){
     alerta.style.display='none';
     for(let i=0; i<pedido.piezas.length; i++){
       const p=pedido.piezas[i];
-      if(!p.genero||!p.talla){ alert(`Completa género y talla en la franela ${i+1}`); return false; }
-      if(!p.sinNombre && !p.nombre){ alert(`⚠️ La franela ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
+      if(!p.genero||!p.talla){ alert(`Completa género y talla en el${pedido.variante==='Short'?' short':' la franela'} ${i+1}`); return false; }
+      if(pedido.variante!=='Short' && !p.sinNombre && !p.nombre){ alert(`⚠️ La franela ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
     }
     return true;
   }
@@ -967,11 +967,15 @@ function setMismoEnvio(val){
 // ── PIEZAS ────────────────────────────────────────────────────
 function inicializarPiezas(){
   if(!pedido.pack||pedido.pack<1){ alert('Selecciona el producto primero'); goStep(2); return; }
+  const esShort=pedido.variante==='Short';
   // Show product label in step4
   const lbl=document.getElementById('step4-producto-label');
   if(lbl) lbl.textContent=pedido.nombreProducto||'—';
   const packLbl=document.getElementById('pack-total-lbl');
-  if(packLbl) packLbl.textContent=pedido.pack===1?'1 prenda':pedido.pack+' franelas';
+  if(packLbl) packLbl.textContent=pedido.pack===1?`1 ${esShort?'short':'prenda'}`:pedido.pack+` ${esShort?'shorts':'franelas'}`;
+  // Update step4 title
+  const step4title=document.querySelector('#step4 .step-title');
+  if(step4title) step4title.textContent=esShort?'Tallas y nombres (Short)':'Tallas y nombres';
   const container=document.getElementById('piezas-container');
   container.innerHTML='';
   piezaCount=0;
@@ -991,8 +995,10 @@ function addPieza(copiarDe=null){
   const nomCopy=copiarDe?document.getElementById('pz-nombre-'+copiarDe)?.value:'';
   const sinCopy=copiarDe?document.getElementById('pz-sinombre-'+copiarDe)?.checked:false;
   const total=document.getElementById('piezas-container').querySelectorAll('.pieza-card').length+1;
+  const esShort=pedido.variante==='Short';
+  const labelPrenda=esShort?'Short':'Franela';
   div.innerHTML=`
-    <div class="pieza-num">Franela #${id} ${total>pedido.pack?'<span style="color:var(--warn);font-size:11px;">(extra)</span>':''}</div>
+    <div class="pieza-num">${labelPrenda} #${id} ${total>pedido.pack?'<span style="color:var(--warn);font-size:11px;">(extra)</span>':''}</div>
     ${total>pedido.pack?`<button class="remove-btn" onclick="removePieza(${id})">✕</button>`:''}
     <div class="pieza-grid">
       <div class="field-group">
@@ -1011,7 +1017,7 @@ function addPieza(copiarDe=null){
         </select>
       </div>
     </div>
-    <div class="field-group" style="margin-bottom:6px">
+    ${!esShort?`<div class="field-group" style="margin-bottom:6px">
       <div class="field-label">Nombre en la prenda</div>
       <div class="field-note">Manga derecha · Sin iniciales ni logos</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;margin-top:4px;">
@@ -1019,13 +1025,13 @@ function addPieza(copiarDe=null){
         <label for="pz-sinombre-${id}" style="font-size:13px;color:var(--muted);cursor:pointer;">Sin nombre en manga derecha</label>
       </div>
       <input class="field-input" type="text" id="pz-nombre-${id}" placeholder="Ej: María, Carlos..." value="${nomCopy}" style="${sinCopy?'display:none':''}">
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;margin-bottom:6px;">
+    </div>`:`<input type="hidden" id="pz-sinombre-${id}" value="true"><input type="hidden" id="pz-nombre-${id}" value="">`}
+    ${!esShort?`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;margin-bottom:6px;">
       <input type="checkbox" id="pz-capucha-${id}" ${pedido.capucha==='Con Capucha'?' checked':''} style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
-      <label for="pz-capucha-${id}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">Con capucha <span style="color:var(--accent);font-size:11px;">(+recarga C.01)</span></label>
-    </div>
+      <label for="pz-capucha-${id}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">Con capucha</label>
+    </div>`:''}
     <div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 10px;background:var(--surface2);border-radius:8px;">
-      <div style="font-size:12px;color:var(--muted);flex:1;">Repetir esta franela:</div>
+      <div style="font-size:12px;color:var(--muted);flex:1;">Repetir este ${labelPrenda.toLowerCase()}:</div>
       <button onclick="cambiarRepeticion(${id},-1)" style="width:32px;height:32px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
       <span id="rep-count-${id}" style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);min-width:28px;text-align:center;">1</span>
       <button onclick="cambiarRepeticion(${id},+1)" style="width:32px;height:32px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
@@ -1231,12 +1237,12 @@ function copiarMonto(moneda, btnId){
   const texto=el.textContent.replace('Bs ','').replace('$','').trim();
   navigator.clipboard.writeText(texto).then(()=>{
     const btn=document.getElementById(btnId);
-    if(btn){ btn.textContent='✅ Copiado'; setTimeout(()=>{ btn.textContent='📋 Copiar'; },2000); }
+    if(btn){ btn.textContent='✅ Copiado'; setTimeout(()=>{ btn.textContent='📋 Copiar'; }, 2000); }
   }).catch(()=>{
     const ta=document.createElement('textarea');
     ta.value=texto; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
     const btn=document.getElementById(btnId);
-    if(btn){ btn.textContent='✅ Copiado'; setTimeout(()=>{ btn.textContent='📋 Copiar'; },2000); }
+    if(btn){ btn.textContent='✅ Copiado'; setTimeout(()=>{ btn.textContent='📋 Copiar'; }, 2000); }
   });
 }
 function copiarDato(texto, btnId){
@@ -1245,7 +1251,7 @@ function copiarDato(texto, btnId){
     const orig=btn.textContent;
     btn.textContent='✓ Copiado';
     btn.style.color='var(--accent)';
-    setTimeout(()=>{ btn.textContent=orig; btn.style.color=''; },2000);
+    setTimeout(()=>{ btn.textContent=orig; btn.style.color=''; }, 2000);
   }).catch(()=>{ alert('No se pudo copiar. Copia manualmente: '+texto); });
 }
 

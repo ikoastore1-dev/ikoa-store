@@ -1287,7 +1287,7 @@ async function init(){
   setTimeout(()=>{
     const splash=document.getElementById('splash-inv');
     if(splash){ splash.style.transition='opacity .5s'; splash.style.opacity='0'; setTimeout(()=>splash.style.display='none',500); }
-  }, 2000);
+  }, 1950);
 
   showMsg('loading','<span class="spinner">↻</span> Cargando...');
   try{
@@ -1636,7 +1636,7 @@ async function subirFotoStock(event){
     msgEl.style.background='var(--surface2)';
     msgEl.style.color='var(--accent)';
     msgEl.innerHTML='✅ Foto enviada';
-    setTimeout(()=>{ msgEl.style.display='none'; },2000);
+    setTimeout(()=>{ msgEl.style.display='none'; }, 2000);
   }catch(e){
     msgEl.style.background='#2a1010';
     msgEl.style.color='var(--danger)';
@@ -1752,7 +1752,7 @@ async function registrarCargaMasiva(){
   msgEl.innerHTML=`✅ ${ok} registro(s) guardado(s)${err?` · ⚠️ ${err} error(s)`:''}`;
   document.getElementById('cm-unlock').value='';
   document.getElementById('cm-filas').innerHTML=''; cmCount=0;
-  setTimeout(()=>{ msgEl.style.display='none'; showProduct(currentProduct); renderStockLista(); },2000);
+  setTimeout(()=>{ msgEl.style.display='none'; showProduct(currentProduct); renderStockLista(); }, 2000);
 }
 
 function addCustomTalla(){
@@ -1984,13 +1984,13 @@ async function leerQRdesdeImagen(event){
     msgEl.innerHTML='✅ QR leído: <b>'+decoded+'</b>';
     document.getElementById('search-input').value=decoded;
     doSearch();
-    setTimeout(()=>{ msgEl.style.display='none'; },2000);
+    setTimeout(()=>{ msgEl.style.display='none'; }, 2000);
   }catch(e){
     msgEl.style.background='#2a1010';
     msgEl.style.border='1px solid var(--danger)';
     msgEl.style.color='var(--danger)';
     msgEl.innerHTML='✗ No se encontró QR en la imagen — intenta con mejor luz o más cerca';
-    setTimeout(()=>{ msgEl.style.display='none'; },2000);
+    setTimeout(()=>{ msgEl.style.display='none'; }, 2000);
   }
   event.target.value='';
 }
@@ -2157,7 +2157,7 @@ async function eliminarCelApi(celular, fecha){
     const res=await scriptGETjson({action:'eliminarCelApi', celular, fecha});
     if(res.ok){
       msgEl.style.color='var(--accent)'; msgEl.innerHTML='Registro eliminado';
-      setTimeout(()=>{ msgEl.style.display='none'; cargarCelApi(); },2000);
+      setTimeout(()=>{ msgEl.style.display='none'; cargarCelApi(); }, 2000);
     } else throw new Error(res.error||'Error');
   }catch(e){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='Error: '+e.message; }
 }
@@ -2282,7 +2282,7 @@ async function ejecutarColorProg(){
       }
       msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)';
       msgEl.innerHTML=`✅ Color ${accion==='agregar'?'agregado':'eliminado'}: ${color}`;
-      setTimeout(()=>{ msgEl.style.display='none'; cargarColores(app); },2000);
+      setTimeout(()=>{ msgEl.style.display='none'; cargarColores(app); }, 2000);
     } else throw new Error(res.error||'Error desconocido');
   }catch(e){
     msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)';
@@ -2390,7 +2390,7 @@ async function guardarTasas(){
       msgEl.innerHTML=`✅ Tasas actualizadas · ${USUARIOS[unlock]}`;
       document.getElementById('tasa-tab-unlock').value='';
       cargarTasas();
-      setTimeout(()=>{ msgEl.style.display='none'; },2000);
+      setTimeout(()=>{ msgEl.style.display='none'; }, 2000);
     } else { throw new Error(data.error||'Error desconocido'); }
   }catch(e){
     msgEl.style.background='#2a1010';
@@ -2836,7 +2836,7 @@ async function confirmarAprobarGC(){
       await fetch('https://hook.us2.make.com/gb8kns1v2r16u068i2qxmxsa6zfq8h76',{method:'POST',body:wb3,mode:'no-cors'});
     }catch(e){}
     msg.style.color='var(--accent)'; msg.innerHTML=`✅ GiftCard ${gcCodigoPendiente} aprobada`;
-    setTimeout(()=>{ msg.style.display='none'; cargarGiftCards(''); },2000);
+    setTimeout(()=>{ msg.style.display='none'; cargarGiftCards(''); }, 2000);
   }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
 }
 
@@ -2861,7 +2861,7 @@ async function confirmarUsadaGC(){
     const res=await scriptGETjson({action:'marcarGiftCardUsada', codigo:gcCodigoPendiente, fecha_uso:new Date().toLocaleString('es-VE')});
     if(!res.ok) throw new Error(res.error||'Error');
     msg.style.color='var(--accent)'; msg.innerHTML=`✅ GiftCard ${gcCodigoPendiente} marcada como usada`;
-    setTimeout(()=>{ msg.style.display='none'; cargarGiftCards(''); },2000);
+    setTimeout(()=>{ msg.style.display='none'; cargarGiftCards(''); }, 2000);
   }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
 }
 
@@ -2908,7 +2908,7 @@ async function guardarEdicionGC(){
     if(res.ok){
       msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
       msg.innerHTML='✅ GiftCard actualizada';
-      setTimeout(()=>{ msg.style.display='none'; cargarGiftCards(''); },2000);
+      setTimeout(()=>{ msg.style.display='none'; cargarGiftCards(''); }, 2000);
     } else throw new Error(res.error||'Error');
   }catch(e){
     msg.style.background='#2a1010'; msg.style.color='var(--danger)';
@@ -2977,7 +2977,7 @@ async function guardarRespaldo(){
       document.getElementById('rv-monto').value='';
       document.getElementById('rv-tasa').value='';
       document.getElementById('rv-unlock').value='';
-      setTimeout(()=>{ msgEl.style.display='none'; },2000);
+      setTimeout(()=>{ msgEl.style.display='none'; }, 2000);
     } else { throw new Error(data.error||'Error desconocido'); }
   }catch(e){
     msgEl.style.background='#2a1010';
@@ -3466,7 +3466,7 @@ async function guardarEdicionCola(){
       msgEl.style.border='1px solid var(--accent)';
       msgEl.style.color='var(--accent)';
       msgEl.innerHTML='✅ Cambios guardados · '+USUARIOS[unlock];
-      setTimeout(()=>{msgEl.style.display='none';cargarCola();},2000);
+      setTimeout(()=>{msgEl.style.display='none';cargarCola();}, 2000);
     } else {
       throw new Error(res.error||'Error al guardar');
     }
@@ -3879,7 +3879,7 @@ async function guardarEdicionApro(){
       msgEl.style.border='1px solid var(--accent)';
       msgEl.style.color='var(--accent)';
       msgEl.innerHTML='✅ Cambios guardados · '+USUARIOS[unlock];
-      setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},2000);
+      setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();}, 2000);
     } else throw new Error(res.error||'Error al guardar');
   }catch(e){
     msgEl.style.background='#2a1010';
@@ -3938,7 +3938,7 @@ async function confirmarReprobar(){
     msgEl.style.border='1px solid #4a1a1a';
     msgEl.style.color='var(--danger)';
     msgEl.innerHTML=`✗ Solicitud reprobada · <b>${motivo}</b> · ${USUARIOS[unlock]}`;
-    setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},2000);
+    setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();}, 2000);
   }catch(e){
     msgEl.style.background='#2a1010';
     msgEl.style.color='var(--danger)';
@@ -4023,7 +4023,7 @@ async function confirmarAprobacion(){
       });
     }catch(waErr){ console.warn('WhatsApp webhook error:',waErr); }
 
-    setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();},2000);
+    setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();}, 2000);
   }catch(e){
     msgEl.style.background='#2a1010';
     msgEl.style.border='1px solid #4a1a1a';
@@ -4328,7 +4328,7 @@ document.getElementById('gestion-form').addEventListener('submit',async function
           const b=document.getElementById('gbtn-'+t);
           if(b){b.style.borderColor='var(--border)';b.style.background='var(--surface2)';b.style.color='var(--muted)';}
         });
-      },2000);
+      }, 1950);
     } else {
       throw new Error('Error del servidor');
     }
