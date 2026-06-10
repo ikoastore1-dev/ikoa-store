@@ -3511,7 +3511,10 @@ async function cargarCola(){
           nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),
           agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),
           banco:v(22),codpago:v(23),
-          urgente:v(31)||''
+          urgente:v(31)||'',
+          tela:allPacks[0]?.tela||'',
+          vinil:allPacks[0]?.vinil||'',
+          piezas:allPacks[0]?.piezas||''
         };
         html+=`<div style="margin-top:8px;">
           <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
@@ -3609,27 +3612,16 @@ function abrirEditarCola(data){
   const packs=data.allPacks||[];
   const codigos=data.allCodigosC||[data.codigoC||data.codigoCBase];
   const container=document.getElementById('ec-packs-container');
-  if(packs.length===0){
-    container.innerHTML=`
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
-        <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Pack único</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div class="field-group"><div class="field-label">Color Tela</div><input class="field-input" id="ec-tela-0" type="text" value="${data.tela||''}" style="width:100%;"></div>
-          <div class="field-group"><div class="field-label">Color Vinil</div><input class="field-input" id="ec-vinil-0" type="text" value="${data.vinil||''}" style="width:100%;"></div>
-          <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Piezas</div><textarea class="field-input" id="ec-piezas-0" rows="3" style="width:100%;resize:vertical;font-size:12px;">${(data.piezas||'').split(' | ').join('\n')}</textarea></div>
-        </div>
-      </div>`;
-  } else {
-    container.innerHTML=packs.map((pk,i)=>`
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;">
-        <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Pack ${i+1} · ${codigos[i]||''}</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div class="field-group"><div class="field-label">Color Tela</div><input class="field-input" id="ec-tela-${i}" type="text" value="${String(pk[15]||'')}" style="width:100%;"></div>
-          <div class="field-group"><div class="field-label">Color Vinil</div><input class="field-input" id="ec-vinil-${i}" type="text" value="${String(pk[16]||'')}" style="width:100%;"></div>
-          <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Piezas</div><textarea class="field-input" id="ec-piezas-${i}" rows="3" style="width:100%;resize:vertical;font-size:12px;">${String(pk[17]||'').split(' | ').join('\n')}</textarea></div>
-        </div>
-      </div>`).join('');
-  }
+  const packsToRender=packs.length>0?packs:[{tela:data.tela||'',vinil:data.vinil||'',piezas:data.piezas||'',codigoC:data.codigoCBase||''}];
+  container.innerHTML=packsToRender.map((pk,i)=>`
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;">
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Pack ${i+1}${codigos[i]?' · '+codigos[i]:''}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="field-group"><div class="field-label">Color Tela</div><input class="field-input" id="ec-tela-${i}" type="text" value="${pk.tela||''}" style="width:100%;"></div>
+        <div class="field-group"><div class="field-label">Color Vinil</div><input class="field-input" id="ec-vinil-${i}" type="text" value="${pk.vinil||''}" style="width:100%;"></div>
+        <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Piezas</div><textarea class="field-input" id="ec-piezas-${i}" rows="3" style="width:100%;resize:vertical;font-size:12px;">${(pk.piezas||'').split(' | ').join('\n')}</textarea></div>
+      </div>
+    </div>`).join('');
 
   document.getElementById('ec-unlock').value='';
   document.getElementById('ec-error').textContent='';
@@ -4036,34 +4028,20 @@ function abrirEditarApro(data){
   // Renderizar packs dinámicamente
   const packs=data.allPacks||[];
   const container=document.getElementById('ea-packs-container');
-  if(packs.length===0){
-    // Pack único (legacy)
-    container.innerHTML=`
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
-        <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Pack único</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div class="field-group"><div class="field-label">Pack</div><input class="field-input" id="ea-pack-0" type="text" value="${data.pack||''}" style="width:100%;"></div>
-          <div class="field-group"><div class="field-label">Manga</div><input class="field-input" id="ea-manga-0" type="text" value="${data.manga||''}" style="width:100%;"></div>
-          <div class="field-group"><div class="field-label">Capucha</div><input class="field-input" id="ea-capucha-0" type="text" value="${data.capucha||''}" style="width:100%;"></div>
-          <div class="field-group"><div class="field-label">Color Tela</div><input class="field-input" id="ea-tela-0" type="text" value="${data.tela||''}" style="width:100%;"></div>
-          <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Color Vinil</div><input class="field-input" id="ea-vinil-0" type="text" value="${data.vinil||''}" style="width:100%;"></div>
-          <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Piezas</div><textarea class="field-input" id="ea-piezas-0" rows="3" style="width:100%;resize:vertical;font-size:12px;">${(data.piezas||'').split(' | ').join('\n')}</textarea></div>
-        </div>
-      </div>`;
-  } else {
-    container.innerHTML=packs.map((pk,i)=>`
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;">
-        <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Pack ${i+1} · ${String(pk[0]||data.allCodigos[i]||'')}</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div class="field-group"><div class="field-label">Pack</div><input class="field-input" id="ea-pack-${i}" type="text" value="${String(pk[14]||'')}" style="width:100%;"></div>
-          <div class="field-group"><div class="field-label">Manga</div><input class="field-input" id="ea-manga-${i}" type="text" value="${String(pk[12]||'')}" style="width:100%;"></div>
-          <div class="field-group"><div class="field-label">Capucha</div><input class="field-input" id="ea-capucha-${i}" type="text" value="${String(pk[13]||'')}" style="width:100%;"></div>
-          <div class="field-group"><div class="field-label">Color Tela</div><input class="field-input" id="ea-tela-${i}" type="text" value="${String(pk[15]||'')}" style="width:100%;"></div>
-          <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Color Vinil</div><input class="field-input" id="ea-vinil-${i}" type="text" value="${String(pk[16]||'')}" style="width:100%;"></div>
-          <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Piezas</div><textarea class="field-input" id="ea-piezas-${i}" rows="3" style="width:100%;resize:vertical;font-size:12px;">${String(pk[17]||'').split(' | ').join('\n')}</textarea></div>
-        </div>
-      </div>`).join('');
-  }
+  const packsToRender=packs.length>0?packs:[null];
+  const codigos=data.allCodigos||[data.codigoS];
+  container.innerHTML=packsToRender.map((pk,i)=>`
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;">
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Pack ${i+1}${codigos[i]?' · '+codigos[i]:''}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="field-group"><div class="field-label">Pack</div><input class="field-input" id="ea-pack-${i}" type="text" value="${pk?String(pk[14]||''):data.pack||''}" style="width:100%;"></div>
+        <div class="field-group"><div class="field-label">Manga</div><input class="field-input" id="ea-manga-${i}" type="text" value="${pk?String(pk[12]||''):data.manga||''}" style="width:100%;"></div>
+        <div class="field-group"><div class="field-label">Capucha</div><input class="field-input" id="ea-capucha-${i}" type="text" value="${pk?String(pk[13]||''):data.capucha||''}" style="width:100%;"></div>
+        <div class="field-group"><div class="field-label">Color Tela</div><input class="field-input" id="ea-tela-${i}" type="text" value="${pk?String(pk[15]||''):data.tela||''}" style="width:100%;"></div>
+        <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Color Vinil</div><input class="field-input" id="ea-vinil-${i}" type="text" value="${pk?String(pk[16]||''):data.vinil||''}" style="width:100%;"></div>
+        <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Piezas</div><textarea class="field-input" id="ea-piezas-${i}" rows="3" style="width:100%;resize:vertical;font-size:12px;">${pk?String(pk[17]||'').split(' | ').join('\n'):(data.piezas||'').split(' | ').join('\n')}</textarea></div>
+      </div>
+    </div>`).join('');
 
   document.getElementById('ea-unlock').value='';
   document.getElementById('ea-error').textContent='';
