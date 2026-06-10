@@ -677,7 +677,7 @@ function goStep(n){
   }
   if(n===5){
     if(pedido.packs.length===0){
-      pedido.packs.push({pack:1,codigoProducto:pedido.codigoProducto,modelo:pedido.nombreProducto,manga:'',capucha:pedido.capucha,largo:pedido.largo,tela:pedido.tela||'',vinil:pedido.vinil,piezas:JSON.parse(JSON.stringify(pedido.piezas))});
+      pedido.packs.push({pack:1,codigoProducto:pedido.codigoProducto,modelo:pedido.nombreProducto,serie:selectedSerie,variante:pedido.variante,manga:'',capucha:pedido.capucha,largo:pedido.largo,tela:pedido.tela||'',vinil:pedido.vinil,piezas:JSON.parse(JSON.stringify(pedido.piezas))});
     }
   }
   if(n===6) calcularPago();
@@ -1295,7 +1295,29 @@ async function guardarEnSheets(){
   let codigoPrincipal='';
   for(let i=0; i<pedido.packs.length; i++){
     const pk=pedido.packs[i];
-    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''} - ${p.nombre}`).join(' | ');
+    const esShort=pk.variante==='Short'||pedido.variante==='Short';
+    const esCotton=pk.variante==='Cotton Licra'||pedido.variante==='Cotton Licra';
+    const piezasText=pk.piezas.map(p=>{
+      const base=`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''}`;
+      if(esShort||esCotton||p.sinNombre||!p.nombre||p.nombre==='SIN NOMBRE EN MANGA') return base;
+      return `${base} - ${p.nombre}`;
+    }).join(' | ');
+    const variante=pk.variante||pedido.variante||'';
+    const sinManga=['T-Shirt'];
+    const modeloParts=[];
+    if(variante==='Toalla'){
+      modeloParts.push('Toalla'); modeloParts.push(pk.tela||pedido.tela||'');
+    } else if(variante==='Cotton Licra'){
+      modeloParts.push(pk.serie||selectedSerie||''); modeloParts.push('Cotton Licra'); modeloParts.push('Manga Corta'); modeloParts.push('Sin Capucha');
+    } else if(!sinManga.includes(variante)){
+      modeloParts.push(pk.serie||selectedSerie||''); modeloParts.push(variante);
+      if(pk.largo) modeloParts.push(pk.largo);
+      else if(pk.manga) modeloParts.push(pk.manga);
+      if(variante!=='Short') modeloParts.push(pk.capucha||pedido.capucha||'Sin Capucha');
+    } else {
+      modeloParts.push(pk.serie||selectedSerie||''); modeloParts.push(variante);
+    }
+    const modeloFinal=modeloParts.filter(Boolean).join(' ');
     try{
       const res=await scriptGETjson({
         action:'addSolicitud',
@@ -1304,7 +1326,7 @@ async function guardarEnSheets(){
         correo:pedido.correo,
         cedula:pedido.cedula,
         celular:pedido.celular,
-        modelo:'LICRA COLECCIÓN',
+        modelo:modeloFinal,
         manga:pk.largo||'',
         capucha:pk.capucha||'Sin Capucha',
         pack:pk.codigoProducto||pedido.codigoProducto,
