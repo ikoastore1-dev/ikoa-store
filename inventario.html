@@ -669,84 +669,138 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
     <!-- BUSCAR SUB-SECCIÓN -->
     <div id="stksec-buscar" style="display:none;">
-      <!-- Búsqueda -->
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <input class="field-input" type="text" id="stk-buscar-input" placeholder="Nombre, color, talla o código..." oninput="stkBuscar()" style="flex:1;">
-        <button onclick="stkBuscar()" style="padding:12px 16px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:14px;font-weight:700;cursor:pointer;">🔍</button>
+
+      <!-- Sub-pestañas -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button onclick="stkSubTab('buscar')" id="stk-subtab-buscar" style="flex:1;padding:9px;border:2px solid var(--accent);border-radius:10px;background:var(--surface2);color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🔍 Buscar Stock</button>
+        <button onclick="stkSubTab('precios')" id="stk-subtab-precios" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">💰 Precios</button>
+        <button onclick="stkSubTab('inventario')" id="stk-subtab-inventario" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📦 Inventario</button>
       </div>
-      <div id="stk-buscar-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-bottom:8px;"></div>
-      <!-- Resultados -->
-      <div id="stk-buscar-lista"></div>
-      <!-- Panel de operación -->
-      <div id="stk-op-panel" style="display:none;margin-top:12px;background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);padding:18px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+
+      <!-- BUSCAR STOCK -->
+      <div id="stk-sub-buscar">
+        <!-- 3 campos de búsqueda -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
           <div>
-            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Producto seleccionado</div>
-            <div id="stk-op-nombre" style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent);"></div>
-            <div id="stk-op-detalle" style="font-size:12px;color:var(--muted);margin-top:2px;"></div>
-            <div id="stk-op-stock-actual" style="font-size:14px;font-weight:700;color:var(--text);margin-top:4px;"></div>
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;font-weight:700;">Código</div>
+            <input class="field-input" type="text" id="stk-q-codigo" placeholder="Ej: COMFY11" oninput="stkBuscar()" style="width:100%;">
           </div>
-          <button onclick="cerrarOpPanel()" style="background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:6px 12px;font-size:12px;cursor:pointer;">✕</button>
-        </div>
-        <!-- Opciones -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
-          <button onclick="stkSetOp('salida')" id="stk-btn-salida" style="padding:12px 8px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;text-align:center;">📤<br>Salida</button>
-          <button onclick="stkSetOp('deposito')" id="stk-btn-deposito" style="padding:12px 8px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;text-align:center;">🏭<br>Cambio Depósito</button>
-          <button onclick="stkSetOp('modificar')" id="stk-btn-modificar" style="padding:12px 8px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;text-align:center;">✏️<br>Modificar</button>
-        </div>
-        <!-- Formulario Salida -->
-        <div id="stk-form-salida" style="display:none;">
-          <div class="field-group">
-            <div class="field-label">Motivo de salida</div>
-            <select class="field-input" id="stk-salida-motivo">
-              <option value="">Seleccionar</option>
-              <option value="Vendido">Vendido</option>
-              <option value="Dañado">Dañado</option>
-              <option value="Muestra">Muestra</option>
-              <option value="Otro">Otro</option>
-            </select>
+          <div>
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;font-weight:700;">Talla</div>
+            <input class="field-input" type="text" id="stk-q-talla" placeholder="Ej: XL, Kids 8" oninput="stkBuscar()" style="width:100%;">
           </div>
-          <div class="field-group">
-            <div class="field-label">Cantidad a retirar</div>
-            <input class="field-input" type="number" id="stk-salida-cantidad" min="1" placeholder="1">
-          </div>
-          <div class="field-group">
-            <div class="field-label">Nota de operación</div>
-            <input class="field-input" type="text" id="stk-salida-nota" placeholder="Ej: Vendido a cliente, factura #123...">
+          <div>
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;font-weight:700;">Color</div>
+            <input class="field-input" type="text" id="stk-q-color" placeholder="Ej: Negro" oninput="stkBuscar()" style="width:100%;">
           </div>
         </div>
-        <!-- Formulario Cambio Depósito -->
-        <div id="stk-form-deposito" style="display:none;">
-          <div class="field-group">
-            <div class="field-label">Depósito destino</div>
-            <select class="field-input" id="stk-deposito-destino">
-              <option value="">Seleccionar</option>
-              <option value="Principal">Principal</option>
-              <option value="Showroom">Showroom</option>
-              <option value="Almacén">Almacén</option>
-              <option value="Tienda">Tienda</option>
-            </select>
+        <div id="stk-buscar-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-bottom:8px;"></div>
+        <div id="stk-buscar-lista"></div>
+        <!-- Panel de operación -->
+        <div id="stk-op-panel" style="display:none;margin-top:12px;background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);padding:18px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div>
+              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Producto seleccionado</div>
+              <div id="stk-op-nombre" style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent);"></div>
+              <div id="stk-op-detalle" style="font-size:12px;color:var(--muted);margin-top:2px;"></div>
+              <div id="stk-op-stock-actual" style="font-size:14px;font-weight:700;color:var(--text);margin-top:4px;"></div>
+            </div>
+            <button onclick="cerrarOpPanel()" style="background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:6px 12px;font-size:12px;cursor:pointer;">✕</button>
           </div>
-          <div class="field-group">
-            <div class="field-label">Cantidad a mover</div>
-            <input class="field-input" type="number" id="stk-deposito-cantidad" min="1" placeholder="1">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
+            <button onclick="stkSetOp('salida')" id="stk-btn-salida" style="padding:12px 8px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;text-align:center;">📤<br>Salida</button>
+            <button onclick="stkSetOp('deposito')" id="stk-btn-deposito" style="padding:12px 8px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;text-align:center;">🏭<br>Cambio Depósito</button>
+            <button onclick="stkSetOp('modificar')" id="stk-btn-modificar" style="padding:12px 8px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;text-align:center;">✏️<br>Modificar</button>
           </div>
+          <div id="stk-form-salida" style="display:none;">
+            <div class="field-group">
+              <div class="field-label">Motivo de salida</div>
+              <select class="field-input" id="stk-salida-motivo">
+                <option value="">Seleccionar</option>
+                <option value="Vendido">Vendido</option>
+                <option value="Dañado">Dañado</option>
+                <option value="Muestra">Muestra</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Cantidad a retirar</div>
+              <input class="field-input" type="number" id="stk-salida-cantidad" min="1" placeholder="1">
+            </div>
+            <div class="field-group">
+              <div class="field-label">Nota de operación</div>
+              <input class="field-input" type="text" id="stk-salida-nota" placeholder="Ej: Vendido a cliente...">
+            </div>
+          </div>
+          <div id="stk-form-deposito" style="display:none;">
+            <div class="field-group">
+              <div class="field-label">Depósito destino</div>
+              <select class="field-input" id="stk-deposito-destino">
+                <option value="">Seleccionar</option>
+                <option value="Principal">Principal</option>
+                <option value="Showroom">Showroom</option>
+                <option value="Almacén">Almacén</option>
+                <option value="Tienda">Tienda</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Cantidad a mover</div>
+              <input class="field-input" type="number" id="stk-deposito-cantidad" min="1" placeholder="1">
+            </div>
+          </div>
+          <div id="stk-form-modificar" style="display:none;">
+            <div class="field-group">
+              <div class="field-label">Nuevo stock</div>
+              <input class="field-input" type="number" id="stk-modificar-cantidad" min="0" placeholder="0">
+            </div>
+            <div class="field-group">
+              <div class="field-label">Motivo del ajuste</div>
+              <input class="field-input" type="text" id="stk-modificar-nota" placeholder="Ej: Conteo físico...">
+            </div>
+          </div>
+          <button id="stk-op-confirmar" onclick="stkConfirmarOp()" style="display:none;width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;">✓ Confirmar operación</button>
+          <div id="stk-op-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:8px;"></div>
         </div>
-        <!-- Formulario Modificar -->
-        <div id="stk-form-modificar" style="display:none;">
-          <div class="field-group">
-            <div class="field-label">Nuevo stock</div>
-            <input class="field-input" type="number" id="stk-modificar-cantidad" min="0" placeholder="0">
-          </div>
-          <div class="field-group">
-            <div class="field-label">Motivo del ajuste</div>
-            <input class="field-input" type="text" id="stk-modificar-nota" placeholder="Ej: Conteo físico, corrección...">
-          </div>
-        </div>
-        <!-- Botón confirmar -->
-        <button id="stk-op-confirmar" onclick="stkConfirmarOp()" style="display:none;width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;">✓ Confirmar operación</button>
-        <div id="stk-op-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:8px;"></div>
       </div>
+
+      <!-- PRECIOS (igual que index.html pestaña Precios) -->
+      <div id="stk-sub-precios" style="display:none;">
+        <div class="search-row" style="margin-bottom:12px;">
+          <input class="search-input" type="text" id="stk-precio-input" placeholder="Buscar por código o nombre..." oninput="stkPrecioSearch()" onkeydown="if(event.key==='Enter')stkPrecioSearch()">
+          <button class="search-btn" onclick="stkPrecioSearch()">🔍</button>
+        </div>
+        <div id="stk-precio-result"></div>
+        <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;margin-top:12px;">Catálogo de productos</div>
+        <div id="stk-filter-row" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;"></div>
+        <div id="stk-product-list"></div>
+      </div>
+
+      <!-- INVENTARIO (igual que index.html pestaña Inventario) -->
+      <div id="stk-sub-inventario" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+          <div>
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Producto</div>
+            <input class="search-input" id="stk-inv-nombre" type="text" placeholder="Nombre o código..." oninput="stkBuscarInventario()" style="padding:10px 14px;font-size:14px;width:100%;">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Talla</div>
+            <input class="search-input" id="stk-inv-talla" type="text" placeholder="Ej: XL..." oninput="stkBuscarInventario()" style="padding:10px 14px;font-size:14px;width:100%;">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Color</div>
+            <input class="search-input" id="stk-inv-color" type="text" placeholder="Ej: Negro..." oninput="stkBuscarInventario()" style="padding:10px 14px;font-size:14px;width:100%;">
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;" id="stk-inv-dep-filters">
+          <button class="filter-pill active" onclick="stkSetDepFilter('Todos')">Todos</button>
+          <button class="filter-pill" onclick="stkSetDepFilter('Tienda')">🟢 Tienda</button>
+          <button class="filter-pill" onclick="stkSetDepFilter('Showroom')">🔵 Showroom</button>
+          <button class="filter-pill" onclick="stkSetDepFilter('Almacén')">🟡 Almacén</button>
+          <button class="filter-pill" onclick="stkSetDepFilter('Principal')">🟣 Principal</button>
+        </div>
+        <div id="stk-inv-results"></div>
+      </div>
+
     </div>
     <div id="stksec-historial" style="display:none;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -4918,25 +4972,47 @@ function cerrarVisorPDF(){
   if(impPDFUrl){ URL.revokeObjectURL(impPDFUrl); impPDFUrl=''; }
 }
 
+// ── STOCK BUSCAR SUB-TABS ─────────────────────────────────────
+let stkSubTabActual='buscar';
+
+function stkSubTab(tab){
+  stkSubTabActual=tab;
+  ['buscar','precios','inventario'].forEach(t=>{
+    const btn=document.getElementById('stk-subtab-'+t);
+    const sec=document.getElementById('stk-sub-'+t);
+    if(btn){ btn.style.borderColor=t===tab?'var(--accent)':'var(--border)'; btn.style.color=t===tab?'var(--text)':'var(--muted)'; }
+    if(sec) sec.style.display=t===tab?'block':'none';
+  });
+  if(tab==='precios' && stkProductos.length===0) stkCargarPrecios();
+  if(tab==='inventario' && stkInvData.length===0) stkCargarInv();
+}
+
 // ── STOCK BUSCAR ──────────────────────────────────────────────
 let stkProductoSeleccionado=null;
 let stkOpActual='';
 
 async function stkBuscar(){
-  const q=document.getElementById('stk-buscar-input').value.trim().toUpperCase();
+  const codigo=document.getElementById('stk-q-codigo')?.value.trim().toUpperCase()||'';
+  const talla=document.getElementById('stk-q-talla')?.value.trim().toUpperCase()||'';
+  const color=document.getElementById('stk-q-color')?.value.trim().toUpperCase()||'';
   const msg=document.getElementById('stk-buscar-msg');
   const lista=document.getElementById('stk-buscar-lista');
   document.getElementById('stk-op-panel').style.display='none';
-  if(!q){ lista.innerHTML=''; msg.style.display='none'; return; }
+  if(!codigo&&!talla&&!color){ lista.innerHTML=''; msg.style.display='none'; return; }
   msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
   msg.innerHTML='<span class="spinner">↻</span> Buscando...';
   try{
+    // Buscar usando el campo más específico como query principal
+    const q=codigo||talla||color;
     const data=await scriptGETjson({action:'buscarStock', q});
-    const rows=(data.rows||[]).filter(r=>parseInt(r[2]||0)>0);
+    let rows=(data.rows||[]).filter(r=>parseInt(r[2]||0)>0);
+    // Filtrar por los 3 campos combinados
+    if(codigo) rows=rows.filter(r=>String(r[0]||'').toUpperCase().includes(codigo));
+    if(talla)  rows=rows.filter(r=>String(r[1]||'').toUpperCase().includes(talla));
+    if(color)  rows=rows.filter(r=>String(r[3]||'').toUpperCase().includes(color));
     if(rows.length===0){
       msg.style.background='#2a1010'; msg.style.color='var(--danger)';
-      msg.innerHTML=`✗ Sin resultados con stock para "${q}"`;
-      lista.innerHTML=''; return;
+      msg.innerHTML='✗ Sin resultados en stock'; lista.innerHTML=''; return;
     }
     msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
     msg.innerHTML=`✅ ${rows.length} resultado(s) en stock`;
@@ -4954,6 +5030,111 @@ async function stkBuscar(){
     msg.style.background='#2a1010'; msg.style.color='var(--danger)';
     msg.innerHTML='✗ '+e.message;
   }
+}
+
+// ── STOCK PRECIOS ─────────────────────────────────────────────
+let stkProductos=[], stkTasaBCV=null, stkCurrentFilter=null;
+
+async function stkCargarPrecios(){
+  document.getElementById('stk-product-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>';
+  try{
+    const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
+    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=CODIGOS&cachebust=${Date.now()}`;
+    const res=await fetch(url);
+    const text=await res.text();
+    const json=JSON.parse(text.replace(/^[^(]+\(/,'').replace(/\);?\s*$/,''));
+    const rows=json.table.rows||[];
+    stkProductos=rows.map(r=>{
+      const v=c=>(!c||c.v===null||c.v===undefined)?'':c.v;
+      return {codigo:String(v(r.c[0])||''),nombre:String(v(r.c[1])||''),depto:String(v(r.c[2])||''),
+        precio_bs:parseFloat(v(r.c[3]))||0,precio_usd:parseFloat(v(r.c[9]))||0};
+    }).filter(p=>p.codigo);
+    // Tasa BCV
+    const urlT=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=TASA&cachebust=${Date.now()}`;
+    const resT=await fetch(urlT);
+    const textT=await resT.text();
+    const jsonT=JSON.parse(textT.replace(/^[^(]+\(/,'').replace(/\);?\s*$/,''));
+    if(jsonT.table?.rows?.[1]?.c?.[0]?.v) stkTasaBCV=parseFloat(jsonT.table.rows[1].c[0].v)||null;
+    stkRenderPrecios();
+  }catch(e){
+    document.getElementById('stk-product-list').innerHTML=`<div style="color:var(--danger);text-align:center;padding:20px;">✗ Error cargando precios</div>`;
+  }
+}
+
+function stkRenderPrecios(filtro=null, q=''){
+  const deptos=[...new Set(stkProductos.map(p=>p.depto).filter(Boolean))];
+  // Filter pills
+  document.getElementById('stk-filter-row').innerHTML=
+    ['Todos',...deptos].map(d=>`<button class="filter-pill${(filtro||'Todos')===d?' active':''}" onclick="stkSetPrecioFilter('${d}')">${d}</button>`).join('');
+  let lista=stkProductos;
+  if(filtro&&filtro!=='Todos') lista=lista.filter(p=>p.depto===filtro);
+  if(q) lista=lista.filter(p=>p.codigo.toUpperCase().includes(q.toUpperCase())||p.nombre.toUpperCase().includes(q.toUpperCase()));
+  const tasaStr=stkTasaBCV?`Bs ${Number(stkTasaBCV).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})}`:'N/A';
+  document.getElementById('stk-product-list').innerHTML= lista.length===0?
+    '<div style="color:var(--muted);text-align:center;padding:20px;">Sin resultados</div>':
+    lista.map(p=>`
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);">${p.nombre||p.codigo}</div>
+        <div style="font-size:11px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;">${p.codigo}</div>
+      </div>
+      <div style="display:flex;gap:12px;">
+        <div><div style="font-size:10px;color:var(--muted);">USD</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">$${p.precio_usd.toFixed(2)}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);">Bs (${tasaStr})</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--text);">${p.precio_bs.toLocaleString('es-VE',{minimumFractionDigits:0,maximumFractionDigits:0})} Bs</div></div>
+      </div>
+    </div>`).join('');
+}
+
+function stkSetPrecioFilter(d){ stkCurrentFilter=d==='Todos'?null:d; stkRenderPrecios(stkCurrentFilter, document.getElementById('stk-precio-input')?.value||''); }
+function stkPrecioSearch(){ const q=document.getElementById('stk-precio-input')?.value||''; stkRenderPrecios(stkCurrentFilter,q); }
+
+// ── STOCK INVENTARIO ──────────────────────────────────────────
+let stkInvData=[], stkInvDepFilter='Todos';
+
+async function stkCargarInv(){
+  document.getElementById('stk-inv-results').innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>';
+  try{
+    const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
+    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=STOCK&cachebust=${Date.now()}`;
+    const res=await fetch(url);
+    const text=await res.text();
+    const json=JSON.parse(text.replace(/^[^(]+\(/,'').replace(/\);?\s*$/,''));
+    const rows=json.table?.rows||[];
+    stkInvData=rows.map(r=>{
+      const v=c=>(!c||c.v===null||c.v===undefined)?'':c.v;
+      return {codigo:String(v(r.c[0])||''),talla:String(v(r.c[1])||''),stock:parseInt(v(r.c[2]))||0,color:String(v(r.c[3])||''),deposito:String(v(r.c[4])||'')};
+    }).filter(p=>p.codigo&&p.stock>0);
+    stkBuscarInventario();
+  }catch(e){
+    document.getElementById('stk-inv-results').innerHTML=`<div style="color:var(--danger);text-align:center;padding:20px;">✗ Error cargando inventario</div>`;
+  }
+}
+
+function stkSetDepFilter(dep){
+  stkInvDepFilter=dep;
+  document.querySelectorAll('#stk-inv-dep-filters .filter-pill').forEach(b=>b.classList.toggle('active',b.textContent.includes(dep)||(dep==='Todos'&&b.textContent==='Todos')));
+  stkBuscarInventario();
+}
+
+function stkBuscarInventario(){
+  const nombre=(document.getElementById('stk-inv-nombre')?.value||'').trim().toUpperCase();
+  const talla=(document.getElementById('stk-inv-talla')?.value||'').trim().toUpperCase();
+  const color=(document.getElementById('stk-inv-color')?.value||'').trim().toUpperCase();
+  let rows=stkInvData;
+  if(nombre) rows=rows.filter(r=>r.codigo.toUpperCase().includes(nombre));
+  if(talla)  rows=rows.filter(r=>r.talla.toUpperCase().includes(talla));
+  if(color)  rows=rows.filter(r=>r.color.toUpperCase().includes(color));
+  if(stkInvDepFilter!=='Todos') rows=rows.filter(r=>r.deposito===stkInvDepFilter);
+  const el=document.getElementById('stk-inv-results');
+  if(rows.length===0){ el.innerHTML='<div style="color:var(--muted);text-align:center;padding:20px;">Sin resultados</div>'; return; }
+  el.innerHTML=rows.map(r=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:6px;">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);">${r.codigo}</div>
+        <div style="font-size:12px;color:var(--muted);">Talla: ${r.talla} · Color: ${r.color} · ${r.deposito}</div>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--accent);">${r.stock}</div>
+    </div>`).join('');
 }
 
 function stkSeleccionar(idx){
