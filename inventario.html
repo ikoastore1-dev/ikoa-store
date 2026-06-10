@@ -28,6 +28,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 #reader{width:100%;max-height:300px;overflow:hidden}
 #reader video{width:100%!important;height:auto!important}
 .search-row{display:flex;gap:8px;margin-bottom:16px}
+.filter-pill{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 16px;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s;font-family:'Barlow',sans-serif}
+.filter-pill.active{background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);color:#000;border-color:var(--accent);font-weight:500}
 .search-input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:13px 16px;color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;outline:none;transition:border-color .2s;}
 .search-input:focus{border-color:var(--accent)}
 .search-input::placeholder{color:var(--muted)}
@@ -329,12 +331,6 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <div class="field-group"><div class="field-label">Correo</div><input class="field-input" id="ea-correo" type="text" style="width:100%;"></div>
       <div class="field-group"><div class="field-label">Celular</div><input class="field-input" id="ea-celular" type="text" style="width:100%;"></div>
       <div class="field-group"><div class="field-label">Modelo</div><input class="field-input" id="ea-modelo" type="text" style="width:100%;"></div>
-      <div class="field-group"><div class="field-label">Pack</div><input class="field-input" id="ea-pack" type="text" style="width:100%;"></div>
-      <div class="field-group"><div class="field-label">Color de Tela</div><input class="field-input" id="ea-tela" type="text" style="width:100%;"></div>
-      <div class="field-group"><div class="field-label">Color de Vinil</div><input class="field-input" id="ea-vinil" type="text" style="width:100%;"></div>
-      <div class="field-group"><div class="field-label">Manga</div><input class="field-input" id="ea-manga" type="text" style="width:100%;"></div>
-      <div class="field-group"><div class="field-label">Capucha</div><input class="field-input" id="ea-capucha" type="text" style="width:100%;"></div>
-      <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Piezas</div><textarea class="field-input" id="ea-piezas" rows="4" style="width:100%;resize:vertical;font-size:12px;"></textarea></div>
       <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Agencia</div><input class="field-input" id="ea-agencia" type="text" style="width:100%;"></div>
       <div class="field-group"><div class="field-label">Retira Nombre</div><input class="field-input" id="ea-retira" type="text" style="width:100%;"></div>
       <div class="field-group"><div class="field-label">Retira CI</div><input class="field-input" id="ea-retira-ci" type="text" style="width:100%;"></div>
@@ -343,6 +339,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <div class="field-group"><div class="field-label">Pago Monto</div><input class="field-input" id="ea-pago-monto" type="text" style="width:100%;"></div>
       <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Pago Referencia</div><input class="field-input" id="ea-pago-ref" type="text" style="width:100%;"></div>
     </div>
+    <!-- Packs dinámicos -->
+    <div id="ea-packs-container"></div>
     <div class="field-label" style="margin-bottom:6px;">Código de autorización</div>
     <input class="modal-cod-input" type="password" id="ea-unlock" placeholder="Tu código personal" maxlength="20">
     <div class="modal-error" id="ea-error"></div>
@@ -679,6 +677,30 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
       <!-- BUSCAR STOCK -->
       <div id="stk-sub-buscar">
+        <!-- Scanner QR -->
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <button onclick="stkToggleScanner('buscar')" id="stk-scan-btn-buscar" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <span>📷</span><span id="stk-scan-txt-buscar">Escanear QR</span>
+          </button>
+          <button onclick="document.getElementById('stk-qr-gallery-buscar').click()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🖼️ GALERÍA</button>
+        </div>
+        <input type="file" id="stk-qr-gallery-buscar" accept="image/*" style="display:none;" onchange="stkLeerQRGaleria(event,'buscar')">
+        <div id="stk-scanner-wrap-buscar" style="display:none;margin-bottom:10px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);">
+          <div style="position:relative;width:100%;background:#000;">
+            <video id="stk-scanner-video-buscar" style="width:100%;display:block;max-height:280px;object-fit:cover;" autoplay muted playsinline></video>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+              <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
+              <div style="position:relative;width:180px;height:180px;z-index:2;">
+                <div style="position:absolute;top:0;left:0;width:24px;height:24px;border-top:3px solid #00e5b0;border-left:3px solid #00e5b0;border-radius:4px 0 0 0;"></div>
+                <div style="position:absolute;top:0;right:0;width:24px;height:24px;border-top:3px solid #00e5b0;border-right:3px solid #00e5b0;border-radius:0 4px 0 0;"></div>
+                <div style="position:absolute;bottom:0;left:0;width:24px;height:24px;border-bottom:3px solid #00e5b0;border-left:3px solid #00e5b0;border-radius:0 0 0 4px;"></div>
+                <div style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-bottom:3px solid #00e5b0;border-right:3px solid #00e5b0;border-radius:0 0 4px 0;"></div>
+                <div style="position:absolute;left:4px;right:4px;height:2px;background:linear-gradient(90deg,transparent,#00e5b0,transparent);animation:scanLine 2s linear infinite;top:0;"></div>
+              </div>
+            </div>
+            <button onclick="stkStopScanner('buscar')" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);border:none;border-radius:8px;color:#fff;padding:5px 12px;font-size:12px;cursor:pointer;z-index:10;">✕ Cerrar</button>
+          </div>
+        </div>
         <!-- 3 campos de búsqueda -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
           <div>
@@ -765,6 +787,29 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
       <!-- PRECIOS (igual que index.html pestaña Precios) -->
       <div id="stk-sub-precios" style="display:none;">
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <button onclick="stkToggleScanner('precios')" id="stk-scan-btn-precios" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <span>📷</span><span id="stk-scan-txt-precios">Escanear QR</span>
+          </button>
+          <button onclick="document.getElementById('stk-qr-gallery-precios').click()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🖼️ GALERÍA</button>
+        </div>
+        <input type="file" id="stk-qr-gallery-precios" accept="image/*" style="display:none;" onchange="stkLeerQRGaleria(event,'precios')">
+        <div id="stk-scanner-wrap-precios" style="display:none;margin-bottom:10px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);">
+          <div style="position:relative;width:100%;background:#000;">
+            <video id="stk-scanner-video-precios" style="width:100%;display:block;max-height:280px;object-fit:cover;" autoplay muted playsinline></video>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+              <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
+              <div style="position:relative;width:180px;height:180px;z-index:2;">
+                <div style="position:absolute;top:0;left:0;width:24px;height:24px;border-top:3px solid #00e5b0;border-left:3px solid #00e5b0;border-radius:4px 0 0 0;"></div>
+                <div style="position:absolute;top:0;right:0;width:24px;height:24px;border-top:3px solid #00e5b0;border-right:3px solid #00e5b0;border-radius:0 4px 0 0;"></div>
+                <div style="position:absolute;bottom:0;left:0;width:24px;height:24px;border-bottom:3px solid #00e5b0;border-left:3px solid #00e5b0;border-radius:0 0 0 4px;"></div>
+                <div style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-bottom:3px solid #00e5b0;border-right:3px solid #00e5b0;border-radius:0 0 4px 0;"></div>
+                <div style="position:absolute;left:4px;right:4px;height:2px;background:linear-gradient(90deg,transparent,#00e5b0,transparent);animation:scanLine 2s linear infinite;top:0;"></div>
+              </div>
+            </div>
+            <button onclick="stkStopScanner('precios')" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);border:none;border-radius:8px;color:#fff;padding:5px 12px;font-size:12px;cursor:pointer;z-index:10;">✕ Cerrar</button>
+          </div>
+        </div>
         <div class="search-row" style="margin-bottom:12px;">
           <input class="search-input" type="text" id="stk-precio-input" placeholder="Buscar por código o nombre..." oninput="stkPrecioSearch()" onkeydown="if(event.key==='Enter')stkPrecioSearch()">
           <button class="search-btn" onclick="stkPrecioSearch()">🔍</button>
@@ -777,6 +822,29 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
       <!-- INVENTARIO (igual que index.html pestaña Inventario) -->
       <div id="stk-sub-inventario" style="display:none;">
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <button onclick="stkToggleScanner('inventario')" id="stk-scan-btn-inventario" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <span>📷</span><span id="stk-scan-txt-inventario">Escanear QR</span>
+          </button>
+          <button onclick="document.getElementById('stk-qr-gallery-inventario').click()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🖼️ GALERÍA</button>
+        </div>
+        <input type="file" id="stk-qr-gallery-inventario" accept="image/*" style="display:none;" onchange="stkLeerQRGaleria(event,'inventario')">
+        <div id="stk-scanner-wrap-inventario" style="display:none;margin-bottom:10px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);">
+          <div style="position:relative;width:100%;background:#000;">
+            <video id="stk-scanner-video-inventario" style="width:100%;display:block;max-height:280px;object-fit:cover;" autoplay muted playsinline></video>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+              <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
+              <div style="position:relative;width:180px;height:180px;z-index:2;">
+                <div style="position:absolute;top:0;left:0;width:24px;height:24px;border-top:3px solid #00e5b0;border-left:3px solid #00e5b0;border-radius:4px 0 0 0;"></div>
+                <div style="position:absolute;top:0;right:0;width:24px;height:24px;border-top:3px solid #00e5b0;border-right:3px solid #00e5b0;border-radius:0 4px 0 0;"></div>
+                <div style="position:absolute;bottom:0;left:0;width:24px;height:24px;border-bottom:3px solid #00e5b0;border-left:3px solid #00e5b0;border-radius:0 0 0 4px;"></div>
+                <div style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-bottom:3px solid #00e5b0;border-right:3px solid #00e5b0;border-radius:0 0 4px 0;"></div>
+                <div style="position:absolute;left:4px;right:4px;height:2px;background:linear-gradient(90deg,transparent,#00e5b0,transparent);animation:scanLine 2s linear infinite;top:0;"></div>
+              </div>
+            </div>
+            <button onclick="stkStopScanner('inventario')" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);border:none;border-radius:8px;color:#fff;padding:5px 12px;font-size:12px;cursor:pointer;z-index:10;">✕ Cerrar</button>
+          </div>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
           <div>
             <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Producto</div>
@@ -3886,7 +3954,7 @@ async function cargarSolicitudes(filtro){
         // Store data globally to avoid JSON corruption
         const aproKey='apro_'+base.replace(/[^a-zA-Z0-9]/g,'_');
         window['_aproData_'+aproKey]={
-          codigoS:base, allCodigos:allCodigos,
+          codigoS:base, allCodigos:allCodigos, allPacks:packs,
           nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),
           modelo:v(11),manga:packs[0]?String(packs[0][12]||''):'',
           capucha:packs[0]?String(packs[0][13]||''):'',
@@ -3933,12 +4001,6 @@ function abrirEditarApro(data){
   document.getElementById('ea-correo').value=data.correo||'';
   document.getElementById('ea-celular').value=data.celular||'';
   document.getElementById('ea-modelo').value=data.modelo||'';
-  document.getElementById('ea-pack').value=data.pack||'';
-  document.getElementById('ea-tela').value=data.tela||'';
-  document.getElementById('ea-vinil').value=data.vinil||'';
-  document.getElementById('ea-manga').value=data.manga||'';
-  document.getElementById('ea-capucha').value=data.capucha||'';
-  document.getElementById('ea-piezas').value=(data.piezas||'').split(' | ').join('\n');
   document.getElementById('ea-agencia').value=data.agencia||'';
   document.getElementById('ea-retira').value=data.retira||'';
   document.getElementById('ea-retira-ci').value=data.retiraCi||'';
@@ -3946,6 +4008,39 @@ function abrirEditarApro(data){
   document.getElementById('ea-pago-moneda').value=data.pagoMoneda||'';
   document.getElementById('ea-pago-monto').value=data.pagoMonto||'';
   document.getElementById('ea-pago-ref').value=data.pagoRef||'';
+
+  // Renderizar packs dinámicamente
+  const packs=data.allPacks||[];
+  const container=document.getElementById('ea-packs-container');
+  if(packs.length===0){
+    // Pack único (legacy)
+    container.innerHTML=`
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Pack único</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="field-group"><div class="field-label">Pack</div><input class="field-input" id="ea-pack-0" type="text" value="${data.pack||''}" style="width:100%;"></div>
+          <div class="field-group"><div class="field-label">Manga</div><input class="field-input" id="ea-manga-0" type="text" value="${data.manga||''}" style="width:100%;"></div>
+          <div class="field-group"><div class="field-label">Capucha</div><input class="field-input" id="ea-capucha-0" type="text" value="${data.capucha||''}" style="width:100%;"></div>
+          <div class="field-group"><div class="field-label">Color Tela</div><input class="field-input" id="ea-tela-0" type="text" value="${data.tela||''}" style="width:100%;"></div>
+          <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Color Vinil</div><input class="field-input" id="ea-vinil-0" type="text" value="${data.vinil||''}" style="width:100%;"></div>
+          <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Piezas</div><textarea class="field-input" id="ea-piezas-0" rows="3" style="width:100%;resize:vertical;font-size:12px;">${(data.piezas||'').split(' | ').join('\n')}</textarea></div>
+        </div>
+      </div>`;
+  } else {
+    container.innerHTML=packs.map((pk,i)=>`
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Pack ${i+1} · ${String(pk[0]||data.allCodigos[i]||'')}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="field-group"><div class="field-label">Pack</div><input class="field-input" id="ea-pack-${i}" type="text" value="${String(pk[14]||'')}" style="width:100%;"></div>
+          <div class="field-group"><div class="field-label">Manga</div><input class="field-input" id="ea-manga-${i}" type="text" value="${String(pk[12]||'')}" style="width:100%;"></div>
+          <div class="field-group"><div class="field-label">Capucha</div><input class="field-input" id="ea-capucha-${i}" type="text" value="${String(pk[13]||'')}" style="width:100%;"></div>
+          <div class="field-group"><div class="field-label">Color Tela</div><input class="field-input" id="ea-tela-${i}" type="text" value="${String(pk[15]||'')}" style="width:100%;"></div>
+          <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Color Vinil</div><input class="field-input" id="ea-vinil-${i}" type="text" value="${String(pk[16]||'')}" style="width:100%;"></div>
+          <div class="field-group" style="grid-column:1/-1;"><div class="field-label">Piezas</div><textarea class="field-input" id="ea-piezas-${i}" rows="3" style="width:100%;resize:vertical;font-size:12px;">${String(pk[17]||'').split(' | ').join('\n')}</textarea></div>
+        </div>
+      </div>`).join('');
+  }
+
   document.getElementById('ea-unlock').value='';
   document.getElementById('ea-error').textContent='';
   document.getElementById('modal-editar-apro').classList.remove('hidden');
@@ -3958,26 +4053,17 @@ async function guardarEdicionApro(){
   if(!USUARIOS[unlock]){errEl.textContent='❌ Código incorrecto';document.getElementById('ea-unlock').value='';return;}
   document.getElementById('modal-editar-apro').classList.add('hidden');
   const msgEl=document.getElementById('apro-msg');
-  msgEl.style.display='block';
-  msgEl.style.background='var(--surface2)';
-  msgEl.style.color='var(--muted)';
+  msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
   msgEl.innerHTML='<span class="spinner">↻</span> Guardando cambios...';
   try{
-    const piezasText=document.getElementById('ea-piezas').value.trim().split('\n').filter(l=>l.trim()).join(' | ');
-    const res=await scriptGETjson({
-      action:'editarAprobacion',
-      codigoS:pendingEditApro.codigoS,
+    const packs=pendingEditApro.allPacks||[];
+    const codigos=pendingEditApro.allCodigos||[pendingEditApro.codigoS];
+    const datosDatos={
       nombre:document.getElementById('ea-nombre').value.trim(),
       cedula:document.getElementById('ea-cedula').value.trim(),
       correo:document.getElementById('ea-correo').value.trim(),
       celular:document.getElementById('ea-celular').value.trim(),
       modelo:document.getElementById('ea-modelo').value.trim(),
-      pack:document.getElementById('ea-pack').value.trim(),
-      tela:document.getElementById('ea-tela').value.trim(),
-      vinil:document.getElementById('ea-vinil').value.trim(),
-      manga:document.getElementById('ea-manga').value.trim(),
-      capucha:document.getElementById('ea-capucha').value.trim(),
-      piezas:piezasText,
       agencia:document.getElementById('ea-agencia').value.trim(),
       retira_nombre:document.getElementById('ea-retira').value.trim(),
       retira_ci:document.getElementById('ea-retira-ci').value.trim(),
@@ -3985,16 +4071,29 @@ async function guardarEdicionApro(){
       pago_moneda:document.getElementById('ea-pago-moneda').value.trim(),
       pago_monto:document.getElementById('ea-pago-monto').value.trim(),
       pago_ref:document.getElementById('ea-pago-ref').value.trim()
-    });
-    if(res.ok){
-      msgEl.style.border='1px solid var(--accent)';
-      msgEl.style.color='var(--accent)';
-      msgEl.innerHTML='✅ Cambios guardados · '+USUARIOS[unlock];
-      setTimeout(()=>{msgEl.style.display='none';cargarSolicitudes();}, 2000);
-    } else throw new Error(res.error||'Error al guardar');
+    };
+    // Guardar cada pack
+    const total=packs.length||1;
+    for(let i=0;i<total;i++){
+      const codigoS=codigos[i]||codigos[0];
+      const piezasText=(document.getElementById('ea-piezas-'+i)?.value||'').trim().split('\n').filter(l=>l.trim()).join(' | ');
+      await scriptGETjson({
+        action:'editarAprobacion',
+        codigoS,
+        ...datosDatos,
+        pack:document.getElementById('ea-pack-'+i)?.value.trim()||'',
+        manga:document.getElementById('ea-manga-'+i)?.value.trim()||'',
+        capucha:document.getElementById('ea-capucha-'+i)?.value.trim()||'',
+        tela:document.getElementById('ea-tela-'+i)?.value.trim()||'',
+        vinil:document.getElementById('ea-vinil-'+i)?.value.trim()||'',
+        piezas:piezasText
+      });
+    }
+    msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)';
+    msgEl.innerHTML=`✅ Cambios guardados · ${USUARIOS[unlock]}`;
+    setTimeout(()=>{ msgEl.style.display='none'; cargarAprobaciones(); },2000);
   }catch(e){
-    msgEl.style.background='#2a1010';
-    msgEl.style.color='var(--danger)';
+    msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)';
     msgEl.innerHTML='✗ Error: '+e.message;
   }
 }
@@ -4972,7 +5071,69 @@ function cerrarVisorPDF(){
   if(impPDFUrl){ URL.revokeObjectURL(impPDFUrl); impPDFUrl=''; }
 }
 
-// ── STOCK BUSCAR SUB-TABS ─────────────────────────────────────
+// ── STOCK QR SCANNER ─────────────────────────────────────────
+let stkScannerActive={}, stkZxingReaders={};
+
+async function stkToggleScanner(sub){
+  if(stkScannerActive[sub]){ stkStopScanner(sub); return; }
+  stkScannerActive[sub]=true;
+  document.getElementById('stk-scanner-wrap-'+sub).style.display='block';
+  document.getElementById('stk-scan-txt-'+sub).textContent='Detener';
+  document.getElementById('stk-scan-btn-'+sub).style.background='var(--danger)';
+  try{
+    const {BrowserQRCodeReader}=window.ZXing||await import('https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/esm/index.min.js');
+    const reader=new BrowserQRCodeReader();
+    stkZxingReaders[sub]=reader;
+    const videoEl=document.getElementById('stk-scanner-video-'+sub);
+    await reader.decodeFromConstraints({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}},videoEl,(result,err)=>{
+      if(result){
+        const decoded=result.getText();
+        stkOnQRScanned(decoded, sub);
+        stkStopScanner(sub);
+      }
+    });
+  }catch(e){ stkStopScanner(sub); }
+}
+
+function stkStopScanner(sub){
+  stkScannerActive[sub]=false;
+  if(stkZxingReaders[sub]){ try{ stkZxingReaders[sub].reset(); }catch(e){} stkZxingReaders[sub]=null; }
+  const wrap=document.getElementById('stk-scanner-wrap-'+sub);
+  if(wrap) wrap.style.display='none';
+  const txt=document.getElementById('stk-scan-txt-'+sub);
+  if(txt) txt.textContent='Escanear QR';
+  const btn=document.getElementById('stk-scan-btn-'+sub);
+  if(btn) btn.style.background='linear-gradient(135deg,var(--accent) 0%,#00b890 100%)';
+  const video=document.getElementById('stk-scanner-video-'+sub);
+  if(video&&video.srcObject){ video.srcObject.getTracks().forEach(t=>t.stop()); video.srcObject=null; }
+}
+
+async function stkLeerQRGaleria(event, sub){
+  const file=event.target.files[0]; if(!file) return;
+  try{
+    const {BrowserQRCodeReader}=window.ZXing||await import('https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/esm/index.min.js');
+    const reader=new BrowserQRCodeReader();
+    const url=URL.createObjectURL(file);
+    const result=await reader.decodeFromImageUrl(url);
+    stkOnQRScanned(result.getText(), sub);
+    URL.revokeObjectURL(url);
+  }catch(e){ alert('No se pudo leer el QR de la imagen'); }
+  event.target.value='';
+}
+
+function stkOnQRScanned(decoded, sub){
+  if(sub==='buscar'){
+    document.getElementById('stk-q-codigo').value=decoded;
+    stkBuscar();
+  } else if(sub==='precios'){
+    document.getElementById('stk-precio-input').value=decoded;
+    stkPrecioSearch();
+  } else if(sub==='inventario'){
+    document.getElementById('stk-inv-nombre').value=decoded;
+    stkBuscarInventario();
+  }
+}
+// ── FIN STOCK QR SCANNER ──────────────────────────────────────
 let stkSubTabActual='buscar';
 
 function stkSubTab(tab){
@@ -5174,10 +5335,11 @@ function cerrarOpPanel(){
   stkProductoSeleccionado=null; stkOpActual='';
 }
 
-async function stkConfirmarOp(){
+let _stkOpPendiente={};
+
+function stkConfirmarOp(){
   if(!stkProductoSeleccionado||!stkOpActual){ alert('Selecciona una operación'); return; }
   const p=stkProductoSeleccionado;
-  const msg=document.getElementById('stk-op-msg');
 
   if(stkOpActual==='salida'){
     const motivo=document.getElementById('stk-salida-motivo').value;
@@ -5186,21 +5348,7 @@ async function stkConfirmarOp(){
     if(!motivo){ alert('Selecciona el motivo de salida'); return; }
     if(cant<1){ alert('Ingresa la cantidad a retirar'); return; }
     if(cant>p.stock){ alert(`Stock insuficiente. Stock actual: ${p.stock}`); return; }
-    const unlock=await mostrarAuthGen('📤','Confirmar Salida',`${cant} unidad(es) · ${motivo}`);
-    if(!unlock) return;
-    msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
-    msg.innerHTML='<span class="spinner">↻</span> Registrando salida...';
-    const nuevoStock=p.stock-cant;
-    try{
-      await scriptGETjson({action:'updateStock',codigo:p.codigo,talla:p.talla,color:p.color,deposito:p.deposito,
-        stock:nuevoStock,antes:p.stock,operacion:`Salida - ${motivo}${nota?' - '+nota:''}`,
-        fecha:getFechaHora(),nombre:p.codigo,usuario:USUARIOS[unlock]||unlock,eliminar:nuevoStock===0?'si':''});
-      msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
-      msg.innerHTML=`✅ Salida registrada · Stock: ${p.stock} → ${nuevoStock}`;
-      stkProductoSeleccionado.stock=nuevoStock;
-      document.getElementById('stk-op-stock-actual').textContent=`Stock actual: ${nuevoStock}`;
-    }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
-
+    _stkOpPendiente={op:'salida',p,cant,motivo,nota};
   } else if(stkOpActual==='deposito'){
     const destino=document.getElementById('stk-deposito-destino').value;
     const cant=parseInt(document.getElementById('stk-deposito-cantidad').value)||0;
@@ -5208,36 +5356,76 @@ async function stkConfirmarOp(){
     if(destino===p.deposito){ alert('El depósito destino es el mismo que el actual'); return; }
     if(cant<1){ alert('Ingresa la cantidad a mover'); return; }
     if(cant>p.stock){ alert(`Stock insuficiente. Stock actual: ${p.stock}`); return; }
-    const unlock=await mostrarAuthGen('🏭','Cambio de Depósito',`${cant} unidad(es) → ${destino}`);
-    if(!unlock) return;
-    msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
-    msg.innerHTML='<span class="spinner">↻</span> Moviendo stock...';
-    try{
-      const nuevoOrigen=p.stock-cant;
-      await scriptGETjson({action:'updateStock',codigo:p.codigo,talla:p.talla,color:p.color,deposito:p.deposito,
-        stock:nuevoOrigen,antes:p.stock,operacion:`Salida - Cambio a ${destino}`,
-        fecha:getFechaHora(),nombre:p.codigo,usuario:USUARIOS[unlock]||unlock,eliminar:nuevoOrigen===0?'si':''});
-      await scriptGETjson({action:'updateStock',codigo:p.codigo,talla:p.talla,color:p.color,deposito:destino,
-        stock:cant,antes:0,operacion:`Entrada - Cambio desde ${p.deposito}`,
-        fecha:getFechaHora(),nombre:p.codigo,usuario:USUARIOS[unlock]||unlock});
-      msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
-      msg.innerHTML=`✅ Movido ${cant} unidad(es) a ${destino}`;
-    }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
-
+    _stkOpPendiente={op:'deposito',p,cant,destino};
   } else if(stkOpActual==='modificar'){
     const nuevoStock=parseInt(document.getElementById('stk-modificar-cantidad').value);
     const nota=document.getElementById('stk-modificar-nota').value.trim();
     if(isNaN(nuevoStock)||nuevoStock<0){ alert('Ingresa el nuevo stock'); return; }
-    const unlock=await mostrarAuthGen('✏️','Modificar Stock',`${p.codigo} · ${p.stock} → ${nuevoStock}`);
-    if(!unlock) return;
-    msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
+    _stkOpPendiente={op:'modificar',p,nuevoStock,nota};
+  }
+
+  const iconos={salida:'📤',deposito:'🏭',modificar:'✏️'};
+  const titulos={salida:'Confirmar Salida',deposito:'Cambio de Depósito',modificar:'Modificar Stock'};
+  const subtitulos={
+    salida:`${_stkOpPendiente.cant} unidad(es) · ${_stkOpPendiente.motivo}`,
+    deposito:`${_stkOpPendiente.cant} unidad(es) → ${_stkOpPendiente.destino}`,
+    modificar:`${p.codigo} · ${p.stock} → ${_stkOpPendiente.nuevoStock}`
+  };
+  document.getElementById('auth-gen-icon').textContent=iconos[stkOpActual];
+  document.getElementById('auth-gen-title').textContent=titulos[stkOpActual];
+  document.getElementById('auth-gen-subtitle').textContent=subtitulos[stkOpActual];
+  document.getElementById('auth-gen-unlock').value='';
+  document.getElementById('auth-gen-error').textContent='';
+  document.getElementById('auth-gen-confirm').onclick=ejecutarStkOp;
+  document.getElementById('modal-auth-gen').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('auth-gen-unlock').focus(),100);
+}
+
+async function ejecutarStkOp(){
+  const unlock=document.getElementById('auth-gen-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('auth-gen-error');
+  if(!USUARIOS[unlock]){ errEl.textContent='❌ Código incorrecto'; document.getElementById('auth-gen-unlock').value=''; return; }
+  document.getElementById('modal-auth-gen').classList.add('hidden');
+  const msg=document.getElementById('stk-op-msg');
+  msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
+  const {op,p,cant,motivo,nota,destino,nuevoStock}=_stkOpPendiente;
+  const usuario=USUARIOS[unlock];
+
+  if(op==='salida'){
+    msg.innerHTML='<span class="spinner">↻</span> Registrando salida...';
+    const ns=p.stock-cant;
+    try{
+      await scriptGETjson({action:'updateStock',codigo:p.codigo,talla:p.talla,color:p.color,deposito:p.deposito,
+        stock:ns,antes:p.stock,operacion:`Salida - ${motivo}${nota?' - '+nota:''}`,
+        fecha:getFechaHora(),nombre:p.codigo,usuario,eliminar:ns===0?'si':''});
+      msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
+      msg.innerHTML=`✅ Salida registrada · Stock: ${p.stock} → ${ns} · ${usuario}`;
+      stkProductoSeleccionado.stock=ns;
+      document.getElementById('stk-op-stock-actual').textContent=`Stock actual: ${ns}`;
+    }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
+
+  } else if(op==='deposito'){
+    msg.innerHTML='<span class="spinner">↻</span> Moviendo stock...';
+    const nuevoOrigen=p.stock-cant;
+    try{
+      await scriptGETjson({action:'updateStock',codigo:p.codigo,talla:p.talla,color:p.color,deposito:p.deposito,
+        stock:nuevoOrigen,antes:p.stock,operacion:`Salida - Cambio a ${destino}`,
+        fecha:getFechaHora(),nombre:p.codigo,usuario,eliminar:nuevoOrigen===0?'si':''});
+      await scriptGETjson({action:'updateStock',codigo:p.codigo,talla:p.talla,color:p.color,deposito:destino,
+        stock:cant,antes:0,operacion:`Entrada - Cambio desde ${p.deposito}`,
+        fecha:getFechaHora(),nombre:p.codigo,usuario});
+      msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
+      msg.innerHTML=`✅ Movido ${cant} unidad(es) a ${destino} · ${usuario}`;
+    }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
+
+  } else if(op==='modificar'){
     msg.innerHTML='<span class="spinner">↻</span> Actualizando stock...';
     try{
       await scriptGETjson({action:'updateStock',codigo:p.codigo,talla:p.talla,color:p.color,deposito:p.deposito,
         stock:nuevoStock,antes:p.stock,operacion:`Ajuste${nota?' - '+nota:''}`,
-        fecha:getFechaHora(),nombre:p.codigo,usuario:USUARIOS[unlock]||unlock,eliminar:nuevoStock===0?'si':''});
+        fecha:getFechaHora(),nombre:p.codigo,usuario,eliminar:nuevoStock===0?'si':''});
       msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
-      msg.innerHTML=`✅ Stock actualizado · ${p.stock} → ${nuevoStock}`;
+      msg.innerHTML=`✅ Stock actualizado · ${p.stock} → ${nuevoStock} · ${usuario}`;
       stkProductoSeleccionado.stock=nuevoStock;
       document.getElementById('stk-op-stock-actual').textContent=`Stock actual: ${nuevoStock}`;
     }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
