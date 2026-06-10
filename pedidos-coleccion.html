@@ -925,8 +925,8 @@ function selectVariante(btn,variante){
   } else {
     pedido.manga=''; pedido.capucha='';
   }
-  // For Unicolor, store color as tela
-  if(selectedSerie==='Unicolor') pedido.tela=selectedColorSerie;
+  // Guardar color como tela para todas las series
+  pedido.tela=selectedColorSerie;
   document.getElementById('producto-label').textContent=nombre+' · '+codigo;
   document.getElementById('producto-seleccionado').style.display='block';
 }
