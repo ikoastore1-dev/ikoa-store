@@ -669,27 +669,84 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
     <!-- BUSCAR SUB-SECCIÓN -->
     <div id="stksec-buscar" style="display:none;">
-
-      <!-- FILTRO POR COLOR -->
-      <div style="margin-bottom:14px;">
-        <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">🎨 Filtrar por Color</div>
-        <div id="buscar-colores" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      <!-- Búsqueda -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input class="field-input" type="text" id="stk-buscar-input" placeholder="Nombre, color, talla o código..." oninput="stkBuscar()" style="flex:1;">
+        <button onclick="stkBuscar()" style="padding:12px 16px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:14px;font-weight:700;cursor:pointer;">🔍</button>
       </div>
-
-      <!-- FILTRO POR TALLA -->
-      <div style="margin-bottom:14px;">
-        <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">📏 Filtrar por Talla</div>
-        <div id="buscar-tallas" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-      </div>
-
-      <!-- RESULTADOS + REFINADOR -->
-      <div id="buscar-filtro-wrap" style="display:none;">
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px;margin-bottom:10px;">
-          <input class="search-input" type="text" id="buscar-refinar-input" placeholder="Refinar por nombre o código..." style="width:100%;" oninput="refinarBusqueda(this.value)">
+      <div id="stk-buscar-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-bottom:8px;"></div>
+      <!-- Resultados -->
+      <div id="stk-buscar-lista"></div>
+      <!-- Panel de operación -->
+      <div id="stk-op-panel" style="display:none;margin-top:12px;background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div>
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Producto seleccionado</div>
+            <div id="stk-op-nombre" style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent);"></div>
+            <div id="stk-op-detalle" style="font-size:12px;color:var(--muted);margin-top:2px;"></div>
+            <div id="stk-op-stock-actual" style="font-size:14px;font-weight:700;color:var(--text);margin-top:4px;"></div>
+          </div>
+          <button onclick="cerrarOpPanel()" style="background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:6px 12px;font-size:12px;cursor:pointer;">✕</button>
         </div>
-        <div id="buscar-filtro-result"></div>
+        <!-- Opciones -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
+          <button onclick="stkSetOp('salida')" id="stk-btn-salida" style="padding:12px 8px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;text-align:center;">📤<br>Salida</button>
+          <button onclick="stkSetOp('deposito')" id="stk-btn-deposito" style="padding:12px 8px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;text-align:center;">🏭<br>Cambio Depósito</button>
+          <button onclick="stkSetOp('modificar')" id="stk-btn-modificar" style="padding:12px 8px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;text-align:center;">✏️<br>Modificar</button>
+        </div>
+        <!-- Formulario Salida -->
+        <div id="stk-form-salida" style="display:none;">
+          <div class="field-group">
+            <div class="field-label">Motivo de salida</div>
+            <select class="field-input" id="stk-salida-motivo">
+              <option value="">Seleccionar</option>
+              <option value="Vendido">Vendido</option>
+              <option value="Dañado">Dañado</option>
+              <option value="Muestra">Muestra</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <div class="field-label">Cantidad a retirar</div>
+            <input class="field-input" type="number" id="stk-salida-cantidad" min="1" placeholder="1">
+          </div>
+          <div class="field-group">
+            <div class="field-label">Nota de operación</div>
+            <input class="field-input" type="text" id="stk-salida-nota" placeholder="Ej: Vendido a cliente, factura #123...">
+          </div>
+        </div>
+        <!-- Formulario Cambio Depósito -->
+        <div id="stk-form-deposito" style="display:none;">
+          <div class="field-group">
+            <div class="field-label">Depósito destino</div>
+            <select class="field-input" id="stk-deposito-destino">
+              <option value="">Seleccionar</option>
+              <option value="Principal">Principal</option>
+              <option value="Showroom">Showroom</option>
+              <option value="Almacén">Almacén</option>
+              <option value="Tienda">Tienda</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <div class="field-label">Cantidad a mover</div>
+            <input class="field-input" type="number" id="stk-deposito-cantidad" min="1" placeholder="1">
+          </div>
+        </div>
+        <!-- Formulario Modificar -->
+        <div id="stk-form-modificar" style="display:none;">
+          <div class="field-group">
+            <div class="field-label">Nuevo stock</div>
+            <input class="field-input" type="number" id="stk-modificar-cantidad" min="0" placeholder="0">
+          </div>
+          <div class="field-group">
+            <div class="field-label">Motivo del ajuste</div>
+            <input class="field-input" type="text" id="stk-modificar-nota" placeholder="Ej: Conteo físico, corrección...">
+          </div>
+        </div>
+        <!-- Botón confirmar -->
+        <button id="stk-op-confirmar" onclick="stkConfirmarOp()" style="display:none;width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;">✓ Confirmar operación</button>
+        <div id="stk-op-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:8px;"></div>
       </div>
-
     </div>
     <div id="stksec-historial" style="display:none;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -1205,7 +1262,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGUXd0WbIkD39x7Vzlb6mPCeRGNQyC-9rz8l2dxnxq5hDzagY5tsjKJVBEUjAvBsLkVA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOlXOFQcM98mF95YX8dKi7v2WWSNR63kYIw3YgLSsSrZoiE-tE7i0W5uD2XymzF6k-wA/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -4860,6 +4917,152 @@ function cerrarVisorPDF(){
   document.getElementById('imp-iframe').src='';
   if(impPDFUrl){ URL.revokeObjectURL(impPDFUrl); impPDFUrl=''; }
 }
+
+// ── STOCK BUSCAR ──────────────────────────────────────────────
+let stkProductoSeleccionado=null;
+let stkOpActual='';
+
+async function stkBuscar(){
+  const q=document.getElementById('stk-buscar-input').value.trim().toUpperCase();
+  const msg=document.getElementById('stk-buscar-msg');
+  const lista=document.getElementById('stk-buscar-lista');
+  document.getElementById('stk-op-panel').style.display='none';
+  if(!q){ lista.innerHTML=''; msg.style.display='none'; return; }
+  msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
+  msg.innerHTML='<span class="spinner">↻</span> Buscando...';
+  try{
+    const data=await scriptGETjson({action:'buscarStock', q});
+    const rows=(data.rows||[]).filter(r=>parseInt(r[2]||0)>0);
+    if(rows.length===0){
+      msg.style.background='#2a1010'; msg.style.color='var(--danger)';
+      msg.innerHTML=`✗ Sin resultados con stock para "${q}"`;
+      lista.innerHTML=''; return;
+    }
+    msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
+    msg.innerHTML=`✅ ${rows.length} resultado(s) en stock`;
+    window._stkResultados=rows;
+    lista.innerHTML=rows.map((r,i)=>`
+      <div onclick="stkSeleccionar(${i})" style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:6px;cursor:pointer;"
+        onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);">${r[0]||'—'}</div>
+          <div style="font-size:12px;color:var(--muted);">Talla: ${r[1]||'—'} · Color: ${r[3]||'—'} · Depósito: ${r[4]||'—'}</div>
+        </div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--accent);">${r[2]||0}</div>
+      </div>`).join('');
+  }catch(e){
+    msg.style.background='#2a1010'; msg.style.color='var(--danger)';
+    msg.innerHTML='✗ '+e.message;
+  }
+}
+
+function stkSeleccionar(idx){
+  const r=(window._stkResultados||[])[idx];
+  if(!r) return;
+  stkProductoSeleccionado={codigo:r[0],talla:r[1],stock:parseInt(r[2]||0),color:r[3],deposito:r[4]};
+  document.getElementById('stk-op-nombre').textContent=r[0];
+  document.getElementById('stk-op-detalle').textContent=`Talla: ${r[1]} · Color: ${r[3]} · Depósito: ${r[4]}`;
+  document.getElementById('stk-op-stock-actual').textContent=`Stock actual: ${r[2]}`;
+  stkOpActual='';
+  ['salida','deposito','modificar'].forEach(op=>{
+    document.getElementById('stk-form-'+op).style.display='none';
+    document.getElementById('stk-btn-'+op).style.borderColor='var(--border)';
+    document.getElementById('stk-btn-'+op).style.color='var(--muted)';
+    document.getElementById('stk-btn-'+op).style.background='var(--surface2)';
+  });
+  document.getElementById('stk-op-confirmar').style.display='none';
+  document.getElementById('stk-op-msg').style.display='none';
+  document.getElementById('stk-op-panel').style.display='block';
+  document.getElementById('stk-op-panel').scrollIntoView({behavior:'smooth'});
+}
+
+function stkSetOp(op){
+  stkOpActual=op;
+  ['salida','deposito','modificar'].forEach(o=>{
+    document.getElementById('stk-form-'+o).style.display=o===op?'block':'none';
+    const btn=document.getElementById('stk-btn-'+o);
+    btn.style.borderColor=o===op?'var(--accent)':'var(--border)';
+    btn.style.color=o===op?'var(--accent)':'var(--muted)';
+    btn.style.background=o===op?'var(--surface)':'var(--surface2)';
+  });
+  document.getElementById('stk-op-confirmar').style.display='block';
+}
+
+function cerrarOpPanel(){
+  document.getElementById('stk-op-panel').style.display='none';
+  stkProductoSeleccionado=null; stkOpActual='';
+}
+
+async function stkConfirmarOp(){
+  if(!stkProductoSeleccionado||!stkOpActual){ alert('Selecciona una operación'); return; }
+  const p=stkProductoSeleccionado;
+  const msg=document.getElementById('stk-op-msg');
+
+  if(stkOpActual==='salida'){
+    const motivo=document.getElementById('stk-salida-motivo').value;
+    const cant=parseInt(document.getElementById('stk-salida-cantidad').value)||0;
+    const nota=document.getElementById('stk-salida-nota').value.trim();
+    if(!motivo){ alert('Selecciona el motivo de salida'); return; }
+    if(cant<1){ alert('Ingresa la cantidad a retirar'); return; }
+    if(cant>p.stock){ alert(`Stock insuficiente. Stock actual: ${p.stock}`); return; }
+    const unlock=await mostrarAuthGen('📤','Confirmar Salida',`${cant} unidad(es) · ${motivo}`);
+    if(!unlock) return;
+    msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
+    msg.innerHTML='<span class="spinner">↻</span> Registrando salida...';
+    const nuevoStock=p.stock-cant;
+    try{
+      await scriptGETjson({action:'updateStock',codigo:p.codigo,talla:p.talla,color:p.color,deposito:p.deposito,
+        stock:nuevoStock,antes:p.stock,operacion:`Salida - ${motivo}${nota?' - '+nota:''}`,
+        fecha:getFechaHora(),nombre:p.codigo,usuario:USUARIOS[unlock]||unlock,eliminar:nuevoStock===0?'si':''});
+      msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
+      msg.innerHTML=`✅ Salida registrada · Stock: ${p.stock} → ${nuevoStock}`;
+      stkProductoSeleccionado.stock=nuevoStock;
+      document.getElementById('stk-op-stock-actual').textContent=`Stock actual: ${nuevoStock}`;
+    }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
+
+  } else if(stkOpActual==='deposito'){
+    const destino=document.getElementById('stk-deposito-destino').value;
+    const cant=parseInt(document.getElementById('stk-deposito-cantidad').value)||0;
+    if(!destino){ alert('Selecciona el depósito destino'); return; }
+    if(destino===p.deposito){ alert('El depósito destino es el mismo que el actual'); return; }
+    if(cant<1){ alert('Ingresa la cantidad a mover'); return; }
+    if(cant>p.stock){ alert(`Stock insuficiente. Stock actual: ${p.stock}`); return; }
+    const unlock=await mostrarAuthGen('🏭','Cambio de Depósito',`${cant} unidad(es) → ${destino}`);
+    if(!unlock) return;
+    msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
+    msg.innerHTML='<span class="spinner">↻</span> Moviendo stock...';
+    try{
+      const nuevoOrigen=p.stock-cant;
+      await scriptGETjson({action:'updateStock',codigo:p.codigo,talla:p.talla,color:p.color,deposito:p.deposito,
+        stock:nuevoOrigen,antes:p.stock,operacion:`Salida - Cambio a ${destino}`,
+        fecha:getFechaHora(),nombre:p.codigo,usuario:USUARIOS[unlock]||unlock,eliminar:nuevoOrigen===0?'si':''});
+      await scriptGETjson({action:'updateStock',codigo:p.codigo,talla:p.talla,color:p.color,deposito:destino,
+        stock:cant,antes:0,operacion:`Entrada - Cambio desde ${p.deposito}`,
+        fecha:getFechaHora(),nombre:p.codigo,usuario:USUARIOS[unlock]||unlock});
+      msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
+      msg.innerHTML=`✅ Movido ${cant} unidad(es) a ${destino}`;
+    }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
+
+  } else if(stkOpActual==='modificar'){
+    const nuevoStock=parseInt(document.getElementById('stk-modificar-cantidad').value);
+    const nota=document.getElementById('stk-modificar-nota').value.trim();
+    if(isNaN(nuevoStock)||nuevoStock<0){ alert('Ingresa el nuevo stock'); return; }
+    const unlock=await mostrarAuthGen('✏️','Modificar Stock',`${p.codigo} · ${p.stock} → ${nuevoStock}`);
+    if(!unlock) return;
+    msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
+    msg.innerHTML='<span class="spinner">↻</span> Actualizando stock...';
+    try{
+      await scriptGETjson({action:'updateStock',codigo:p.codigo,talla:p.talla,color:p.color,deposito:p.deposito,
+        stock:nuevoStock,antes:p.stock,operacion:`Ajuste${nota?' - '+nota:''}`,
+        fecha:getFechaHora(),nombre:p.codigo,usuario:USUARIOS[unlock]||unlock,eliminar:nuevoStock===0?'si':''});
+      msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
+      msg.innerHTML=`✅ Stock actualizado · ${p.stock} → ${nuevoStock}`;
+      stkProductoSeleccionado.stock=nuevoStock;
+      document.getElementById('stk-op-stock-actual').textContent=`Stock actual: ${nuevoStock}`;
+    }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.innerHTML='✗ '+e.message; }
+  }
+}
+// ── FIN STOCK BUSCAR ──────────────────────────────────────────
 
 init();
 </script>
