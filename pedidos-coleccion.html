@@ -844,19 +844,19 @@ function setCustomPack(val){
 // ── COLECCION SERIE/VARIANTE SELECTION ───────────────────────
 const SERIES_COLECCION={
   Camping:{nombre:'Camping (Outdoor)',colores:['Negro','Camuflaje','Verde'],
-    codigos:{Negro:{Playera:'CampingBlack',Dress:'CampingBlackDress',Cortaviento:'CampingBlackCortaviento'},
-             Camuflaje:{Playera:'CampingCamo',Dress:'CampingCamoDress',Cortaviento:'CampingCamoCortaviento'},
-             Verde:{Playera:'CampingSelva',Dress:'CampingSelvaDress',Cortaviento:'CampingSelvaCortaviento'}}},
+    codigos:{Negro:{Playera:'CampingBlack',Dress:'CampingBlackDress',Cortaviento:'CampingBlackCortaviento',Short:'CampingBlackShort'},
+             Camuflaje:{Playera:'CampingCamo',Dress:'CampingCamoDress',Cortaviento:'CampingCamoCortaviento',Short:'CampingCamoShort'},
+             Verde:{Playera:'CampingSelva',Dress:'CampingSelvaDress',Cortaviento:'CampingSelvaCortaviento',Short:'CampingSelvaShort'}}},
   Nautica:{nombre:'Náutica',colores:['Pink','Azul','Blanco-Menta','Blanco-Negro'],
-    codigos:{Pink:{Playera:'NauticaPink',Dress:'NauticaPinkDress',Cortaviento:'NauticaPinkCortaviento'},
-             Azul:{Playera:'NauticaMarino',Dress:'NauticaMarinoDress',Cortaviento:'NauticaMarinoCortaviento'},
-             'Blanco-Menta':{Playera:'NauticaMintJack',Dress:'NauticaMintJackDress',Cortaviento:'NauticaMintJackCortaviento'},
-             'Blanco-Negro':{Playera:'NauticaBlackJack',Dress:'NauticaBlackJackDress',Cortaviento:'NauticaBlackJackCortaviento'}}},
+    codigos:{Pink:{Playera:'NauticaPink',Dress:'NauticaPinkDress',Cortaviento:'NauticaPinkCortaviento',Short:'NauticaPinkShort'},
+             Azul:{Playera:'NauticaMarino',Dress:'NauticaMarinoDress',Cortaviento:'NauticaMarinoCortaviento',Short:'NauticaMarinoShort'},
+             'Blanco-Menta':{Playera:'NauticaMintJack',Dress:'NauticaMintJackDress',Cortaviento:'NauticaMintJackCortaviento',Short:'NauticaMintJackShort'},
+             'Blanco-Negro':{Playera:'NauticaBlackJack',Dress:'NauticaBlackJackDress',Cortaviento:'NauticaBlackJackCortaviento',Short:'NauticaBlackJackShort'}}},
   Alpha:{nombre:'Alpha',colores:['Verde','Gris','Azul','Pink'],
-    codigos:{Verde:{Playera:'AlphaSelva',Dress:'AlphaSelvaDress',Cortaviento:'AlphaSelvaCortaviento'},
-             Gris:{Playera:'AlphaGris',Dress:'AlphaGrisDress',Cortaviento:'AlphaGrisCortaviento'},
-             Azul:{Playera:'AlphaMarino',Dress:'AlphaMarinoDress',Cortaviento:'AlphaMarinoCortaviento'},
-             Pink:{Playera:'AlphaPink',Dress:'AlphaPinkDress',Cortaviento:'AlphaPinkCortaviento'}}},
+    codigos:{Verde:{Playera:'AlphaSelva',Dress:'AlphaSelvaDress',Cortaviento:'AlphaSelvaCortaviento',Short:'AlphaSelvaShort'},
+             Gris:{Playera:'AlphaGris',Dress:'AlphaGrisDress',Cortaviento:'AlphaGrisCortaviento',Short:'AlphaGrisShort'},
+             Azul:{Playera:'AlphaMarino',Dress:'AlphaMarinoDress',Cortaviento:'AlphaMarinoCortaviento',Short:'AlphaMarinoShort'},
+             Pink:{Playera:'AlphaPink',Dress:'AlphaPinkDress',Cortaviento:'AlphaPinkCortaviento',Short:'AlphaPinkShort'}}},
   Unicolor:{nombre:'Unicolor',colores:['Blanco','Negro','Azul Rey','Azul Marino','Menta','Gris','Rojo','Rosa Bebé','Verde Militar'],
     codigos:{
       Blanco:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
@@ -905,7 +905,7 @@ function selectColorSerie(btn,color){
     return;
   }
 
-  const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short','Cotton Licra']:['Playera','Dress','Cortaviento'];
+  const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short','Cotton Licra']:['Playera','Dress','Cortaviento','Short'];
   document.getElementById('variante-grid').innerHTML=variantes.map(v=>`<button class="opt-btn" onclick="selectVariante(this,'${v}')">${v.toUpperCase()}</button>`).join('');
   document.getElementById('variante-wrap').style.display='block';
   document.getElementById('producto-seleccionado').style.display='none';
@@ -919,8 +919,8 @@ function selectVariante(btn,variante){
   const codigo=s.codigos[selectedColorSerie][variante];
   const nombre=selectedSerie==='Unicolor'?`${variante} Serie ${selectedColorSerie}`:`${variante} ${s.nombre} ${selectedColorSerie}`;
   pedido.codigoProducto=codigo; pedido.nombreProducto=nombre; pedido.variante=variante; pedido.pack=1;
-  // Cotton Licra y T-Shirt: manga corta, sin capucha
-  if(variante==='Cotton Licra'||variante==='T-Shirt'){
+  // Cotton Licra, T-Shirt y Short: sin capucha
+  if(variante==='Cotton Licra'||variante==='T-Shirt'||variante==='Short'){
     pedido.manga='Manga Corta'; pedido.capucha='Sin Capucha';
   } else {
     pedido.manga=''; pedido.capucha='';

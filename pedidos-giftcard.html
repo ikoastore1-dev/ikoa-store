@@ -266,17 +266,41 @@ main{max-width:480px;margin:0 auto;padding:16px;}
           </div>
           <!-- Info pago Bs -->
           <div id="r-pago-bs-info" style="display:none;background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:10px;">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Datos bancarios</div>
-            <div style="font-size:13px;font-weight:700;color:var(--text);">Banesco · 04149450742</div>
-            <div style="font-size:13px;color:var(--text);">CI: V-18265345</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:6px;">Monto en Bs (tasa IKOA):</div>
-            <div id="r-monto-bs-val" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--accent);">Bs 0.00</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">Datos bancarios</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <div><div style="font-size:11px;color:var(--muted);">Banco</div><div style="font-size:14px;font-weight:700;color:var(--text);">Banesco</div></div>
+              <button onclick="copiarDato('Banesco',this)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">📋 Copiar</button>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <div><div style="font-size:11px;color:var(--muted);">Teléfono</div><div style="font-size:14px;font-weight:700;color:var(--text);">04149450742</div></div>
+              <button onclick="copiarDato('04149450742',this)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">📋 Copiar</button>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div><div style="font-size:11px;color:var(--muted);">Cédula</div><div style="font-size:14px;font-weight:700;color:var(--text);">V-18265345</div></div>
+              <button onclick="copiarDato('18265345',this)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">📋 Copiar</button>
+            </div>
+            <div style="background:var(--surface);border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Monto en Bs (tasa IKOA)</div>
+              <div id="r-monto-bs-val" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--accent);">Bs 0.00</div>
+              <button onclick="copiarDato(document.getElementById('r-monto-bs-val').textContent.replace('Bs ',''),this)" style="margin-top:6px;padding:6px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">📋 Copiar monto</button>
+            </div>
           </div>
           <!-- Info pago Divisa -->
           <div id="r-pago-usd-info" style="display:none;background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:10px;">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Pago en Divisa</div>
-            <div style="font-size:13px;font-weight:700;color:var(--text);">Binance · johancazorla@gmail.com</div>
-            <div id="r-monto-usd-val" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--accent);margin-top:4px;">$0.00</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;">Pago en Divisa</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <div><div style="font-size:11px;color:var(--muted);">Plataforma</div><div style="font-size:14px;font-weight:700;color:var(--text);">Binance</div></div>
+              <button onclick="copiarDato('Binance',this)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">📋 Copiar</button>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div><div style="font-size:11px;color:var(--muted);">Correo</div><div style="font-size:14px;font-weight:700;color:var(--text);">johancazorla@gmail.com</div></div>
+              <button onclick="copiarDato('johancazorla@gmail.com',this)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">📋 Copiar</button>
+            </div>
+            <div style="background:var(--surface);border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Monto a pagar</div>
+              <div id="r-monto-usd-val" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--accent);">$0.00</div>
+              <button onclick="copiarDato(document.getElementById('r-monto-usd-val').textContent.replace('$',''),this)" style="margin-top:6px;padding:6px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">📋 Copiar monto</button>
+            </div>
           </div>
           <div id="r-pago-ref-wrap" style="display:none;">
             <div class="field-label" style="margin-bottom:6px;" id="r-pago-ref-label">Número de referencia</div>
@@ -918,9 +942,11 @@ function actualizarTotalesPago(){
 
 function copiarTexto(txt, btn){
   navigator.clipboard.writeText(txt).then(()=>{
-    const orig=btn.innerHTML; btn.innerHTML='✅'; setTimeout(()=>btn.innerHTML=orig,2000);
+    const orig=btn.textContent; btn.textContent='✅ Copiado'; btn.style.color='var(--accent)';
+    setTimeout(()=>{ btn.textContent=orig; btn.style.color=''; },2000);
   }).catch(()=>{ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); const orig=btn.innerHTML; btn.innerHTML='✅'; setTimeout(()=>btn.innerHTML=orig,2000); });
 }
+function copiarDato(txt, btn){ copiarTexto(txt, btn); }
 
 let pagoSeleccionado='';
 function selectPagoGC(tipo){
