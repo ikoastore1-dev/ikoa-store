@@ -1138,11 +1138,12 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <!-- TIPO DE GESTIÓN -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;">
         <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">📋 Tipo de Gestión</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:10px;">
           <button onclick="setTipoGestion('COD')" id="gbtn-COD" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">📦 COD</button>
           <button onclick="toggleEnvioModos()" id="gbtn-Enviado" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🚚 Enviado</button>
           <button onclick="setTipoGestion('Buscar')" id="gbtn-Buscar" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🔍 Buscar</button>
           <button onclick="setTipoGestion('Imprenta')" id="gbtn-Imprenta" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🖨️ Imprenta</button>
+          <button onclick="setTipoGestion('Produccion')" id="gbtn-Produccion" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🏭 Producción</button>
         </div>
         <!-- Sub-modos Enviado -->
         <div id="envio-modos" style="display:none;margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -1244,6 +1245,18 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
             <button onclick="imprimirActual()" style="flex:1;padding:14px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:10px;color:#000;font-size:16px;font-weight:700;cursor:pointer;">🖨️ Imprimir este</button>
             <button onclick="cerrarVisorPDF()" style="padding:14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">✕</button>
           </div>
+        </div>
+      </div>
+
+      <!-- PRODUCCIÓN -->
+      <div id="produccion-wrap" style="display:none;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">🏭 Pedidos en Producción</div>
+            <button onclick="cargarProduccion()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">↻ Actualizar</button>
+          </div>
+          <div id="produccion-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-bottom:8px;"></div>
+          <div id="produccion-lista"></div>
         </div>
       </div>
 
@@ -1383,7 +1396,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOlXOFQcM98mF95YX8dKi7v2WWSNR63kYIw3YgLSsSrZoiE-tE7i0W5uD2XymzF6k-wA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtEDrMQ1g0N9AqaJ-SD2_IHHhj4A2MpKh7Oicwu2vbrgol6zExIr57IcR2NJKfAOj__A/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -3794,7 +3807,37 @@ async function confirmarPlanificacion(){
       });
     }catch(e){ console.warn('addPedido error:',e); }
 
-    // 4. Resultado — igual que COD
+    // Registrar en hoja PRODUCCION
+    try{
+      await registrarEnProduccion({
+        codigoP:lastCodigoP,
+        codigoC:pendingCola.allCodigosC?pendingCola.allCodigosC.join(','):(pendingCola.codigoCBase||''),
+        cod:codMake,
+        fecha:fechaProd,
+        nombre:pendingCola.nombre||'',
+        correo:pendingCola.correo||'',
+        cedula:pendingCola.cedula||'',
+        celular:pendingCola.celular||'',
+        modelo:allPacks[0]?.modelo||'',
+        manga:allPacks[0]?.manga||'',
+        capucha:allPacks[0]?.capucha||'',
+        pack:allPacks.map(pk=>pk.pack).join(' | '),
+        tela:allPacks.map(pk=>pk.tela).join(' | '),
+        vinil:allPacks.map(pk=>pk.vinil).join(' | '),
+        piezas:descripcionPacks,
+        agencia:pendingCola.agencia||'',
+        retira_nombre:pendingCola.retira||'',
+        retira_ci:pendingCola.retiraCi||'',
+        retira_cel:pendingCola.retiraCel||'',
+        banco:pendingCola.banco||'',
+        cod_pago:pendingCola.codpago||'',
+        usuario:USUARIOS[unlock],
+        fecha_apro:fechaProd,
+        fecha_produccion:fechaProd,
+        usuario_produccion:USUARIOS[unlock],
+        urgente:pendingCola.urgente||''
+      });
+    }catch(e){ console.warn('registrarProduccion error:',e); }
     if(response.ok||response.type==='opaque'){
       msgEl.style.background='var(--surface2)';
       msgEl.style.border='1px solid #1a4a2a';
@@ -4259,6 +4302,7 @@ function resetGestionBtns(){
   document.getElementById('envio-seleccion-wrap').style.display='none';
   document.getElementById('gestion-form-wrap').style.display='none';
   document.getElementById('imprenta-wrap').style.display='none';
+  document.getElementById('produccion-wrap').style.display='none';
 }
 
 function setTipoGestion(tipo){
@@ -4307,10 +4351,19 @@ function setTipoGestion(tipo){
   } else if(tipo==='Imprenta'){
     document.getElementById('gestion-form-wrap').style.display='none';
     document.getElementById('imprenta-wrap').style.display='block';
+    document.getElementById('produccion-wrap').style.display='none';
     submitBtn.style.display='none';
+    return;
+  } else if(tipo==='Produccion'){
+    document.getElementById('gestion-form-wrap').style.display='none';
+    document.getElementById('imprenta-wrap').style.display='none';
+    document.getElementById('produccion-wrap').style.display='block';
+    submitBtn.style.display='none';
+    cargarProduccion();
     return;
   }
   document.getElementById('imprenta-wrap').style.display='none';
+  document.getElementById('produccion-wrap').style.display='none';
 }
 
 function toggleEnvioModos(){
@@ -4351,11 +4404,13 @@ async function buscarCOD(){
     rows.forEach(r=>{
       const v=i=>String(gvizVal(r.c[i])||'').trim();
       const status=v(6); const c=sc[status]||'var(--muted)';
+      const urgente=v(15);
       html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;animation:slideUp .3s ease;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
           <div style="font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;">${v(0)}</div>
           <span style="background:${c}22;border:1px solid ${c};border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:${c};letter-spacing:.08em;">${status}</span>
         </div>
+        ${urgente?`<div style="background:#1a1a10;border:1px solid var(--warn);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:13px;font-weight:700;color:var(--warn);">⚡ ${urgente}</div>`:''}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
           <div><span style="color:var(--muted);">COD:</span> <b style="color:var(--text);">${v(3)}</b></div>
           <div><span style="color:var(--muted);">N° Guía:</span> <b>${v(4)||'—'}</b></div>
@@ -4364,7 +4419,10 @@ async function buscarCOD(){
           <div><span style="color:var(--muted);">Agencia:</span> ${v(5)||'—'}</div>
           <div><span style="color:var(--muted);">Fecha:</span> ${v(8)||'—'}</div>
           <div style="grid-column:1/-1;"><span style="color:var(--muted);">Correo:</span> ${v(2)||'—'}</div>
-          ${v(9)?`<div style="grid-column:1/-1;background:var(--surface2);border-radius:8px;padding:8px 10px;margin-top:4px;"><span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Descripción</span><div style="margin-top:4px;font-size:12px;line-height:1.6;">${v(9)}</div></div>`:''}
+          ${v(9)?`<div style="grid-column:1/-1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:4px;">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px;">📋 Descripción del pedido</div>
+            <div style="font-size:12px;line-height:1.8;color:var(--text);">${v(9).split(' | ').join('<br>')}</div>
+          </div>`:''}
           ${v(10)?`<div style="grid-column:1/-1;"><span style="color:var(--muted);">Envío a:</span> ${v(10)} ${v(11)?'· '+v(11):''} ${v(12)?'· '+v(12):''}</div>`:''}
         </div>
       </div>`;
@@ -4506,6 +4564,29 @@ document.getElementById('gestion-form').addEventListener('submit',async function
         ci_envio:   formData.get('ci_envio')||'',
         direccion:  dirInput?dirInput.value:''
       });
+    }
+
+    // Registrar en PRODUCCION si es COD, eliminar si es Enviado
+    if(tipo==='COD' && codMake){
+      try{
+        await registrarEnProduccion({
+          cod:codMake,
+          fecha:fecha,
+          nombre:formData.get('nombre')||'',
+          correo:formData.get('correo')||'',
+          cedula:formData.get('cedula')||'',
+          celular:formData.get('celular')||'',
+          agencia:formData.get('agencia')||'',
+          piezas:formData.get('descripcion')||'',
+          usuario:nombreUsuario,
+          fecha_produccion:fecha,
+          usuario_produccion:nombreUsuario,
+          urgente:''
+        });
+      }catch(e){ console.warn('registrarProduccion COD error:',e); }
+    } else if(tipo==='Enviado'){
+      const codEnviado=formData.get('codigo')||'';
+      if(codEnviado) try{ await eliminarDeProduccion(codEnviado); }catch(e){ console.warn('eliminarProduccion error:',e); }
     }
 
     // With no-cors, response.type is 'opaque' and response.ok is false — treat as success
@@ -5073,7 +5154,67 @@ function cerrarVisorPDF(){
   if(impPDFUrl){ URL.revokeObjectURL(impPDFUrl); impPDFUrl=''; }
 }
 
-// ── STOCK QR SCANNER ─────────────────────────────────────────
+// ── PRODUCCION ────────────────────────────────────────────────
+async function cargarProduccion(){
+  const msg=document.getElementById('produccion-msg');
+  const lista=document.getElementById('produccion-lista');
+  msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
+  msg.innerHTML='<span class="spinner">↻</span> Cargando producción...';
+  try{
+    const data=await scriptGETjson({action:'leerProduccion'});
+    const rows=data.rows||[];
+    if(rows.length===0){
+      msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
+      msg.innerHTML='✅ No hay pedidos en producción';
+      lista.innerHTML=''; return;
+    }
+    msg.style.display='none';
+    lista.innerHTML=rows.map((r,i)=>{
+      const urgente=String(r[27]||'').trim();
+      const cod=String(r[2]||r[1]||r[0]||'').trim();
+      const nombre=String(r[4]||'').trim();
+      const modelo=String(r[8]||'').trim();
+      const agencia=String(r[15]||'').trim();
+      const fecha=String(r[25]||r[3]||'').trim();
+      const piezas=String(r[14]||'').trim();
+      const tela=String(r[12]||'').trim();
+      const vinil=String(r[13]||'').trim();
+      return `<div style="background:var(--surface);border:1px solid ${urgente?'var(--warn)':'var(--border)'};border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+        ${urgente?`<div style="background:#1a1a10;border:1px solid var(--warn);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:13px;font-weight:700;color:var(--warn);">⚡ PRIORIDAD · ${urgente}</div>`:''}
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">${cod}</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);">${nombre}</div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);text-align:right;">${fecha}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:8px;">
+          <div><span style="color:var(--muted);">Modelo:</span> <b>${modelo||'—'}</b></div>
+          <div><span style="color:var(--muted);">Agencia:</span> ${agencia||'—'}</div>
+          ${tela?`<div><span style="color:var(--muted);">Tela:</span> ${tela}</div>`:''}
+          ${vinil?`<div><span style="color:var(--muted);">Vinil:</span> ${vinil}</div>`:''}
+        </div>
+        ${piezas?`<div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.8;">${piezas.split(' | ').join('<br>')}</div>`:''}
+      </div>`;
+    }).join('');
+  }catch(e){
+    msg.style.background='#2a1010'; msg.style.color='var(--danger)';
+    msg.innerHTML='✗ '+e.message;
+  }
+}
+
+async function registrarEnProduccion(datos){
+  try{
+    await scriptGETjson({action:'registrarProduccion', ...datos});
+  }catch(e){ console.warn('Error registrando en produccion:',e); }
+}
+
+async function eliminarDeProduccion(cod){
+  try{
+    await scriptGETjson({action:'eliminarProduccion', cod});
+  }catch(e){ console.warn('Error eliminando de produccion:',e); }
+}
+// ── FIN PRODUCCION ────────────────────────────────────────────
 let stkScannerActive={}, stkZxingReaders={};
 
 async function stkToggleScanner(sub){
