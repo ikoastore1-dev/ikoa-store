@@ -444,13 +444,22 @@ window.addEventListener('load',function(){
   </div>
 </main>
 
-<!-- PANTALLA DE ÉXITO -->
-<div id="pantalla-exito" style="display:none;position:fixed;inset:0;z-index:999;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;">
-  <div style="font-size:72px;margin-bottom:20px;animation:bounceIn .6s ease;">🎉</div>
-  <div style="font-family:'Barlow',sans-serif;font-size:32px;font-weight:700;color:var(--accent);letter-spacing:.04em;margin-bottom:12px;">¡Gracias por elegir a IKOA!</div>
-  <div style="font-size:16px;color:var(--text);line-height:1.7;max-width:340px;">Estamos trabajando para ti.<br><b style="color:var(--accent);">Pronto revisaremos tu solicitud</b> y te contactaremos por <b>WhatsApp, Instagram o correo</b>.</div>
-  <div style="margin-top:28px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 24px;">
-    <div style="font-size:13px;color:var(--muted);">Tu solicitud fue registrada exitosamente ✅</div>
+<!-- PANTALLA DE ÉXITO - MARTHA -->
+<div id="pantalla-exito" style="display:none;position:fixed;inset:0;z-index:999;background:var(--bg);overflow-y:auto;padding:24px 20px;">
+  <div style="max-width:480px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:56px;margin-bottom:8px;">🦅</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:24px;font-weight:700;color:var(--accent);letter-spacing:.04em;">¡Pedido Recibido!</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;font-size:14px;color:var(--text);line-height:1.8;">
+      <p style="margin:0 0 14px;">¡Hola! 💌 Soy Martha, tu asistente online del Team IKOA 🦅. Quiero darte las gracias por la compra que acabas de realizar, ya hemos recibido tu pedido con muchísimo cariño.</p>
+      <p style="margin:0 0 14px;">🧵 Actualmente está siendo procesado por nuestro equipo de producción para aprobar tu solicitud.</p>
+      <p style="margin:0 0 14px;">📅 En el siguiente día hábil o según la programación de planificación por lote de venta, se te asignará un Código Único de Producción (COD) por nuestro sistema de gestión de Calidad y se notifica por correo.</p>
+      <p style="margin:0 0 14px;">⏱ En un lapso de 2 a 5 días hábiles, tu pedido estará listo para ser enviado. <span style="color:var(--muted);font-size:13px;">Nota: en temporadas altas puedes durar hasta alrededor de 10 días hábiles. Alguna duda con esto consultar con tu asesor de venta.</span></p>
+      <p style="margin:0 0 14px;">📦 Una vez realizado el envío, te notificaremos por correo electrónico con la guía de despacho.</p>
+      <p style="margin:0;">📸 Y si deseas compartir tu experiencia, puedes etiquetarnos en Instagram o enviarnos una foto por WhatsApp <b style="color:var(--accent);">+584149450742</b>.</p>
+    </div>
+    <button onclick="marthaConfirmar()" style="width:100%;margin-top:20px;padding:18px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:14px;color:#000;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;letter-spacing:.04em;">✓ Entendido · Confirmar lectura</button>
   </div>
 </div>
 
@@ -1241,7 +1250,7 @@ async function enviarSinWhatsApp(){
   await guardarEnSheets();
   await notificarNuevoPedido();
   await marcarTokenUsado();
-  document.getElementById('pantalla-exito').style.display='flex';
+  document.getElementById('pantalla-exito').style.display='block';
 }
 
 async function enviarWhatsApp(){
@@ -1253,7 +1262,7 @@ async function enviarWhatsApp(){
   await notificarNuevoPedido();
   await marcarTokenUsado();
   window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(buildMensaje())}`,'_blank');
-  document.getElementById('pantalla-exito').style.display='flex';
+  document.getElementById('pantalla-exito').style.display='block';
 }
 
 // Auto-uppercase en campos de texto (excepto correo y referencias)
