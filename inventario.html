@@ -4581,7 +4581,7 @@ document.getElementById('gestion-form').addEventListener('submit',async function
           usuario:nombreUsuario,
           fecha_produccion:fecha,
           usuario_produccion:nombreUsuario,
-          urgente:''
+          urgente:formData.get('urgente')||''
         });
       }catch(e){ console.warn('registrarProduccion COD error:',e); }
     } else if(tipo==='Enviado'){
@@ -5169,34 +5169,62 @@ async function cargarProduccion(){
       lista.innerHTML=''; return;
     }
     msg.style.display='none';
-    lista.innerHTML=rows.map((r,i)=>{
-      const urgente=String(r[27]||'').trim();
-      const cod=String(r[2]||r[1]||r[0]||'').trim();
-      const nombre=String(r[4]||'').trim();
-      const modelo=String(r[8]||'').trim();
-      const agencia=String(r[15]||'').trim();
-      const fecha=String(r[25]||r[3]||'').trim();
-      const piezas=String(r[14]||'').trim();
-      const tela=String(r[12]||'').trim();
-      const vinil=String(r[13]||'').trim();
-      return `<div style="background:var(--surface);border:1px solid ${urgente?'var(--warn)':'var(--border)'};border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+    lista.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${rows.length} pedido(s) en producción</div>`;
+    rows.forEach(r=>{
+      const v=i=>String(r[i]||'').trim();
+      const urgente=v(27);
+      const cod=v(2)||v(1)||v(0);
+      const nombre=v(4);
+      const correo=v(5);
+      const cedula=v(6);
+      const celular=v(7);
+      const modelo=v(8);
+      const manga=v(9);
+      const capucha=v(10);
+      const pack=v(11);
+      const tela=v(12);
+      const vinil=v(13);
+      const piezas=v(14);
+      const agencia=v(15);
+      const retira=v(16);
+      const retiraCI=v(17);
+      const retiraCel=v(18);
+      const fecha=v(25)||v(3);
+      const usuario=v(26);
+      const card=document.createElement('div');
+      card.style.cssText=`background:var(--surface);border:1px solid ${urgente?'var(--warn)':'var(--border)'};border-radius:12px;padding:16px;margin-bottom:14px;animation:slideUp .3s ease;`;
+      card.innerHTML=`
         ${urgente?`<div style="background:#1a1a10;border:1px solid var(--warn);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:13px;font-weight:700;color:var(--warn);">⚡ PRIORIDAD · ${urgente}</div>`:''}
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">${cod}</div>
-            <div style="font-size:14px;font-weight:700;color:var(--text);">${nombre}</div>
+            <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;">${nombre}</div>
+            <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
+              <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text);">${cod}</span>
+            </div>
           </div>
-          <div style="font-size:11px;color:var(--muted);text-align:right;">${fecha}</div>
+          <span style="background:#1a1a2a;border:1px solid var(--accent);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--accent);">EN PRODUCCIÓN</span>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:8px;">
-          <div><span style="color:var(--muted);">Modelo:</span> <b>${modelo||'—'}</b></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:10px;">
+          <div><span style="color:var(--muted);">Correo:</span> ${correo||'—'}</div>
+          <div><span style="color:var(--muted);">Cédula:</span> ${cedula||'—'}</div>
+          <div><span style="color:var(--muted);">Celular:</span> ${celular||'—'}</div>
           <div><span style="color:var(--muted);">Agencia:</span> ${agencia||'—'}</div>
-          ${tela?`<div><span style="color:var(--muted);">Tela:</span> ${tela}</div>`:''}
-          ${vinil?`<div><span style="color:var(--muted);">Vinil:</span> ${vinil}</div>`:''}
+          <div><span style="color:var(--muted);">Fecha:</span> ${fecha||'—'}</div>
+          <div><span style="color:var(--muted);">Usuario:</span> ${usuario||'—'}</div>
         </div>
-        ${piezas?`<div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.8;">${piezas.split(' | ').join('<br>')}</div>`:''}
-      </div>`;
-    }).join('');
+        <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:10px;">
+          <span style="color:var(--muted);">Retira:</span> ${retira||'—'}${retiraCI?` · C.I: ${retiraCI}`:''}${retiraCel?` · Cel: ${retiraCel}`:''}
+        </div>
+        <div style="border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--bg);">
+          <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">${pack||'—'} · <span style="color:var(--muted);font-size:13px;">${cod}</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:6px;">
+            <div><span style="color:var(--muted);">Tela:</span> ${tela||'—'}</div>
+            <div><span style="color:var(--muted);">Vinil:</span> ${vinil||'—'}</div>
+          </div>
+          ${piezas?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${modelo||''} ${manga||''} ${capucha||''}<br>${piezas.split(' | ').join('<br>')}</div>`:''}
+        </div>`;
+      lista.appendChild(card);
+    });
   }catch(e){
     msg.style.background='#2a1010'; msg.style.color='var(--danger)';
     msg.innerHTML='✗ '+e.message;
