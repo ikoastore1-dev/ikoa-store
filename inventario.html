@@ -1138,12 +1138,14 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <!-- TIPO DE GESTIÓN -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;">
         <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">📋 Tipo de Gestión</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:10px;">
-          <button onclick="setTipoGestion('COD')" id="gbtn-COD" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">📦 COD</button>
-          <button onclick="toggleEnvioModos()" id="gbtn-Enviado" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🚚 Enviado</button>
-          <button onclick="setTipoGestion('Buscar')" id="gbtn-Buscar" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🔍 Buscar</button>
-          <button onclick="setTipoGestion('Imprenta')" id="gbtn-Imprenta" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🖨️ Imprenta</button>
-          <button onclick="setTipoGestion('Produccion')" id="gbtn-Produccion" style="padding:18px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🏭 Producción</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
+          <button onclick="setTipoGestion('COD')" id="gbtn-COD" style="padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">📦 COD</button>
+          <button onclick="toggleEnvioModos()" id="gbtn-Enviado" style="padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🚚 Enviado</button>
+          <button onclick="setTipoGestion('Buscar')" id="gbtn-Buscar" style="padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🔍 Buscar</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick="setTipoGestion('Imprenta')" id="gbtn-Imprenta" style="padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🖨️ Imprenta</button>
+          <button onclick="setTipoGestion('Produccion')" id="gbtn-Produccion" style="padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🏭 Producción</button>
         </div>
         <!-- Sub-modos Enviado -->
         <div id="envio-modos" style="display:none;margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -2581,6 +2583,15 @@ async function guardarTasas(){
       msgEl.innerHTML=`✅ Tasas actualizadas · ${USUARIOS[unlock]}`;
       document.getElementById('tasa-tab-unlock').value='';
       cargarTasas();
+      // Disparar actualización de precios en WooCommerce
+      try{
+        fetch('https://hook.us2.make.com/urctfmxzrm1pr7osowwqlw12rwbhjkry',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({trigger:'tasas_actualizadas', usuario:USUARIOS[unlock], fecha:getFechaHora()}),
+          mode:'no-cors'
+        });
+      }catch(we){ console.warn('WooCommerce webhook error:',we); }
       setTimeout(()=>{ msgEl.style.display='none'; }, 2000);
     } else { throw new Error(data.error||'Error desconocido'); }
   }catch(e){
