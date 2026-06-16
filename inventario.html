@@ -1143,9 +1143,10 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <button onclick="toggleEnvioModos()" id="gbtn-Enviado" style="padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🚚 Enviado</button>
           <button onclick="setTipoGestion('Buscar')" id="gbtn-Buscar" style="padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🔍 Buscar</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
           <button onclick="setTipoGestion('Imprenta')" id="gbtn-Imprenta" style="padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🖨️ Imprenta</button>
           <button onclick="setTipoGestion('Produccion')" id="gbtn-Produccion" style="padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🏭 Producción</button>
+          <button onclick="setTipoGestion('Cotizaciones')" id="gbtn-Cotizaciones" style="padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">💰 Cotizaciones</button>
         </div>
         <!-- Sub-modos Enviado -->
         <div id="envio-modos" style="display:none;margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -1370,6 +1371,73 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         </form>
       </div>
     </div>
+
+
+  <!-- COTIZACIONES PANEL -->
+  <!-- COTIZACIONES PANEL -->
+  <div id="cotizaciones-wrap" style="display:none;max-width:600px;margin:0 auto;">
+    <!-- PASO 1: PRODUCTO -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
+      <div style="font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">1 &middot; Producto</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button onclick="cotSelectApp('comfy')" id="cotbtn-comfy" class="cot-app-btn" style="padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Comfy Mega Promo</button>
+        <button onclick="cotSelectApp('fullcomfy')" id="cotbtn-fullcomfy" class="cot-app-btn" style="padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Comfy Protect</button>
+        <button onclick="cotSelectApp('licra')" id="cotbtn-licra" class="cot-app-btn" style="padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Licra Protect</button>
+        <button onclick="cotSelectApp('coleccion')" id="cotbtn-coleccion" class="cot-app-btn" style="padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Licra Coleccion</button>
+      </div>
+    </div>
+    <!-- PASO 2: CONFIGURACIÓN -->
+    <div id="cot-config" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
+      <div style="font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">2 &middot; Configuracion</div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Pack</div>
+        <div id="cot-packs" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Manga</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="cotSelectManga('Manga Larga')" id="cotmanga-larga" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Manga Larga</button>
+          <button onclick="cotSelectManga('Manga Corta')" id="cotmanga-corta" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Manga Corta</button>
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Capucha</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="cotSelectCapucha('Sin Capucha')" id="cotcap-sin" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Sin Capucha</button>
+          <button onclick="cotSelectCapucha('Con Capucha')" id="cotcap-con" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Con Capucha <span style="font-size:11px;color:var(--warn);">(+$)</span></button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Color de Tela</div>
+          <select id="cot-tela" class="field-input" style="width:100%;" onchange="cotCalc()"><option value="">Seleccionar...</option></select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Color de Vinil</div>
+          <select id="cot-vinil" class="field-input" style="width:100%;" onchange="cotCalc()"><option value="">Seleccionar...</option></select>
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Tallas y Piezas</div>
+        <div id="cot-tallas" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <button onclick="cotAddTalla()" style="margin-top:8px;padding:8px 14px;border:1px dashed var(--accent);border-radius:8px;background:transparent;color:var(--accent);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">+ Agregar talla</button>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Nombre del Cliente (opcional)</div>
+        <input class="field-input" type="text" id="cot-cliente" placeholder="Nombre del cliente..." oninput="cotCalc()" style="width:100%;box-sizing:border-box;">
+      </div>
+    </div>
+    <!-- PASO 3: VISTA PREVIA -->
+    <div id="cot-preview" style="display:none;background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
+      <div style="font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">3 &middot; Vista Previa</div>
+      <div id="cot-preview-content" style="font-size:13px;line-height:1.9;color:var(--text);"></div>
+      <div style="margin-top:16px;display:flex;gap:10px;">
+        <button onclick="cotGenerarPDF()" style="flex:1;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:12px;color:#000;font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">Descargar PDF</button>
+        <button onclick="cotReset()" style="padding:14px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Nueva</button>
+      </div>
+    </div>
+  </div>
+
   </div>
 
   <!-- TAB PROGRAMACION -->
@@ -4304,7 +4372,7 @@ const WEBHOOK_URL='https://hook.us2.make.com/9vb6zab74fbbqkbv46c2coi8i7e4mnqs';
 const WEBHOOK_FOTO='https://hook.us2.make.com/6eprt8kp7xj3jj8t5ahsypbtz3hohf6c';
 
 function resetGestionBtns(){
-  ['COD','Enviado','Buscar','Imprenta'].forEach(t=>{
+  ['COD','Enviado','Buscar','Imprenta','Cotizaciones'].forEach(t=>{
     const b=document.getElementById('gbtn-'+t);
     if(b){ b.style.borderColor='var(--border)'; b.style.background='var(--surface2)'; b.style.color='var(--muted)'; }
   });
@@ -4314,6 +4382,7 @@ function resetGestionBtns(){
   document.getElementById('gestion-form-wrap').style.display='none';
   document.getElementById('imprenta-wrap').style.display='none';
   document.getElementById('produccion-wrap').style.display='none';
+  const cwrap=document.getElementById('cotizaciones-wrap'); if(cwrap) cwrap.style.display='none';
 }
 
 function setTipoGestion(tipo){
@@ -4369,12 +4438,22 @@ function setTipoGestion(tipo){
     document.getElementById('gestion-form-wrap').style.display='none';
     document.getElementById('imprenta-wrap').style.display='none';
     document.getElementById('produccion-wrap').style.display='block';
+    document.getElementById('cotizaciones-wrap').style.display='none';
     submitBtn.style.display='none';
     cargarProduccion();
+    return;
+  } else if(tipo==='Cotizaciones'){
+    document.getElementById('gestion-form-wrap').style.display='none';
+    document.getElementById('imprenta-wrap').style.display='none';
+    document.getElementById('produccion-wrap').style.display='none';
+    document.getElementById('cotizaciones-wrap').style.display='block';
+    cotReset();
+    submitBtn.style.display='none';
     return;
   }
   document.getElementById('imprenta-wrap').style.display='none';
   document.getElementById('produccion-wrap').style.display='none';
+  document.getElementById('cotizaciones-wrap').style.display='none';
 }
 
 function toggleEnvioModos(){
@@ -5616,6 +5695,366 @@ async function ejecutarStkOp(){
 // ── FIN STOCK BUSCAR ──────────────────────────────────────────
 
 init();
+
+// ── COTIZACIONES ───────────────────────────────────────────────
+const COT_NOMBRES = {
+  comfy:     'IKOA Comfy Mega Promo',
+  fullcomfy: 'IKOA Comfy Protect',
+  licra:     'IKOA Licra Protect',
+  coleccion: 'IKOA Licra Coleccion'
+};
+const COT_HOJAS = {
+  comfy:'COLORES.COMFY', fullcomfy:'COLORES.FULLCOMFY',
+  licra:'COLORES.LICRA', coleccion:'COLORES.COLECCION'
+};
+const COT_PACKS_MAP = {
+  comfy:     ['1PACK','2PACK','3PACK','4PACK','5PACK','6PACK'],
+  fullcomfy: ['1PACK','2PACK','3PACK','4PACK','5PACK','6PACK'],
+  licra:     ['1PACK','2PACK','3PACK','4PACK','5PACK','6PACK'],
+  coleccion: ['1 PRENDA','2 PRENDAS','3 PRENDAS','4 PRENDAS','5 PRENDAS','6 PRENDAS']
+};
+const COT_TALLAS_OPTS = ['Kids 1','Kids 2','Kids 4','Kids 6','Kids 8','Kids 10','Kids 12','Kids 14','Kids 16','XS','S','M','L','XL','2XL','3XL'];
+const COT_GENEROS = ['Caballero','Dama','Kids'];
+
+let cotApp = '', cotPack = '', cotManga = 'Manga Larga', cotCapucha = 'Sin Capucha';
+let cotPrecios = {}, cotTasaBCV = 0;
+let cotTallaCount = 0;
+
+async function cotSelectApp(app) {
+  cotApp = app;
+  cotPack = ''; cotManga = 'Manga Larga'; cotCapucha = 'Sin Capucha';
+  document.querySelectorAll('.cot-app-btn').forEach(b => {
+    b.style.borderColor = 'var(--border)';
+    b.style.color = 'var(--muted)';
+    b.style.background = 'var(--surface2)';
+  });
+  const btn = document.getElementById('cotbtn-' + app);
+  if (btn) { btn.style.borderColor = 'var(--accent)'; btn.style.color = 'var(--accent)'; btn.style.background = '#0a2a1e'; }
+
+  // Reset capucha/manga buttons
+  ['cotmanga-larga','cotmanga-corta','cotcap-sin','cotcap-con'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.borderColor='var(--border)'; el.style.color='var(--muted)'; el.style.background='var(--surface2)'; }
+  });
+  document.getElementById('cotmanga-larga').style.borderColor = 'var(--accent)';
+  document.getElementById('cotmanga-larga').style.color = 'var(--accent)';
+  document.getElementById('cotcap-sin').style.borderColor = 'var(--accent)';
+  document.getElementById('cotcap-sin').style.color = 'var(--accent)';
+
+  // Packs
+  const packsDiv = document.getElementById('cot-packs');
+  packsDiv.innerHTML = '';
+  COT_PACKS_MAP[app].forEach(pk => {
+    const b = document.createElement('button');
+    b.id = 'cotpack-' + pk;
+    b.textContent = pk;
+    b.style.cssText = 'padding:10px 16px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:Barlow,sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;';
+    b.onclick = () => cotSelectPack(pk);
+    packsDiv.appendChild(b);
+  });
+
+  // Cargar colores
+  const hoja = COT_HOJAS[app];
+  const data = await scriptGETjson({ action: 'leerColores', hoja });
+  const selTela = document.getElementById('cot-tela');
+  const selVinil = document.getElementById('cot-vinil');
+  selTela.innerHTML = '<option value="">Seleccionar...</option>';
+  selVinil.innerHTML = '<option value="">Seleccionar...</option>';
+  if (data.ok) {
+    (data.telas || []).forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; selTela.appendChild(o); });
+    (data.viniles || []).forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; selVinil.appendChild(o); });
+  }
+
+  // Cargar precios
+  const acciones = { comfy:'leerPrecios', fullcomfy:'leerPreciosFullComfy', licra:'leerPreciosLicra', coleccion:'leerPreciosColeccion' };
+  const pdata = await scriptGETjson({ action: acciones[app] });
+  if (pdata.ok) {
+    cotPrecios = pdata;
+    cotTasaBCV = pdata.tasa_bcv || 0;
+  }
+
+  // Reset tallas
+  cotTallaCount = 0;
+  document.getElementById('cot-tallas').innerHTML = '';
+  cotAddTalla();
+
+  document.getElementById('cot-config').style.display = 'block';
+  document.getElementById('cot-preview').style.display = 'none';
+  document.getElementById('cot-cliente').value = '';
+}
+
+function cotSelectPack(pk) {
+  cotPack = pk;
+  document.querySelectorAll('[id^="cotpack-"]').forEach(b => {
+    b.style.borderColor = 'var(--border)'; b.style.color = 'var(--muted)'; b.style.background = 'var(--surface2)';
+  });
+  const btn = document.getElementById('cotpack-' + pk);
+  if (btn) { btn.style.borderColor = 'var(--accent)'; btn.style.color = 'var(--accent)'; btn.style.background = '#0a2a1e'; }
+  cotCalc();
+}
+
+function cotSelectManga(m) {
+  cotManga = m;
+  ['cotmanga-larga','cotmanga-corta'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.borderColor='var(--border)'; el.style.color='var(--muted)'; el.style.background='var(--surface2)'; }
+  });
+  const id = m === 'Manga Larga' ? 'cotmanga-larga' : 'cotmanga-corta';
+  const el = document.getElementById(id);
+  if (el) { el.style.borderColor='var(--accent)'; el.style.color='var(--accent)'; }
+  cotCalc();
+}
+
+function cotSelectCapucha(c) {
+  cotCapucha = c;
+  ['cotcap-sin','cotcap-con'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.borderColor='var(--border)'; el.style.color='var(--muted)'; el.style.background='var(--surface2)'; }
+  });
+  const id = c === 'Sin Capucha' ? 'cotcap-sin' : 'cotcap-con';
+  const el = document.getElementById(id);
+  if (el) { el.style.borderColor='var(--accent)'; el.style.color='var(--accent)'; }
+  cotCalc();
+}
+
+function cotAddTalla() {
+  cotTallaCount++;
+  const div = document.createElement('div');
+  div.id = 'cot-talla-row-' + cotTallaCount;
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;';
+  div.innerHTML = `
+    <select class="field-input cot-talla-sel" style="width:100%;" onchange="cotCalc()">
+      <option value="">Talla...</option>
+      ${COT_TALLAS_OPTS.map(t=>`<option value="${t}">${t}</option>`).join('')}
+    </select>
+    <select class="field-input cot-genero-sel" style="width:100%;" onchange="cotCalc()">
+      <option value="">Genero...</option>
+      ${COT_GENEROS.map(g=>`<option value="${g}">${g}</option>`).join('')}
+    </select>
+    <button onclick="this.closest('[id^=cot-talla-row]').remove();cotCalc();"
+      style="padding:8px 10px;border:1px solid var(--danger);border-radius:8px;background:transparent;color:var(--danger);font-size:14px;cursor:pointer;">✕</button>
+  `;
+  document.getElementById('cot-tallas').appendChild(div);
+}
+
+function cotGetTallas() {
+  const rows = document.querySelectorAll('#cot-tallas > div');
+  const result = [];
+  rows.forEach(row => {
+    const talla = row.querySelector('.cot-talla-sel')?.value || '';
+    const genero = row.querySelector('.cot-genero-sel')?.value || '';
+    if (talla) result.push({ talla, genero });
+  });
+  return result;
+}
+
+function cotGetPrecioUnitario() {
+  if (!cotPrecios || !cotPack) return 0;
+  // Intentar leer del pack_precios
+  const pp = cotPrecios.pack_precios || {};
+  // Mapear pack al código correspondiente
+  const packNum = parseInt(cotPack) || 1;
+  const claves = {
+    comfy:     { 1:'COMFY11', 2:'COMFY11', 3:'COMFY11', 4:'COMFY11' },
+    fullcomfy: { 2:'2PACK.C.01.40OFF', 3:'3PACK.C.01.40OFF', 4:'4PACK.C.01.40OFF' },
+    licra:     { 2:'2PACK.L.01', 3:'3PACK.L.01', 4:'4PACK.L.01' },
+    coleccion: {}
+  };
+  const clave = (claves[cotApp] || {})[packNum];
+  if (clave && pp[clave]) return pp[clave].usd || 0;
+  // Fallback: comfy usa comfy_usd
+  if (cotApp === 'comfy' && cotPrecios.comfy_usd) return cotPrecios.comfy_usd;
+  // Coleccion: precio base desde CODIGOS (primer pack encontrado)
+  if (cotApp === 'coleccion') {
+    const keys = Object.keys(pp);
+    for (const k of keys) { if (pp[k].usd > 0) return pp[k].usd; }
+  }
+  return 0;
+}
+
+function cotCalc() {
+  if (!cotApp || !cotPack) return;
+  const tallas = cotGetTallas().filter(t => t.talla);
+  if (!tallas.length) return;
+
+  const packNum = parseInt(cotPack) || tallas.length;
+  const precioUnit = cotGetPrecioUnitario();
+  const recargaUSD = (cotPrecios.recarga_usd || 0);
+  const capuchaUSD = cotCapucha === 'Con Capucha' ? (cotPrecios.capucha_usd || 0) : 0;
+
+  // Calcular piezas Plus (2XL, 3XL)
+  const piezasPlus = tallas.filter(t => ['2XL','3XL'].includes(t.talla)).length;
+  const piezasNormal = tallas.length - piezasPlus;
+
+  // Para Colección y Licra: Plus tiene recarga
+  const esSinRecargaPlus = (cotApp === 'coleccion');
+  const recargaTotal = esSinRecargaPlus ? 0 : piezasPlus * recargaUSD;
+  const capuchaTotal = capuchaUSD * tallas.length;
+
+  const subtotalUSD = precioUnit * packNum + recargaTotal + capuchaTotal;
+  const tasaBCV = cotTasaBCV || 0;
+  const tasaIKOA = cotPrecios.tasa_ikoa || tasaBCV;
+  const subtotalBS = subtotalUSD * tasaBCV;
+
+  // Mostrar vista previa
+  const cliente = document.getElementById('cot-cliente').value.trim();
+  const tela = document.getElementById('cot-tela').value;
+  const vinil = document.getElementById('cot-vinil').value;
+  const fecha = new Date().toLocaleDateString('es-VE');
+
+  let tallasTexto = tallas.map(t => `${t.genero ? t.genero + ' ' : ''}${t.talla}`).join(' · ');
+
+  let html = `
+    <div style="border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:10px;">
+      <div style="font-size:16px;font-weight:700;color:var(--accent);">${COT_NOMBRES[cotApp]}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;">Fecha: ${fecha}</div>
+      ${cliente ? `<div style="font-size:12px;color:var(--text);margin-top:4px;">Cliente: <b>${cliente}</b></div>` : ''}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:12px;margin-bottom:12px;">
+      <div><span style="color:var(--muted);">Pack:</span> <b>${cotPack}</b></div>
+      <div><span style="color:var(--muted);">Manga:</span> <b>${cotManga}</b></div>
+      <div><span style="color:var(--muted);">Capucha:</span> <b>${cotCapucha}</b></div>
+      <div><span style="color:var(--muted);">Piezas:</span> <b>${tallas.length}</b></div>
+      ${tela ? `<div><span style="color:var(--muted);">Tela:</span> <b>${tela}</b></div>` : ''}
+      ${vinil ? `<div><span style="color:var(--muted);">Vinil:</span> <b>${vinil}</b></div>` : ''}
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Tallas: ${tallasTexto}</div>
+    <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-top:8px;">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">DESGLOSE DE PRECIO</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);">
+        <span>Precio unitario (${cotPack})</span><span><b>$${precioUnit.toFixed(2)}</b></span>
+      </div>
+      ${recargaTotal > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);"><span>Recarga tallas Plus (${piezasPlus} uds)</span><span>+$${recargaTotal.toFixed(2)}</span></div>` : ''}
+      ${capuchaTotal > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);"><span>Capucha (${tallas.length} uds)</span><span>+$${capuchaTotal.toFixed(2)}</span></div>` : ''}
+      <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;padding:8px 0 4px;color:var(--accent);">
+        <span>TOTAL USD</span><span>$${subtotalUSD.toFixed(2)}</span>
+      </div>
+      ${tasaBCV > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding:2px 0;color:var(--text);">
+        <span>TOTAL BS <span style="font-size:10px;font-weight:400;color:var(--muted);">(tasa BCV ${tasaBCV})</span></span>
+        <span>Bs ${subtotalBS.toLocaleString('es-VE', {minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+      </div>` : ''}
+    </div>
+  `;
+
+  document.getElementById('cot-preview-content').innerHTML = html;
+  document.getElementById('cot-preview').style.display = 'block';
+
+  // Guardar datos para PDF
+  window._cotData = { app: cotApp, nombreApp: COT_NOMBRES[cotApp], pack: cotPack, manga: cotManga,
+    capucha: cotCapucha, tela, vinil, tallas, cliente, precioUnit, recargaTotal, capuchaTotal,
+    subtotalUSD, subtotalBS, tasaBCV, fecha, piezasPlus };
+}
+
+function cotGenerarPDF() {
+  const d = window._cotData;
+  if (!d) return;
+
+  const w = window.open('', '_blank');
+  const tallasTexto = d.tallas.map(t => `${t.genero ? t.genero + ' ' : ''}${t.talla}`).join(' &middot; ');
+  const fecha = d.fecha;
+
+  w.document.write(`<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Cotizacion IKOA - ${fecha}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Arial', sans-serif; background:#fff; color:#1a1a1a; padding:40px; }
+  .header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #00e5b0; padding-bottom:20px; margin-bottom:24px; }
+  .logo-ikoa { font-size:32px; font-weight:900; letter-spacing:.2em; color:#00e5b0; line-height:1; }
+  .logo-bekate { font-size:14px; font-weight:700; color:#555; letter-spacing:.15em; margin-top:4px; }
+  .header-right { text-align:right; }
+  .cotizacion-label { font-size:22px; font-weight:700; color:#1a1a1a; letter-spacing:.05em; }
+  .fecha { font-size:12px; color:#888; margin-top:4px; }
+  .cliente-box { background:#f8f8f8; border-left:4px solid #00e5b0; padding:12px 16px; margin-bottom:20px; }
+  .cliente-label { font-size:10px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:.1em; }
+  .cliente-nombre { font-size:16px; font-weight:700; color:#1a1a1a; margin-top:2px; }
+  .section-title { font-size:10px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:.1em; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:6px; }
+  .config-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:20px; }
+  .config-item .label { font-size:10px; color:#888; font-weight:600; text-transform:uppercase; }
+  .config-item .value { font-size:14px; font-weight:700; color:#1a1a1a; margin-top:2px; }
+  .tallas-box { background:#f8f8f8; border-radius:8px; padding:12px 16px; margin-bottom:20px; font-size:13px; color:#555; }
+  .precio-table { width:100%; border-collapse:collapse; margin-bottom:20px; }
+  .precio-table td { padding:10px 12px; border-bottom:1px solid #eee; font-size:13px; }
+  .precio-table .label-col { color:#555; }
+  .precio-table .value-col { text-align:right; font-weight:600; }
+  .total-row td { font-size:16px; font-weight:700; color:#00e5b0; border-top:2px solid #00e5b0; border-bottom:none; padding-top:14px; }
+  .total-bs-row td { font-size:14px; font-weight:700; color:#1a1a1a; border-bottom:none; padding-top:6px; }
+  .footer { margin-top:30px; border-top:1px solid #eee; padding-top:16px; font-size:11px; color:#aaa; text-align:center; }
+  .validity { background:#fff9e6; border:1px solid #f0c040; border-radius:6px; padding:10px 14px; font-size:12px; color:#7a6000; margin-top:16px; }
+  @media print { body { padding:20px; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div class="logo-ikoa">IKOA</div>
+    <div class="logo-bekate">BEKATE</div>
+    <div style="font-size:11px;color:#888;margin-top:6px;">C.C. Hiper Jumbo, Local PB39, Maracay</div>
+    <div style="font-size:11px;color:#888;">@ikoabrand &nbsp;|&nbsp; ikoastore.com</div>
+  </div>
+  <div class="header-right">
+    <div class="cotizacion-label">COTIZACION</div>
+    <div class="fecha">Fecha: ${fecha}</div>
+    <div style="font-size:11px;color:#888;margin-top:4px;">Valida por 48 horas</div>
+  </div>
+</div>
+
+${d.cliente ? `<div class="cliente-box"><div class="cliente-label">Cotizacion para</div><div class="cliente-nombre">${d.cliente}</div></div>` : ''}
+
+<div class="section-title">Detalle del Pedido</div>
+<div class="config-grid">
+  <div class="config-item"><div class="label">Producto</div><div class="value">${d.nombreApp}</div></div>
+  <div class="config-item"><div class="label">Pack</div><div class="value">${d.pack}</div></div>
+  <div class="config-item"><div class="label">Piezas</div><div class="value">${d.tallas.length} uds</div></div>
+  <div class="config-item"><div class="label">Manga</div><div class="value">${d.manga}</div></div>
+  <div class="config-item"><div class="label">Capucha</div><div class="value">${d.capucha}</div></div>
+  ${d.tela ? `<div class="config-item"><div class="label">Color Tela</div><div class="value">${d.tela}</div></div>` : ''}
+  ${d.vinil ? `<div class="config-item"><div class="label">Color Vinil</div><div class="value">${d.vinil}</div></div>` : ''}
+</div>
+
+<div class="section-title">Tallas</div>
+<div class="tallas-box">${tallasTexto}</div>
+
+<div class="section-title">Precio</div>
+<table class="precio-table">
+  <tr><td class="label-col">Precio base (${d.pack})</td><td class="value-col">$${d.precioUnit.toFixed(2)}</td></tr>
+  ${d.recargaTotal > 0 ? `<tr><td class="label-col">Recarga tallas Plus (${d.piezasPlus} uds)</td><td class="value-col">+$${d.recargaTotal.toFixed(2)}</td></tr>` : ''}
+  ${d.capuchaTotal > 0 ? `<tr><td class="label-col">Capucha (${d.tallas.length} uds)</td><td class="value-col">+$${d.capuchaTotal.toFixed(2)}</td></tr>` : ''}
+  <tr class="total-row"><td>TOTAL USD</td><td style="text-align:right;">$${d.subtotalUSD.toFixed(2)}</td></tr>
+  ${d.tasaBCV > 0 ? `<tr class="total-bs-row"><td>TOTAL BS <span style="font-size:11px;font-weight:400;color:#888;">(Tasa BCV ${d.tasaBCV})</span></td><td style="text-align:right;">Bs ${d.subtotalBS.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>` : ''}
+</table>
+
+<div class="validity">
+  Esta cotizacion es valida por 48 horas. Los precios pueden variar segun la tasa del dia de pago.
+  Para confirmar el pedido, comuniquese con nosotros por WhatsApp o visítenos en tienda.
+</div>
+
+<div class="footer">
+  IKOA &amp; BeKate &nbsp;·&nbsp; @ikoabrand &nbsp;·&nbsp; ikoastore.com &nbsp;·&nbsp; C.C. Hiper Jumbo Local PB39, Maracay
+</div>
+
+<script>window.onload=()=>{window.print();}<\/script>
+</body>
+</html>`);
+  w.document.close();
+}
+
+function cotReset() {
+  cotApp = ''; cotPack = ''; cotManga = 'Manga Larga'; cotCapucha = 'Sin Capucha';
+  cotTallaCount = 0; cotPrecios = {}; cotTasaBCV = 0;
+  document.querySelectorAll('.cot-app-btn').forEach(b => {
+    b.style.borderColor = 'var(--border)'; b.style.color = 'var(--muted)'; b.style.background = 'var(--surface2)';
+  });
+  document.getElementById('cot-config').style.display = 'none';
+  document.getElementById('cot-preview').style.display = 'none';
+  document.getElementById('cot-tallas').innerHTML = '';
+  document.getElementById('cot-cliente').value = '';
+}
+
+// Mostrar/ocultar panel cotizaciones en setTipoGestion
+
 </script>
 </body>
 </html>
