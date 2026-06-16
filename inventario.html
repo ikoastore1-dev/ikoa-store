@@ -1476,7 +1476,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px;">RESUMEN</div>
       <div id="cot-resumen-content" style="font-size:12px;color:var(--text);"></div>
     </div>
-    <div id="cot-acciones" style="display:none;display:flex;gap:10px;">
+    <div id="cot-acciones" style="display:none;gap:10px;">
       <button onclick="cotGenerarPDF()" style="flex:1;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:12px;color:#000;font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">⬇️ Generar PDF</button>
       <button onclick="cotReset()" style="padding:14px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🗑 Nueva</button>
     </div>
@@ -4490,7 +4490,8 @@ function setTipoGestion(tipo){
     document.getElementById('gestion-form-wrap').style.display='none';
     document.getElementById('imprenta-wrap').style.display='none';
     document.getElementById('produccion-wrap').style.display='none';
-    document.getElementById('cotizaciones-wrap').style.display='block';
+    const cotWrap = document.getElementById('cotizaciones-wrap');
+    if(cotWrap) cotWrap.style.display='block';
     cotReset();
     submitBtn.style.display='none';
     return;
@@ -5779,15 +5780,22 @@ function cotAgregarItem() {
   document.querySelectorAll('.cot-modal-app-btn').forEach(b => {
     b.style.borderColor='var(--border)'; b.style.color='var(--muted)'; b.style.background='var(--surface2)';
   });
-  // Ocultar secciones
+  // Ocultar secciones del modal
   ['cotm-pack-section','cotm-manga-section','cotm-capucha-section','cotm-colores-section','cotm-tallas-section'].forEach(id => {
-    document.getElementById(id).style.display = 'none';
+    const el = document.getElementById(id);
+    if(el) el.style.display = 'none';
   });
-  document.getElementById('cotm-guardar-btn').style.display = 'none';
-  document.getElementById('cotm-tallas').innerHTML = '';
-  document.getElementById('cotm-modal-title').textContent = 'Configurar Producto';
-  document.getElementById('cot-modal-wrap').style.display = 'block';
-  document.getElementById('cot-modal-wrap').scrollIntoView({behavior:'smooth'});
+  const guardarBtn = document.getElementById('cotm-guardar-btn');
+  if(guardarBtn) guardarBtn.style.display = 'none';
+  const tallasDiv = document.getElementById('cotm-tallas');
+  if(tallasDiv) tallasDiv.innerHTML = '';
+  const modalTitle = document.getElementById('cotm-modal-title');
+  if(modalTitle) modalTitle.textContent = 'Configurar Producto';
+  const modal = document.getElementById('cot-modal-wrap');
+  if(modal){
+    modal.style.display = 'block';
+    setTimeout(()=>{ modal.scrollIntoView({behavior:'smooth', block:'start'}); }, 50);
+  }
 }
 
 function cotCancelarModal() {
@@ -6029,8 +6037,8 @@ function cotRenderItems() {
   const hasItems = cotItems.length > 0;
   const resumenEl  = document.getElementById('cot-resumen');
   const accionesEl = document.getElementById('cot-acciones');
-  resumenEl.style.display  = hasItems ? 'block' : 'none';
-  accionesEl.style.display = hasItems ? 'flex'  : 'none';
+  if(resumenEl)  resumenEl.style.display  = hasItems ? 'block' : 'none';
+  if(accionesEl) accionesEl.style.display = hasItems ? 'flex'  : 'none';
 
   if (hasItems) {
     const fmt = n => n.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2});
