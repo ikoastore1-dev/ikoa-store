@@ -5123,7 +5123,7 @@ function impMostrarActual(){
   document.getElementById('imp-btn-next').disabled=impActualIdx===impSeleccionados.length-1;
   document.getElementById('imp-btn-prev').style.opacity=impActualIdx===0?'0.4':'1';
   document.getElementById('imp-btn-next').style.opacity=impActualIdx===impSeleccionados.length-1?'0.4':'1';
-  impPDFUrl=f.link;
+  impPDFUrl=f.link||f.url;
   document.getElementById('imp-visor-wrap').style.display='block';
   document.getElementById('imp-visor-wrap').scrollIntoView({behavior:'smooth'});
 }
@@ -5137,7 +5137,8 @@ function impNavegar(dir){
 
 function imprimirActual(){
   if(!impPDFUrl){ alert('No hay archivo seleccionado'); return; }
-  window.open(impPDFUrl+'#page=1','_blank');
+  const url=impPDFUrl.replace('dl=0','dl=1').replace('www.dropbox.com','dl.dropboxusercontent.com');
+  window.open(url,'_blank');
 }
 
 // Alias legacy
@@ -5161,8 +5162,7 @@ function imprimirPDF(){
 
 function cerrarVisorPDF(){
   document.getElementById('imp-visor-wrap').style.display='none';
-  document.getElementById('imp-iframe').src='';
-  if(impPDFUrl){ URL.revokeObjectURL(impPDFUrl); impPDFUrl=''; }
+  if(impPDFUrl){ impPDFUrl=''; }
 }
 
 // ── PRODUCCION ────────────────────────────────────────────────
