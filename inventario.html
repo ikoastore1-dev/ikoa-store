@@ -1381,7 +1381,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <div style="font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">1 &middot; Producto</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <button onclick="cotSelectApp('comfy')" id="cotbtn-comfy" class="cot-app-btn" style="padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Comfy Mega Promo</button>
-        <button onclick="cotSelectApp('fullcomfy')" id="cotbtn-fullcomfy" class="cot-app-btn" style="padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Comfy Protect</button>
+        <button onclick="cotSelectApp('fullcomfy')" id="cotbtn-fullcomfy" class="cot-app-btn" style="padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Full Comfy</button>
         <button onclick="cotSelectApp('licra')" id="cotbtn-licra" class="cot-app-btn" style="padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Licra Protect</button>
         <button onclick="cotSelectApp('coleccion')" id="cotbtn-coleccion" class="cot-app-btn" style="padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Licra Coleccion</button>
       </div>
@@ -5717,7 +5717,7 @@ init();
 // ── COTIZACIONES ───────────────────────────────────────────────
 const COT_NOMBRES = {
   comfy:     'IKOA Comfy Mega Promo',
-  fullcomfy: 'IKOA Comfy Protect',
+  fullcomfy: 'IKOA Full Comfy',
   licra:     'IKOA Licra Protect',
   coleccion: 'IKOA Licra Coleccion'
 };
@@ -5727,9 +5727,9 @@ const COT_HOJAS = {
 };
 const COT_PACKS_MAP = {
   comfy:     [], // comfy usa input manual de cantidad
-  fullcomfy: ['2PACK','3PACK','4PACK','5PACK','6PACK'],
-  licra:     ['2PACK','3PACK','4PACK','5PACK','6PACK'],
-  coleccion: ['1 PRENDA','2 PRENDAS','3 PRENDAS','4 PRENDAS','5 PRENDAS','6 PRENDAS']
+  fullcomfy: ['1PACK','2PACK','3PACK','4PACK','5PACK','6PACK'],
+  licra:     ['1PACK','2PACK','3PACK','4PACK','5PACK','6PACK'],
+  coleccion: [] // Al detal — sin pack
 };
 const COT_TALLAS_OPTS = ['Kids 1','Kids 2','Kids 4','Kids 6','Kids 8','Kids 10','Kids 12','Kids 14','Kids 16','XS','S','M','L','XL','2XL','3XL'];
 const COT_GENEROS = ['Caballero','Dama','Kids'];
@@ -5781,6 +5781,12 @@ async function cotSelectApp(app) {
     const inp = document.getElementById('cot-cantidad-input');
     inp.value = 2;
     cotPack = '2PACK';
+  } else if (app === 'coleccion') {
+    // Coleccion: al detal, sin pack
+    cantWrap.style.display = 'none';
+    packsDiv.style.display = 'block';
+    packsDiv.innerHTML = '<div style="padding:8px 12px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;font-size:12px;font-weight:700;color:var(--accent);display:inline-block;">AL DETAL — Sin pack</div>';
+    cotPack = '1PACK';
   } else {
     cantWrap.style.display = 'none';
     packsDiv.style.display = 'flex';
@@ -5817,8 +5823,10 @@ async function cotSelectApp(app) {
   if (esComfy) {
     cotGenerarFilasTallas(2); // 2 franelas por defecto
   } else {
-    cotAddTalla();
+    cotAddTalla(); // 1 fila inicial para fullcomfy, licra, coleccion
   }
+  // Para coleccion: mostrar botón agregar (cada prenda es individual)
+  if (app === 'coleccion') document.getElementById('cot-add-talla-btn').style.display = 'block';
 
   document.getElementById('cot-config').style.display = 'block';
   document.getElementById('cot-preview').style.display = 'none';
@@ -5931,8 +5939,8 @@ function cotGetPrecioUnitario() {
   const packNum = parseInt(cotPack) || 2;
   const claves = {
     comfy:     { 2:'COMFY11', 3:'COMFY11', 4:'COMFY11', 5:'COMFY11', 6:'COMFY11' },
-    fullcomfy: { 2:'2PACK.C.01.40OFF', 3:'3PACK.C.01.40OFF', 4:'4PACK.C.01.40OFF' },
-    licra:     { 2:'2PACK.L.01', 3:'3PACK.L.01', 4:'4PACK.L.01' },
+    fullcomfy: { 1:'COMFY01', 2:'2PACK.C.01.40OFF', 3:'3PACK.C.01.40OFF', 4:'4PACK.C.01.40OFF', 5:'4PACK.C.01.40OFF', 6:'4PACK.C.01.40OFF' },
+    licra:     { 1:'LICRA01', 2:'2PACK.L.01', 3:'3PACK.L.01', 4:'4PACK.L.01', 5:'4PACK.L.01', 6:'4PACK.L.01' },
     coleccion: {}
   };
   const clave = (claves[cotApp] || {})[packNum];
