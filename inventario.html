@@ -1540,6 +1540,12 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
       <div id="cotf-preview" style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--text);min-height:20px;"></div>
 
+      <div id="cotf-unlock-wrap" style="display:none;margin-bottom:14px;">
+        <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div>
+        <input class="modal-cod-input" type="password" id="cotf-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')cotConfirmarFacturacion()" style="width:100%;box-sizing:border-box;">
+        <div class="modal-error" id="cotf-error"></div>
+      </div>
+
       <div style="display:flex;gap:10px;">
         <button onclick="cotConfirmarFacturacion()" id="cotf-confirmar-btn" style="display:none;flex:1;padding:13px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✓ Confirmar y Generar PDF</button>
         <button onclick="cotCancelarFacturacion()" style="padding:13px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Cancelar</button>
@@ -6558,12 +6564,12 @@ function cotGuardarItem(){
     const precioUnitUSD=cotPrecioUSD(pp,def.precioUnitCod);
     const precioUnitBS=cotPrecioBS(pp,def.precioUnitCod);
     const nPlus=tallas.filter(t=>(def.plusTallas||[]).some(pt=>t.includes(pt))).length;
-    const plusUSD=cotPrecioUSD(pp,'S.COMFY.03')||0;
-    const plusBS =cotPrecioBS(pp,'S.COMFY.03')||0;
+    const plusUSD=cotPrecioUSD(pp,'S.COMFY.03')||parseFloat(cotmPrecios.recarga_usd)||0;
+    const plusBS =cotPrecioBS(pp,'S.COMFY.03')||parseFloat(cotmPrecios.recarga_bs)||0;
     const recargaTotal=plusUSD*nPlus;
     const recargaTotalBs=plusBS*nPlus;
-    const capUSD=(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioUSD(pp,def.capuchaCod)||0):0;
-    const capBS =(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioBS(pp,def.capuchaCod)||0):0;
+    const capUSD=(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioUSD(pp,def.capuchaCod)||parseFloat(cotmPrecios.capucha_usd)||0):0;
+    const capBS =(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioBS(pp,def.capuchaCod)||parseFloat(cotmPrecios.capucha_bs)||0):0;
     const capuchaTotal=capUSD*packN;
     const capuchaTotalBs=capBS*packN;
     const subtotalUSD=precioUnitUSD*packN+recargaTotal+capuchaTotal;
@@ -6572,6 +6578,10 @@ function cotGuardarItem(){
       app:cotmApp, nombreApp:def.nombre,
       codigo:def.precioUnitCod,
       pack:`${packN} uds`, manga:'Manga Larga', capucha:cotmCapucha,
+      tela:'', vinil:'', tallas, nPlus,
+      precioUnitUSD, precioUnitBS, recargaTotal, recargaTotalBs, capuchaTotal, capuchaTotalBs,
+      logoEspalda:0, logoPecho:0, logoEspaldaBs:0, logoPechoBs:0,
+      estampado, colorLibre:'',
       subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV
     });
     document.getElementById('cot-modal-wrap').style.display='none';
@@ -6584,12 +6594,12 @@ function cotGuardarItem(){
     const precioUnitUSD=cotPrecioUSD(pp,def.precioUnitCod);
     const precioUnitBS=cotPrecioBS(pp,def.precioUnitCod);
     const nPlus=tallas.filter(t=>(def.plusTallas||[]).some(pt=>t.includes(pt))).length;
-    const plusUSD=cotPrecioUSD(pp,'S.COMFY.03')||0;
-    const plusBS =cotPrecioBS(pp,'S.COMFY.03')||0;
+    const plusUSD=cotPrecioUSD(pp,'S.COMFY.03')||parseFloat(cotmPrecios.recarga_usd)||0;
+    const plusBS =cotPrecioBS(pp,'S.COMFY.03')||parseFloat(cotmPrecios.recarga_bs)||0;
     const recargaTotal=plusUSD*nPlus;
     const recargaTotalBs=plusBS*nPlus;
-    const capUSD=(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioUSD(pp,def.capuchaCod)||0):0;
-    const capBS =(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioBS(pp,def.capuchaCod)||0):0;
+    const capUSD=(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioUSD(pp,def.capuchaCod)||parseFloat(cotmPrecios.capucha_usd)||0):0;
+    const capBS =(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioBS(pp,def.capuchaCod)||parseFloat(cotmPrecios.capucha_bs)||0):0;
     const capuchaTotal=capUSD*packN;
     const capuchaTotalBs=capBS*packN;
     const nLogoEsp=parseInt(document.getElementById('cotm-logo-espalda')?.value)||0;
@@ -6610,12 +6620,16 @@ function cotGuardarItem(){
       app:cotmApp, nombreApp:def.nombre,
       codigo:def.precioUnitCod,
       pack:`${packN} uds`, manga:'Manga Larga', capucha:cotmCapucha,
+      tela, vinil, tallas, nPlus,
+      precioUnitUSD, precioUnitBS, recargaTotal, recargaTotalBs, capuchaTotal, capuchaTotalBs,
+      logoEspalda:logoEspTotal, logoEspaldaBs:logoEspTotalBs,
       logoPecho:logoPecTotal, logoPechoBs:logoPecTotalBs,
       nLogoEsp, nLogoPec, estampado:'', colorLibre:'',
       subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV
     });
     document.getElementById('cot-modal-wrap').style.display='none';
     cotRenderItems(); return;
+
   }
 
   // ── UNITARIOS (licra_suplex, short_uni, cortaviento_uni) ──
@@ -6650,8 +6664,8 @@ function cotGuardarItem(){
   const nPlus=tallas.filter(t=>(def.plusTallas||[]).some(pt=>t.includes(pt))).length;
   const recargaTotal=plusUSD*nPlus;
   const recargaTotalBs=plusBS*nPlus;
-  const capUSD=(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioUSD(pp,def.capuchaCod)||0):0;
-  const capBS =(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioBS(pp,def.capuchaCod)||0):0;
+  const capUSD=(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(parseFloat(cotmPrecios.capucha_usd)||0):0;
+  const capBS =(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(parseFloat(cotmPrecios.capucha_bs)||0):0;
   const capuchaTotal=capUSD*tallas.length;
   const capuchaTotalBs=capBS*tallas.length;
   const tela=document.getElementById('cotm-tela')?.value||'';
@@ -6749,6 +6763,9 @@ function cotAbrirFacturacion(){
   document.getElementById('cotf-retencion-wrap').style.display='none';
   document.getElementById('cotf-preview').innerHTML='';
   document.getElementById('cotf-confirmar-btn').style.display='none';
+  document.getElementById('cotf-unlock-wrap').style.display='none';
+  document.getElementById('cotf-unlock').value='';
+  document.getElementById('cotf-error').textContent='';
   document.getElementById('cot-acciones').style.display='none';
   document.getElementById('cot-codigo-generado').style.display='none';
   const modal=document.getElementById('cot-factura-modal');
@@ -6813,8 +6830,9 @@ function cotfCalcularMontos(){
 function cotfActualizarPreview(){
   const prev=document.getElementById('cotf-preview');
   const btn=document.getElementById('cotf-confirmar-btn');
+  const unlockWrap=document.getElementById('cotf-unlock-wrap');
   if(!cotfDeseaFactura || !cotfMoneda || (cotfDeseaFactura==='SI' && !cotfRetencion)){
-    prev.innerHTML=''; btn.style.display='none'; return;
+    prev.innerHTML=''; btn.style.display='none'; unlockWrap.style.display='none'; return;
   }
   const m=cotfCalcularMontos();
   const sym = m.enBs ? 'Bs ' : '$';
@@ -6831,9 +6849,21 @@ function cotfActualizarPreview(){
   html += `<div style="display:flex;justify-content:space-between;padding-top:6px;margin-top:4px;border-top:1px solid var(--border);font-weight:700;color:var(--accent);font-size:14px;"><span>TOTAL A PAGAR</span><span>${sym}${fmt(m.totalPagar)}</span></div>`;
   prev.innerHTML=html;
   btn.style.display='block';
+  unlockWrap.style.display='block';
+  document.getElementById('cotf-unlock').value='';
+  document.getElementById('cotf-error').textContent='';
 }
 
 async function cotConfirmarFacturacion(){
+  const unlock=document.getElementById('cotf-unlock').value.trim().toUpperCase();
+  const errEl=document.getElementById('cotf-error');
+  if(!USUARIOS[unlock]){
+    errEl.textContent='❌ Código incorrecto — acceso denegado';
+    document.getElementById('cotf-unlock').value='';
+    return;
+  }
+  const usuarioAutoriza=USUARIOS[unlock];
+
   const m=cotfCalcularMontos();
   const cliente=document.getElementById('cot-cliente')?.value.trim()||'';
   const cedula=document.getElementById('cot-cedula')?.value.trim()||'';
@@ -6860,7 +6890,7 @@ async function cotConfirmarFacturacion(){
       iva_usd: m.enBs?0:m.iva, iva_bs: m.enBs?m.iva:0,
       retencion_iva_usd: m.enBs?0:m.retencionIva, retencion_iva_bs: m.enBs?m.retencionIva:0,
       total_pagar_usd: m.enBs?0:m.totalPagar, total_pagar_bs: m.enBs?m.totalPagar:0,
-      tasa_bcv: tasaBCV, usuario: (window.usuarioActual||'')
+      tasa_bcv: tasaBCV, usuario: usuarioAutoriza
     });
     if(resp.ok) codigo=resp.codigo;
   } catch(e){ console.error('Error guardando cotizacion', e); }
@@ -6869,6 +6899,7 @@ async function cotConfirmarFacturacion(){
   document.getElementById('cot-factura-modal').style.display='none';
 
   if(codigo){
+
     document.getElementById('cot-codigo-texto').textContent=codigo;
     document.getElementById('cot-codigo-generado').style.display='block';
   }
