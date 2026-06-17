@@ -1540,7 +1540,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtEDrMQ1g0N9AqaJ-SD2_IHHhj4A2MpKh7Oicwu2vbrgol6zExIr57IcR2NJKfAOj__A/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby5IIn7aJRL0ttLRwMQ8vOvyG1RrF-BUK7MkUSFLq7c83V45BZuOm7N50onLsEiq7fg_g/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -6143,7 +6143,10 @@ async function cotModalSelectApp(app){
 
   // ── EMPRESARIALES (con colores de hoja) ──────────────────
   if(app==='empresarial'||app==='cortaviento_emp'){
-    const pdata=await scriptGETjson({action:'leerPreciosFullComfy'});
+    // Usamos leerPreciosColeccion porque trae TODOS los codigos de CODIGOS
+    // (leerPreciosFullComfy solo busca codigos predefinidos: COMFY01, 2-4PACK, etc.
+    // y no incluye COMFY12, COMFY13, COMFY14, COMFY15)
+    const pdata=await scriptGETjson({action:'leerPreciosColeccion'});
     if(pdata.ok){cotmPrecios=pdata; cotmTasaBCV=pdata.tasa_bcv||0;}
     // Colores
     document.getElementById('cotm-colores-section').style.display='block';
