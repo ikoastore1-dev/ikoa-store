@@ -1592,16 +1592,33 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <!-- Comparación de precios (aparece solo si hay cambios al pulsar Aprobar) -->
         <div id="cotb-cambios-precio" style="display:none;background:var(--surface2);border:1px solid var(--warn);border-radius:10px;padding:14px;margin-bottom:14px;">
           <div style="font-size:12px;font-weight:700;color:var(--warn);margin-bottom:8px;">⚠️ Se detectaron cambios de precio desde que se creó esta cotización</div>
-          <div id="cotb-cambios-content" style="font-size:12px;color:var(--text);"></div>
-          <div style="display:flex;gap:10px;margin-top:12px;">
+          <div id="cotb-cambios-content" style="font-size:12px;color:var(--text);margin-bottom:10px;"></div>
+          <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div>
+          <input class="modal-cod-input" type="password" id="cotb-unlock-cambios" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')cotbConfirmarAprobacion()" style="width:100%;box-sizing:border-box;margin-bottom:6px;">
+          <div class="modal-error" id="cotb-error-cambios"></div>
+          <div style="display:flex;gap:10px;margin-top:8px;">
             <button onclick="cotbConfirmarAprobacion()" style="flex:1;padding:11px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✓ Aprobar con precios actuales</button>
             <button onclick="document.getElementById('cotb-cambios-precio').style.display='none';" style="padding:11px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Cancelar</button>
           </div>
         </div>
 
+        <!-- Confirmación de aprobación sin cambios de precio (pide código igualmente) -->
+        <div id="cotb-aprobar-wrap" style="display:none;margin-bottom:14px;">
+          <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div>
+          <input class="modal-cod-input" type="password" id="cotb-unlock-aprobar" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')cotbValidarYAprobar()" style="width:100%;box-sizing:border-box;margin-bottom:6px;">
+          <div class="modal-error" id="cotb-error-aprobar"></div>
+          <div style="display:flex;gap:10px;margin-top:8px;">
+            <button onclick="cotbValidarYAprobar()" style="flex:1;padding:11px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✓ Confirmar Aprobación</button>
+            <button onclick="document.getElementById('cotb-aprobar-wrap').style.display='none';" style="padding:11px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Cancelar</button>
+          </div>
+        </div>
+
         <div id="cotb-rechazo-wrap" style="display:none;margin-bottom:14px;">
           <input class="field-input" type="text" id="cotb-motivo-rechazo" placeholder="Motivo del rechazo..." style="width:100%;box-sizing:border-box;margin-bottom:8px;">
-          <div style="display:flex;gap:10px;">
+          <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div>
+          <input class="modal-cod-input" type="password" id="cotb-unlock-rechazo" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')cotbConfirmarRechazo()" style="width:100%;box-sizing:border-box;margin-bottom:6px;">
+          <div class="modal-error" id="cotb-error-rechazo"></div>
+          <div style="display:flex;gap:10px;margin-top:8px;">
             <button onclick="cotbConfirmarRechazo()" style="flex:1;padding:11px;background:var(--danger);border:none;border-radius:10px;color:#fff;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Confirmar Rechazo</button>
             <button onclick="document.getElementById('cotb-rechazo-wrap').style.display='none';" style="padding:11px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Cancelar</button>
           </div>
@@ -7163,30 +7180,59 @@ async function cotbIniciarAprobacion(){
         <span>$${c.antes.toFixed(2)} → <b style="color:var(--warn);">$${c.ahora.toFixed(2)}</b></span>
       </div>`
     ).join('');
+    document.getElementById('cotb-unlock-cambios').value='';
+    document.getElementById('cotb-error-cambios').textContent='';
     document.getElementById('cotb-cambios-precio').style.display='block';
   } else {
-    // Sin cambios detectados, aprobar directo
-    cotbConfirmarAprobacion();
+    // Sin cambios detectados: igual se pide código de autorización antes de aprobar
+    document.getElementById('cotb-unlock-aprobar').value='';
+    document.getElementById('cotb-error-aprobar').textContent='';
+    document.getElementById('cotb-aprobar-wrap').style.display='block';
   }
 }
 
-async function cotbConfirmarAprobacion(){
+function cotbValidarYAprobar(){
+  const unlock=document.getElementById('cotb-unlock-aprobar').value.trim().toUpperCase();
+  const errEl=document.getElementById('cotb-error-aprobar');
+  if(!USUARIOS[unlock]){
+    errEl.textContent='❌ Código incorrecto — acceso denegado';
+    document.getElementById('cotb-unlock-aprobar').value='';
+    return;
+  }
+  document.getElementById('cotb-aprobar-wrap').style.display='none';
+  cotbConfirmarAprobacion(USUARIOS[unlock]);
+}
+
+async function cotbConfirmarAprobacion(usuarioForzado){
   if(!cotbCotizacionActual) return;
+  let usuario=usuarioForzado;
+  // Si viene desde el flujo "con cambios de precio", validar el código de ese formulario
+  if(!usuario){
+    const unlock=document.getElementById('cotb-unlock-cambios').value.trim().toUpperCase();
+    const errEl=document.getElementById('cotb-error-cambios');
+    if(!USUARIOS[unlock]){
+      errEl.textContent='❌ Código incorrecto — acceso denegado';
+      document.getElementById('cotb-unlock-cambios').value='';
+      return;
+    }
+    usuario=USUARIOS[unlock];
+  }
   const codigo=cotbCotizacionActual.codigo;
   document.getElementById('cotb-cambios-precio').style.display='none';
+  document.getElementById('cotb-aprobar-wrap').style.display='none';
   document.getElementById('cotb-acciones-pendiente').innerHTML='<div style="font-size:12px;color:var(--muted);padding:10px;width:100%;text-align:center;">Aprobando...</div>';
   try{
     const resp=await scriptGETjson({
       action:'aprobarCotizacion', codigo,
       fecha_aprobacion:new Date().toLocaleDateString('es-VE'),
-      usuario:(window.usuarioActual||'')
+      usuario:usuario
     });
     if(resp.ok){
       const badge=document.getElementById('cotb-status-badge');
       document.getElementById('cotb-acciones-pendiente').style.display='none';
       badge.style.display='block';
       badge.style.background='#0a2a1e'; badge.style.color='var(--accent)';
-      badge.textContent='✓ Cotización aprobada'+(resp.codigoS?' — Solicitud '+resp.codigoS+' creada':'');
+      badge.textContent='✓ Cotización aprobada por '+usuario+(resp.codigoS?' — Solicitud '+resp.codigoS+' creada':'');
     } else {
       alert('Error al aprobar: '+(resp.error||'desconocido'));
       cotbAbrirDetalle(codigo);
@@ -7198,13 +7244,21 @@ async function cotbConfirmarAprobacion(){
 
 async function cotbConfirmarRechazo(){
   if(!cotbCotizacionActual) return;
+  const unlock=document.getElementById('cotb-unlock-rechazo').value.trim().toUpperCase();
+  const errEl=document.getElementById('cotb-error-rechazo');
+  if(!USUARIOS[unlock]){
+    errEl.textContent='❌ Código incorrecto — acceso denegado';
+    document.getElementById('cotb-unlock-rechazo').value='';
+    return;
+  }
+  const usuario=USUARIOS[unlock];
   const codigo=cotbCotizacionActual.codigo;
   const motivo=document.getElementById('cotb-motivo-rechazo')?.value.trim()||'';
   try{
     const resp=await scriptGETjson({
       action:'rechazarCotizacion', codigo, motivo,
       fecha_rechazo:new Date().toLocaleDateString('es-VE'),
-      usuario:(window.usuarioActual||'')
+      usuario:usuario
     });
     if(resp.ok){
       document.getElementById('cotb-rechazo-wrap').style.display='none';
@@ -7212,7 +7266,7 @@ async function cotbConfirmarRechazo(){
       const badge=document.getElementById('cotb-status-badge');
       badge.style.display='block';
       badge.style.background='#3a0a0a'; badge.style.color='var(--danger)';
-      badge.textContent='✕ Cotización rechazada';
+      badge.textContent='✕ Cotización rechazada por '+usuario;
     } else {
       alert('Error al rechazar: '+(resp.error||'desconocido'));
     }
