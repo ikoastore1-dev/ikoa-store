@@ -5973,6 +5973,29 @@ function cotCalcPack(appKey,packN,pp,precios){
     const u=cotPrecioUSD(pp, def.precioUnitCod);
     return {totalUSD:u*packN, precioUnitUSD:u};
   }
+  // Para fullcomfy y licra: calcular combinación óptima de packs
+  // Dividir en packs de 4 y 3, usando el mayor posible
+  if(appKey==='fullcomfy'||appKey==='licra'){
+    const p4key = appKey==='fullcomfy' ? '4PACK.C.01.40OFF' : '4PACK.L.01';
+    const p3key = appKey==='fullcomfy' ? '3PACK.C.01.40OFF' : '3PACK.L.01';
+    const p2key = appKey==='fullcomfy' ? '2PACK.C.01.40OFF' : '2PACK.L.01';
+    const p1key = appKey==='fullcomfy' ? 'COMFY01' : 'LICRA01';
+    const p4 = cotPrecioUSD(pp, p4key);
+    const p3 = cotPrecioUSD(pp, p3key);
+    const p2 = cotPrecioUSD(pp, p2key);
+    const p1 = cotPrecioUSD(pp, p1key);
+    if(packN===1) return {totalUSD:p1, precioUnitUSD:p1};
+    if(packN===2) return {totalUSD:p2, precioUnitUSD:p2/2};
+    if(packN===3) return {totalUSD:p3, precioUnitUSD:p3/3};
+    if(packN===4) return {totalUSD:p4, precioUnitUSD:p4/4};
+    // 5+: combinación óptima con 4s y 3s
+    let total=0, n=packN;
+    while(n>=4){ total+=p4; n-=4; }
+    if(n===3) total+=p3;
+    else if(n===2) total+=p2;
+    else if(n===1) total+=p1;
+    return {totalUSD:total, precioUnitUSD:packN>0?total/packN:0};
+  }
   const combos=def.packCods[packN];
   if(!combos) return {totalUSD:0,precioUnitUSD:0};
   let total=0;
@@ -6034,8 +6057,19 @@ async function cotModalSelectApp(app){
   if(app==='coleccion'){
     const pdata=await scriptGETjson({action:'leerPreciosColeccion'});
     if(pdata.ok){cotmPrecios=pdata; cotmTasaBCV=pdata.tasa_bcv||0;}
+    // Buscar o crear la sección de colección
     let cs=document.getElementById('cotm-coleccion-section');
-    if(!cs){cs=document.createElement('div');cs.id='cotm-coleccion-section';document.getElementById('cotm-guardar-btn').before(cs);}
+    if(!cs){
+      cs=document.createElement('div');
+      cs.id='cotm-coleccion-section';
+      cs.style.cssText='margin-bottom:12px;';
+      const guardarBtn=document.getElementById('cotm-guardar-btn');
+      if(guardarBtn && guardarBtn.parentNode){
+        guardarBtn.parentNode.insertBefore(cs, guardarBtn);
+      } else {
+        document.getElementById('cot-modal-wrap').appendChild(cs);
+      }
+    }
     cs.style.display='block';
     const seriesOpts=Object.keys(def.series).map(s=>`<option value="${s}">${s}</option>`).join('');
     const prendasOpts=Object.keys(def.prendas).map(p=>`<option value="${p}">${p}</option>`).join('');
@@ -6178,11 +6212,13 @@ async function cotModalSelectApp(app){
   const packsDiv=document.getElementById('cotm-packs');
   packSec.style.display='block'; packsDiv.innerHTML='';
 
-  if(app==='comfy'){
+  // Comfy, fullcomfy y licra usan input manual de cantidad
+  if(app==='comfy'||app==='fullcomfy'||app==='licra'){
+    const minVal = app==='comfy' ? 2 : 1;
     cantWrap.style.display='block'; packsDiv.style.display='none';
-    document.getElementById('cotm-cantidad').value=2;
-    document.getElementById('cotm-cantidad').min=2;
-    cotmPack='2';
+    const inp=document.getElementById('cotm-cantidad');
+    inp.value=minVal; inp.min=minVal;
+    cotmPack=String(minVal);
   } else {
     cantWrap.style.display='none'; packsDiv.style.display='flex';
     (def.packs||[]).forEach(pk=>{
@@ -6213,12 +6249,16 @@ async function cotModalSelectApp(app){
   const acciones={comfy:'leerPrecios',fullcomfy:'leerPreciosFullComfy',licra:'leerPreciosLicra'};
   const pdata=await scriptGETjson({action:acciones[app]});
   if(pdata.ok){cotmPrecios=pdata; cotmTasaBCV=pdata.tasa_bcv||0;}
-  // Tallas
+  // Tallas — para comfy/fullcomfy/licra: cantidad fija según input
   document.getElementById('cotm-tallas-section').style.display='block';
   document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
-  const n=app==='comfy'?2:1;
-  for(let i=0;i<n;i++) cotmAddTalla(COT_TALLAS_TODAS);
-  document.getElementById('cotm-add-talla-btn').style.display=app==='comfy'?'none':'block';
+  const initN = (app==='comfy'||app==='fullcomfy'||app==='licra')
+    ? parseInt(document.getElementById('cotm-cantidad').value)||1
+    : 1;
+  for(let i=0;i<initN;i++) cotmAddTalla(COT_TALLAS_TODAS);
+  // Ocultar botón agregar para comfy/fullcomfy/licra (cantidad fija)
+  document.getElementById('cotm-add-talla-btn').style.display=
+    (app==='comfy'||app==='fullcomfy'||app==='licra')?'none':'block';
   document.getElementById('cotm-guardar-btn').style.display='block';
 }
 
@@ -6282,10 +6322,9 @@ function cotmCantAdj(delta){
 }
 function cotmCantChange(){
   const inp=document.getElementById('cotm-cantidad');
-  const minVal=parseInt(inp.min)||2;
+  const minVal=parseInt(inp.min)||1;
   const v=Math.max(minVal,parseInt(inp.value)||minVal);
   inp.value=v; cotmPack=String(v);
-  const def=COT_DEF[cotmApp];
   const isEmp=['empresarial','cortaviento_emp'].includes(cotmApp);
   if(!isEmp){
     document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
