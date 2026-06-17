@@ -1376,6 +1376,15 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   <!-- COTIZACIONES PANEL -->
   <div id="cotizaciones-wrap" style="display:none;max-width:640px;margin:0 auto;">
 
+    <!-- SUB-TABS: Nueva Cotización / Buscar Cotización -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button onclick="cotSetSubTab('nueva')" id="cotsub-nueva" style="flex:1;padding:11px;border:2px solid var(--accent);border-radius:10px;background:#0a2a1e;color:var(--accent);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">+ Nueva Cotización</button>
+      <button onclick="cotSetSubTab('buscar')" id="cotsub-buscar" style="flex:1;padding:11px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🔍 Buscar Cotización</button>
+    </div>
+
+    <!-- ═══════════ SUB-TAB: NUEVA COTIZACIÓN ═══════════ -->
+    <div id="cot-subtab-nueva">
+
     <!-- DATOS DEL CLIENTE -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;">
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Datos del Cliente</div>
@@ -1553,6 +1562,61 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <button onclick="cotAbrirFacturacion()" style="flex:1;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:12px;color:#000;font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">⬇️ Generar PDF</button>
       <button onclick="cotReset()" style="padding:14px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🗑 Nueva</button>
     </div>
+
+    </div>
+    <!-- ═══════════ FIN SUB-TAB NUEVA ═══════════ -->
+
+    <!-- ═══════════ SUB-TAB: BUSCAR COTIZACIÓN ═══════════ -->
+    <div id="cot-subtab-buscar" style="display:none;">
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Buscar por código, nombre, RIF o cédula</div>
+        <div style="display:flex;gap:8px;">
+          <input class="field-input" type="text" id="cotb-query" placeholder="Ej: COT-0001, Maria Gonzalez, V-12345678..." style="flex:1;box-sizing:border-box;" onkeydown="if(event.key==='Enter') cotBuscarCotizaciones()">
+          <button onclick="cotBuscarCotizaciones()" style="padding:0 18px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Buscar</button>
+        </div>
+      </div>
+
+      <div id="cotb-resultados" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
+
+      <!-- DETALLE DE COTIZACIÓN SELECCIONADA -->
+      <div id="cotb-detalle" style="display:none;background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);padding:18px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div id="cotb-detalle-codigo" style="font-size:16px;font-weight:700;color:var(--accent);"></div>
+          <button onclick="cotbCerrarDetalle()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div id="cotb-detalle-info" style="font-size:12px;color:var(--text);margin-bottom:12px;"></div>
+        <div id="cotb-detalle-items" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+        <div id="cotb-detalle-totales" style="font-size:13px;color:var(--text);border-top:1px solid var(--border);padding-top:10px;margin-bottom:14px;"></div>
+
+        <!-- Comparación de precios (aparece solo si hay cambios al pulsar Aprobar) -->
+        <div id="cotb-cambios-precio" style="display:none;background:var(--surface2);border:1px solid var(--warn);border-radius:10px;padding:14px;margin-bottom:14px;">
+          <div style="font-size:12px;font-weight:700;color:var(--warn);margin-bottom:8px;">⚠️ Se detectaron cambios de precio desde que se creó esta cotización</div>
+          <div id="cotb-cambios-content" style="font-size:12px;color:var(--text);"></div>
+          <div style="display:flex;gap:10px;margin-top:12px;">
+            <button onclick="cotbConfirmarAprobacion()" style="flex:1;padding:11px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✓ Aprobar con precios actuales</button>
+            <button onclick="document.getElementById('cotb-cambios-precio').style.display='none';" style="padding:11px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Cancelar</button>
+          </div>
+        </div>
+
+        <div id="cotb-rechazo-wrap" style="display:none;margin-bottom:14px;">
+          <input class="field-input" type="text" id="cotb-motivo-rechazo" placeholder="Motivo del rechazo..." style="width:100%;box-sizing:border-box;margin-bottom:8px;">
+          <div style="display:flex;gap:10px;">
+            <button onclick="cotbConfirmarRechazo()" style="flex:1;padding:11px;background:var(--danger);border:none;border-radius:10px;color:#fff;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Confirmar Rechazo</button>
+            <button onclick="document.getElementById('cotb-rechazo-wrap').style.display='none';" style="padding:11px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Cancelar</button>
+          </div>
+        </div>
+
+        <div id="cotb-acciones-pendiente" style="display:flex;gap:10px;">
+          <button onclick="cotbIniciarAprobacion()" style="flex:1;padding:13px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✓ Aprobar</button>
+          <button onclick="document.getElementById('cotb-rechazo-wrap').style.display='block';" style="flex:1;padding:13px;background:transparent;border:2px solid var(--danger);border-radius:10px;color:var(--danger);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✕ Rechazar</button>
+        </div>
+        <div id="cotb-status-badge" style="display:none;text-align:center;padding:10px;border-radius:10px;font-size:13px;font-weight:700;"></div>
+      </div>
+
+    </div>
+    <!-- ═══════════ FIN SUB-TAB BUSCAR ═══════════ -->
+
   </div>
 
   </div>
@@ -1560,6 +1624,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   <!-- TAB PROGRAMACION -->
   <div id="tab-programacion" style="display:none;padding:16px;">
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;">📅 Programación de Colores</div>
+
 
     <!-- Sub-pestañas apps -->
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
@@ -6431,6 +6496,7 @@ function cotGuardarItem(){
     const subtotalBs=(precioUnitBS+capBS)*tallas.length;
     cotItems.push({
       app:'coleccion', nombreApp:`${cotmSerie} — ${cotmPrenda}`,
+      codigo:cod,
       pack:`${tallas.length} ud${tallas.length>1?'s':''}`,
       manga:'Manga Larga', capucha:cotmCapuchaCol,
       tela:'', vinil:'', tallas, nPlus:0,
@@ -6453,6 +6519,7 @@ function cotGuardarItem(){
     const subtotalBs=precioUnitBS*tallas.length;
     cotItems.push({
       app:'toalla', nombreApp:'Toalla Microfibra',
+      codigo:'TOALLA.01',
       pack:`${tallas.length} ud${tallas.length>1?'s':''}`,
       manga:'', capucha:'',
       tela:colorLibre, vinil:'', tallas, nPlus:0,
@@ -6486,11 +6553,8 @@ function cotGuardarItem(){
     const subtotalBs=precioUnitBS*packN+recargaTotalBs+capuchaTotalBs;
     cotItems.push({
       app:cotmApp, nombreApp:def.nombre,
+      codigo:def.precioUnitCod,
       pack:`${packN} uds`, manga:'Manga Larga', capucha:cotmCapucha,
-      tela:'', vinil:'', tallas, nPlus,
-      precioUnitUSD, precioUnitBS, recargaTotal, recargaTotalBs, capuchaTotal, capuchaTotalBs,
-      logoEspalda:0, logoPecho:0, logoEspaldaBs:0, logoPechoBs:0,
-      estampado, colorLibre:'',
       subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV
     });
     document.getElementById('cot-modal-wrap').style.display='none';
@@ -6527,10 +6591,8 @@ function cotGuardarItem(){
     const subtotalBs=precioUnitBS*packN+recargaTotalBs+capuchaTotalBs+logoEspTotalBs+logoPecTotalBs;
     cotItems.push({
       app:cotmApp, nombreApp:def.nombre,
+      codigo:def.precioUnitCod,
       pack:`${packN} uds`, manga:'Manga Larga', capucha:cotmCapucha,
-      tela, vinil, tallas, nPlus,
-      precioUnitUSD, precioUnitBS, recargaTotal, recargaTotalBs, capuchaTotal, capuchaTotalBs,
-      logoEspalda:logoEspTotal, logoEspaldaBs:logoEspTotalBs,
       logoPecho:logoPecTotal, logoPechoBs:logoPecTotalBs,
       nLogoEsp, nLogoPec, estampado:'', colorLibre:'',
       subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV
@@ -6548,6 +6610,7 @@ function cotGuardarItem(){
     const subtotalBs=precioUnitBS*tallas.length;
     cotItems.push({
       app:cotmApp, nombreApp:def.nombre,
+      codigo:def.precioUnitCod,
       pack:`${tallas.length} ud${tallas.length>1?'s':''}`,
       manga:'', capucha:'', tela, vinil:'', tallas, nPlus:0,
       precioUnitUSD, precioUnitBS, recargaTotal:0, recargaTotalBs:0,
@@ -6564,8 +6627,9 @@ function cotGuardarItem(){
   const packN=parseInt(cotmPack)||tallas.length;
   const {totalUSD:packTotalUSD, precioUnitUSD, totalBS:packTotalBS, precioUnitBS}=cotCalcPack(cotmApp,packN,pp,cotmPrecios);
   const aplicaPlus=cotmApp==='comfy'?true:(packN>1);
-  const plusUSD=aplicaPlus&&def.plusCod?(cotPrecioUSD(pp,def.plusCod)||0):0;
-  const plusBS =aplicaPlus&&def.plusCod?(cotPrecioBS(pp,def.plusCod)||0):0;
+  // Comfy usa leerPrecios (recarga_usd/recarga_bs sueltos); FullComfy/Licra usan pp (pack_precios con S.COMFY.03)
+  const plusUSD=aplicaPlus&&def.plusCod?(cotmApp==='comfy'?(parseFloat(cotmPrecios.recarga_usd)||0):(cotPrecioUSD(pp,def.plusCod)||0)):0;
+  const plusBS =aplicaPlus&&def.plusCod?(cotmApp==='comfy'?(parseFloat(cotmPrecios.recarga_bs)||0):(cotPrecioBS(pp,def.plusCod)||0)):0;
   const nPlus=tallas.filter(t=>(def.plusTallas||[]).some(pt=>t.includes(pt))).length;
   const recargaTotal=plusUSD*nPlus;
   const recargaTotalBs=plusBS*nPlus;
@@ -6579,6 +6643,7 @@ function cotGuardarItem(){
   const subtotalBs=packTotalBS+recargaTotalBs+capuchaTotalBs;
   cotItems.push({
     app:cotmApp, nombreApp:COT_DEF[cotmApp].nombre,
+    codigo:cotmApp+':'+packN,
     pack:cotmApp==='comfy'?`${packN} uds`:cotmPack,
     manga:'Manga Larga', capucha:cotmApp==='comfy'?'Sin Capucha':cotmCapucha,
     tela, vinil, tallas, nPlus,
@@ -6895,14 +6960,14 @@ body{font-family:'Arial',sans-serif;background:#fff;color:#1a1a1a;padding:28px 3
 <div class="bot-wrap">
   <div class="terminos">
     <div class="tit">TERMINOS Y CONDICIONES</div>
-    <p>Cotizacion valida por 48 horas. Precios sujetos a variacion de tasa BCV. El pedido se confirma con el pago del 50% o pago total.</p>
+    <p>Cotización válida hasta que caduque el cambio de la tasa BCV. Precios sujetos a variación de tasa BCV. El pedido se confirma con el pago del 50% o pago total.</p>
   </div>
   <div class="totales">
     ${codigoCot?`<div style="font-size:11px;font-weight:700;color:#000;margin-bottom:6px;">COTIZACIÓN N°: ${codigoCot}</div>`:''}
     ${mf.iva>0?`<div class="tot-row"><span class="tot-lbl">IVA (16%)</span><span class="tot-val">${mf.enBs?fmt(mf.iva):'$'+mf.iva.toFixed(2)}</span></div>`:''}
     ${mf.retencionIva>0?`<div class="tot-row" style="color:#666;font-size:10.5px;"><span class="tot-lbl">Retenido (75% IVA)</span><span class="tot-val">-${mf.enBs?fmt(mf.retencionIva):'$'+mf.retencionIva.toFixed(2)}</span></div>`:''}
     <div class="tot-row tot-total"><span class="tot-lbl">TOTAL A PAGAR:</span><span class="tot-val">${mf.enBs?fmt(mf.totalPagar):'$'+mf.totalPagar.toFixed(2)}</span></div>
-    ${tasaBCV>0?`<div style="font-size:9px;color:#888;margin-top:4px;text-align:right;">Tasa BCV: ${tasaBCV} | Total USD: $${totalUSD.toFixed(2)}</div>`:''}
+    ${tasaBCV>0?`<div style="font-size:9px;color:#888;margin-top:4px;text-align:right;">Tasa BCV: ${tasaBCV}</div>`:''}
   </div>
 </div>
 <div class="banda-bottom"></div>
@@ -6918,6 +6983,242 @@ body{font-family:'Arial',sans-serif;background:#fff;color:#1a1a1a;padding:28px 3
 <script>window.onload=()=>{window.print();}<\/script>
 </body></html>`);
   w.document.close();
+}
+
+// ── SUB-TABS: NUEVA / BUSCAR ───────────────────────────────────
+function cotSetSubTab(tab){
+  const nueva=document.getElementById('cot-subtab-nueva');
+  const buscar=document.getElementById('cot-subtab-buscar');
+  const btnN=document.getElementById('cotsub-nueva');
+  const btnB=document.getElementById('cotsub-buscar');
+  if(tab==='nueva'){
+    nueva.style.display='block'; buscar.style.display='none';
+    btnN.style.borderColor='var(--accent)'; btnN.style.color='var(--accent)'; btnN.style.background='#0a2a1e';
+    btnB.style.borderColor='var(--border)'; btnB.style.color='var(--muted)'; btnB.style.background='var(--surface2)';
+  } else {
+    nueva.style.display='none'; buscar.style.display='block';
+    btnB.style.borderColor='var(--accent)'; btnB.style.color='var(--accent)'; btnB.style.background='#0a2a1e';
+    btnN.style.borderColor='var(--border)'; btnN.style.color='var(--muted)'; btnN.style.background='var(--surface2)';
+  }
+}
+
+// ── BUSCAR COTIZACIONES ──────────────────────────────────────
+let cotbCotizacionActual = null; // datos completos de la cotización abierta en el detalle
+
+async function cotBuscarCotizaciones(){
+  const q=document.getElementById('cotb-query')?.value.trim()||'';
+  const cont=document.getElementById('cotb-resultados');
+  cont.innerHTML='<div style="font-size:12px;color:var(--muted);padding:10px;">Buscando...</div>';
+  cotbCerrarDetalle();
+  try{
+    const resp=await scriptGETjson({action:'buscarCotizacion', q});
+    if(!resp.ok || !resp.rows || !resp.rows.length){
+      cont.innerHTML='<div style="font-size:12px;color:var(--muted);padding:10px;text-align:center;">No se encontraron cotizaciones.</div>';
+      return;
+    }
+    cont.innerHTML='';
+    resp.rows.forEach(row=>{
+      // columnas: 0 codigo,1 fecha,2 cliente,3 cedula,4 celular,...19 status
+      const codigo=row[0], fecha=row[1], cliente=row[2], cedula=row[3], status=row[19]||'Pendiente';
+      const totalUsd=parseFloat(row[10])||0, totalBs=parseFloat(row[11])||0;
+      const div=document.createElement('div');
+      div.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:border-color .2s;';
+      div.onclick=()=>cotbAbrirDetalle(codigo);
+      div.innerHTML=`
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--accent);">${codigo}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">${cliente||'(sin nombre)'} ${cedula?'· '+cedula:''}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px;">${fecha}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;display:inline-block;${status==='Pendiente'?'background:#3a3000;color:#ffcc00;':'background:#0a2a1e;color:var(--accent);'}">${status}</div>
+            <div style="font-size:12px;color:var(--text);margin-top:4px;">${totalBs>0?('Bs '+totalBs.toLocaleString('es-VE',{maximumFractionDigits:2})):('$'+totalUsd.toFixed(2))}</div>
+          </div>
+        </div>`;
+      cont.appendChild(div);
+    });
+  } catch(e){
+    cont.innerHTML='<div style="font-size:12px;color:var(--danger);padding:10px;">Error al buscar. Intenta de nuevo.</div>';
+  }
+}
+
+async function cotbAbrirDetalle(codigo){
+  const detalle=document.getElementById('cotb-detalle');
+  detalle.style.display='block';
+  detalle.scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('cotb-detalle-codigo').textContent='Cargando '+codigo+'...';
+  document.getElementById('cotb-detalle-info').innerHTML='';
+  document.getElementById('cotb-detalle-items').innerHTML='';
+  document.getElementById('cotb-detalle-totales').innerHTML='';
+  document.getElementById('cotb-cambios-precio').style.display='none';
+  document.getElementById('cotb-rechazo-wrap').style.display='none';
+  document.getElementById('cotb-status-badge').style.display='none';
+  document.getElementById('cotb-acciones-pendiente').style.display='flex';
+
+  const resp=await scriptGETjson({action:'leerCotizacionPorCodigo', codigo});
+  if(!resp.ok){
+    document.getElementById('cotb-detalle-codigo').textContent='Error';
+    document.getElementById('cotb-detalle-info').innerHTML='<div style="color:var(--danger);">No se pudo cargar la cotización.</div>';
+    return;
+  }
+  cotbCotizacionActual = resp;
+  let items=[];
+  try{ items=JSON.parse(resp.items_json||'[]'); } catch(e){ items=[]; }
+  cotbCotizacionActual.items = items;
+
+  document.getElementById('cotb-detalle-codigo').textContent=resp.codigo;
+  document.getElementById('cotb-detalle-info').innerHTML=`
+    <div><b>Cliente:</b> ${resp.cliente||'-'}</div>
+    <div><b>Cédula/RIF:</b> ${resp.cedula||'-'} ${resp.celular?'· <b>Cel:</b> '+resp.celular:''}</div>
+    <div><b>Fecha:</b> ${resp.fecha} · <b>Estado:</b> ${resp.status}</div>
+    <div><b>Factura:</b> ${resp.desea_factura} · <b>Moneda:</b> ${resp.moneda} ${resp.agente_retencion!=='N-A'?'· <b>Retención:</b> '+resp.agente_retencion:''}</div>
+  `;
+
+  const itemsCont=document.getElementById('cotb-detalle-items');
+  itemsCont.innerHTML='';
+  items.forEach((it,idx)=>{
+    const d=document.createElement('div');
+    d.style.cssText='background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;';
+    d.innerHTML=`<b>${idx+1}. ${it.nombreApp}</b> — ${it.pack} — $${(it.subtotalUSD||0).toFixed(2)} ${it.subtotalBs?('/ Bs '+it.subtotalBs.toLocaleString('es-VE',{maximumFractionDigits:2})):''}`;
+    itemsCont.appendChild(d);
+  });
+
+  const fmt=n=>n.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('cotb-detalle-totales').innerHTML=`
+    <div style="display:flex;justify-content:space-between;"><span>Subtotal</span><span>$${(parseFloat(resp.subtotal_usd)||0).toFixed(2)} ${resp.subtotal_bs?('/ Bs '+fmt(parseFloat(resp.subtotal_bs))):''}</span></div>
+    <div style="display:flex;justify-content:space-between;font-weight:700;color:var(--accent);"><span>Total a pagar</span><span>${parseFloat(resp.total_pagar_bs)>0?('Bs '+fmt(parseFloat(resp.total_pagar_bs))):('$'+(parseFloat(resp.total_pagar_usd)||0).toFixed(2))}</span></div>
+  `;
+
+  // Si ya está resuelta (no Pendiente), ocultar acciones y mostrar badge
+  if(resp.status!=='Pendiente'){
+    document.getElementById('cotb-acciones-pendiente').style.display='none';
+    const badge=document.getElementById('cotb-status-badge');
+    badge.style.display='block';
+    badge.style.background=resp.status==='Aprobada'?'#0a2a1e':'#3a0a0a';
+    badge.style.color=resp.status==='Aprobada'?'var(--accent)':'var(--danger)';
+    badge.textContent=resp.status==='Aprobada'?'✓ Cotización ya aprobada':'✕ Cotización ya rechazada';
+  }
+}
+
+function cotbCerrarDetalle(){
+  const d=document.getElementById('cotb-detalle');
+  if(d) d.style.display='none';
+  cotbCotizacionActual=null;
+}
+
+// ── APROBACIÓN: comparar precios actuales vs guardados ────────
+async function cotbIniciarAprobacion(){
+  if(!cotbCotizacionActual) return;
+  const items=cotbCotizacionActual.items||[];
+  const btn=document.getElementById('cotb-acciones-pendiente');
+  const prevHtml=btn.innerHTML;
+  btn.innerHTML='<div style="font-size:12px;color:var(--muted);padding:10px;">Verificando precios actuales...</div>';
+
+  // Traer precios actuales según los tipos de producto presentes
+  const tiposApp=[...new Set(items.map(i=>i.app))];
+  const accionesPorApp={comfy:'leerPrecios',fullcomfy:'leerPreciosFullComfy',licra:'leerPreciosLicra'};
+  const preciosActuales={}; // app -> respuesta del backend
+
+  for(const app of tiposApp){
+    const accion=accionesPorApp[app]||'leerPreciosColeccion';
+    try{
+      const r=await scriptGETjson({action:accion});
+      if(r.ok) preciosActuales[app]=r;
+    } catch(e){}
+  }
+
+  // Comparar precio unitario guardado vs precio unitario actual de cada item, usando el codigo guardado
+  const cambios=[];
+  items.forEach(it=>{
+    const pr=preciosActuales[it.app];
+    if(!pr || !it.codigo) return;
+    let precioActualUSD=null;
+
+    if(it.app==='comfy'){
+      precioActualUSD=parseFloat(pr.comfy_usd)||0;
+    } else if(it.app==='fullcomfy'||it.app==='licra'){
+      // codigo guardado como "app:packN" -> recalcular con cotCalcPack usando precios actuales
+      const packN=parseInt((it.codigo.split(':')[1])||'1');
+      const calc=cotCalcPack(it.app, packN, pr.pack_precios||{}, pr);
+      precioActualUSD=calc.precioUnitUSD;
+    } else {
+      // coleccion, toalla, sublimados, empresariales, unitarios: codigo es directo
+      const pp=pr.pack_precios||{};
+      precioActualUSD=cotPrecioUSD(pp, it.codigo);
+    }
+
+    if(precioActualUSD!==null && Math.abs(precioActualUSD-(it.precioUnitUSD||0))>0.001){
+      cambios.push({nombre:it.nombreApp, antes:it.precioUnitUSD||0, ahora:precioActualUSD});
+    }
+  });
+
+  btn.innerHTML=prevHtml;
+
+  if(cambios.length){
+    const cont=document.getElementById('cotb-cambios-content');
+    cont.innerHTML=cambios.map(c=>
+      `<div style="display:flex;justify-content:space-between;padding:3px 0;">
+        <span>${c.nombre}</span>
+        <span>$${c.antes.toFixed(2)} → <b style="color:var(--warn);">$${c.ahora.toFixed(2)}</b></span>
+      </div>`
+    ).join('');
+    document.getElementById('cotb-cambios-precio').style.display='block';
+  } else {
+    // Sin cambios detectados, aprobar directo
+    cotbConfirmarAprobacion();
+  }
+}
+
+async function cotbConfirmarAprobacion(){
+  if(!cotbCotizacionActual) return;
+  const codigo=cotbCotizacionActual.codigo;
+  document.getElementById('cotb-cambios-precio').style.display='none';
+  document.getElementById('cotb-acciones-pendiente').innerHTML='<div style="font-size:12px;color:var(--muted);padding:10px;width:100%;text-align:center;">Aprobando...</div>';
+  try{
+    const resp=await scriptGETjson({
+      action:'aprobarCotizacion', codigo,
+      fecha_aprobacion:new Date().toLocaleDateString('es-VE'),
+      usuario:(window.usuarioActual||'')
+    });
+    if(resp.ok){
+      const badge=document.getElementById('cotb-status-badge');
+      document.getElementById('cotb-acciones-pendiente').style.display='none';
+      badge.style.display='block';
+      badge.style.background='#0a2a1e'; badge.style.color='var(--accent)';
+      badge.textContent='✓ Cotización aprobada'+(resp.codigoS?' — Solicitud '+resp.codigoS+' creada':'');
+    } else {
+      alert('Error al aprobar: '+(resp.error||'desconocido'));
+      cotbAbrirDetalle(codigo);
+    }
+  } catch(e){
+    alert('Error al aprobar la cotización.');
+  }
+}
+
+async function cotbConfirmarRechazo(){
+  if(!cotbCotizacionActual) return;
+  const codigo=cotbCotizacionActual.codigo;
+  const motivo=document.getElementById('cotb-motivo-rechazo')?.value.trim()||'';
+  try{
+    const resp=await scriptGETjson({
+      action:'rechazarCotizacion', codigo, motivo,
+      fecha_rechazo:new Date().toLocaleDateString('es-VE'),
+      usuario:(window.usuarioActual||'')
+    });
+    if(resp.ok){
+      document.getElementById('cotb-rechazo-wrap').style.display='none';
+      document.getElementById('cotb-acciones-pendiente').style.display='none';
+      const badge=document.getElementById('cotb-status-badge');
+      badge.style.display='block';
+      badge.style.background='#3a0a0a'; badge.style.color='var(--danger)';
+      badge.textContent='✕ Cotización rechazada';
+    } else {
+      alert('Error al rechazar: '+(resp.error||'desconocido'));
+    }
+  } catch(e){
+    alert('Error al rechazar la cotización.');
+  }
 }
 
 // ── RESET ────────────────────────────────────────────────────
