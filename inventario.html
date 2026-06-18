@@ -5202,6 +5202,10 @@ async function confirmarEnvioSeleccion(){
       usuario:USUARIOS[unlock]
     });
     if(!resPedido.ok) throw new Error('No se pudo guardar en PEDIDOS: '+(resPedido.error||''));
+
+    // Eliminar de PRODUCCION ya que el pedido se está marcando como Enviado
+    try{ await eliminarDeProduccion(pedidoEncontrado.cod); }catch(e){ console.warn('eliminarProduccion error:',e); }
+
     // 2. Enviar a Make con exactamente los mismos campos que el manual
     const makeBody=new FormData();
     makeBody.append('tipo_operacion','Enviado');
