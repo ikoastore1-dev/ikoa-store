@@ -6946,7 +6946,9 @@ async function cotConfirmarFacturacion(){
   // ── MODO EDICIÓN: actualizar una cotización existente en lugar de crear una nueva ──
   if(cotModoEdicion){
     try{
-      const resp=await scriptGETjson({
+      // Usamos POST (no GET/JSONP) porque items_json puede ser largo y exceder
+      // el límite de longitud de URL, truncando o desalineando los parámetros.
+      const resp=await scriptPOSTjson({
         action:'editarCotizacion',
         codigo: cotModoEdicion.codigo,
         cliente, cedula, correo:correoCli, celular:celularCli,
@@ -7344,9 +7346,15 @@ async function cotBuscarCotizaciones(){
     }
     cont.innerHTML='';
     resp.rows.forEach(row=>{
-      // columnas: 0 codigo,1 fecha,2 cliente,3 cedula,4 correo,5 celular,...17 total_usd,18 total_bs,19 tasa_bcv,20 status
+      // columnas: 0 codigo,1 fecha,2 cliente,3 cedula,4 correo,5 celular,...11 subtotal_usd,12 subtotal_bs,17 total_usd,18 total_bs,19 tasa_bcv,20 status
       const codigo=row[0], fecha=row[1], cliente=row[2], cedula=row[3], status=row[20]||'En espera cliente';
+      const subUsd=parseFloat(row[11])||0, subBs=parseFloat(row[12])||0;
       const totalUsd=parseFloat(row[17])||0, totalBs=parseFloat(row[18])||0;
+      // Si la cotización está en Bs, el total real (con IVA) está en totalBs y el equivalente en USD es el subtotal sin IVA.
+      // Si está en Divisa, es al revés.
+      const enBs=totalBs>0;
+      const montoPrincipal=enBs?('Bs '+totalBs.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})):('$'+totalUsd.toFixed(2));
+      const montoEquivalente=enBs?('≈ $'+subUsd.toFixed(2)):('≈ Bs '+subBs.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2}));
       const div=document.createElement('div');
       div.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:border-color .2s;';
       div.onclick=()=>cotbAbrirDetalle(codigo);
@@ -7359,7 +7367,8 @@ async function cotBuscarCotizaciones(){
           </div>
           <div style="text-align:right;">
             <div style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;display:inline-block;${status==='En espera cliente'?'background:#3a3000;color:#ffcc00;':(status==='Rechazada'?'background:#3a0a0a;color:var(--danger);':'background:#0a2a1e;color:var(--accent);')}">${status}</div>
-            <div style="font-size:12px;color:var(--text);margin-top:4px;">${totalBs>0?('Bs '+totalBs.toLocaleString('es-VE',{maximumFractionDigits:2})):('$'+totalUsd.toFixed(2))}</div>
+            <div style="font-size:12px;color:var(--text);margin-top:4px;">${montoPrincipal}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:1px;">${montoEquivalente}</div>
           </div>
         </div>`;
       cont.appendChild(div);
