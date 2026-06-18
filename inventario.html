@@ -6990,24 +6990,37 @@ async function cotEnviarCorreoNuevaCot(){
   const cot=cotUltimaCotizacionAprobada;
   const htmlDoc=cotConstruirHTMLDocumento(cot.items, cot.datosCliente, cot.montosFactura, cot.codigo);
 
-  const wrapper=document.createElement('div');
-  wrapper.style.position='fixed';
-  wrapper.style.left='-9999px';
-  wrapper.style.top='0';
-  wrapper.style.width='800px';
-  wrapper.innerHTML=htmlDoc;
-  document.body.appendChild(wrapper);
+  // Usamos un iframe oculto (no un div) porque htmlDoc es un documento HTML completo
+  // (con su propio <head><style>) — un div con innerHTML descarta esas etiquetas y el PDF sale en blanco.
+  const iframe=document.createElement('iframe');
+  iframe.style.position='fixed';
+  iframe.style.left='0';
+  iframe.style.top='0';
+  iframe.style.width='800px';
+  iframe.style.height='1131px';
+  iframe.style.opacity='0';
+  iframe.style.pointerEvents='none';
+  iframe.style.zIndex='-1';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(htmlDoc);
+  iframe.contentDocument.close();
 
   try{
     btn.textContent='Convirtiendo a PDF...';
+    await new Promise(resolve=>{
+      if(iframe.contentDocument.readyState==='complete') setTimeout(resolve,300);
+      else iframe.onload=()=>setTimeout(resolve,300);
+    });
+    const targetEl=iframe.contentDocument.body;
     const pdfBase64=await new Promise((resolve,reject)=>{
       html2pdf().set({
         margin:0,
         filename:'Cotizacion_'+cot.codigo+'.pdf',
         image:{type:'jpeg',quality:0.95},
-        html2canvas:{scale:2,useCORS:true},
+        html2canvas:{scale:2,useCORS:true,windowWidth:800},
         jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-      }).from(wrapper).toPdf().output('datauristring')
+      }).from(targetEl).toPdf().output('datauristring')
         .then(datauri=>resolve(datauri.split(',')[1]))
         .catch(reject);
     });
@@ -7040,7 +7053,7 @@ async function cotEnviarCorreoNuevaCot(){
     btn.disabled=false; btn.textContent='Sí, enviar correo';
     console.error('Error enviando correo de cotizacion:', e);
   } finally {
-    document.body.removeChild(wrapper);
+    document.body.removeChild(iframe);
   }
 }
 
@@ -7143,7 +7156,7 @@ body{font-family:'Arial',sans-serif;background:#fff;color:#1a1a1a;padding:28px 3
 <div class="bot-wrap">
   <div class="terminos">
     <div class="tit">TERMINOS Y CONDICIONES</div>
-    <p>Cotización válida hasta que caduque el cambio de la tasa BCV. Precios sujetos a variación de tasa BCV. El pedido se confirma con el pago del 50% o pago total.</p>
+    <p>Cotización válida hasta que caduque el cambio de la tasa BCV. Precios sujetos a variación de tasa BCV. El pedido se confirma con el pago total.</p>
   </div>
   <div class="totales">
     ${codigoCot?`<div style="font-size:11px;font-weight:700;color:#000;margin-bottom:6px;">COTIZACIÓN N°: ${codigoCot}</div>`:''}
@@ -7471,25 +7484,37 @@ async function cotbEnviarCorreo(){
 
   const htmlDoc=cotConstruirHTMLDocumento(items, datosCliente, montosFactura, cot.codigo);
 
-  // Render oculto fuera de pantalla para que html2pdf pueda capturarlo
-  const wrapper=document.createElement('div');
-  wrapper.style.position='fixed';
-  wrapper.style.left='-9999px';
-  wrapper.style.top='0';
-  wrapper.style.width='800px';
-  wrapper.innerHTML=htmlDoc;
-  document.body.appendChild(wrapper);
+  // Usamos un iframe oculto (no un div) porque htmlDoc es un documento HTML completo
+  // (con su propio <head><style>) — un div con innerHTML descarta esas etiquetas y el PDF sale en blanco.
+  const iframe=document.createElement('iframe');
+  iframe.style.position='fixed';
+  iframe.style.left='0';
+  iframe.style.top='0';
+  iframe.style.width='800px';
+  iframe.style.height='1131px';
+  iframe.style.opacity='0';
+  iframe.style.pointerEvents='none';
+  iframe.style.zIndex='-1';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(htmlDoc);
+  iframe.contentDocument.close();
 
   try{
     btn.textContent='Convirtiendo a PDF...';
+    await new Promise(resolve=>{
+      if(iframe.contentDocument.readyState==='complete') setTimeout(resolve,300);
+      else iframe.onload=()=>setTimeout(resolve,300);
+    });
+    const targetEl=iframe.contentDocument.body;
     const pdfBase64=await new Promise((resolve,reject)=>{
       html2pdf().set({
         margin:0,
         filename:'Cotizacion_'+cot.codigo+'.pdf',
         image:{type:'jpeg',quality:0.95},
-        html2canvas:{scale:2,useCORS:true},
+        html2canvas:{scale:2,useCORS:true,windowWidth:800},
         jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-      }).from(wrapper).toPdf().output('datauristring')
+      }).from(targetEl).toPdf().output('datauristring')
         .then(datauri=>resolve(datauri.split(',')[1]))
         .catch(reject);
     });
@@ -7522,7 +7547,7 @@ async function cotbEnviarCorreo(){
     btn.disabled=false; btn.textContent='Sí, enviar correo';
     console.error('Error enviando correo de cotizacion:', e);
   } finally {
-    document.body.removeChild(wrapper);
+    document.body.removeChild(iframe);
   }
 }
 
@@ -7705,19 +7730,35 @@ async function cotbReenviarCorreoActualizado(){
   };
   const htmlDoc=cotConstruirHTMLDocumento(cot.items||[], datosCliente, montosFactura, cot.codigo);
 
-  const wrapper=document.createElement('div');
-  wrapper.style.position='fixed'; wrapper.style.left='-9999px'; wrapper.style.top='0'; wrapper.style.width='800px';
-  wrapper.innerHTML=htmlDoc;
-  document.body.appendChild(wrapper);
+  // Usamos un iframe oculto (no un div) porque htmlDoc es un documento HTML completo
+  // (con su propio <head><style>) — un div con innerHTML descarta esas etiquetas y el PDF sale en blanco.
+  const iframe=document.createElement('iframe');
+  iframe.style.position='fixed';
+  iframe.style.left='0';
+  iframe.style.top='0';
+  iframe.style.width='800px';
+  iframe.style.height='1131px';
+  iframe.style.opacity='0';
+  iframe.style.pointerEvents='none';
+  iframe.style.zIndex='-1';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(htmlDoc);
+  iframe.contentDocument.close();
 
   try{
     btn.textContent='Convirtiendo a PDF...';
+    await new Promise(resolve=>{
+      if(iframe.contentDocument.readyState==='complete') setTimeout(resolve,300);
+      else iframe.onload=()=>setTimeout(resolve,300);
+    });
+    const targetEl=iframe.contentDocument.body;
     const pdfBase64=await new Promise((resolve,reject)=>{
       html2pdf().set({
         margin:0, filename:'Cotizacion_'+cot.codigo+'.pdf',
-        image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2,useCORS:true},
+        image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2,useCORS:true,windowWidth:800},
         jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-      }).from(wrapper).toPdf().output('datauristring')
+      }).from(targetEl).toPdf().output('datauristring')
         .then(datauri=>resolve(datauri.split(',')[1]))
         .catch(reject);
     });
@@ -7743,7 +7784,7 @@ async function cotbReenviarCorreoActualizado(){
     alert('Error generando o enviando el PDF.');
     console.error(e);
   } finally {
-    document.body.removeChild(wrapper);
+    document.body.removeChild(iframe);
   }
 }
 
