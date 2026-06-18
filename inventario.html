@@ -1392,6 +1392,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <input class="field-input" type="text" id="cot-cliente" placeholder="Nombre completo del cliente..." style="width:100%;box-sizing:border-box;">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
           <input class="field-input" type="text" id="cot-cedula" placeholder="C.I. o RIF (ej: V-12345678)" style="width:100%;box-sizing:border-box;">
+          <input class="field-input" type="email" id="cot-correo" placeholder="Correo electrónico" style="width:100%;box-sizing:border-box;">
           <input class="field-input" type="text" id="cot-celular-cli" placeholder="Celular (opcional)" style="width:100%;box-sizing:border-box;">
         </div>
       </div>
@@ -1671,7 +1672,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby5IIn7aJRL0ttLRwMQ8vOvyG1RrF-BUK7MkUSFLq7c83V45BZuOm7N50onLsEiq7fg_g/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxCNBC4CxASU-B5ZpPC9cyJDwyo2KZlZ5el22RztxWwYX9XNUoiLttWcstxRD0TzkyXDw/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -6867,6 +6868,7 @@ async function cotConfirmarFacturacion(){
   const m=cotfCalcularMontos();
   const cliente=document.getElementById('cot-cliente')?.value.trim()||'';
   const cedula=document.getElementById('cot-cedula')?.value.trim()||'';
+  const correoCli=document.getElementById('cot-correo')?.value.trim()||'';
   const celularCli=document.getElementById('cot-celular-cli')?.value.trim()||'';
   const fecha=new Date().toLocaleDateString('es-VE');
   const tasaBCV=cotItems.find(i=>i.tasaBCV>0)?.tasaBCV||0;
@@ -6880,7 +6882,7 @@ async function cotConfirmarFacturacion(){
   try{
     const resp=await scriptGETjson({
       action:'guardarCotizacion',
-      fecha, cliente, cedula, celular:celularCli,
+      fecha, cliente, cedula, correo:correoCli, celular:celularCli,
       items_json: JSON.stringify(cotItems),
       total_piezas: totalPiezas,
       desea_factura: cotfDeseaFactura,
@@ -7119,6 +7121,7 @@ async function cotbAbrirDetalle(codigo){
   document.getElementById('cotb-detalle-info').innerHTML=`
     <div><b>Cliente:</b> ${resp.cliente||'-'}</div>
     <div><b>Cédula/RIF:</b> ${resp.cedula||'-'} ${resp.celular?'· <b>Cel:</b> '+resp.celular:''}</div>
+    ${resp.correo?`<div><b>Correo:</b> ${resp.correo}</div>`:''}
     <div><b>Fecha:</b> ${resp.fecha} · <b>Estado:</b> ${resp.status}</div>
     <div><b>Factura:</b> ${resp.desea_factura} · <b>Moneda:</b> ${resp.moneda} ${resp.agente_retencion!=='N-A'?'· <b>Retención:</b> '+resp.agente_retencion:''}</div>
   `;
@@ -7315,7 +7318,7 @@ function cotReset(){
   const mw=document.getElementById('cot-modal-wrap'); if(mw) mw.style.display='none';
   const re=document.getElementById('cot-resumen'); if(re) re.style.display='none';
   const ac=document.getElementById('cot-acciones'); if(ac) ac.style.display='none';
-  ['cot-cliente','cot-cedula','cot-celular-cli'].forEach(id=>{
+  ['cot-cliente','cot-cedula','cot-correo','cot-celular-cli'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
 }
