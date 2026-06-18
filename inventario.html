@@ -1665,6 +1665,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
         <div id="cotb-acciones-pendiente" style="display:flex;flex-direction:column;gap:10px;">
           <button onclick="cotbActualizarPrecio()" style="padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🔄 Actualizar precio y reenviar</button>
+          <button onclick="cotbModificarCotizacion()" style="padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✏️ Modificar cotización</button>
           <div style="display:flex;gap:10px;">
             <button onclick="cotbIniciarAprobacion()" style="flex:1;padding:13px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✓ Aprobar</button>
             <button onclick="document.getElementById('cotb-rechazo-wrap').style.display='block';" style="flex:1;padding:13px;background:transparent;border:2px solid var(--danger);border-radius:10px;color:var(--danger);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✕ Rechazar</button>
@@ -1718,7 +1719,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykwxphWmj63XhH4a9OrMXsKb6f_wY8xidNM-8ykaaP7FvPGHgZpLVrezrroiHwafUowg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxbviRNjz9LjFsfMjDSz21YodeyAvARPJh-DuopHhW5N0Qsvsrh0IwESL2gdGT5NFr2sg/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -6135,6 +6136,7 @@ const COT_TALLAS_BIKINI = ['S','M','L'];
 
 // Estado
 let cotItems=[], cotItemEditIdx=-1;
+let cotModoEdicion=null; // null = creando nueva | {codigo, fecha, usuario, total_pagar_bs, ...} = editando una existente
 let cotmApp='', cotmPack='', cotmCapucha='Sin Capucha';
 let cotmPrecios={}, cotmTasaBCV=0, cotmTallaCount=0;
 let cotmSerie='', cotmPrenda='', cotmCapuchaCol='Sin Capucha';
@@ -6823,6 +6825,18 @@ function cotAbrirFacturacion(){
   const modal=document.getElementById('cot-factura-modal');
   modal.style.display='block';
   setTimeout(()=>modal.scrollIntoView({behavior:'smooth',block:'start'}),50);
+
+  // En modo edición, pre-seleccionar los valores que ya tenía la cotización
+  if(cotModoEdicion){
+    if(cotModoEdicion.desea_factura) cotFacturaSel(cotModoEdicion.desea_factura);
+    if(cotModoEdicion.moneda) cotMonedaSel(cotModoEdicion.moneda);
+    if(cotModoEdicion.agente_retencion==='SI'){
+      cotfRetencion='SI';
+      const el=document.getElementById('cotr-si');
+      if(el){el.style.borderColor='var(--accent)';el.style.color='var(--accent)';el.style.background='#0a2a1e';}
+      cotfActualizarPreview();
+    }
+  }
 }
 
 function cotCancelarFacturacion(){
@@ -6901,6 +6915,7 @@ function cotfActualizarPreview(){
   html += `<div style="display:flex;justify-content:space-between;padding-top:6px;margin-top:4px;border-top:1px solid var(--border);font-weight:700;color:var(--accent);font-size:14px;"><span>TOTAL A PAGAR</span><span>${sym}${fmt(m.totalPagar)}</span></div>`;
   prev.innerHTML=html;
   btn.style.display='block';
+  btn.textContent=cotModoEdicion?'💾 Guardar Cambios':'✓ Confirmar y Generar PDF';
   unlockWrap.style.display='block';
   document.getElementById('cotf-unlock').value='';
   document.getElementById('cotf-error').textContent='';
@@ -6927,6 +6942,39 @@ async function cotConfirmarFacturacion(){
 
   const btn=document.getElementById('cotf-confirmar-btn');
   btn.disabled=true; btn.textContent='Guardando...';
+
+  // ── MODO EDICIÓN: actualizar una cotización existente en lugar de crear una nueva ──
+  if(cotModoEdicion){
+    try{
+      const resp=await scriptGETjson({
+        action:'editarCotizacion',
+        codigo: cotModoEdicion.codigo,
+        cliente, cedula, correo:correoCli, celular:celularCli,
+        items_json: JSON.stringify(cotItems),
+        total_piezas: totalPiezas,
+        desea_factura: cotfDeseaFactura,
+        moneda: cotfMoneda,
+        agente_retencion: cotfRetencion,
+        subtotal_usd: m.totalUSD, subtotal_bs: m.totalBs,
+        iva_usd: m.enBs?0:m.iva, iva_bs: m.enBs?m.iva:0,
+        retencion_iva_usd: m.enBs?0:m.retencionIva, retencion_iva_bs: m.enBs?m.retencionIva:0,
+        total_pagar_usd: m.enBs?0:m.totalPagar, total_pagar_bs: m.enBs?m.totalPagar:0,
+        tasa_bcv: tasaBCV
+      });
+      if(resp.ok){
+        location.reload();
+        return;
+      } else {
+        btn.disabled=false; btn.textContent='💾 Guardar Cambios';
+        errEl.textContent='❌ Error al guardar: '+(resp.error||'desconocido');
+        return;
+      }
+    } catch(e){
+      btn.disabled=false; btn.textContent='💾 Guardar Cambios';
+      errEl.textContent='❌ Error al guardar los cambios.';
+      return;
+    }
+  }
 
   // El código de autorización es solo para CREAR el registro (no es la aprobación final).
   // Queda en COTIZACIONES con status "En espera cliente" hasta que el cliente decida.
@@ -6998,13 +7046,14 @@ async function cotEnviarCorreoNuevaCot(){
   // Usamos un iframe oculto (no un div) porque htmlDoc es un documento HTML completo
   // (con su propio <head><style>) — un div con innerHTML descarta esas etiquetas y el PDF sale en blanco.
   const iframe=document.createElement('iframe');
+  // Posicionado fuera del viewport (no visible al usuario) pero con dimensiones reales
+  // para que el navegador lo renderice por completo y html2canvas pueda capturarlo bien.
   iframe.style.position='fixed';
-  iframe.style.left='0';
+  iframe.style.left='-9999px';
   iframe.style.top='0';
   iframe.style.width='800px';
   iframe.style.height='2000px';
   iframe.style.border='none';
-  iframe.style.zIndex='99999';
   iframe.style.background='#fff';
   document.body.appendChild(iframe);
   iframe.contentDocument.open();
@@ -7231,6 +7280,53 @@ function cotSetSubTab(tab){
 
 // ── BUSCAR COTIZACIONES ──────────────────────────────────────
 let cotbCotizacionActual = null; // datos completos de la cotización abierta en el detalle
+
+// Carga una cotización "En espera cliente" en el sistema de Nueva Cotización,
+// permitiendo agregar/quitar/editar productos y datos del cliente, para luego guardar los cambios.
+function cotbModificarCotizacion(){
+  if(!cotbCotizacionActual) return;
+  const cot=cotbCotizacionActual;
+  let items=[];
+  try{ items=JSON.parse(cot.items_json||'[]'); }catch(e){ items=cot.items||[]; }
+
+  cotModoEdicion={
+    codigo: cot.codigo,
+    fecha: cot.fecha,
+    usuario: cot.usuario_creo||'',
+    desea_factura: cot.desea_factura||'NO',
+    moneda: cot.moneda||'Divisa',
+    agente_retencion: cot.agente_retencion||'N-A'
+  };
+  cotItems = JSON.parse(JSON.stringify(items));
+
+  document.getElementById('cot-cliente').value = cot.cliente||'';
+  document.getElementById('cot-cedula').value = cot.cedula||'';
+  document.getElementById('cot-correo').value = cot.correo||'';
+  document.getElementById('cot-celular-cli').value = cot.celular||'';
+
+  cotSetSubTab('nueva');
+  cotRenderItems();
+
+  // Banner indicando que se está editando una cotización existente
+  let banner=document.getElementById('cot-edicion-banner');
+  if(!banner){
+    banner=document.createElement('div');
+    banner.id='cot-edicion-banner';
+    banner.style.cssText='background:#3a3000;color:#ffcc00;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;align-items:center;';
+    document.getElementById('cot-subtab-nueva').prepend(banner);
+  }
+  banner.innerHTML=`<span>✏️ Modificando cotización ${cot.codigo}</span><button onclick="cotCancelarEdicion()" style="background:transparent;border:1px solid #ffcc00;color:#ffcc00;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">Cancelar</button>`;
+  banner.style.display='flex';
+}
+
+// Cancela el modo edición y vuelve a la lista de Buscar Cotización sin guardar cambios
+function cotCancelarEdicion(){
+  cotModoEdicion=null;
+  cotReset();
+  const banner=document.getElementById('cot-edicion-banner');
+  if(banner) banner.style.display='none';
+  cotSetSubTab('buscar');
+}
 
 async function cotBuscarCotizaciones(){
   const q=document.getElementById('cotb-query')?.value.trim()||'';
@@ -7511,13 +7607,14 @@ async function cotbEnviarCorreo(){
   // Usamos un iframe oculto (no un div) porque htmlDoc es un documento HTML completo
   // (con su propio <head><style>) — un div con innerHTML descarta esas etiquetas y el PDF sale en blanco.
   const iframe=document.createElement('iframe');
+  // Posicionado fuera del viewport (no visible al usuario) pero con dimensiones reales
+  // para que el navegador lo renderice por completo y html2canvas pueda capturarlo bien.
   iframe.style.position='fixed';
-  iframe.style.left='0';
+  iframe.style.left='-9999px';
   iframe.style.top='0';
   iframe.style.width='800px';
   iframe.style.height='2000px';
   iframe.style.border='none';
-  iframe.style.zIndex='99999';
   iframe.style.background='#fff';
   document.body.appendChild(iframe);
   iframe.contentDocument.open();
@@ -7767,13 +7864,14 @@ async function cotbReenviarCorreoActualizado(){
   // Usamos un iframe oculto (no un div) porque htmlDoc es un documento HTML completo
   // (con su propio <head><style>) — un div con innerHTML descarta esas etiquetas y el PDF sale en blanco.
   const iframe=document.createElement('iframe');
+  // Posicionado fuera del viewport (no visible al usuario) pero con dimensiones reales
+  // para que el navegador lo renderice por completo y html2canvas pueda capturarlo bien.
   iframe.style.position='fixed';
-  iframe.style.left='0';
+  iframe.style.left='-9999px';
   iframe.style.top='0';
   iframe.style.width='800px';
   iframe.style.height='2000px';
   iframe.style.border='none';
-  iframe.style.zIndex='99999';
   iframe.style.background='#fff';
   document.body.appendChild(iframe);
   iframe.contentDocument.open();
@@ -7838,6 +7936,8 @@ function cotReset(){
   cotmApp=''; cotmPack=''; cotmCapucha='Sin Capucha';
   cotmSerie=''; cotmPrenda=''; cotmCapuchaCol='Sin Capucha';
   cotUltimaCotizacionAprobada=null;
+  cotModoEdicion=null;
+  const banner=document.getElementById('cot-edicion-banner'); if(banner) banner.style.display='none';
   const il=document.getElementById('cot-items-list'); if(il) il.innerHTML='';
   const mw=document.getElementById('cot-modal-wrap'); if(mw) mw.style.display='none';
   const re=document.getElementById('cot-resumen'); if(re) re.style.display='none';
