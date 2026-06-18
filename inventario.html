@@ -1657,7 +1657,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div id="cotb-actualizar-wrap" style="display:none;margin-bottom:14px;background:var(--surface2);border-radius:10px;padding:14px;">
           <div id="cotb-actualizar-content" style="font-size:12px;color:var(--text);margin-bottom:10px;"></div>
           <div style="display:flex;gap:10px;">
-            <button onclick="document.getElementById('cotb-actualizar-wrap').style.display='none';cotGenerarPDFDesdeBusqueda();setTimeout(()=>location.reload(),300);" style="flex:1;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">📄 Abrir PDF manual</button>
+            <button onclick="document.getElementById('cotb-actualizar-wrap').style.display='none';cotGenerarPDFDesdeBusqueda();" style="flex:1;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">📄 Abrir PDF manual</button>
             <button onclick="cotbReenviarCorreoActualizado()" id="cotb-reenviar-correo-btn" style="flex:1;padding:11px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">✉️ Reenviar por correo</button>
           </div>
         </div>
@@ -6997,7 +6997,6 @@ async function cotEnviarCorreoNuevaCot(){
   // Usamos un iframe oculto (no un div) porque htmlDoc es un documento HTML completo
   // (con su propio <head><style>) — un div con innerHTML descarta esas etiquetas y el PDF sale en blanco.
   const iframe=document.createElement('iframe');
-  iframe.setAttribute('sandbox','allow-same-origin');
   iframe.style.position='fixed';
   iframe.style.left='0';
   iframe.style.top='0';
@@ -7202,6 +7201,10 @@ function cotGenerarPDF(montosFactura, codigoCot){
   };
   const html = cotConstruirHTMLDocumento(cotItems, datosCliente, montosFactura, codigoCot);
   const w=window.open('','_blank');
+  if(!w){
+    alert('El navegador bloqueó la ventana del PDF. Permite ventanas emergentes para este sitio e intenta de nuevo.');
+    return;
+  }
   w.document.write(html.replace('</body></html>', '<script>window.onload=()=>{window.print();}<\/script>\n</body></html>'));
   w.document.close();
 }
@@ -7502,7 +7505,6 @@ async function cotbEnviarCorreo(){
   // Usamos un iframe oculto (no un div) porque htmlDoc es un documento HTML completo
   // (con su propio <head><style>) — un div con innerHTML descarta esas etiquetas y el PDF sale en blanco.
   const iframe=document.createElement('iframe');
-  iframe.setAttribute('sandbox','allow-same-origin');
   iframe.style.position='fixed';
   iframe.style.left='0';
   iframe.style.top='0';
@@ -7728,8 +7730,14 @@ function cotGenerarPDFDesdeBusqueda(){
   };
   const html=cotConstruirHTMLDocumento(cot.items||[], datosCliente, montosFactura, cot.codigo);
   const w=window.open('','_blank');
+  if(!w){
+    alert('El navegador bloqueó la ventana del PDF. Permite ventanas emergentes para este sitio e intenta de nuevo.');
+    return;
+  }
   w.document.write(html.replace('</body></html>', '<script>window.onload=()=>{window.print();}<\\/script>\\n</body></html>'));
   w.document.close();
+  // Esperar a que la ventana nueva termine de cargar su propio contenido antes de refrescar esta página
+  setTimeout(()=>location.reload(), 1200);
 }
 
 // Reenvía por correo la cotización ya actualizada (desde "Actualizar precio y reenviar")
@@ -7753,7 +7761,6 @@ async function cotbReenviarCorreoActualizado(){
   // Usamos un iframe oculto (no un div) porque htmlDoc es un documento HTML completo
   // (con su propio <head><style>) — un div con innerHTML descarta esas etiquetas y el PDF sale en blanco.
   const iframe=document.createElement('iframe');
-  iframe.setAttribute('sandbox','allow-same-origin');
   iframe.style.position='fixed';
   iframe.style.left='0';
   iframe.style.top='0';
