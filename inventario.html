@@ -1564,7 +1564,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div id="cot-envio-correo-destino" style="font-size:11px;color:var(--muted);margin-bottom:10px;"></div>
         <div style="display:flex;gap:10px;">
           <button onclick="cotEnviarCorreoNuevaCot()" id="cot-envio-si-btn" style="flex:1;padding:11px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Sí, enviar correo</button>
-          <button onclick="document.getElementById('cot-envio-correo-wrap').style.display='none';" style="flex:1;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">No, gracias</button>
+          <button onclick="location.reload();" style="flex:1;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">No, gracias</button>
         </div>
         <div id="cot-envio-correo-status" style="font-size:12px;margin-top:10px;text-align:center;"></div>
       </div>
@@ -1657,7 +1657,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div id="cotb-actualizar-wrap" style="display:none;margin-bottom:14px;background:var(--surface2);border-radius:10px;padding:14px;">
           <div id="cotb-actualizar-content" style="font-size:12px;color:var(--text);margin-bottom:10px;"></div>
           <div style="display:flex;gap:10px;">
-            <button onclick="document.getElementById('cotb-actualizar-wrap').style.display='none';cotGenerarPDFDesdeBusqueda();" style="flex:1;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">📄 Abrir PDF manual</button>
+            <button onclick="document.getElementById('cotb-actualizar-wrap').style.display='none';cotGenerarPDFDesdeBusqueda();setTimeout(()=>location.reload(),300);" style="flex:1;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">📄 Abrir PDF manual</button>
             <button onclick="cotbReenviarCorreoActualizado()" id="cotb-reenviar-correo-btn" style="flex:1;padding:11px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">✉️ Reenviar por correo</button>
           </div>
         </div>
@@ -1677,7 +1677,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <div id="cotb-envio-correo-destino" style="font-size:11px;color:var(--muted);margin-bottom:10px;"></div>
           <div style="display:flex;gap:10px;">
             <button onclick="cotbEnviarCorreo()" id="cotb-envio-si-btn" style="flex:1;padding:11px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Sí, enviar correo</button>
-            <button onclick="document.getElementById('cotb-envio-correo-wrap').style.display='none';" style="flex:1;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">No, gracias</button>
+            <button onclick="location.reload();" style="flex:1;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">No, gracias</button>
           </div>
           <div id="cotb-envio-correo-status" style="font-size:12px;margin-top:10px;text-align:center;"></div>
         </div>
@@ -6970,11 +6970,15 @@ async function cotConfirmarFacturacion(){
       document.getElementById('cot-envio-si-btn').style.display='block';
       document.getElementById('cot-envio-si-btn').textContent='Sí, enviar correo';
       document.getElementById('cot-envio-correo-wrap').style.display='block';
+      document.getElementById('cot-acciones').style.display='flex';
+      cotGenerarPDF(m, codigo);
+      return; // El refresco ocurre al terminar el flujo de correo (enviar o "No, gracias")
     }
   }
   document.getElementById('cot-acciones').style.display='flex';
 
   cotGenerarPDF(m, codigo);
+  if(codigo) location.reload();
 }
 
 let cotUltimaCotizacionAprobada = null;
@@ -6993,14 +6997,15 @@ async function cotEnviarCorreoNuevaCot(){
   // Usamos un iframe oculto (no un div) porque htmlDoc es un documento HTML completo
   // (con su propio <head><style>) — un div con innerHTML descarta esas etiquetas y el PDF sale en blanco.
   const iframe=document.createElement('iframe');
+  iframe.setAttribute('sandbox','allow-same-origin');
   iframe.style.position='fixed';
   iframe.style.left='0';
   iframe.style.top='0';
   iframe.style.width='800px';
-  iframe.style.height='1131px';
-  iframe.style.opacity='0';
-  iframe.style.pointerEvents='none';
-  iframe.style.zIndex='-1';
+  iframe.style.height='2000px';
+  iframe.style.border='none';
+  iframe.style.zIndex='99999';
+  iframe.style.background='#fff';
   document.body.appendChild(iframe);
   iframe.contentDocument.open();
   iframe.contentDocument.write(htmlDoc);
@@ -7008,11 +7013,20 @@ async function cotEnviarCorreoNuevaCot(){
 
   try{
     btn.textContent='Convirtiendo a PDF...';
+    // Esperar a que el iframe cargue Y a que el navegador termine de pintar el layout real
     await new Promise(resolve=>{
-      if(iframe.contentDocument.readyState==='complete') setTimeout(resolve,300);
-      else iframe.onload=()=>setTimeout(resolve,300);
+      if(iframe.contentDocument.readyState==='complete') resolve();
+      else iframe.onload=()=>resolve();
     });
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    // Esperar a que todas las imágenes (incluyendo el logo en base64) terminen de decodificar
+    const imgs=Array.from(iframe.contentDocument.images||[]);
+    await Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(res=>{img.onload=res;img.onerror=res;})));
+    await new Promise(resolve=>setTimeout(resolve,500));
     const targetEl=iframe.contentDocument.body;
+    if(!targetEl || !targetEl.innerHTML.trim()){
+      throw new Error('El contenido del PDF no se generó correctamente (documento vacío).');
+    }
     const pdfBase64=await new Promise((resolve,reject)=>{
       html2pdf().set({
         margin:0,
@@ -7039,9 +7053,8 @@ async function cotEnviarCorreoNuevaCot(){
     });
 
     if(resp.ok){
-      statusEl.style.color='var(--accent)';
-      statusEl.textContent='✓ Correo enviado a '+cot.correo;
-      btn.style.display='none';
+      location.reload();
+      return;
     } else {
       statusEl.style.color='var(--danger)';
       statusEl.textContent='❌ Error al enviar el correo. Intenta de nuevo.';
@@ -7452,6 +7465,8 @@ async function cotbConfirmarAprobacion(usuarioForzado){
         document.getElementById('cotb-envio-si-btn').disabled=false;
         document.getElementById('cotb-envio-si-btn').textContent='Sí, enviar correo';
         document.getElementById('cotb-envio-correo-wrap').style.display='block';
+      } else {
+        location.reload();
       }
     } else {
       alert('Error al aprobar: '+(resp.error||'desconocido'));
@@ -7487,14 +7502,15 @@ async function cotbEnviarCorreo(){
   // Usamos un iframe oculto (no un div) porque htmlDoc es un documento HTML completo
   // (con su propio <head><style>) — un div con innerHTML descarta esas etiquetas y el PDF sale en blanco.
   const iframe=document.createElement('iframe');
+  iframe.setAttribute('sandbox','allow-same-origin');
   iframe.style.position='fixed';
   iframe.style.left='0';
   iframe.style.top='0';
   iframe.style.width='800px';
-  iframe.style.height='1131px';
-  iframe.style.opacity='0';
-  iframe.style.pointerEvents='none';
-  iframe.style.zIndex='-1';
+  iframe.style.height='2000px';
+  iframe.style.border='none';
+  iframe.style.zIndex='99999';
+  iframe.style.background='#fff';
   document.body.appendChild(iframe);
   iframe.contentDocument.open();
   iframe.contentDocument.write(htmlDoc);
@@ -7502,11 +7518,20 @@ async function cotbEnviarCorreo(){
 
   try{
     btn.textContent='Convirtiendo a PDF...';
+    // Esperar a que el iframe cargue Y a que el navegador termine de pintar el layout real
     await new Promise(resolve=>{
-      if(iframe.contentDocument.readyState==='complete') setTimeout(resolve,300);
-      else iframe.onload=()=>setTimeout(resolve,300);
+      if(iframe.contentDocument.readyState==='complete') resolve();
+      else iframe.onload=()=>resolve();
     });
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    // Esperar a que todas las imágenes (incluyendo el logo en base64) terminen de decodificar
+    const imgs=Array.from(iframe.contentDocument.images||[]);
+    await Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(res=>{img.onload=res;img.onerror=res;})));
+    await new Promise(resolve=>setTimeout(resolve,500));
     const targetEl=iframe.contentDocument.body;
+    if(!targetEl || !targetEl.innerHTML.trim()){
+      throw new Error('El contenido del PDF no se generó correctamente (documento vacío).');
+    }
     const pdfBase64=await new Promise((resolve,reject)=>{
       html2pdf().set({
         margin:0,
@@ -7533,9 +7558,8 @@ async function cotbEnviarCorreo(){
     });
 
     if(resp.ok){
-      statusEl.style.color='var(--accent)';
-      statusEl.textContent='✓ Correo enviado a '+cot.correo;
-      document.getElementById('cotb-envio-si-btn').style.display='none';
+      location.reload();
+      return;
     } else {
       statusEl.style.color='var(--danger)';
       statusEl.textContent='❌ Error al enviar el correo. Intenta de nuevo.';
@@ -7570,12 +7594,8 @@ async function cotbConfirmarRechazo(){
       usuario:usuario
     });
     if(resp.ok){
-      document.getElementById('cotb-rechazo-wrap').style.display='none';
-      document.getElementById('cotb-acciones-pendiente').style.display='none';
-      const badge=document.getElementById('cotb-status-badge');
-      badge.style.display='block';
-      badge.style.background='#3a0a0a'; badge.style.color='var(--danger)';
-      badge.textContent='✕ Cotización rechazada por '+usuario;
+      location.reload();
+      return;
     } else {
       alert('Error al rechazar: '+(resp.error||'desconocido'));
     }
@@ -7733,14 +7753,15 @@ async function cotbReenviarCorreoActualizado(){
   // Usamos un iframe oculto (no un div) porque htmlDoc es un documento HTML completo
   // (con su propio <head><style>) — un div con innerHTML descarta esas etiquetas y el PDF sale en blanco.
   const iframe=document.createElement('iframe');
+  iframe.setAttribute('sandbox','allow-same-origin');
   iframe.style.position='fixed';
   iframe.style.left='0';
   iframe.style.top='0';
   iframe.style.width='800px';
-  iframe.style.height='1131px';
-  iframe.style.opacity='0';
-  iframe.style.pointerEvents='none';
-  iframe.style.zIndex='-1';
+  iframe.style.height='2000px';
+  iframe.style.border='none';
+  iframe.style.zIndex='99999';
+  iframe.style.background='#fff';
   document.body.appendChild(iframe);
   iframe.contentDocument.open();
   iframe.contentDocument.write(htmlDoc);
@@ -7748,11 +7769,20 @@ async function cotbReenviarCorreoActualizado(){
 
   try{
     btn.textContent='Convirtiendo a PDF...';
+    // Esperar a que el iframe cargue Y a que el navegador termine de pintar el layout real
     await new Promise(resolve=>{
-      if(iframe.contentDocument.readyState==='complete') setTimeout(resolve,300);
-      else iframe.onload=()=>setTimeout(resolve,300);
+      if(iframe.contentDocument.readyState==='complete') resolve();
+      else iframe.onload=()=>resolve();
     });
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    // Esperar a que todas las imágenes (incluyendo el logo en base64) terminen de decodificar
+    const imgs=Array.from(iframe.contentDocument.images||[]);
+    await Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(res=>{img.onload=res;img.onerror=res;})));
+    await new Promise(resolve=>setTimeout(resolve,500));
     const targetEl=iframe.contentDocument.body;
+    if(!targetEl || !targetEl.innerHTML.trim()){
+      throw new Error('El contenido del PDF no se generó correctamente (documento vacío).');
+    }
     const pdfBase64=await new Promise((resolve,reject)=>{
       html2pdf().set({
         margin:0, filename:'Cotizacion_'+cot.codigo+'.pdf',
@@ -7774,7 +7804,8 @@ async function cotbReenviarCorreoActualizado(){
     });
 
     if(resp.ok){
-      btn.textContent='✓ Correo reenviado';
+      location.reload();
+      return;
     } else {
       btn.disabled=false; btn.textContent='✉️ Reenviar por correo';
       alert('Error al enviar el correo. Intenta de nuevo.');
