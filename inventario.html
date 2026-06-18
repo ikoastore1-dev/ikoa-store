@@ -1589,11 +1589,12 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;">
         <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Buscar por código, nombre, RIF o cédula</div>
         <div style="display:flex;gap:8px;">
-          <input class="field-input" type="text" id="cotb-query" placeholder="Ej: COT-0001, Maria Gonzalez, V-12345678..." style="flex:1;box-sizing:border-box;" onkeydown="if(event.key==='Enter') cotBuscarCotizaciones()">
+          <input class="field-input" type="text" id="cotb-query" placeholder="Dejar vacío para ver todas las cotizaciones en espera..." style="flex:1;box-sizing:border-box;" onkeydown="if(event.key==='Enter') cotBuscarCotizaciones()">
           <button onclick="cotBuscarCotizaciones()" style="padding:0 18px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Buscar</button>
         </div>
       </div>
 
+      <div id="cotb-resultados-titulo" style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Cotizaciones en espera del cliente</div>
       <div id="cotb-resultados" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
 
       <!-- DETALLE DE COTIZACIÓN SELECCIONADA -->
@@ -7223,6 +7224,8 @@ function cotSetSubTab(tab){
     nueva.style.display='none'; buscar.style.display='block';
     btnB.style.borderColor='var(--accent)'; btnB.style.color='var(--accent)'; btnB.style.background='#0a2a1e';
     btnN.style.borderColor='var(--border)'; btnN.style.color='var(--muted)'; btnN.style.background='var(--surface2)';
+    // Cargar automáticamente la lista de todas las cotizaciones en espera del cliente
+    cotBuscarCotizaciones();
   }
 }
 
@@ -7232,12 +7235,15 @@ let cotbCotizacionActual = null; // datos completos de la cotización abierta en
 async function cotBuscarCotizaciones(){
   const q=document.getElementById('cotb-query')?.value.trim()||'';
   const cont=document.getElementById('cotb-resultados');
+  const titulo=document.getElementById('cotb-resultados-titulo');
+  titulo.textContent=q?'Resultados de la búsqueda':'Cotizaciones en espera del cliente';
   cont.innerHTML='<div style="font-size:12px;color:var(--muted);padding:10px;">Buscando...</div>';
   cotbCerrarDetalle();
   try{
     const resp=await scriptGETjson({action:'buscarCotizacion', q});
     if(!resp.ok || !resp.rows || !resp.rows.length){
-      cont.innerHTML='<div style="font-size:12px;color:var(--muted);padding:10px;text-align:center;">No se encontraron cotizaciones.</div>';
+      cont.innerHTML='<div style="font-size:12px;color:var(--muted);padding:10px;text-align:center;">'+
+        (q?'No se encontraron cotizaciones con ese filtro.':'No hay cotizaciones en espera del cliente por ahora.')+'</div>';
       return;
     }
     cont.innerHTML='';
