@@ -1330,7 +1330,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <div id="g-cod-section" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;flex-direction:column;gap:12px;">
             <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">📦 Detalles COD</div>
             <div class="field-group"><div class="field-label">Descripción del pedido</div><textarea class="field-input" name="descripcion" placeholder="DESCRIPCIÓN..." rows="3" style="text-transform:uppercase;resize:vertical;"></textarea></div>
-            <div class="field-group"><div class="field-label">¿Es urgente?</div><input class="field-input" type="text" name="urgente" placeholder="SÍ / NO / FECHA LÍMITE" style="text-transform:uppercase;"></div>
+            <div class="field-group"><div class="field-label">¿Es urgente?</div><input class="field-input" type="text" name="urgente" placeholder="EJ: URGENTE LUNES 22.06.26" style="text-transform:uppercase;"></div>
           </div>
 
           <!-- CAMPOS ENVIADO -->
@@ -3864,7 +3864,7 @@ async function cargarCola(){
         html+=`<div style="margin-top:8px;">
           <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
           <div style="display:flex;gap:6px;">
-            <input type="text" id="urgente-cola-${base}" placeholder="Ej: URGENTE - Entregar 15/06" value="${v(31)||''}"
+            <input type="text" id="urgente-cola-${base}" placeholder="EJ: URGENTE LUNES 22.06.26" value="${v(31)||''}"
               style="flex:1;background:var(--surface3);border:1.5px solid var(--warn);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;text-transform:uppercase;">
             <button onclick="guardarUrgenteGrupo('cola','${packs.map(pk=>String(pk[1]||'').trim()).join(',')}','urgente-cola-${base}')"
               style="padding:8px 14px;background:#1a1a10;border:1.5px solid var(--warn);border-radius:8px;color:var(--warn);font-size:13px;font-weight:700;cursor:pointer;">💾</button>
@@ -3888,6 +3888,12 @@ async function cargarCola(){
 let _urgentePendiente={tipo:'',codigo:'',inputId:''};
 
 function iniciarGuardarUrgente(tipo, codigo, inputId){
+  const urgenteCheck=document.getElementById(inputId)?.value.trim()||'';
+  if(urgenteCheck.includes('/')){
+    alert('⚠️ El campo de urgencia contiene una barra ( / ) que no está permitida.\n\nUsa puntos en vez de barras para las fechas.\nEjemplo: URGENTE LUNES 22.06.26');
+    document.getElementById(inputId)?.focus();
+    return;
+  }
   _urgentePendiente={tipo,codigo,inputId};
   const val=document.getElementById(inputId)?.value.trim()||'';
   document.getElementById('auth-gen-icon').textContent='⚡';
@@ -4359,7 +4365,7 @@ async function cargarSolicitudes(filtro){
         html+=`<div style="margin-top:8px;">
           <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
           <div style="display:flex;gap:6px;">
-            <input type="text" id="urgente-apro-${base}" placeholder="Ej: URGENTE - Entregar 15/06" value="${v(31)||''}"
+            <input type="text" id="urgente-apro-${base}" placeholder="EJ: URGENTE LUNES 22.06.26" value="${v(31)||''}"
               style="flex:1;background:var(--surface3);border:1.5px solid var(--warn);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;text-transform:uppercase;">
             <button onclick="guardarUrgente('apro','${base}','urgente-apro-${base}')"
               style="padding:8px 14px;background:#1a1a10;border:1.5px solid var(--warn);border-radius:8px;color:var(--warn);font-size:13px;font-weight:700;cursor:pointer;">💾</button>
@@ -4867,6 +4873,19 @@ document.getElementById('gestion-form').addEventListener('submit',async function
   const tipo=document.getElementById('g-tipo').value;
   const fecha=getFechaHora();
   let codMake='';
+
+  // Validar que el campo urgente no contenga barras
+  const urgenteVal=formData.get('urgente')||'';
+  if(urgenteVal.includes('/')){
+    btn.disabled=false;
+    btn.textContent='📤 ENVIAR GESTIÓN';
+    msg.style.display='block';
+    msg.style.background='#2a1a00';
+    msg.style.border='1px solid #aa6600';
+    msg.style.color='#ffaa00';
+    msg.innerHTML='⚠️ El campo de urgencia contiene una barra ( / ) que no está permitida. Usa puntos para las fechas. Ejemplo: URGENTE LUNES 22.06.26';
+    return;
+  }
 
   try{
     if(tipo==='COD'){
