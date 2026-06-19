@@ -4951,7 +4951,10 @@ document.getElementById('gestion-form').addEventListener('submit',async function
           const waBody=new FormData();
           waBody.append('celular', celularEnvio);
           waBody.append('nombre', nombreEnvio);
-          waBody.append('mensaje', `Hola ${nombreEnvio} Somos IKOA BeKate. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias`);
+          const waMensaje=tipo==='COD'
+            ? `Hola ${nombreEnvio} Somos IKOA BeKate. Tu pedido ha sido registrado y ya se encuentra en el área de producción. En cuanto esté listo te notificaremos. Gracias`
+            : `Hola ${nombreEnvio} Somos IKOA BeKate. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias`;
+          waBody.append('mensaje', waMensaje);
           await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:waBody,mode:'no-cors'});
         }
       }catch(waErr){ console.warn('WhatsApp webhook error:',waErr); }
