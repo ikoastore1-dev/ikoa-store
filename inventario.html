@@ -7081,6 +7081,7 @@ async function cotEnviarCorreoNuevaCot(){
   iframe.style.border='none';
   iframe.style.background='#fff';
   iframe.style.colorScheme='light';
+  iframe.setAttribute('style', iframe.getAttribute('style') + ';color-scheme:light;background:#fff;filter:none;');
   document.body.appendChild(iframe);
   iframe.contentDocument.open();
   iframe.contentDocument.write(htmlDoc);
@@ -7196,10 +7197,10 @@ function cotConstruirHTMLDocumento(items, datosCliente, montosFactura, codigoCot
     filasHTML+=`<tr><td class="num">${i}.</td><td class="prod"></td><td class="prec"></td><td class="und"></td><td class="pv"></td></tr>`;
   }
   return `<!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><title>Cotizacion IKOA - ${fecha}</title>
+<html lang="es" style="background:#fff !important;color:#1a1a1a !important;color-scheme:light !important;"><head><meta charset="UTF-8"><meta name="color-scheme" content="light"><title>Cotizacion IKOA - ${fecha}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-html{background:#fff !important;color:#1a1a1a !important;}
+html{background:#fff !important;color:#1a1a1a !important;color-scheme:light !important;}
 body{font-family:'Arial',sans-serif;background:#fff !important;color:#1a1a1a !important;padding:28px 36px;font-size:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 .cab{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
 .logo-col{display:flex;flex-direction:column;align-items:flex-start;gap:0;min-width:170px;}
@@ -7653,6 +7654,7 @@ async function cotbEnviarCorreo(){
   iframe.style.border='none';
   iframe.style.background='#fff';
   iframe.style.colorScheme='light';
+  iframe.setAttribute('style', iframe.getAttribute('style') + ';color-scheme:light;background:#fff;filter:none;');
   document.body.appendChild(iframe);
   iframe.contentDocument.open();
   iframe.contentDocument.write(htmlDoc);
@@ -7897,6 +7899,7 @@ async function cotbReenviarCorreoActualizado(){
   iframe.style.border='none';
   iframe.style.background='#fff';
   iframe.style.colorScheme='light';
+  iframe.setAttribute('style', iframe.getAttribute('style') + ';color-scheme:light;background:#fff;filter:none;');
   document.body.appendChild(iframe);
   iframe.contentDocument.open();
   iframe.contentDocument.write(htmlDoc);
