@@ -7062,60 +7062,11 @@ async function cotEnviarCorreoNuevaCot(){
   if(!cotUltimaCotizacionAprobada) return;
   const btn=document.getElementById('cot-envio-si-btn');
   const statusEl=document.getElementById('cot-envio-correo-status');
-  btn.disabled=true; btn.textContent='Generando PDF...';
+  btn.disabled=true; btn.textContent='Enviando correo...';
   statusEl.textContent='';
-
   const cot=cotUltimaCotizacionAprobada;
   const htmlDoc=cotConstruirHTMLDocumento(cot.items, cot.datosCliente, cot.montosFactura, cot.codigo, true);
-
-  // Usamos un iframe oculto (no un div) porque htmlDoc es un documento HTML completo
-  // (con su propio <head><style>) — un div con innerHTML descarta esas etiquetas y el PDF sale en blanco.
-  const iframe=document.createElement('iframe');
-  // Posicionado fuera del viewport (no visible al usuario) pero con dimensiones reales
-  // para que el navegador lo renderice por completo y html2canvas pueda capturarlo bien.
-  iframe.style.position='fixed';
-  iframe.style.left='-9999px';
-  iframe.style.top='0';
-  iframe.style.width='800px';
-  iframe.style.height='2000px';
-  iframe.style.border='none';
-  iframe.style.background='#fff';
-  iframe.style.colorScheme='light';
-  iframe.setAttribute('style', iframe.getAttribute('style') + ';color-scheme:light;background:#fff;filter:none;');
-  document.body.appendChild(iframe);
-  iframe.contentDocument.open();
-  iframe.contentDocument.write(htmlDoc);
-  iframe.contentDocument.close();
-
   try{
-    btn.textContent='Convirtiendo a PDF...';
-    // Esperar a que el iframe cargue Y a que el navegador termine de pintar el layout real
-    await new Promise(resolve=>{
-      if(iframe.contentDocument.readyState==='complete') resolve();
-      else iframe.onload=()=>resolve();
-    });
-    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-    // Esperar a que todas las imágenes (incluyendo el logo en base64) terminen de decodificar
-    const imgs=Array.from(iframe.contentDocument.images||[]);
-    await Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(res=>{img.onload=res;img.onerror=res;})));
-    await new Promise(resolve=>setTimeout(resolve,500));
-    const targetEl=iframe.contentDocument.body;
-    if(!targetEl || !targetEl.innerHTML.trim()){
-      throw new Error('El contenido del PDF no se generó correctamente (documento vacío).');
-    }
-    const pdfBase64=await new Promise((resolve,reject)=>{
-      html2pdf().set({
-        margin:0,
-        filename:'Cotizacion_'+cot.codigo+'.pdf',
-        image:{type:'jpeg',quality:0.95},
-        html2canvas:{scale:2,useCORS:true,windowWidth:800},
-        jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-      }).from(targetEl).toPdf().output('datauristring')
-        .then(datauri=>resolve(datauri.split(',')[1]))
-        .catch(reject);
-    });
-
-    btn.textContent='Enviando correo...';
     const resp=await fetch('https://hook.us2.make.com/3iglxv9u7qijrhh3swrsv9vbfv063tox', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -7123,28 +7074,23 @@ async function cotEnviarCorreoNuevaCot(){
         correo: cot.correo,
         nombre_cliente: cot.cliente||'',
         codigo_cotizacion: cot.codigo,
-        pdf_base64: pdfBase64,
+        html_content: htmlDoc,
         pdf_filename: 'Cotizacion_'+cot.codigo+'.pdf'
       })
     });
-
-    if(resp.ok){
-      location.reload();
-      return;
-    } else {
+    if(resp.ok){ location.reload(); return; }
+    else {
       statusEl.style.color='var(--danger)';
-      statusEl.textContent='❌ Error al enviar el correo. Intenta de nuevo.';
-      btn.disabled=false; btn.textContent='Sí, enviar correo';
+      statusEl.textContent='\u274c Error al enviar el correo. Intenta de nuevo.';
+      btn.disabled=false; btn.textContent='S\u00ed, enviar correo';
     }
   } catch(e){
     statusEl.style.color='var(--danger)';
-    statusEl.textContent='❌ Error generando o enviando el PDF.';
-    btn.disabled=false; btn.textContent='Sí, enviar correo';
-    console.error('Error enviando correo de cotizacion:', e);
-  } finally {
-    document.body.removeChild(iframe);
+    statusEl.textContent='\u274c Error al enviar el correo.';
+    btn.disabled=false; btn.textContent='S\u00ed, enviar correo';
   }
 }
+
 
 // ── GENERAR PDF ──────────────────────────────────────────────
 const COT_LOGO_EMAIL = `<img src="https://ikoastore1-dev.github.io/ikoa-store/logo.png" style="width:160px;display:block;" alt="IKOA"/>`;
@@ -7623,72 +7569,22 @@ async function cotbConfirmarAprobacion(usuarioForzado){
 // al webhook de Make junto con los datos del cliente, para que Make arme y mande el correo.
 async function cotbEnviarCorreo(){
   if(!cotbCotizacionActual) return;
+  const cot=cotbCotizacionActual;
   const btn=document.getElementById('cotb-envio-si-btn');
   const statusEl=document.getElementById('cotb-envio-correo-status');
-  btn.disabled=true; btn.textContent='Generando PDF...';
+  btn.disabled=true; btn.textContent='Enviando correo...';
   statusEl.textContent='';
-
-  const cot=cotbCotizacionActual;
-  const items=cot.items||[];
-  const datosCliente={ cliente:cot.cliente||'', cedula:cot.cedula||'', celular:cot.celular||'' };
+  const datosCliente={cliente:cot.cliente||'',cedula:cot.cedula||'',celular:cot.celular||''};
+  const enBs=parseFloat(cot.total_pagar_bs)>0;
   const montosFactura={
-    enBs: parseFloat(cot.total_pagar_bs)>0,
-    baseImponible: parseFloat(cot.total_pagar_bs)>0 ? parseFloat(cot.subtotal_bs)||0 : parseFloat(cot.subtotal_usd)||0,
-    iva: parseFloat(cot.total_pagar_bs)>0 ? parseFloat(cot.iva_bs)||0 : parseFloat(cot.iva_usd)||0,
-    retencionIva: parseFloat(cot.total_pagar_bs)>0 ? parseFloat(cot.retencion_iva_bs)||0 : parseFloat(cot.retencion_iva_usd)||0,
-    totalPagar: parseFloat(cot.total_pagar_bs)>0 ? parseFloat(cot.total_pagar_bs)||0 : parseFloat(cot.total_pagar_usd)||0
+    enBs,
+    baseImponible: enBs?parseFloat(cot.subtotal_bs)||0:parseFloat(cot.subtotal_usd)||0,
+    iva: enBs?parseFloat(cot.iva_bs)||0:parseFloat(cot.iva_usd)||0,
+    retencionIva: enBs?parseFloat(cot.retencion_iva_bs)||0:parseFloat(cot.retencion_iva_usd)||0,
+    totalPagar: enBs?parseFloat(cot.total_pagar_bs)||0:parseFloat(cot.total_pagar_usd)||0
   };
-
-  const htmlDoc=cotConstruirHTMLDocumento(items, datosCliente, montosFactura, cot.codigo, true);
-
-  // Usamos un iframe oculto (no un div) porque htmlDoc es un documento HTML completo
-  // (con su propio <head><style>) — un div con innerHTML descarta esas etiquetas y el PDF sale en blanco.
-  const iframe=document.createElement('iframe');
-  // Posicionado fuera del viewport (no visible al usuario) pero con dimensiones reales
-  // para que el navegador lo renderice por completo y html2canvas pueda capturarlo bien.
-  iframe.style.position='fixed';
-  iframe.style.left='-9999px';
-  iframe.style.top='0';
-  iframe.style.width='800px';
-  iframe.style.height='2000px';
-  iframe.style.border='none';
-  iframe.style.background='#fff';
-  iframe.style.colorScheme='light';
-  iframe.setAttribute('style', iframe.getAttribute('style') + ';color-scheme:light;background:#fff;filter:none;');
-  document.body.appendChild(iframe);
-  iframe.contentDocument.open();
-  iframe.contentDocument.write(htmlDoc);
-  iframe.contentDocument.close();
-
+  const htmlDoc=cotConstruirHTMLDocumento(cot.items||[], datosCliente, montosFactura, cot.codigo, true);
   try{
-    btn.textContent='Convirtiendo a PDF...';
-    // Esperar a que el iframe cargue Y a que el navegador termine de pintar el layout real
-    await new Promise(resolve=>{
-      if(iframe.contentDocument.readyState==='complete') resolve();
-      else iframe.onload=()=>resolve();
-    });
-    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-    // Esperar a que todas las imágenes (incluyendo el logo en base64) terminen de decodificar
-    const imgs=Array.from(iframe.contentDocument.images||[]);
-    await Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(res=>{img.onload=res;img.onerror=res;})));
-    await new Promise(resolve=>setTimeout(resolve,500));
-    const targetEl=iframe.contentDocument.body;
-    if(!targetEl || !targetEl.innerHTML.trim()){
-      throw new Error('El contenido del PDF no se generó correctamente (documento vacío).');
-    }
-    const pdfBase64=await new Promise((resolve,reject)=>{
-      html2pdf().set({
-        margin:0,
-        filename:'Cotizacion_'+cot.codigo+'.pdf',
-        image:{type:'jpeg',quality:0.95},
-        html2canvas:{scale:2,useCORS:true,windowWidth:800},
-        jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-      }).from(targetEl).toPdf().output('datauristring')
-        .then(datauri=>resolve(datauri.split(',')[1]))
-        .catch(reject);
-    });
-
-    btn.textContent='Enviando correo...';
     const resp=await fetch('https://hook.us2.make.com/3iglxv9u7qijrhh3swrsv9vbfv063tox', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -7696,154 +7592,24 @@ async function cotbEnviarCorreo(){
         correo: cot.correo,
         nombre_cliente: cot.cliente||'',
         codigo_cotizacion: cot.codigo,
-        pdf_base64: pdfBase64,
+        html_content: htmlDoc,
         pdf_filename: 'Cotizacion_'+cot.codigo+'.pdf'
       })
     });
-
-    if(resp.ok){
-      location.reload();
-      return;
-    } else {
+    if(resp.ok){ location.reload(); return; }
+    else {
       statusEl.style.color='var(--danger)';
-      statusEl.textContent='❌ Error al enviar el correo. Intenta de nuevo.';
-      btn.disabled=false; btn.textContent='Sí, enviar correo';
+      statusEl.textContent='\u274c Error al enviar el correo. Intenta de nuevo.';
+      btn.disabled=false; btn.textContent='S\u00ed, enviar correo';
     }
   } catch(e){
     statusEl.style.color='var(--danger)';
-    statusEl.textContent='❌ Error generando o enviando el PDF.';
-    btn.disabled=false; btn.textContent='Sí, enviar correo';
-    console.error('Error enviando correo de cotizacion:', e);
-  } finally {
-    document.body.removeChild(iframe);
+    statusEl.textContent='\u274c Error al enviar el correo.';
+    btn.disabled=false; btn.textContent='S\u00ed, enviar correo';
   }
 }
 
-async function cotbConfirmarRechazo(){
-  if(!cotbCotizacionActual) return;
-  const unlock=document.getElementById('cotb-unlock-rechazo').value.trim().toUpperCase();
-  const errEl=document.getElementById('cotb-error-rechazo');
-  if(!USUARIOS[unlock]){
-    errEl.textContent='❌ Código incorrecto — acceso denegado';
-    document.getElementById('cotb-unlock-rechazo').value='';
-    return;
-  }
-  const usuario=USUARIOS[unlock];
-  const codigo=cotbCotizacionActual.codigo;
-  const motivo=document.getElementById('cotb-motivo-rechazo')?.value.trim()||'';
-  try{
-    const resp=await scriptGETjson({
-      action:'rechazarCotizacion', codigo, motivo,
-      fecha_rechazo:new Date().toLocaleDateString('es-VE'),
-      usuario:usuario
-    });
-    if(resp.ok){
-      location.reload();
-      return;
-    } else {
-      alert('Error al rechazar: '+(resp.error||'desconocido'));
-    }
-  } catch(e){
-    alert('Error al rechazar la cotización.');
-  }
-}
 
-// ── ACTUALIZAR PRECIO (mientras está "En espera cliente") ──────
-// Recalcula los items contra los precios ACTUALES de CODIGOS, actualiza el registro
-// en COTIZACIONES (sin cambiar de estado), y ofrece reenviar por correo o abrir PDF manual.
-async function cotbActualizarPrecio(){
-  if(!cotbCotizacionActual) return;
-  const items=cotbCotizacionActual.items||[];
-  const wrap=document.getElementById('cotb-acciones-pendiente');
-  const prevHtml=wrap.innerHTML;
-  wrap.innerHTML='<div style="font-size:12px;color:var(--muted);padding:10px;width:100%;text-align:center;">Actualizando precios...</div>';
-
-  // Una sola llamada trae TODOS los codigos con columna D (Bs) y J (USD) de CODIGOS
-  let packPrecios={};
-  try{
-    const r=await scriptGETjson({action:'leerPreciosColeccion'});
-    if(r.ok) packPrecios=r.pack_precios||{};
-  } catch(e){ wrap.innerHTML=prevHtml; return; }
-
-  const cambios=[];
-  const itemsActualizados=items.map(it=>{
-    const cod=it.codigo||'';
-    if(!cod) return it;
-    // Buscar precio actual en CODIGOS por codigo directo (columnas D=Bs y J=USD)
-    const entrada=packPrecios[cod]||packPrecios[cod.toUpperCase()]||packPrecios[cod.toLowerCase()];
-    if(!entrada) return it; // codigo compuesto (comfy:N) no se puede buscar directamente
-    const precioActualUSD=parseFloat(entrada.usd)||0;
-    const precioActualBS=parseFloat(entrada.bs)||0;
-    const cambioUSD=Math.abs(precioActualUSD-(it.precioUnitUSD||0))>0.001;
-    const cambioBS=Math.abs(precioActualBS-(it.precioUnitBS||0))>0.1;
-    if(cambioUSD||cambioBS){
-      cambios.push({nombre:it.nombreApp, antesUSD:it.precioUnitUSD||0, ahoraUSD:precioActualUSD, antesBS:it.precioUnitBS||0, ahoraBS:precioActualBS});
-    }
-    const nUnidades=it.tallas.length;
-    const nuevoSubtotalUSD=precioActualUSD*nUnidades+(it.recargaTotal||0)+(it.capuchaTotal||0)+(it.logoEspalda||0)+(it.logoPecho||0);
-    const nuevoSubtotalBS=precioActualBS*nUnidades+(it.recargaTotalBs||0)+(it.capuchaTotalBs||0)+(it.logoEspaldaBs||0)+(it.logoPechoBs||0);
-    return {...it, precioUnitUSD:precioActualUSD, precioUnitBS:precioActualBS, subtotalUSD:nuevoSubtotalUSD, subtotalBs:nuevoSubtotalBS};
-  });
-
-  wrap.innerHTML=prevHtml;
-
-  if(!cambios.length){
-    document.getElementById('cotb-actualizar-content').textContent='Los precios no han cambiado desde la ultima actualizacion.';
-    document.getElementById('cotb-actualizar-wrap').style.display='block';
-    return;
-  }
-
-  const totalUSD=itemsActualizados.reduce((s,i)=>s+i.subtotalUSD,0);
-  const totalBs=itemsActualizados.reduce((s,i)=>s+i.subtotalBs,0);
-  const enBs=parseFloat(cotbCotizacionActual.total_pagar_bs)>0;
-  const baseImponible=enBs?totalBs:totalUSD;
-  const deseaFactura=cotbCotizacionActual.desea_factura==='SI';
-  const esRetencion=cotbCotizacionActual.agente_retencion==='SI';
-  let iva=0, retencionIva=0, totalPagar=baseImponible;
-  if(deseaFactura){
-    iva=baseImponible*0.16;
-    if(esRetencion){ retencionIva=iva*0.75; totalPagar=baseImponible+(iva*0.25); }
-    else { totalPagar=baseImponible+iva; }
-  }
-  const tasaBCV=parseFloat(TASAS.BCV)||itemsActualizados.find(i=>i.tasaBCV>0)?.tasaBCV||0;
-
-  try{
-    const resp=await scriptGETjson({
-      action:'actualizarPrecioCotizacion',
-      codigo: cotbCotizacionActual.codigo,
-      items_json: JSON.stringify(itemsActualizados),
-      subtotal_usd: totalUSD, subtotal_bs: totalBs,
-      iva_usd: enBs?0:iva, iva_bs: enBs?iva:0,
-      retencion_iva_usd: enBs?0:retencionIva, retencion_iva_bs: enBs?retencionIva:0,
-      total_pagar_usd: enBs?0:totalPagar, total_pagar_bs: enBs?totalPagar:0,
-      tasa_bcv: tasaBCV
-    });
-    if(resp.ok){
-      cotbCotizacionActual.items=itemsActualizados;
-      cotbCotizacionActual.subtotal_usd=totalUSD; cotbCotizacionActual.subtotal_bs=totalBs;
-      cotbCotizacionActual.iva_usd=enBs?0:iva; cotbCotizacionActual.iva_bs=enBs?iva:0;
-      cotbCotizacionActual.retencion_iva_usd=enBs?0:retencionIva; cotbCotizacionActual.retencion_iva_bs=enBs?retencionIva:0;
-      cotbCotizacionActual.total_pagar_usd=enBs?0:totalPagar; cotbCotizacionActual.total_pagar_bs=enBs?totalPagar:0;
-      const cont=document.getElementById('cotb-actualizar-content');
-      cont.innerHTML='<div style="font-weight:700;color:var(--warn);margin-bottom:6px;">Precios actualizados:</div>'+
-        cambios.map(c=>{
-          const lineas=[];
-          if(Math.abs(c.ahoraUSD-c.antesUSD)>0.001) lineas.push('$'+c.antesUSD.toFixed(2)+' → <b style="color:var(--accent);">$'+c.ahoraUSD.toFixed(2)+'</b>');
-          if(Math.abs(c.ahoraBS-c.antesBS)>0.1) lineas.push('Bs'+c.antesBS.toLocaleString('es-VE',{maximumFractionDigits:0})+' → <b style="color:var(--accent);">Bs'+c.ahoraBS.toLocaleString('es-VE',{maximumFractionDigits:0})+'</b>');
-          return '<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>'+c.nombre+'</span><span>'+lineas.join(' / ')+'</span></div>';
-        }).join('');
-      document.getElementById('cotb-reenviar-correo-btn').style.display=cotbCotizacionActual.correo?'block':'none';
-      document.getElementById('cotb-actualizar-wrap').style.display='block';
-      cotbAbrirDetalle(cotbCotizacionActual.codigo);
-    } else {
-      alert('Error al actualizar precio: '+(resp.error||'desconocido'));
-    }
-  } catch(e){
-    alert('Error al actualizar el precio de la cotizacion.');
-  }
-}
-
-// Abre el PDF de la cotización en espera (para reenvío manual), usando los datos actuales en memoria
 function cotGenerarPDFDesdeBusqueda(){
   if(!cotbCotizacionActual) return;
   const cot=cotbCotizacionActual;
@@ -7872,10 +7638,9 @@ function cotGenerarPDFDesdeBusqueda(){
 async function cotbReenviarCorreoActualizado(){
   if(!cotbCotizacionActual || !cotbCotizacionActual.correo) return;
   const btn=document.getElementById('cotb-reenviar-correo-btn');
-  btn.disabled=true; btn.textContent='Generando PDF...';
-
+  btn.disabled=true; btn.textContent='Enviando...';
   const cot=cotbCotizacionActual;
-  const datosCliente={cliente:cot.cliente||'', cedula:cot.cedula||'', celular:cot.celular||''};
+  const datosCliente={cliente:cot.cliente||'',cedula:cot.cedula||'',celular:cot.celular||''};
   const enBs=parseFloat(cot.total_pagar_bs)>0;
   const montosFactura={
     enBs,
@@ -7885,99 +7650,27 @@ async function cotbReenviarCorreoActualizado(){
     totalPagar: enBs?parseFloat(cot.total_pagar_bs)||0:parseFloat(cot.total_pagar_usd)||0
   };
   const htmlDoc=cotConstruirHTMLDocumento(cot.items||[], datosCliente, montosFactura, cot.codigo, true);
-
-  // Usamos un iframe oculto (no un div) porque htmlDoc es un documento HTML completo
-  // (con su propio <head><style>) — un div con innerHTML descarta esas etiquetas y el PDF sale en blanco.
-  const iframe=document.createElement('iframe');
-  // Posicionado fuera del viewport (no visible al usuario) pero con dimensiones reales
-  // para que el navegador lo renderice por completo y html2canvas pueda capturarlo bien.
-  iframe.style.position='fixed';
-  iframe.style.left='-9999px';
-  iframe.style.top='0';
-  iframe.style.width='800px';
-  iframe.style.height='2000px';
-  iframe.style.border='none';
-  iframe.style.background='#fff';
-  iframe.style.colorScheme='light';
-  iframe.setAttribute('style', iframe.getAttribute('style') + ';color-scheme:light;background:#fff;filter:none;');
-  document.body.appendChild(iframe);
-  iframe.contentDocument.open();
-  iframe.contentDocument.write(htmlDoc);
-  iframe.contentDocument.close();
-
   try{
-    btn.textContent='Convirtiendo a PDF...';
-    // Esperar a que el iframe cargue Y a que el navegador termine de pintar el layout real
-    await new Promise(resolve=>{
-      if(iframe.contentDocument.readyState==='complete') resolve();
-      else iframe.onload=()=>resolve();
-    });
-    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-    // Esperar a que todas las imágenes (incluyendo el logo en base64) terminen de decodificar
-    const imgs=Array.from(iframe.contentDocument.images||[]);
-    await Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(res=>{img.onload=res;img.onerror=res;})));
-    await new Promise(resolve=>setTimeout(resolve,500));
-    const targetEl=iframe.contentDocument.body;
-    if(!targetEl || !targetEl.innerHTML.trim()){
-      throw new Error('El contenido del PDF no se generó correctamente (documento vacío).');
-    }
-    const pdfBase64=await new Promise((resolve,reject)=>{
-      html2pdf().set({
-        margin:0, filename:'Cotizacion_'+cot.codigo+'.pdf',
-        image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2,useCORS:true,windowWidth:800},
-        jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-      }).from(targetEl).toPdf().output('datauristring')
-        .then(datauri=>resolve(datauri.split(',')[1]))
-        .catch(reject);
-    });
-
-    btn.textContent='Enviando correo...';
     const resp=await fetch('https://hook.us2.make.com/3iglxv9u7qijrhh3swrsv9vbfv063tox', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        correo: cot.correo, nombre_cliente: cot.cliente||'',
-        codigo_cotizacion: cot.codigo, pdf_base64: pdfBase64,
+        correo: cot.correo,
+        nombre_cliente: cot.cliente||'',
+        codigo_cotizacion: cot.codigo,
+        html_content: htmlDoc,
         pdf_filename: 'Cotizacion_'+cot.codigo+'.pdf'
       })
     });
-
-    if(resp.ok){
-      location.reload();
-      return;
-    } else {
-      btn.disabled=false; btn.textContent='✉️ Reenviar por correo';
+    if(resp.ok){ location.reload(); return; }
+    else {
+      btn.disabled=false; btn.textContent='\u2709\ufe0f Reenviar por correo';
       alert('Error al enviar el correo. Intenta de nuevo.');
     }
   } catch(e){
-    btn.disabled=false; btn.textContent='✉️ Reenviar por correo';
-    alert('Error generando o enviando el PDF.');
-    console.error(e);
-  } finally {
-    document.body.removeChild(iframe);
+    btn.disabled=false; btn.textContent='\u2709\ufe0f Reenviar por correo';
+    alert('Error al enviar el correo.');
   }
 }
 
-// ── RESET ────────────────────────────────────────────────────
-function cotReset(){
-  cotItems=[]; cotItemEditIdx=-1;
-  cotmApp=''; cotmPack=''; cotmCapucha='Sin Capucha';
-  cotmSerie=''; cotmPrenda=''; cotmCapuchaCol='Sin Capucha';
-  cotUltimaCotizacionAprobada=null;
-  cotModoEdicion=null;
-  const banner=document.getElementById('cot-edicion-banner'); if(banner) banner.style.display='none';
-  const il=document.getElementById('cot-items-list'); if(il) il.innerHTML='';
-  const mw=document.getElementById('cot-modal-wrap'); if(mw) mw.style.display='none';
-  const re=document.getElementById('cot-resumen'); if(re) re.style.display='none';
-  const ac=document.getElementById('cot-acciones'); if(ac) ac.style.display='none';
-  const cg=document.getElementById('cot-codigo-generado'); if(cg) cg.style.display='none';
-  const ec=document.getElementById('cot-envio-correo-wrap'); if(ec) ec.style.display='none';
-  ['cot-cliente','cot-cedula','cot-correo','cot-celular-cli'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.value='';
-  });
-}
 
-// Mostrar/ocultar panel cotizaciones en setTipoGestion
-
-</script>
-</body>
-</html>
