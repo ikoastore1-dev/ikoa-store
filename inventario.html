@@ -7755,6 +7755,96 @@ async function cotbReenviarCorreoActualizado(){
   }
 }
 
+async function cotbActualizarPrecio(){
+  if(!cotbCotizacionActual) return;
+  const items=cotbCotizacionActual.items||[];
+  const wrap=document.getElementById('cotb-acciones-pendiente');
+  const prevHtml=wrap.innerHTML;
+  wrap.innerHTML='<div style="font-size:12px;color:var(--muted);padding:10px;width:100%;text-align:center;">Actualizando precios...</div>';
+
+  let packPrecios={};
+  try{
+    const r=await scriptGETjson({action:'leerPreciosColeccion'});
+    if(r.ok) packPrecios=r.pack_precios||{};
+  } catch(e){ wrap.innerHTML=prevHtml; return; }
+
+  const cambios=[];
+  const itemsActualizados=items.map(it=>{
+    const cod=it.codigo||'';
+    if(!cod) return it;
+    const entrada=packPrecios[cod]||packPrecios[cod.toUpperCase()]||packPrecios[cod.toLowerCase()];
+    if(!entrada) return it;
+    const precioActualUSD=parseFloat(entrada.usd)||0;
+    const precioActualBS=parseFloat(entrada.bs)||0;
+    const cambioUSD=Math.abs(precioActualUSD-(it.precioUnitUSD||0))>0.001;
+    const cambioBS=Math.abs(precioActualBS-(it.precioUnitBS||0))>0.1;
+    if(cambioUSD||cambioBS){
+      cambios.push({nombre:it.nombreApp, antesUSD:it.precioUnitUSD||0, ahoraUSD:precioActualUSD, antesBS:it.precioUnitBS||0, ahoraBS:precioActualBS});
+    }
+    const nUnidades=it.tallas.length;
+    const nuevoSubtotalUSD=precioActualUSD*nUnidades+(it.recargaTotal||0)+(it.capuchaTotal||0)+(it.logoEspalda||0)+(it.logoPecho||0);
+    const nuevoSubtotalBS=precioActualBS*nUnidades+(it.recargaTotalBs||0)+(it.capuchaTotalBs||0)+(it.logoEspaldaBs||0)+(it.logoPechoBs||0);
+    return {...it, precioUnitUSD:precioActualUSD, precioUnitBS:precioActualBS, subtotalUSD:nuevoSubtotalUSD, subtotalBs:nuevoSubtotalBS};
+  });
+
+  wrap.innerHTML=prevHtml;
+
+  if(!cambios.length){
+    document.getElementById('cotb-actualizar-content').textContent='Los precios no han cambiado desde la última actualización.';
+    document.getElementById('cotb-actualizar-wrap').style.display='block';
+    return;
+  }
+
+  const totalUSD=itemsActualizados.reduce((s,i)=>s+i.subtotalUSD,0);
+  const totalBs=itemsActualizados.reduce((s,i)=>s+i.subtotalBs,0);
+  const enBs=parseFloat(cotbCotizacionActual.total_pagar_bs)>0;
+  const baseImponible=enBs?totalBs:totalUSD;
+  const deseaFactura=cotbCotizacionActual.desea_factura==='SI';
+  const esRetencion=cotbCotizacionActual.agente_retencion==='SI';
+  let iva=0, retencionIva=0, totalPagar=baseImponible;
+  if(deseaFactura){
+    iva=baseImponible*0.16;
+    if(esRetencion){ retencionIva=iva*0.75; totalPagar=baseImponible+(iva*0.25); }
+    else { totalPagar=baseImponible+iva; }
+  }
+  const tasaBCV=parseFloat(TASAS.BCV)||itemsActualizados.find(i=>i.tasaBCV>0)?.tasaBCV||0;
+
+  try{
+    const resp=await scriptGETjson({
+      action:'actualizarPrecioCotizacion',
+      codigo: cotbCotizacionActual.codigo,
+      items_json: JSON.stringify(itemsActualizados),
+      subtotal_usd: totalUSD, subtotal_bs: totalBs,
+      iva_usd: enBs?0:iva, iva_bs: enBs?iva:0,
+      retencion_iva_usd: enBs?0:retencionIva, retencion_iva_bs: enBs?retencionIva:0,
+      total_pagar_usd: enBs?0:totalPagar, total_pagar_bs: enBs?totalPagar:0,
+      tasa_bcv: tasaBCV
+    });
+    if(resp.ok){
+      cotbCotizacionActual.items=itemsActualizados;
+      cotbCotizacionActual.subtotal_usd=totalUSD; cotbCotizacionActual.subtotal_bs=totalBs;
+      cotbCotizacionActual.iva_usd=enBs?0:iva; cotbCotizacionActual.iva_bs=enBs?iva:0;
+      cotbCotizacionActual.retencion_iva_usd=enBs?0:retencionIva; cotbCotizacionActual.retencion_iva_bs=enBs?retencionIva:0;
+      cotbCotizacionActual.total_pagar_usd=enBs?0:totalPagar; cotbCotizacionActual.total_pagar_bs=enBs?totalPagar:0;
+      const cont=document.getElementById('cotb-actualizar-content');
+      cont.innerHTML='<div style="font-weight:700;color:var(--warn);margin-bottom:6px;">Precios actualizados:</div>'+
+        cambios.map(c=>{
+          const lineas=[];
+          if(Math.abs(c.ahoraUSD-c.antesUSD)>0.001) lineas.push('$'+c.antesUSD.toFixed(2)+' → <b style="color:var(--accent);">$'+c.ahoraUSD.toFixed(2)+'</b>');
+          if(Math.abs(c.ahoraBS-c.antesBS)>0.1) lineas.push('Bs'+c.antesBS.toLocaleString('es-VE',{maximumFractionDigits:0})+' → <b style="color:var(--accent);">Bs'+c.ahoraBS.toLocaleString('es-VE',{maximumFractionDigits:0})+'</b>');
+          return '<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>'+c.nombre+'</span><span>'+lineas.join(' / ')+'</span></div>';
+        }).join('');
+      document.getElementById('cotb-reenviar-correo-btn').style.display=cotbCotizacionActual.correo?'block':'none';
+      document.getElementById('cotb-actualizar-wrap').style.display='block';
+      cotbAbrirDetalle(cotbCotizacionActual.codigo);
+    } else {
+      alert('Error al actualizar precio: '+(resp.error||'desconocido'));
+    }
+  } catch(e){
+    alert('Error al actualizar el precio de la cotización.');
+  }
+}
+
 function cotReset(){
   cotItems=[]; cotItemEditIdx=-1;
   cotModoEdicion=null;
