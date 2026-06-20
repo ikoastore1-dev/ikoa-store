@@ -7140,15 +7140,51 @@ async function cotGenerarPDFDesdeVentanaLimpia(htmlDoc, codigo){
 // Genera el PDF de la cotización llamando al Apps Script (que usa Google Docs internamente)
 // Esto evita el problema del tema oscuro del navegador al capturar con html2canvas
 async function cotGenerarPDFViaAppsScript(htmlDoc, codigo){
-  const form = new FormData();
-  form.append('action', 'generarPDFCotizacion');
-  form.append('html_content', htmlDoc);
-  form.append('titulo', 'Cotizacion_' + codigo);
-  const resp = await fetch(SCRIPT_URL, {method:'POST', body:form})
-    .then(r=>r.json())
-    .catch(()=>({ok:false,error:'Error de red'}));
-  if(!resp.ok) throw new Error(resp.error || 'Error generando PDF');
-  return resp.pdf_base64;
+  // Abrir el documento en una ventana nueva (sale perfecto, fondo blanco)
+  const w = window.open('', '_blank');
+  w.document.open();
+  w.document.write(htmlDoc);
+  w.document.close();
+
+  // Esperar a que cargue completamente
+  await new Promise(resolve => {
+    if(w.document.readyState === 'complete') resolve();
+    else w.onload = () => resolve();
+  });
+  await new Promise(resolve => setTimeout(resolve, 1200));
+
+  // Capturar con html2canvas apuntando al body de la ventana nueva
+  const canvas = await html2canvas(w.document.body, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    windowWidth: 860,
+    foreignObjectRendering: false,
+    logging: false
+  });
+
+  // NO cerrar la ventana — el usuario la verá y la cierra manualmente
+
+  // Convertir canvas a PDF con jsPDF
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({unit:'mm', format:'a4', orientation:'portrait'});
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const pxPerMm = canvas.width / pageW;
+  const pageHpx = pageH * pxPerMm;
+  let yPx = 0;
+  while(yPx < canvas.height){
+    const sliceH = Math.min(pageHpx, canvas.height - yPx);
+    const sliceCanvas = document.createElement('canvas');
+    sliceCanvas.width = canvas.width;
+    sliceCanvas.height = sliceH;
+    sliceCanvas.getContext('2d').drawImage(canvas, 0, yPx, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+    const imgData = sliceCanvas.toDataURL('image/jpeg', 0.92);
+    if(yPx > 0) pdf.addPage();
+    pdf.addImage(imgData, 'JPEG', 0, 0, pageW, sliceH/pxPerMm);
+    yPx += pageHpx;
+  }
+  return pdf.output('datauristring').split(',')[1];
 }
 
 async function cotEnviarCorreoNuevaCot(){
