@@ -7176,6 +7176,7 @@ async function cotEnviarCorreoNuevaCot(){
         correo:cot.correo,
         nombre_cliente:cot.cliente||'',
         codigo_cotizacion:cot.codigo,
+        html_content:htmlDoc,
         pdf_base64:pdfBase64,
         pdf_filename:'Cotizacion_'+cot.codigo+'.pdf'
       })
@@ -7691,7 +7692,7 @@ async function cotbEnviarCorreo(){
     const resp=await fetch('https://hook.us2.make.com/3iglxv9u7qijrhh3swrsv9vbfv063tox',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({correo:cot.correo,nombre_cliente:cot.cliente||'',codigo_cotizacion:cot.codigo,pdf_base64:pdfBase64,pdf_filename:'Cotizacion_'+cot.codigo+'.pdf'})
+      body:JSON.stringify({correo:cot.correo,nombre_cliente:cot.cliente||'',codigo_cotizacion:cot.codigo,html_content:htmlDoc,pdf_base64:pdfBase64,pdf_filename:'Cotizacion_'+cot.codigo+'.pdf'})
     });
     if(resp.ok){
       statusEl.style.color='var(--accent)';
@@ -7751,7 +7752,7 @@ async function cotbReenviarCorreoActualizado(){
     const resp=await fetch('https://hook.us2.make.com/3iglxv9u7qijrhh3swrsv9vbfv063tox',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({correo:cot.correo,nombre_cliente:cot.cliente||'',codigo_cotizacion:cot.codigo,pdf_base64:pdfBase64,pdf_filename:'Cotizacion_'+cot.codigo+'.pdf'})
+      body:JSON.stringify({correo:cot.correo,nombre_cliente:cot.cliente||'',codigo_cotizacion:cot.codigo,html_content:htmlDoc,pdf_base64:pdfBase64,pdf_filename:'Cotizacion_'+cot.codigo+'.pdf'})
     });
     if(resp.ok){
       btn.textContent='\u2705 Enviado';
