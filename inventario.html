@@ -7058,15 +7058,94 @@ async function cotConfirmarFacturacion(){
 let cotUltimaCotizacionAprobada = null;
 
 // Envía por correo la cotización recién aprobada en el flujo "Nueva Cotización"
+async function cotGenerarPDFDesdeVentanaLimpia(htmlDoc, codigo){
+  // Crear un contenedor completamente aislado dentro de la misma página
+  // para que html2canvas pueda accederlo sin restricciones cross-origin
+  const container = document.createElement('div');
+  container.style.cssText = [
+    'position:fixed', 'left:-9999px', 'top:0',
+    'width:860px', 'min-height:100px',
+    'background:#ffffff', 'color:#1a1a1a',
+    'color-scheme:light', 'z-index:-1',
+    'font-family:Arial,sans-serif', 'overflow:visible'
+  ].join(';');
+
+  // Crear un iframe dentro del contenedor para aislar los estilos
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'width:860px;border:none;background:#fff;';
+  iframe.setAttribute('scrolling', 'no');
+  container.appendChild(iframe);
+  document.body.appendChild(container);
+
+  // Escribir el HTML en el iframe
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(htmlDoc);
+  iframe.contentDocument.close();
+
+  // Esperar a que cargue e imágenes terminen
+  await new Promise(resolve => {
+    if(iframe.contentDocument.readyState === 'complete') resolve();
+    else iframe.onload = () => resolve();
+  });
+  await new Promise(resolve => setTimeout(resolve, 800));
+
+  // Ajustar altura del iframe al contenido real
+  const bodyH = iframe.contentDocument.body.scrollHeight;
+  iframe.style.height = bodyH + 'px';
+  container.style.height = bodyH + 'px';
+  await new Promise(resolve => setTimeout(resolve, 200));
+
+  // Forzar fondo blanco en todo el documento del iframe
+  iframe.contentDocument.documentElement.style.cssText = 'background:#fff !important;color:#1a1a1a !important;color-scheme:light !important;';
+  iframe.contentDocument.body.style.cssText += ';background:#fff !important;color:#1a1a1a !important;';
+
+  // Capturar con html2canvas apuntando al body del iframe
+  const canvas = await html2canvas(iframe.contentDocument.body, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    windowWidth: 860,
+    foreignObjectRendering: false,
+    logging: false
+  });
+
+  document.body.removeChild(container);
+
+  // Convertir canvas a PDF con jsPDF (multi-página si es necesario)
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({unit:'mm', format:'a4', orientation:'portrait'});
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const pxPerMm = canvas.width / pageW;
+  const pageHpx = pageH * pxPerMm;
+  let yPx = 0;
+  while(yPx < canvas.height){
+    const sliceH = Math.min(pageHpx, canvas.height - yPx);
+    const sliceCanvas = document.createElement('canvas');
+    sliceCanvas.width = canvas.width;
+    sliceCanvas.height = sliceH;
+    sliceCanvas.getContext('2d').drawImage(canvas, 0, yPx, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+    const imgData = sliceCanvas.toDataURL('image/jpeg', 0.92);
+    if(yPx > 0) pdf.addPage();
+    pdf.addImage(imgData, 'JPEG', 0, 0, pageW, sliceH/pxPerMm);
+    yPx += pageHpx;
+  }
+  return pdf.output('datauristring').split(',')[1];
+}
+
+
 async function cotEnviarCorreoNuevaCot(){
   if(!cotUltimaCotizacionAprobada) return;
   const btn=document.getElementById('cot-envio-si-btn');
   const statusEl=document.getElementById('cot-envio-correo-status');
-  btn.disabled=true; btn.textContent='Enviando correo...';
+  btn.disabled=true; btn.textContent='Generando PDF...';
   statusEl.textContent='';
   const cot=cotUltimaCotizacionAprobada;
   const htmlDoc=cotConstruirHTMLDocumento(cot.items, cot.datosCliente, cot.montosFactura, cot.codigo, true);
   try{
+    btn.textContent='Convirtiendo a PDF...';
+    const pdfBase64 = await cotGenerarPDFDesdeVentanaLimpia(htmlDoc, cot.codigo);
+    btn.textContent='Enviando correo...';
     const resp=await fetch('https://hook.us2.make.com/3iglxv9u7qijrhh3swrsv9vbfv063tox', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -7074,7 +7153,7 @@ async function cotEnviarCorreoNuevaCot(){
         correo: cot.correo,
         nombre_cliente: cot.cliente||'',
         codigo_cotizacion: cot.codigo,
-        html_content: htmlDoc,
+        pdf_base64: pdfBase64,
         pdf_filename: 'Cotizacion_'+cot.codigo+'.pdf'
       })
     });
@@ -7086,8 +7165,9 @@ async function cotEnviarCorreoNuevaCot(){
     }
   } catch(e){
     statusEl.style.color='var(--danger)';
-    statusEl.textContent='\u274c Error al enviar el correo.';
+    statusEl.textContent='\u274c Error: '+e.message;
     btn.disabled=false; btn.textContent='S\u00ed, enviar correo';
+    console.error(e);
   }
 }
 
