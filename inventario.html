@@ -7151,7 +7151,7 @@ async function cotGenerarPDFViaAppsScript(htmlDoc, codigo){
     })
   }).then(r=>r.json()).catch(()=>({ok:false,error:'Error de red'}));
   if(!resp.ok) throw new Error(resp.error || 'Error generando PDF');
-  return resp.pdf_base64;
+  return {pdf_url: resp.pdf_url, pdf_id: resp.pdf_id, filename: resp.filename};
 }
 
 async function cotEnviarCorreoNuevaCot(){
@@ -7167,7 +7167,7 @@ async function cotEnviarCorreoNuevaCot(){
   if(w){ w.document.write(htmlDoc); w.document.close(); }
   try{
     btn.textContent='Convirtiendo a PDF...';
-    const pdfBase64=await cotGenerarPDFViaAppsScript(htmlDoc, cot.codigo);
+    const pdfInfo=await cotGenerarPDFViaAppsScript(htmlDoc, cot.codigo);
     btn.textContent='Enviando correo...';
     const resp=await fetch('https://hook.us2.make.com/3iglxv9u7qijrhh3swrsv9vbfv063tox',{
       method:'POST',
@@ -7177,7 +7177,8 @@ async function cotEnviarCorreoNuevaCot(){
         nombre_cliente:cot.cliente||'',
         codigo_cotizacion:cot.codigo,
         html_content:htmlDoc,
-        pdf_base64:pdfBase64,
+        pdf_url:pdfInfo.pdf_url,
+        pdf_id:pdfInfo.pdf_id,
         pdf_filename:'Cotizacion_'+cot.codigo+'.pdf'
       })
     });
@@ -7244,8 +7245,10 @@ function cotConstruirHTMLDocumento(items, datosCliente, montosFactura, codigoCot
       <td class="pv">${totalItemBs>0?fmt(totalItemBs):('$'+totalItemUSD.toFixed(2))}</td>
     </tr>`;
   });
-  for(let i=items.length+1;i<=Math.max(7,items.length+2);i++){
-    filasHTML+=`<tr><td class="num">${i}.</td><td class="prod"></td><td class="prec"></td><td class="und"></td><td class="pv"></td></tr>`;
+  if(!paraCorreo){
+    for(let i=items.length+1;i<=Math.max(7,items.length+2);i++){
+      filasHTML+=`<tr><td class="num">${i}.</td><td class="prod"></td><td class="prec"></td><td class="und"></td><td class="pv"></td></tr>`;
+    }
   }
   return `<!DOCTYPE html>
 <html lang="es" style="background:#fff !important;color:#1a1a1a !important;color-scheme:light !important;"><head><meta charset="UTF-8"><meta name="color-scheme" content="light"><title>Cotizacion IKOA - ${fecha}</title>
@@ -7294,8 +7297,7 @@ body{font-family:'Arial',sans-serif;background:#fff !important;color:#1a1a1a !im
     ${celularCli?`<div class="cli-row"><span class="cli-lbl">CELULAR:</span><span>${celularCli}</span></div>`:''}
   </div>
 </div>
-<div class="banda"><div></div><div>PRODUCTO</div><div>PRECIO UNIT.</div><div>UNDS</div><div>PRECIO VENTA</div></div>
-<table class="ptable">${filasHTML}</table>
+${paraCorreo ? `<table class="ptable"><thead><tr style="background:#000;color:#fff;font-size:10.5px;font-weight:700;text-transform:uppercase;"><th style="width:24px;padding:7px 6px;text-align:center;"></th><th style="padding:7px 6px;text-align:center;">PRODUCTO</th><th style="width:100px;padding:7px 6px;text-align:center;">PRECIO UNIT.</th><th style="width:70px;padding:7px 6px;text-align:center;">UNDS</th><th style="width:110px;padding:7px 6px;text-align:center;">PRECIO VENTA</th></tr></thead><tbody>${filasHTML}</tbody></table>` : `<div class="banda"><div></div><div>PRODUCTO</div><div>PRECIO UNIT.</div><div>UNDS</div><div>PRECIO VENTA</div></div><table class="ptable">${filasHTML}</table>`}
 <div class="bot-wrap">
   <div class="terminos">
     <div class="tit">TERMINOS Y CONDICIONES</div>
@@ -7309,7 +7311,7 @@ body{font-family:'Arial',sans-serif;background:#fff !important;color:#1a1a1a !im
     ${tasaBCV>0?`<div style="font-size:9px;color:#888;margin-top:4px;text-align:right;">Tasa BCV: ${tasaBCV}</div>`:''}
   </div>
 </div>
-<div class="banda-bottom"></div>
+${paraCorreo ? `<hr style="border:none;border-top:3px solid #000;margin:14px 0 10px 0;">` : `<div class="banda-bottom"></div>`}
 <div class="pie">
   <div class="pie-left">
     <div class="pit">Pago Movil:</div>
@@ -7747,12 +7749,12 @@ async function cotbReenviarCorreoActualizado(){
   if(w){ w.document.write(htmlDoc); w.document.close(); }
   try{
     btn.textContent='Convirtiendo a PDF...';
-    const pdfBase64=await cotGenerarPDFViaAppsScript(htmlDoc, cot.codigo);
+    const pdfInfo=await cotGenerarPDFViaAppsScript(htmlDoc, cot.codigo);
     btn.textContent='Enviando...';
     const resp=await fetch('https://hook.us2.make.com/3iglxv9u7qijrhh3swrsv9vbfv063tox',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({correo:cot.correo,nombre_cliente:cot.cliente||'',codigo_cotizacion:cot.codigo,html_content:htmlDoc,pdf_base64:pdfBase64,pdf_filename:'Cotizacion_'+cot.codigo+'.pdf'})
+      body:JSON.stringify({correo:cot.correo,nombre_cliente:cot.cliente||'',codigo_cotizacion:cot.codigo,html_content:htmlDoc,pdf_url:pdfInfo.pdf_url,pdf_id:pdfInfo.pdf_id,pdf_filename:'Cotizacion_'+cot.codigo+'.pdf'})
     });
     if(resp.ok){
       btn.textContent='\u2705 Enviado';
