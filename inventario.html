@@ -7140,16 +7140,13 @@ async function cotGenerarPDFDesdeVentanaLimpia(htmlDoc, codigo){
 // Genera el PDF de la cotización llamando al Apps Script (que usa Google Docs internamente)
 // Esto evita el problema del tema oscuro del navegador al capturar con html2canvas
 async function cotGenerarPDFViaAppsScript(htmlDoc, codigo){
-  // Usamos JSON (no FormData) porque html_content es muy largo
-  const resp = await fetch(SCRIPT_URL, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      action: 'generarPDFCotizacion',
-      html_content: htmlDoc,
-      titulo: 'Cotizacion_' + codigo
-    })
-  }).then(r=>r.json()).catch(()=>({ok:false,error:'Error de red'}));
+  const form = new FormData();
+  form.append('action', 'generarPDFCotizacion');
+  form.append('html_content', htmlDoc);
+  form.append('titulo', 'Cotizacion_' + codigo);
+  const resp = await fetch(SCRIPT_URL, {method:'POST', body:form})
+    .then(r=>r.json())
+    .catch(()=>({ok:false,error:'Error de red'}));
   if(!resp.ok) throw new Error(resp.error || 'Error generando PDF');
   return resp.pdf_base64;
 }
