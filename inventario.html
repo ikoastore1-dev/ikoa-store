@@ -1721,7 +1721,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDc-Be46aCJY981tUXh14t2ao0ukzSXMHtrmp48gkSDDIovTgYynLi61IKW4k5t9j6Mg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPuz3tYRgazyew4ci-sXeGWg1lg9kcB4EFgEsDBMKIjkZdBfapgIk2XArTxoGjicN1Ww/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -7140,11 +7140,16 @@ async function cotGenerarPDFDesdeVentanaLimpia(htmlDoc, codigo){
 // Genera el PDF de la cotización llamando al Apps Script (que usa Google Docs internamente)
 // Esto evita el problema del tema oscuro del navegador al capturar con html2canvas
 async function cotGenerarPDFViaAppsScript(htmlDoc, codigo){
-  const resp = await scriptPOSTjson({
-    action: 'generarPDFCotizacion',
-    html_content: htmlDoc,
-    titulo: 'Cotizacion_' + codigo
-  });
+  // Usamos JSON (no FormData) porque html_content es muy largo
+  const resp = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      action: 'generarPDFCotizacion',
+      html_content: htmlDoc,
+      titulo: 'Cotizacion_' + codigo
+    })
+  }).then(r=>r.json()).catch(()=>({ok:false,error:'Error de red'}));
   if(!resp.ok) throw new Error(resp.error || 'Error generando PDF');
   return resp.pdf_base64;
 }
