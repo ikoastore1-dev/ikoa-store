@@ -1565,7 +1565,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;">¿Desea enviar la cotización por correo electrónico al cliente?</div>
         <div id="cot-envio-correo-destino" style="font-size:11px;color:var(--muted);margin-bottom:10px;"></div>
         <div style="display:flex;gap:10px;">
-          <button onclick="cotEnviarCorreoNuevaCot()" id="cot-envio-si-btn" style="flex:1;padding:11px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Sí, enviar correo</button>
+          <button onclick="cotVentanaYCorreo()" id="cot-envio-si-btn" style="flex:1;padding:11px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Sí, enviar correo</button>
           <button onclick="location.reload();" style="flex:1;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">No, gracias</button>
         </div>
         <div id="cot-envio-correo-status" style="font-size:12px;margin-top:10px;text-align:center;"></div>
@@ -7154,6 +7154,20 @@ async function cotGenerarPDFViaAppsScript(htmlDoc, codigo){
   return {pdf_url: resp.pdf_url, pdf_id: resp.pdf_id, filename: resp.filename};
 }
 
+function cotVentanaYCorreo(){
+  // Abrir ventana sincrónicamente en el evento click (antes de cualquier async)
+  const cot=cotUltimaCotizacionAprobada;
+  if(!cot) return;
+  const htmlVista=cotConstruirHTMLDocumento(cot.items, cot.datosCliente, cot.montosFactura, cot.codigo, false);
+  const w=window.open('','_blank');
+  if(w){
+    w.document.write(htmlVista.replace('</body></html>','<scr'+'ipt>window.onload=()=>{window.print();}</'+'script>
+</body></html>'));
+    w.document.close();
+  }
+  cotEnviarCorreoNuevaCot();
+}
+
 async function cotEnviarCorreoNuevaCot(){
   if(!cotUltimaCotizacionAprobada) return;
   const btn=document.getElementById('cot-envio-si-btn');
@@ -7161,17 +7175,8 @@ async function cotEnviarCorreoNuevaCot(){
   btn.disabled=true; btn.textContent='Generando PDF...';
   statusEl.textContent='';
   const cot=cotUltimaCotizacionAprobada;
-  // HTML para impresión (igual al PDF manual)
-  const htmlVista=cotConstruirHTMLDocumento(cot.items, cot.datosCliente, cot.montosFactura, cot.codigo, false);
   // HTML para Google Docs (tablas puras, sin flexbox)
   const htmlCorreoGD=cotConstruirHTMLDocumento(cot.items, cot.datosCliente, cot.montosFactura, cot.codigo, true);
-  // Abrir ventana de impresión igual que el PDF manual
-  const w=window.open('','_blank');
-  if(w){
-    w.document.write(htmlVista.replace('</body></html>', '<script>window.onload=()=>{window.print();}<\/script>
-</body></html>'));
-    w.document.close();
-  }
   try{
     btn.textContent='Convirtiendo a PDF...';
     const pdfInfo=await cotGenerarPDFViaAppsScript(htmlCorreoGD, cot.codigo);
@@ -7852,7 +7857,7 @@ async function cotbReenviarCorreoActualizado(){
   const htmlCorreoGD2=cotConstruirHTMLDocumento(cot.items||[], datosCliente, montosFactura, cot.codigo, true);
   const w=window.open('','_blank');
   if(w){
-    w.document.write(htmlVista2.replace('</body></html>', '<script>window.onload=()=>{window.print();}<\/script>
+    w.document.write(htmlVista2.replace('</body></html>', '<scr'+'ipt>window.onload=()=>{window.print();}</'+'script>
 </body></html>'));
     w.document.close();
   }
