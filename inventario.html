@@ -7250,7 +7250,8 @@ function cotConstruirHTMLDocumento(items, datosCliente, montosFactura, codigoCot
       filasHTML+=`<tr><td class="num">${i}.</td><td class="prod"></td><td class="prec"></td><td class="und"></td><td class="pv"></td></tr>`;
     }
   }
-  return `<!DOCTYPE html>
+  // HTML para pantalla (con flexbox/grid)
+  const htmlPantalla = `<!DOCTYPE html>
 <html lang="es" style="background:#fff !important;color:#1a1a1a !important;color-scheme:light !important;"><head><meta charset="UTF-8"><meta name="color-scheme" content="light"><title>Cotizacion IKOA - ${fecha}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -7297,7 +7298,8 @@ body{font-family:'Arial',sans-serif;background:#fff !important;color:#1a1a1a !im
     ${celularCli?`<div class="cli-row"><span class="cli-lbl">CELULAR:</span><span>${celularCli}</span></div>`:''}
   </div>
 </div>
-${paraCorreo ? `<table class="ptable"><thead><tr style="background:#000;color:#fff;font-size:10.5px;font-weight:700;text-transform:uppercase;"><th style="width:24px;padding:7px 6px;text-align:center;"></th><th style="padding:7px 6px;text-align:center;">PRODUCTO</th><th style="width:100px;padding:7px 6px;text-align:center;">PRECIO UNIT.</th><th style="width:70px;padding:7px 6px;text-align:center;">UNDS</th><th style="width:110px;padding:7px 6px;text-align:center;">PRECIO VENTA</th></tr></thead><tbody>${filasHTML}</tbody></table>` : `<div class="banda"><div></div><div>PRODUCTO</div><div>PRECIO UNIT.</div><div>UNDS</div><div>PRECIO VENTA</div></div><table class="ptable">${filasHTML}</table>`}
+<div class="banda"><div></div><div>PRODUCTO</div><div>PRECIO UNIT.</div><div>UNDS</div><div>PRECIO VENTA</div></div>
+<table class="ptable">${filasHTML}</table>
 <div class="bot-wrap">
   <div class="terminos">
     <div class="tit">TERMINOS Y CONDICIONES</div>
@@ -7311,7 +7313,7 @@ ${paraCorreo ? `<table class="ptable"><thead><tr style="background:#000;color:#f
     ${tasaBCV>0?`<div style="font-size:9px;color:#888;margin-top:4px;text-align:right;">Tasa BCV: ${tasaBCV}</div>`:''}
   </div>
 </div>
-${paraCorreo ? `<hr style="border:none;border-top:3px solid #000;margin:14px 0 10px 0;">` : `<div class="banda-bottom"></div>`}
+<div class="banda-bottom"></div>
 <div class="pie">
   <div class="pie-left">
     <div class="pit">Pago Movil:</div>
@@ -7322,6 +7324,78 @@ ${paraCorreo ? `<hr style="border:none;border-top:3px solid #000;margin:14px 0 1
   <div class="pie-right">PAGO EN BS A TASA DOLAR BCV DEL DIA. CONSULTAR.</div>
 </div>
 </body></html>`;
+
+  // HTML para PDF via Google Docs (solo tablas, sin flexbox/grid)
+  const ivaRow = mf.iva>0 ? `<tr><td style="font-size:11px;font-weight:700;text-align:right;padding:3px 0;border:none;">IVA (16%)</td><td style="font-size:11px;text-align:right;padding:3px 0 3px 16px;border:none;">${mf.enBs?fmt(mf.iva):'$'+mf.iva.toFixed(2)}</td></tr>` : '';
+  const retencionRow = mf.retencionIva>0 ? `<tr><td style="font-size:10px;color:#666;text-align:right;padding:3px 0;border:none;">Retenido (75% IVA)</td><td style="font-size:10px;color:#666;text-align:right;padding:3px 0 3px 16px;border:none;">-${mf.enBs?fmt(mf.retencionIva):'$'+mf.retencionIva.toFixed(2)}</td></tr>` : '';
+  const tasaRow = tasaBCV>0 ? `<tr><td colspan="2" style="font-size:9px;color:#888;text-align:right;padding:2px 0;border:none;">Tasa BCV: ${tasaBCV}</td></tr>` : '';
+  const codigoRow = codigoCot ? `<tr><td colspan="2" style="font-size:11px;font-weight:700;text-align:right;padding:0 0 6px 0;border:none;">COTIZACIÓN N°: ${codigoCot}</td></tr>` : '';
+
+  const htmlCorreo = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Cotizacion IKOA - ${fecha}</title></head>
+<body style="font-family:Arial,sans-serif;color:#1a1a1a;font-size:12px;margin:0;padding:20px 28px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:14px;">
+  <tr>
+    <td width="170" valign="top">${logoHtml}</td>
+    <td valign="top" style="padding-left:20px;">
+      <p style="font-size:12px;font-weight:700;margin:0 0 6px 0;">FECHA:&nbsp;&nbsp;${fecha}</p>
+      <p style="font-size:14px;font-weight:700;margin:0 0 2px 0;">IKOA BRAND CORP, C.A.</p>
+      <p style="font-size:13px;font-weight:700;margin:0 0 3px 0;">RIF: J-50503171-6</p>
+      <p style="font-size:10.5px;color:#444;margin:0 0 10px 0;">C.C. HIPER JUMBO, MARACAY, ARAGUA.</p>
+      ${cliente?`<table cellpadding="0" cellspacing="0"><tr><td style="font-size:12px;font-weight:700;width:75px;padding:1px 0;">CLIENTE:</td><td style="font-size:12px;padding:1px 0;">${cliente.toUpperCase()}</td></tr></table>`:''}
+      ${cedula?`<table cellpadding="0" cellspacing="0"><tr><td style="font-size:12px;font-weight:700;width:75px;padding:1px 0;">RIF / CI</td><td style="font-size:12px;padding:1px 0;">${cedula.toUpperCase()}</td></tr></table>`:''}
+      ${celularCli?`<table cellpadding="0" cellspacing="0"><tr><td style="font-size:12px;font-weight:700;width:75px;padding:1px 0;">CELULAR:</td><td style="font-size:12px;padding:1px 0;">${celularCli}</td></tr></table>`:''}
+    </td>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:0;">
+  <thead>
+    <tr style="background-color:#000000;">
+      <th width="24" style="padding:7px 6px;color:#ffffff;font-size:10.5px;font-weight:700;text-transform:uppercase;text-align:center;border:none;"></th>
+      <th style="padding:7px 6px;color:#ffffff;font-size:10.5px;font-weight:700;text-transform:uppercase;text-align:center;border:none;">PRODUCTO</th>
+      <th width="100" style="padding:7px 6px;color:#ffffff;font-size:10.5px;font-weight:700;text-transform:uppercase;text-align:center;border:none;">PRECIO UNIT.</th>
+      <th width="70" style="padding:7px 6px;color:#ffffff;font-size:10.5px;font-weight:700;text-transform:uppercase;text-align:center;border:none;">UNDS</th>
+      <th width="110" style="padding:7px 6px;color:#ffffff;font-size:10.5px;font-weight:700;text-transform:uppercase;text-align:center;border:none;">PRECIO VENTA</th>
+    </tr>
+  </thead>
+  <tbody>${filasHTML}</tbody>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;margin-bottom:14px;">
+  <tr>
+    <td width="50%" valign="top" style="padding-right:20px;">
+      <p style="font-size:10.5px;font-weight:700;margin:0 0 3px 0;">TERMINOS Y CONDICIONES</p>
+      <p style="font-size:10px;color:#555;line-height:1.5;margin:0;">Cotización válida hasta que caduque el cambio de la tasa BCV. Precios sujetos a variación de tasa BCV. El pedido se confirma con el pago total.</p>
+    </td>
+    <td valign="bottom" style="text-align:right;">
+      <table cellpadding="0" cellspacing="0" style="margin-left:auto;">
+        ${codigoRow}
+        ${ivaRow}
+        ${retencionRow}
+        <tr><td colspan="2" style="border-top:2px solid #000;padding-top:4px;"></td></tr>
+        <tr><td style="font-size:14px;font-weight:800;text-align:right;padding:4px 0;border:none;">TOTAL A PAGAR:</td><td style="font-size:14px;font-weight:800;text-align:right;padding:4px 0 4px 16px;border:none;">${mf.enBs?fmt(mf.totalPagar):'$'+mf.totalPagar.toFixed(2)}</td></tr>
+        ${tasaRow}
+      </table>
+    </td>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
+  <tr><td colspan="2" style="background-color:#000000;height:14px;border:none;font-size:1px;">&nbsp;</td></tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr>
+    <td valign="top" style="font-size:10px;color:#1a1a1a;line-height:1.9;">
+      <p style="font-size:10.5px;font-weight:700;margin:0 0 2px 0;">Pago Movil:</p>
+      <p style="margin:0;">Rif: J505031716</p>
+      <p style="margin:0;">Cel: 04121574901</p>
+      <p style="margin:0;">Ikoa Brand Corp C.A.</p>
+      <p style="margin:0;">BANESCO - 0134 0354 66 3541023205</p>
+    </td>
+    <td valign="middle" style="text-align:right;font-size:10.5px;font-weight:700;color:#444;">PAGO EN BS A TASA DOLAR BCV DEL DIA. CONSULTAR.</td>
+  </tr>
+</table>
+</body></html>`;
+
+  return paraCorreo ? htmlCorreo : htmlPantalla;
 }
 
 // ── GENERAR PDF (flujo "Nueva Cotización" — abre ventana de impresión) ──
