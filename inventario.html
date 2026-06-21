@@ -7161,7 +7161,8 @@ async function cotEnviarCorreoNuevaCot(){
   btn.disabled=true; btn.textContent='Generando PDF...';
   statusEl.textContent='';
   const cot=cotUltimaCotizacionAprobada;
-  const htmlDoc=cotConstruirHTMLDocumento(cot.items, cot.datosCliente, cot.montosFactura, cot.codigo, true);
+  // Usar el mismo HTML del PDF manual (htmlPantalla) para el correo
+  const htmlDoc=cotConstruirHTMLDocumento(cot.items, cot.datosCliente, cot.montosFactura, cot.codigo, false);
   // Abrir pestaña vacía de antemano (para no ser bloqueada por el navegador)
   const w=window.open('','_blank');
   try{
@@ -7842,12 +7843,12 @@ async function cotbReenviarCorreoActualizado(){
   const datosCliente={cliente:cot.cliente||'',cedula:cot.cedula||'',celular:cot.celular||''};
   const enBs=parseFloat(cot.total_pagar_bs)>0;
   const montosFactura={enBs,baseImponible:enBs?parseFloat(cot.subtotal_bs)||0:parseFloat(cot.subtotal_usd)||0,iva:enBs?parseFloat(cot.iva_bs)||0:parseFloat(cot.iva_usd)||0,retencionIva:enBs?parseFloat(cot.retencion_iva_bs)||0:parseFloat(cot.retencion_iva_usd)||0,totalPagar:enBs?parseFloat(cot.total_pagar_bs)||0:parseFloat(cot.total_pagar_usd)||0};
-  const htmlDoc=cotConstruirHTMLDocumento(cot.items||[], datosCliente, montosFactura, cot.codigo, true);
+  const htmlDoc=cotConstruirHTMLDocumento(cot.items||[], datosCliente, montosFactura, cot.codigo, false);
   const w=window.open('','_blank');
-  if(w){ w.document.write(htmlDoc); w.document.close(); }
   try{
     btn.textContent='Convirtiendo a PDF...';
     const pdfInfo=await cotGenerarPDFViaAppsScript(htmlDoc, cot.codigo);
+    if(w) w.location.href = pdfInfo.pdf_url;
     btn.textContent='Enviando...';
     const resp=await fetch('https://hook.us2.make.com/3iglxv9u7qijrhh3swrsv9vbfv063tox',{
       method:'POST',
