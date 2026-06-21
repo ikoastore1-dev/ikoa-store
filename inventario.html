@@ -7360,36 +7360,36 @@ body{font-family:'Arial',sans-serif;background:#fff !important;color:#1a1a1a !im
 <html><head><meta charset="UTF-8"><title>Cotizacion IKOA - ${fecha}</title>
 <style>table{border-collapse:collapse;}td,th{border:none!important;}@page{margin:4mm;}</style>
 </head>
-<body style="font-family:Arial,sans-serif;color:#1a1a1a;font-size:8.5px;margin:0;padding:4px 0;">
+<body style="font-family:Arial,sans-serif;color:#1a1a1a;font-size:7.5px;margin:0;padding:4px 0;">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:6px;border:none;padding:0;">
   <tr>
     <td width="170" valign="top" style="border:none;">${logoHtml}</td>
     <td valign="top" style="padding-left:20px;border:none;">
-      <p style="font-size:8.5px;font-weight:700;margin:0 0 3px 0;">FECHA:&nbsp;&nbsp;${fecha}</p>
-      <p style="font-size:10px;font-weight:700;margin:0 0 1px 0;">IKOA BRAND CORP, C.A.</p>
-      <p style="font-size:9px;font-weight:700;margin:0 0 1px 0;">RIF: J-50503171-6</p>
-      <p style="font-size:8px;color:#444;margin:0 0 6px 0;">C.C. HIPER JUMBO, MARACAY, ARAGUA.</p>
-      ${cliente?`<p style="margin:0 0 1px 0;font-size:8.5px;"><b>CLIENTE:</b>&nbsp;&nbsp;${cliente.toUpperCase()}</p>`:''}
-      ${cedula?`<p style="margin:0 0 1px 0;font-size:8.5px;"><b>RIF / CI</b>&nbsp;&nbsp;${cedula.toUpperCase()}</p>`:''}
-      ${celularCli?`<p style="margin:0 0 1px 0;font-size:8.5px;"><b>CELULAR:</b>&nbsp;&nbsp;${celularCli}</p>`:''}
+      <p style="font-size:10px;font-weight:700;margin:0 0 3px 0;">FECHA:&nbsp;&nbsp;${fecha}</p>
+      <p style="font-size:12px;font-weight:700;margin:0 0 1px 0;">IKOA BRAND CORP, C.A.</p>
+      <p style="font-size:11px;font-weight:700;margin:0 0 1px 0;">RIF: J-50503171-6</p>
+      <p style="font-size:9.5px;color:#444;margin:0 0 6px 0;">C.C. HIPER JUMBO, MARACAY, ARAGUA.</p>
+      ${cliente?`<p style="margin:0 0 1px 0;font-size:10px;"><b>CLIENTE:</b>&nbsp;&nbsp;${cliente.toUpperCase()}</p>`:''}
+      ${cedula?`<p style="margin:0 0 1px 0;font-size:10px;"><b>RIF / CI</b>&nbsp;&nbsp;${cedula.toUpperCase()}</p>`:''}
+      ${celularCli?`<p style="margin:0 0 1px 0;font-size:10px;"><b>CELULAR:</b>&nbsp;&nbsp;${celularCli}</p>`:''}
     </td>
   </tr>
 </table>
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;width:100%;">
   <colgroup>
     <col style="width:20px">
-    <col style="width:524px">
+    <col style="width:554px">
     <col style="width:90px">
-    <col style="width:40px">
+    <col style="width:20px">
     <col style="width:90px">
   </colgroup>
   <thead>
     <tr bgcolor="#000000">
-      <th width="20" style="padding:2px 6px;color:#ffffff;font-size:8px;font-weight:700;text-transform:uppercase;text-align:center;border:none;"></th>
-      <th width="524" style="padding:2px 6px;color:#ffffff;font-size:8px;font-weight:700;text-transform:uppercase;text-align:center;border:none;">PRODUCTO</th>
-      <th width="90" style="padding:2px 6px;color:#ffffff;font-size:8px;font-weight:700;text-transform:uppercase;text-align:right;border:none;">PRECIO UNIT.</th>
-      <th width="40" style="padding:2px 6px;color:#ffffff;font-size:8px;font-weight:700;text-transform:uppercase;text-align:center;border:none;">UNDS</th>
-      <th width="90" style="padding:2px 6px;color:#ffffff;font-size:8px;font-weight:700;text-transform:uppercase;text-align:right;border:none;">PRECIO VENTA</th>
+      <th width="20" style="padding:2px 6px;color:#ffffff;font-size:7px;font-weight:700;text-transform:uppercase;text-align:center;border:none;"></th>
+      <th width="524" style="padding:2px 6px;color:#ffffff;font-size:7px;font-weight:700;text-transform:uppercase;text-align:center;border:none;">PRODUCTO</th>
+      <th width="90" style="padding:2px 6px;color:#ffffff;font-size:7px;font-weight:700;text-transform:uppercase;text-align:right;border:none;">PRECIO UNIT.</th>
+      <th width="40" style="padding:2px 6px;color:#ffffff;font-size:7px;font-weight:700;text-transform:uppercase;text-align:center;border:none;">UNDS</th>
+      <th width="90" style="padding:2px 6px;color:#ffffff;font-size:7px;font-weight:700;text-transform:uppercase;text-align:right;border:none;">PRECIO VENTA</th>
     </tr>
   </thead>
   <tbody>${filasHTML}</tbody>
