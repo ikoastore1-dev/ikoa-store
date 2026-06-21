@@ -7162,13 +7162,13 @@ async function cotEnviarCorreoNuevaCot(){
   statusEl.textContent='';
   const cot=cotUltimaCotizacionAprobada;
   const htmlDoc=cotConstruirHTMLDocumento(cot.items, cot.datosCliente, cot.montosFactura, cot.codigo, true);
-  const htmlVista=cotConstruirHTMLDocumento(cot.items, cot.datosCliente, cot.montosFactura, cot.codigo, false);
-  // Abrir vista previa en pestaña nueva (usa htmlPantalla con márgenes)
+  // Abrir pestaña vacía de antemano (para no ser bloqueada por el navegador)
   const w=window.open('','_blank');
-  if(w){ w.document.write(htmlVista); w.document.close(); }
   try{
     btn.textContent='Convirtiendo a PDF...';
     const pdfInfo=await cotGenerarPDFViaAppsScript(htmlDoc, cot.codigo);
+    // Redirigir la pestaña al PDF real en Google Drive
+    if(w) w.location.href = pdfInfo.pdf_url;
     btn.textContent='Enviando correo...';
     const resp=await fetch('https://hook.us2.make.com/3iglxv9u7qijrhh3swrsv9vbfv063tox',{
       method:'POST',
@@ -7367,19 +7367,19 @@ body{font-family:'Arial',sans-serif;background:#fff !important;color:#1a1a1a !im
 </table>
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;width:100%;">
   <colgroup>
-    <col width="20">
-    <col width="60%">
-    <col width="13%">
-    <col width="4%">
-    <col width="13%">
+    <col style="width:20px">
+    <col style="width:524px">
+    <col style="width:90px">
+    <col style="width:40px">
+    <col style="width:90px">
   </colgroup>
   <thead>
     <tr bgcolor="#000000">
-      <th style="padding:2px 6px;color:#ffffff;font-size:8px;font-weight:700;text-transform:uppercase;text-align:center;border:none;"></th>
-      <th style="padding:2px 6px;color:#ffffff;font-size:8px;font-weight:700;text-transform:uppercase;text-align:center;border:none;">PRODUCTO</th>
-      <th style="padding:2px 6px;color:#ffffff;font-size:8px;font-weight:700;text-transform:uppercase;text-align:right;border:none;">PRECIO UNIT.</th>
-      <th style="padding:2px 6px;color:#ffffff;font-size:8px;font-weight:700;text-transform:uppercase;text-align:center;border:none;">UNDS</th>
-      <th style="padding:2px 6px;color:#ffffff;font-size:8px;font-weight:700;text-transform:uppercase;text-align:right;border:none;">PRECIO VENTA</th>
+      <th width="20" style="padding:2px 6px;color:#ffffff;font-size:8px;font-weight:700;text-transform:uppercase;text-align:center;border:none;"></th>
+      <th width="524" style="padding:2px 6px;color:#ffffff;font-size:8px;font-weight:700;text-transform:uppercase;text-align:center;border:none;">PRODUCTO</th>
+      <th width="90" style="padding:2px 6px;color:#ffffff;font-size:8px;font-weight:700;text-transform:uppercase;text-align:right;border:none;">PRECIO UNIT.</th>
+      <th width="40" style="padding:2px 6px;color:#ffffff;font-size:8px;font-weight:700;text-transform:uppercase;text-align:center;border:none;">UNDS</th>
+      <th width="90" style="padding:2px 6px;color:#ffffff;font-size:8px;font-weight:700;text-transform:uppercase;text-align:right;border:none;">PRECIO VENTA</th>
     </tr>
   </thead>
   <tbody>${filasHTML}</tbody>
