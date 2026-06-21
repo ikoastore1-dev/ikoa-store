@@ -7162,9 +7162,10 @@ async function cotEnviarCorreoNuevaCot(){
   statusEl.textContent='';
   const cot=cotUltimaCotizacionAprobada;
   const htmlDoc=cotConstruirHTMLDocumento(cot.items, cot.datosCliente, cot.montosFactura, cot.codigo, true);
-  // Abrir PDF en pestaña nueva para que el usuario lo vea
+  const htmlVista=cotConstruirHTMLDocumento(cot.items, cot.datosCliente, cot.montosFactura, cot.codigo, false);
+  // Abrir vista previa en pestaña nueva (usa htmlPantalla con márgenes)
   const w=window.open('','_blank');
-  if(w){ w.document.write(htmlDoc); w.document.close(); }
+  if(w){ w.document.write(htmlVista); w.document.close(); }
   try{
     btn.textContent='Convirtiendo a PDF...';
     const pdfInfo=await cotGenerarPDFViaAppsScript(htmlDoc, cot.codigo);
@@ -7235,15 +7236,15 @@ function cotConstruirHTMLDocumento(items, datosCliente, montosFactura, codigoCot
     if(item.logoPecho>0)     recargasHTML.push(`<div class="ps" style="color:#880000;">+${precioUnitBs>0?fmt(item.logoPechoBs||0):('$'+item.logoPecho.toFixed(2))} logo pecho+ (${item.nLogoPec} uds)</div>`);
     if(paraCorreo){
       filasHTML+=`<tr>
-        <td style="width:20px;padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;">${idx+1}.</td>
-        <td style="width:340px;padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;">
-          <div style="font-size:11px;line-height:1.4;font-weight:600;">${dl1parts.join(' ')}</div>
-          <div style="font-size:9.5px;color:#444;margin-top:2px;line-height:1.4;">${dl2parts.join(' — ')}</div>
+        <td style="padding:6px 4px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;">${idx+1}.</td>
+        <td style="padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;">
+          <b style="font-size:11px;line-height:1.4;">${dl1parts.join(' ')}</b><br>
+          ${dl2parts.length?`<span style="font-size:9.5px;color:#444;line-height:1.4;">${dl2parts.join(' — ')}</span><br>`:''}
           ${recargasHTML.join('')}
         </td>
-        <td style="width:90px;padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;text-align:right;">${precioUnitBs>0?fmt(precioUnitBs):('$'+item.precioUnitUSD.toFixed(2))}</td>
-        <td style="width:50px;padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;text-align:center;">${item.tallas.length}</td>
-        <td style="width:90px;padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;text-align:right;font-weight:600;">${totalItemBs>0?fmt(totalItemBs):('$'+totalItemUSD.toFixed(2))}</td>
+        <td style="padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;text-align:right;">${precioUnitBs>0?fmt(precioUnitBs):('$'+item.precioUnitUSD.toFixed(2))}</td>
+        <td style="padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;text-align:center;">${item.tallas.length}</td>
+        <td style="padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;text-align:right;font-weight:600;">${totalItemBs>0?fmt(totalItemBs):('$'+totalItemUSD.toFixed(2))}</td>
       </tr>`;
     } else {
       filasHTML+=`<tr>
@@ -7280,13 +7281,13 @@ body{font-family:'Arial',sans-serif;background:#fff !important;color:#1a1a1a !im
 .dir{font-size:10.5px;color:#444;margin-bottom:10px;}
 .cli-row{display:grid;grid-template-columns:75px 1fr;gap:4px;font-size:12px;margin-bottom:2px;}
 .cli-lbl{font-weight:700;}
-.banda{background:#000;color:#fff;display:grid;grid-template-columns:20px 1fr 88px 50px 95px;padding:7px 6px;font-size:10.5px;font-weight:700;text-transform:uppercase;margin-top:14px;}
+.banda{background:#000;color:#fff;display:grid;grid-template-columns:20px 1fr 88px 44px 95px;padding:7px 6px;font-size:10.5px;font-weight:700;text-transform:uppercase;margin-top:14px;}
 .banda>div{text-align:center;}
 .ptable{width:100%;border-collapse:collapse;}
 .ptable td{padding:6px 6px;border-bottom:1px solid #c8c8c8;vertical-align:top;font-size:11px;}
-.num{width:20px;}.prod{color:#1a1a1a;}.pm{font-size:11px;line-height:1.4;font-weight:600;}
+.num{width:20px;white-space:nowrap;}.prod{color:#1a1a1a;}.pm{font-size:11px;line-height:1.4;font-weight:600;}
 .ps{font-size:9.5px;color:#444;margin-top:2px;line-height:1.4;}
-.prec{width:88px;text-align:right;}.und{width:50px;text-align:center;}.pv{width:95px;text-align:right;font-weight:600;}
+.prec{width:88px;text-align:right;white-space:nowrap;}.und{width:44px;text-align:center;white-space:nowrap;}.pv{width:95px;text-align:right;font-weight:600;white-space:nowrap;}
 .bot-wrap{display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px;margin-bottom:14px;}
 .terminos{font-size:10px;max-width:300px;}.terminos .tit{font-weight:700;font-size:10.5px;margin-bottom:4px;}
 .terminos p{font-weight:400;color:#555;font-size:10px;line-height:1.5;}
@@ -7366,11 +7367,11 @@ body{font-family:'Arial',sans-serif;background:#fff !important;color:#1a1a1a !im
 </table>
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;width:100%;">
   <colgroup>
-    <col width="18">
-    <col>
-    <col width="12%">
-    <col width="5%">
-    <col width="12%">
+    <col width="20">
+    <col width="60%">
+    <col width="13%">
+    <col width="4%">
+    <col width="13%">
   </colgroup>
   <thead>
     <tr bgcolor="#000000">
