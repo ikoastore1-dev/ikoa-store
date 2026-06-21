@@ -7233,17 +7233,31 @@ function cotConstruirHTMLDocumento(items, datosCliente, montosFactura, codigoCot
     if(item.capuchaTotal>0)  recargasHTML.push(`<div class="ps" style="color:#880000;">+${precioUnitBs>0?fmt(item.capuchaTotalBs||0):('$'+item.capuchaTotal.toFixed(2))} capucha</div>`);
     if(item.logoEspalda>0)   recargasHTML.push(`<div class="ps" style="color:#880000;">+${precioUnitBs>0?fmt(item.logoEspaldaBs||0):('$'+item.logoEspalda.toFixed(2))} logo espalda (${item.nLogoEsp} uds)</div>`);
     if(item.logoPecho>0)     recargasHTML.push(`<div class="ps" style="color:#880000;">+${precioUnitBs>0?fmt(item.logoPechoBs||0):('$'+item.logoPecho.toFixed(2))} logo pecho+ (${item.nLogoPec} uds)</div>`);
-    filasHTML+=`<tr>
-      <td class="num">${idx+1}.</td>
-      <td class="prod">
-        <div class="pm">${dl1parts.join(' ')}</div>
-        <div class="ps">${dl2parts.join(' — ')}</div>
-        ${recargasHTML.join('')}
-      </td>
-      <td class="prec">${precioUnitBs>0?fmt(precioUnitBs):('$'+item.precioUnitUSD.toFixed(2))}</td>
-      <td class="und">${item.tallas.length}</td>
-      <td class="pv">${totalItemBs>0?fmt(totalItemBs):('$'+totalItemUSD.toFixed(2))}</td>
-    </tr>`;
+    if(paraCorreo){
+      filasHTML+=`<tr>
+        <td style="width:24px;padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;">${idx+1}.</td>
+        <td style="padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;">
+          <div style="font-size:11px;line-height:1.4;font-weight:600;">${dl1parts.join(' ')}</div>
+          <div style="font-size:9.5px;color:#444;margin-top:2px;line-height:1.4;">${dl2parts.join(' — ')}</div>
+          ${recargasHTML.join('')}
+        </td>
+        <td style="width:100px;padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;text-align:right;">${precioUnitBs>0?fmt(precioUnitBs):('$'+item.precioUnitUSD.toFixed(2))}</td>
+        <td style="width:70px;padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;text-align:center;">${item.tallas.length}</td>
+        <td style="width:110px;padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;text-align:right;font-weight:600;">${totalItemBs>0?fmt(totalItemBs):('$'+totalItemUSD.toFixed(2))}</td>
+      </tr>`;
+    } else {
+      filasHTML+=`<tr>
+        <td class="num">${idx+1}.</td>
+        <td class="prod">
+          <div class="pm">${dl1parts.join(' ')}</div>
+          <div class="ps">${dl2parts.join(' — ')}</div>
+          ${recargasHTML.join('')}
+        </td>
+        <td class="prec">${precioUnitBs>0?fmt(precioUnitBs):('$'+item.precioUnitUSD.toFixed(2))}</td>
+        <td class="und">${item.tallas.length}</td>
+        <td class="pv">${totalItemBs>0?fmt(totalItemBs):('$'+totalItemUSD.toFixed(2))}</td>
+      </tr>`;
+    }
   });
   if(!paraCorreo){
     for(let i=items.length+1;i<=Math.max(7,items.length+2);i++){
@@ -7332,25 +7346,27 @@ body{font-family:'Arial',sans-serif;background:#fff !important;color:#1a1a1a !im
   const codigoRow = codigoCot ? `<tr><td colspan="2" style="font-size:11px;font-weight:700;text-align:right;padding:0 0 6px 0;border:none;">COTIZACIÓN N°: ${codigoCot}</td></tr>` : '';
 
   const htmlCorreo = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Cotizacion IKOA - ${fecha}</title></head>
+<html><head><meta charset="UTF-8"><title>Cotizacion IKOA - ${fecha}</title>
+<style>table{border-collapse:collapse;}td,th{border:none!important;}</style>
+</head>
 <body style="font-family:Arial,sans-serif;color:#1a1a1a;font-size:12px;margin:0;padding:20px 28px;">
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:14px;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;border:none;">
   <tr>
-    <td width="170" valign="top">${logoHtml}</td>
-    <td valign="top" style="padding-left:20px;">
+    <td width="170" valign="top" style="border:none;">${logoHtml}</td>
+    <td valign="top" style="padding-left:20px;border:none;">
       <p style="font-size:12px;font-weight:700;margin:0 0 6px 0;">FECHA:&nbsp;&nbsp;${fecha}</p>
       <p style="font-size:14px;font-weight:700;margin:0 0 2px 0;">IKOA BRAND CORP, C.A.</p>
       <p style="font-size:13px;font-weight:700;margin:0 0 3px 0;">RIF: J-50503171-6</p>
       <p style="font-size:10.5px;color:#444;margin:0 0 10px 0;">C.C. HIPER JUMBO, MARACAY, ARAGUA.</p>
-      ${cliente?`<table cellpadding="0" cellspacing="0"><tr><td style="font-size:12px;font-weight:700;width:75px;padding:1px 0;">CLIENTE:</td><td style="font-size:12px;padding:1px 0;">${cliente.toUpperCase()}</td></tr></table>`:''}
-      ${cedula?`<table cellpadding="0" cellspacing="0"><tr><td style="font-size:12px;font-weight:700;width:75px;padding:1px 0;">RIF / CI</td><td style="font-size:12px;padding:1px 0;">${cedula.toUpperCase()}</td></tr></table>`:''}
-      ${celularCli?`<table cellpadding="0" cellspacing="0"><tr><td style="font-size:12px;font-weight:700;width:75px;padding:1px 0;">CELULAR:</td><td style="font-size:12px;padding:1px 0;">${celularCli}</td></tr></table>`:''}
+      ${cliente?`<p style="margin:0 0 2px 0;font-size:12px;"><b>CLIENTE:</b>&nbsp;&nbsp;${cliente.toUpperCase()}</p>`:''}
+      ${cedula?`<p style="margin:0 0 2px 0;font-size:12px;"><b>RIF / CI</b>&nbsp;&nbsp;${cedula.toUpperCase()}</p>`:''}
+      ${celularCli?`<p style="margin:0 0 2px 0;font-size:12px;"><b>CELULAR:</b>&nbsp;&nbsp;${celularCli}</p>`:''}
     </td>
   </tr>
 </table>
-<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:0;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;">
   <thead>
-    <tr style="background-color:#000000;">
+    <tr bgcolor="#000000">
       <th width="24" style="padding:7px 6px;color:#ffffff;font-size:10.5px;font-weight:700;text-transform:uppercase;text-align:center;border:none;"></th>
       <th style="padding:7px 6px;color:#ffffff;font-size:10.5px;font-weight:700;text-transform:uppercase;text-align:center;border:none;">PRODUCTO</th>
       <th width="100" style="padding:7px 6px;color:#ffffff;font-size:10.5px;font-weight:700;text-transform:uppercase;text-align:center;border:none;">PRECIO UNIT.</th>
@@ -7360,37 +7376,37 @@ body{font-family:'Arial',sans-serif;background:#fff !important;color:#1a1a1a !im
   </thead>
   <tbody>${filasHTML}</tbody>
 </table>
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;margin-bottom:14px;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;margin-bottom:14px;border:none;">
   <tr>
-    <td width="50%" valign="top" style="padding-right:20px;">
+    <td width="50%" valign="top" style="padding-right:20px;border:none;">
       <p style="font-size:10.5px;font-weight:700;margin:0 0 3px 0;">TERMINOS Y CONDICIONES</p>
       <p style="font-size:10px;color:#555;line-height:1.5;margin:0;">Cotización válida hasta que caduque el cambio de la tasa BCV. Precios sujetos a variación de tasa BCV. El pedido se confirma con el pago total.</p>
     </td>
-    <td valign="bottom" style="text-align:right;">
-      <table cellpadding="0" cellspacing="0" style="margin-left:auto;">
+    <td valign="bottom" style="text-align:right;border:none;">
+      <table cellpadding="0" cellspacing="0" border="0" style="margin-left:auto;border:none;">
         ${codigoRow}
         ${ivaRow}
         ${retencionRow}
-        <tr><td colspan="2" style="border-top:2px solid #000;padding-top:4px;"></td></tr>
+        <tr><td colspan="2" style="border-top:2px solid #000;padding-top:4px;border-left:none;border-right:none;border-bottom:none;font-size:1px;">&nbsp;</td></tr>
         <tr><td style="font-size:14px;font-weight:800;text-align:right;padding:4px 0;border:none;">TOTAL A PAGAR:</td><td style="font-size:14px;font-weight:800;text-align:right;padding:4px 0 4px 16px;border:none;">${mf.enBs?fmt(mf.totalPagar):'$'+mf.totalPagar.toFixed(2)}</td></tr>
         ${tasaRow}
       </table>
     </td>
   </tr>
 </table>
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
-  <tr><td colspan="2" style="background-color:#000000;height:14px;border:none;font-size:1px;">&nbsp;</td></tr>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;border:none;">
+  <tr><td colspan="2" bgcolor="#000000" style="height:14px;border:none;font-size:1px;">&nbsp;</td></tr>
 </table>
-<table width="100%" cellpadding="0" cellspacing="0">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:none;">
   <tr>
-    <td valign="top" style="font-size:10px;color:#1a1a1a;line-height:1.9;">
+    <td valign="top" style="font-size:10px;color:#1a1a1a;line-height:1.9;border:none;">
       <p style="font-size:10.5px;font-weight:700;margin:0 0 2px 0;">Pago Movil:</p>
       <p style="margin:0;">Rif: J505031716</p>
       <p style="margin:0;">Cel: 04121574901</p>
       <p style="margin:0;">Ikoa Brand Corp C.A.</p>
       <p style="margin:0;">BANESCO - 0134 0354 66 3541023205</p>
     </td>
-    <td valign="middle" style="text-align:right;font-size:10.5px;font-weight:700;color:#444;">PAGO EN BS A TASA DOLAR BCV DEL DIA. CONSULTAR.</td>
+    <td valign="middle" style="text-align:right;font-size:10.5px;font-weight:700;color:#444;border:none;">PAGO EN BS A TASA DOLAR BCV DEL DIA. CONSULTAR.</td>
   </tr>
 </table>
 </body></html>`;
