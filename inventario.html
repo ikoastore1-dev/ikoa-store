@@ -6718,14 +6718,14 @@ function cotGuardarItem(){
     const recargaTotalBs=plusBS*nPlus;
     const capUSD=(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioUSD(pp,def.capuchaCod)||parseFloat(cotmPrecios.capucha_usd)||0):0;
     const capBS =(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioBS(pp,def.capuchaCod)||parseFloat(cotmPrecios.capucha_bs)||0):0;
-    const capuchaTotal=capUSD*packN;
-    const capuchaTotalBs=capBS*packN;
-    const subtotalUSD=precioUnitUSD*packN+recargaTotal+capuchaTotal;
-    const subtotalBs=precioUnitBS*packN+recargaTotalBs+capuchaTotalBs;
+    const capuchaTotal=capUSD*tallas.length;
+    const capuchaTotalBs=capBS*tallas.length;
+    const subtotalUSD=precioUnitUSD*tallas.length+recargaTotal+capuchaTotal;
+    const subtotalBs=precioUnitBS*tallas.length+recargaTotalBs+capuchaTotalBs;
     cotItems.push({
       app:cotmApp, nombreApp:def.nombre,
       codigo:def.precioUnitCod,
-      pack:`${packN} uds`, manga:'Manga Larga', capucha:cotmCapucha,
+      pack:`${tallas.length} ud${tallas.length>1?'s':''}`, manga:'Manga Larga', capucha:cotmCapucha,
       tela:'', vinil:'', tallas, nPlus,
       precioUnitUSD, precioUnitBS, recargaTotal, recargaTotalBs, capuchaTotal, capuchaTotalBs,
       logoEspalda:0, logoPecho:0, logoEspaldaBs:0, logoPechoBs:0,
@@ -6762,12 +6762,12 @@ function cotGuardarItem(){
     const logoPecTotalBs=logoPecBS*nLogoPec;
     const tela=document.getElementById('cotm-tela')?.value||'';
     const vinil=document.getElementById('cotm-vinil')?.value||'';
-    const subtotalUSD=precioUnitUSD*packN+recargaTotal+capuchaTotal+logoEspTotal+logoPecTotal;
-    const subtotalBs=precioUnitBS*packN+recargaTotalBs+capuchaTotalBs+logoEspTotalBs+logoPecTotalBs;
+    const subtotalUSD=precioUnitUSD*tallas.length+recargaTotal+capuchaTotal+logoEspTotal+logoPecTotal;
+    const subtotalBs=precioUnitBS*tallas.length+recargaTotalBs+capuchaTotalBs+logoEspTotalBs+logoPecTotalBs;
     cotItems.push({
       app:cotmApp, nombreApp:def.nombre,
       codigo:def.precioUnitCod,
-      pack:`${packN} uds`, manga:'Manga Larga', capucha:cotmCapucha,
+      pack:`${tallas.length} ud${tallas.length>1?'s':''}`, manga:'Manga Larga', capucha:cotmCapucha,
       tela, vinil, tallas, nPlus,
       precioUnitUSD, precioUnitBS, recargaTotal, recargaTotalBs, capuchaTotal, capuchaTotalBs,
       logoEspalda:logoEspTotal, logoEspaldaBs:logoEspTotalBs,
