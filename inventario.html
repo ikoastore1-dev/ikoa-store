@@ -6547,11 +6547,13 @@ function cotmCantChange(){
   const minVal=parseInt(inp.min)||1;
   const v=Math.max(minVal,parseInt(inp.value)||minVal);
   inp.value=v; cotmPack=String(v);
-  const isEmp=['empresarial','cortaviento_emp'].includes(cotmApp);
-  if(!isEmp){
-    document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
-    for(let i=0;i<v;i++) cotmAddTalla(COT_TALLAS_TODAS);
-  }
+  // Regenerar 1 sola fila con cantidad = v (el usuario puede ajustar con el contador de talla)
+  document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
+  const el=document.getElementById('cotm-tallas-total'); if(el) el.remove();
+  cotmAddTalla(COT_TALLAS_TODAS);
+  // Poner el contador de esa fila en v
+  const cantInput=document.querySelector('.cotm-talla-cant');
+  if(cantInput){ cantInput.value=v; cotmTallaChange(); }
 }
 function cotmSelCapucha(c){
   cotmCapucha=c;
@@ -6562,24 +6564,79 @@ function cotmSelCapucha(c){
 function cotmAddTalla(opts){
   const tallasOpts=opts||COT_TALLAS_TODAS;
   cotmTallaCount++;
+  const id=cotmTallaCount;
   const div=document.createElement('div');
-  div.id='cotm-tr-'+cotmTallaCount;
-  div.style.cssText='display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;margin-bottom:4px;';
+  div.id='cotm-tr-'+id;
+  div.style.cssText='display:grid;grid-template-columns:1fr 80px auto;gap:6px;align-items:center;margin-bottom:4px;';
   div.innerHTML=`
-    <select class="field-input cotm-talla-sel" style="width:100%;">
+    <select class="field-input cotm-talla-sel" style="width:100%;" onchange="cotmTallaChange()">
       <option value="">Seleccionar talla...</option>
       ${tallasOpts.map(t=>`<option value="${t}">${t}</option>`).join('')}
     </select>
-    <button onclick="this.closest('[id^=cotm-tr]').remove();" style="padding:7px 9px;border:1px solid var(--danger);border-radius:8px;background:transparent;color:var(--danger);font-size:13px;cursor:pointer;">✕</button>
+    <input type="number" class="cotm-talla-cant field-input" min="1" value="1"
+      style="width:100%;text-align:center;padding:6px;font-weight:700;color:var(--accent);"
+      oninput="cotmTallaChange(this)">
+    <button onclick="document.getElementById('cotm-tr-${id}').remove();cotmTallaChange();"
+      style="padding:7px 9px;border:1px solid var(--danger);border-radius:8px;background:transparent;color:var(--danger);font-size:13px;cursor:pointer;">✕</button>
   `;
   document.getElementById('cotm-tallas').appendChild(div);
+}
+
+function cotmTallaChange(changedInput){
+  const inpPrincipal=document.getElementById('cotm-cantidad');
+  const maxVal=parseInt(inpPrincipal?.value)||0;
+
+  // Si se está editando un input de cantidad, no dejar pasar del máximo
+  if(changedInput && maxVal>0){
+    const cants=Array.from(document.querySelectorAll('.cotm-talla-cant'));
+    // Suma de todos excepto el que se está editando
+    const otherSum=cants.reduce((s,i)=>i===changedInput?s:s+(parseInt(i.value)||0),0);
+    const remaining=maxVal-otherSum;
+    // Limitar el valor actual al restante disponible
+    let v=parseInt(changedInput.value)||0;
+    if(v<1) v=1;
+    if(v>remaining) v=remaining;
+    changedInput.value=v;
+  }
+
+  // Calcular suma total
+  const cants=Array.from(document.querySelectorAll('.cotm-talla-cant'));
+  const total=cants.reduce((s,i)=>s+(parseInt(i.value)||0),0);
+
+  // Mostrar total
+  let totEl=document.getElementById('cotm-tallas-total');
+  if(!totEl){
+    totEl=document.createElement('div');
+    totEl.id='cotm-tallas-total';
+    totEl.style.cssText='font-size:11px;font-weight:700;margin-top:4px;';
+    document.getElementById('cotm-tallas').after(totEl);
+  }
+  const color = total===maxVal ? 'var(--accent)' : 'var(--warn)';
+  totEl.style.color=color;
+  totEl.textContent=`Total tallas: ${total} / ${maxVal} und`;
+
+  // Bloquear botón +Talla si ya se alcanzó el máximo
+  const addBtn=document.getElementById('cotm-add-talla-btn');
+  if(addBtn){
+    const restante=maxVal-total;
+    addBtn.disabled=restante<=0;
+    addBtn.style.opacity=restante<=0?'0.4':'1';
+    addBtn.style.cursor=restante<=0?'not-allowed':'pointer';
+  }
 }
 
 // ── GUARDAR ITEM ─────────────────────────────────────────────
 function cotGuardarItem(){
   if(!cotmApp) return;
   const def=COT_DEF[cotmApp];
-  const tallas=Array.from(document.querySelectorAll('.cotm-talla-sel')).map(s=>s.value).filter(Boolean);
+  // Expandir tallas según contador de cada fila
+  const tallasRows=Array.from(document.querySelectorAll('#cotm-tallas [id^="cotm-tr-"]'));
+  const tallas=[];
+  for(const row of tallasRows){
+    const sel=row.querySelector('.cotm-talla-sel');
+    const cant=parseInt(row.querySelector('.cotm-talla-cant')?.value)||1;
+    if(sel&&sel.value) for(let i=0;i<cant;i++) tallas.push(sel.value);
+  }
   if(!tallas.length){alert('Agrega al menos una talla');return;}
   const pp=cotmPrecios.pack_precios||{};
 
