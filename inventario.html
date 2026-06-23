@@ -6353,7 +6353,10 @@ async function cotModalSelectApp(app){
     }
     document.getElementById('cotm-tallas-section').style.display='block';
     document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
-    for(let i=0;i<6;i++) cotmAddTalla(COT_TALLAS_TODAS);
+    const elTot2=document.getElementById('cotm-tallas-total'); if(elTot2) elTot2.remove();
+    cotmAddTalla(COT_TALLAS_TODAS);
+    const subCantInput=document.querySelector('.cotm-talla-cant');
+    if(subCantInput){ subCantInput.value=6; cotmTallaChange(null); }
     cotmPack='6';
     document.getElementById('cotm-add-talla-btn').style.display='block';
     document.getElementById('cotm-guardar-btn').style.display='block';
@@ -6396,11 +6399,14 @@ async function cotModalSelectApp(app){
     document.getElementById('cotm-cantidad').value=6;
     document.getElementById('cotm-cantidad').min=6;
     cotmPack='6';
-    // Tallas
+    // Tallas — 1 fila con cantidad 6 (usuario puede dividir con +Talla)
     document.getElementById('cotm-tallas-section').style.display='block';
     document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
-    for(let i=0;i<6;i++) cotmAddTalla(COT_TALLAS_TODAS);
-    document.getElementById('cotm-add-talla-btn').style.display='none';
+    const elTot=document.getElementById('cotm-tallas-total'); if(elTot) elTot.remove();
+    cotmAddTalla(COT_TALLAS_TODAS);
+    const empCantInput=document.querySelector('.cotm-talla-cant');
+    if(empCantInput){ empCantInput.value=6; cotmTallaChange(null); }
+    document.getElementById('cotm-add-talla-btn').style.display='block';
     document.getElementById('cotm-guardar-btn').style.display='block';
     return;
   }
@@ -6547,13 +6553,20 @@ function cotmCantChange(){
   const minVal=parseInt(inp.min)||1;
   const v=Math.max(minVal,parseInt(inp.value)||minVal);
   inp.value=v; cotmPack=String(v);
-  // Regenerar 1 sola fila con cantidad = v (el usuario puede ajustar con el contador de talla)
-  document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
-  const el=document.getElementById('cotm-tallas-total'); if(el) el.remove();
-  cotmAddTalla(COT_TALLAS_TODAS);
-  // Poner el contador de esa fila en v
-  const cantInput=document.querySelector('.cotm-talla-cant');
-  if(cantInput){ cantInput.value=v; cotmTallaChange(); }
+  // Regenerar tallas: distribuir las v unidades en filas existentes o crear 1 nueva
+  const existing=Array.from(document.querySelectorAll('.cotm-talla-cant'));
+  if(existing.length===1){
+    // Si solo hay 1 fila, actualizar su contador directamente
+    existing[0].value=v;
+    cotmTallaChange(null);
+  } else {
+    // Si hay varias filas, regenerar con 1 fila con cantidad total
+    document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
+    const el=document.getElementById('cotm-tallas-total'); if(el) el.remove();
+    cotmAddTalla(COT_TALLAS_TODAS);
+    const cantInput=document.querySelector('.cotm-talla-cant');
+    if(cantInput){ cantInput.value=v; cotmTallaChange(null); }
+  }
 }
 function cotmSelCapucha(c){
   cotmCapucha=c;
