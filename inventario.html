@@ -6725,7 +6725,7 @@ function cotGuardarItem(){
 
   // ── EMPRESARIALES ────────────────────────────────────────
   if(cotmApp==='empresarial'||cotmApp==='cortaviento_emp'){
-    const packN=parseInt(cotmPack)||tallas.length;
+    const packN=tallas.length;
     const precioUnitUSD=cotPrecioUSD(pp,def.precioUnitCod);
     const precioUnitBS=cotPrecioBS(pp,def.precioUnitCod);
     const nPlus=tallas.filter(t=>(def.plusTallas||[]).some(pt=>t.includes(pt))).length;
@@ -6790,7 +6790,8 @@ function cotGuardarItem(){
   }
 
   // ── COMFY / FULLCOMFY / LICRA ────────────────────────────
-  const packN=parseInt(cotmPack)||tallas.length;
+  const packN=parseInt(cotmPack)||tallas.length; // para lookup de precio según pack seleccionado
+  const undsReal=tallas.length; // unidades reales según tallas expandidas
   const {totalUSD:packTotalUSD, precioUnitUSD, totalBS:packTotalBS, precioUnitBS}=cotCalcPack(cotmApp,packN,pp,cotmPrecios);
   const aplicaPlus=cotmApp==='comfy'?true:(packN>1);
   // Comfy usa leerPrecios (recarga_usd/recarga_bs sueltos); FullComfy/Licra usan pp (pack_precios con S.COMFY.03)
@@ -6801,16 +6802,16 @@ function cotGuardarItem(){
   const recargaTotalBs=plusBS*nPlus;
   const capUSD=(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(parseFloat(cotmPrecios.capucha_usd)||0):0;
   const capBS =(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(parseFloat(cotmPrecios.capucha_bs)||0):0;
-  const capuchaTotal=capUSD*tallas.length;
-  const capuchaTotalBs=capBS*tallas.length;
+  const capuchaTotal=capUSD*undsReal;
+  const capuchaTotalBs=capBS*undsReal;
   const tela=document.getElementById('cotm-tela')?.value||'';
   const vinil=document.getElementById('cotm-vinil')?.value||'';
-  const subtotalUSD=packTotalUSD+recargaTotal+capuchaTotal;
-  const subtotalBs=packTotalBS+recargaTotalBs+capuchaTotalBs;
+  const subtotalUSD=precioUnitUSD*undsReal+recargaTotal+capuchaTotal;
+  const subtotalBs=precioUnitBS*undsReal+recargaTotalBs+capuchaTotalBs;
   cotItems.push({
     app:cotmApp, nombreApp:COT_DEF[cotmApp].nombre,
     codigo:cotmApp+':'+packN,
-    pack:cotmApp==='comfy'?`${packN} uds`:cotmPack,
+    pack:`${undsReal} ud${undsReal>1?'s':''}`,
     manga:'Manga Larga', capucha:cotmApp==='comfy'?'Sin Capucha':cotmCapucha,
     tela, vinil, tallas, nPlus,
     precioUnitUSD, precioUnitBS, recargaTotal, recargaTotalBs, capuchaTotal, capuchaTotalBs,
