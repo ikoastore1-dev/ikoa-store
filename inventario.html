@@ -4293,15 +4293,20 @@ async function cargarSolicitudes(filtro){
     const grupos={};
     filtradas.forEach(r=>{
       const codigo=String(r[0]||'').trim();
-      const base=codigo.split('.')[0];
+      // Agrupar por base: S-100, S-100.2, S-100.3 → base S-100
+      // También agrupar S-100-1, S-100-2 → base S-100
+      const base=codigo.split('.')[0].split('-').slice(0,2).join('-');
       if(!grupos[base]) grupos[base]=[];
       grupos[base].push(r);
     });
     Object.values(grupos).forEach(g=>g.sort((a,b)=>{
       const ca=String(a[0]||''), cb=String(b[0]||'');
-      if(!ca.includes('.')&&cb.includes('.')) return -1;
-      if(ca.includes('.')&&!cb.includes('.')) return 1;
-      return parseFloat(ca.split('-')[1]||0)-parseFloat(cb.split('-')[1]||0);
+      // Base sin sufijo va primero (S-100 antes de S-100.2 o S-100-2)
+      const aHasSuffix=ca.includes('.')||(ca.match(/-\d+$/)&&ca.match(/-\d+-\d+$/));
+      const bHasSuffix=cb.includes('.')||(cb.match(/-\d+$/)&&cb.match(/-\d+-\d+$/));
+      if(!aHasSuffix&&bHasSuffix) return -1;
+      if(aHasSuffix&&!bHasSuffix) return 1;
+      return ca.localeCompare(cb);
     }));
     const sc={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)'};
     const sb={Pendiente:'#2a1f0a',Pagado:'var(--surface2)',Reprobado:'#2a1010'};
