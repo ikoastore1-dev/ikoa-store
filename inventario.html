@@ -1614,8 +1614,13 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <div style="font-size:12px;font-weight:700;color:var(--warn);margin-bottom:8px;">⚠️ Se detectaron cambios de precio desde que se creó esta cotización</div>
           <div id="cotb-cambios-content" style="font-size:12px;color:var(--text);margin-bottom:10px;"></div>
           <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Datos de pago del cliente</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-            <input class="field-input" type="text" id="cotb-pago-moneda-cambios" placeholder="Banco / Moneda" style="width:100%;box-sizing:border-box;">
+          <div style="margin-bottom:8px;">
+            <div class="field-label" style="font-size:11px;color:var(--muted);margin-bottom:5px;">Moneda de pago</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <button id="cotb-mon-bs-cambios" onclick="cotbSelMoneda('cambios','Bs')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">💵 Bs</button>
+              <button id="cotb-mon-div-cambios" onclick="cotbSelMoneda('cambios','Divisa')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">💱 Divisa</button>
+            </div>
+            <input type="hidden" id="cotb-pago-moneda-cambios" value="">
             <input class="field-input" type="text" id="cotb-pago-monto-cambios" placeholder="Monto pagado" style="width:100%;box-sizing:border-box;">
           </div>
           <input class="field-input" type="text" id="cotb-pago-ref-cambios" placeholder="N° de referencia" style="width:100%;box-sizing:border-box;margin-bottom:10px;">
@@ -1631,8 +1636,13 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <!-- Confirmación de aprobación sin cambios de precio (pide datos de pago + código) -->
         <div id="cotb-aprobar-wrap" style="display:none;margin-bottom:14px;">
           <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Datos de pago del cliente</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-            <input class="field-input" type="text" id="cotb-pago-moneda-aprobar" placeholder="Banco / Moneda" style="width:100%;box-sizing:border-box;">
+          <div style="margin-bottom:8px;">
+            <div class="field-label" style="font-size:11px;color:var(--muted);margin-bottom:5px;">Moneda de pago</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <button id="cotb-mon-bs-aprobar" onclick="cotbSelMoneda('aprobar','Bs')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">💵 Bs</button>
+              <button id="cotb-mon-div-aprobar" onclick="cotbSelMoneda('aprobar','Divisa')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">💱 Divisa</button>
+            </div>
+            <input type="hidden" id="cotb-pago-moneda-aprobar" value="">
             <input class="field-input" type="text" id="cotb-pago-monto-aprobar" placeholder="Monto pagado" style="width:100%;box-sizing:border-box;">
           </div>
           <input class="field-input" type="text" id="cotb-pago-ref-aprobar" placeholder="N° de referencia" style="width:100%;box-sizing:border-box;margin-bottom:10px;">
@@ -4541,6 +4551,23 @@ async function confirmarReprobar(){
     msgEl.innerHTML='✗ Error: '+e.message;
   }
   pendingSolicitud=null;
+}
+
+function cotbSelMoneda(seccion, moneda){
+  const hiddenInput = document.getElementById('cotb-pago-moneda-'+seccion);
+  if(hiddenInput) hiddenInput.value = moneda;
+  // Highlight selected button
+  const bsBtn  = document.getElementById('cotb-mon-bs-'+seccion);
+  const divBtn = document.getElementById('cotb-mon-div-'+seccion);
+  if(bsBtn && divBtn){
+    const isBS = moneda === 'Bs';
+    bsBtn.style.borderColor  = isBS  ? 'var(--accent)' : 'var(--border)';
+    bsBtn.style.color        = isBS  ? 'var(--accent)' : 'var(--muted)';
+    bsBtn.style.background   = isBS  ? '#0a2a1e'       : 'var(--surface2)';
+    divBtn.style.borderColor = !isBS ? 'var(--accent)' : 'var(--border)';
+    divBtn.style.color       = !isBS ? 'var(--accent)' : 'var(--muted)';
+    divBtn.style.background  = !isBS ? '#0a2a1e'       : 'var(--surface2)';
+  }
 }
 
 function abrirModalAprobacion(data){
