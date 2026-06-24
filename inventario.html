@@ -3580,7 +3580,7 @@ function abrirModalEditarRespaldo(codigo,mensaje,banco,referencia,factura,tasa,m
 async function confirmarEditarRespaldo(){
   const unlock=document.getElementById('edit-rv-unlock').value.trim().toUpperCase();
   const errEl=document.getElementById('edit-rv-error');
-  if(!USUARIOS[unlock]){ errEl.textContent='❌ Código incorrecto'; document.getElementById('edit-rv-unlock').value=''; return; }
+  if(!USUARIOS_RESPALDO[unlock]){ errEl.textContent='❌ Código incorrecto'; document.getElementById('edit-rv-unlock').value=''; return; }
   const codigo=document.getElementById('modal-editar-rv').dataset.codigo;
   const mensaje=document.getElementById('edit-rv-mensaje').value.trim();
   const banco=document.getElementById('edit-rv-banco').value;
