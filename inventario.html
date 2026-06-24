@@ -1055,6 +1055,14 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <!-- NUEVO RESPALDO -->
     <div id="rvsec-nuevo">
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;">
+        <div class="field-group" style="margin-bottom:14px;">
+          <div class="field-label">Destino del pedido</div>
+          <div style="display:flex;gap:8px;margin-top:4px;">
+            <button id="rv-dest-tienda" onclick="rvSelDestino('Stock Tienda')" style="flex:1;padding:12px;border:2px solid var(--accent);border-radius:8px;background:#0a2a1e;color:var(--accent);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🏪 Stock Tienda</button>
+            <button id="rv-dest-taller" onclick="rvSelDestino('Envio Taller')" style="flex:1;padding:12px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🏭 Envío Taller</button>
+          </div>
+          <input type="hidden" id="rv-destino" value="Stock Tienda">
+        </div>
         <div class="field-group">
           <div class="field-label">Pega el mensaje de WhatsApp</div>
           <textarea id="rv-mensaje" rows="8" placeholder="Pega aquí el mensaje completo del cliente..." style="background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;outline:none;width:100%;resize:vertical;line-height:1.6;"></textarea>
@@ -1106,14 +1114,6 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
               <option value="Divisa">Divisa</option>
             </select>
           </div>
-        </div>
-        <div class="field-group" style="margin-bottom:12px;">
-          <div class="field-label">Destino del pedido</div>
-          <div style="display:flex;gap:8px;margin-top:4px;">
-            <button id="rv-dest-tienda" onclick="rvSelDestino('Stock Tienda')" style="flex:1;padding:10px;border:2px solid var(--accent);border-radius:8px;background:#0a2a1e;color:var(--accent);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🏪 Stock Tienda</button>
-            <button id="rv-dest-taller" onclick="rvSelDestino('Envio Taller')" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🏭 Envío Taller</button>
-          </div>
-          <input type="hidden" id="rv-destino" value="Stock Tienda">
         </div>
         <div class="field-group" style="margin-bottom:12px;">
           <div class="field-label">Código de autorización</div>
