@@ -6580,6 +6580,12 @@ function cotmAddTalla(opts){
   const tallasOpts=opts||COT_TALLAS_TODAS;
   cotmTallaCount++;
   const id=cotmTallaCount;
+  // Calcular restante disponible para el contador por defecto
+  const inpPrincipal=document.getElementById('cotm-cantidad');
+  const maxVal=parseInt(inpPrincipal?.value)||0;
+  const cants=Array.from(document.querySelectorAll('.cotm-talla-cant'));
+  const usados=cants.reduce((s,i)=>s+(parseInt(i.value)||0),0);
+  const restante=maxVal>0?Math.max(1,maxVal-usados):1;
   const div=document.createElement('div');
   div.id='cotm-tr-'+id;
   div.style.cssText='display:grid;grid-template-columns:1fr 80px auto;gap:6px;align-items:center;margin-bottom:4px;';
@@ -6588,13 +6594,14 @@ function cotmAddTalla(opts){
       <option value="">Seleccionar talla...</option>
       ${tallasOpts.map(t=>`<option value="${t}">${t}</option>`).join('')}
     </select>
-    <input type="number" class="cotm-talla-cant field-input" min="1" value="1"
+    <input type="number" class="cotm-talla-cant field-input" min="1" value="${restante}"
       style="width:100%;text-align:center;padding:6px;font-weight:700;color:var(--accent);"
       oninput="cotmTallaChange(this)">
-    <button onclick="document.getElementById('cotm-tr-${id}').remove();cotmTallaChange();"
+    <button onclick="document.getElementById('cotm-tr-${id}').remove();cotmTallaChange(null);"
       style="padding:7px 9px;border:1px solid var(--danger);border-radius:8px;background:transparent;color:var(--danger);font-size:13px;cursor:pointer;">✕</button>
   `;
   document.getElementById('cotm-tallas').appendChild(div);
+  cotmTallaChange(null);
 }
 
 function cotmTallaChange(changedInput){
@@ -6631,12 +6638,16 @@ function cotmTallaChange(changedInput){
   totEl.textContent=`Total tallas: ${total} / ${maxVal} und`;
 
   // Bloquear botón +Talla si ya se alcanzó el máximo
-  const addBtn=document.getElementById('cotm-add-talla-btn');
-  if(addBtn){
-    const restante=maxVal-total;
-    addBtn.disabled=restante<=0;
-    addBtn.style.opacity=restante<=0?'0.4':'1';
-    addBtn.style.cursor=restante<=0?'not-allowed':'pointer';
+  const addBtnDiv=document.getElementById('cotm-add-talla-btn');
+  if(addBtnDiv){
+    const addBtnEl=addBtnDiv.querySelector('button');
+    if(addBtnEl){
+      // Solo bloquear si hay un máximo definido (maxVal>0) y ya se alcanzó
+      const bloqueado = maxVal>0 && total>=maxVal;
+      addBtnEl.disabled=bloqueado;
+      addBtnEl.style.opacity=bloqueado?'0.4':'1';
+      addBtnEl.style.cursor=bloqueado?'not-allowed':'pointer';
+    }
   }
 }
 
