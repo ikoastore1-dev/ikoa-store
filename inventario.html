@@ -1442,7 +1442,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
             <button onclick="cotmCantAdj(-1)" style="width:36px;height:36px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-size:18px;font-weight:700;cursor:pointer;">−</button>
             <input type="number" id="cotm-cantidad" min="2" value="2" oninput="cotmCantChange()" style="width:60px;text-align:center;padding:6px;border:2px solid var(--accent);border-radius:8px;background:var(--surface2);color:var(--accent);font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;">
             <button onclick="cotmCantAdj(1)" style="width:36px;height:36px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-size:18px;font-weight:700;cursor:pointer;">+</button>
-            <span style="font-size:12px;color:var(--muted);">franelas</span>
+            <span id="cotm-cantidad-label" style="font-size:12px;color:var(--muted);">franelas</span>
           </div>
         </div>
       </div>
@@ -6116,7 +6116,7 @@ const COT_DEF = {
     nombre:'Short Unicolor', tipo:'unitario',
     manga:'', capuchaCod:null,
     precioUnitCod:'ShortUnicolor', plusCod:null, plusTallas:[],
-    hojaColores:'COLORES.COLECCION.UNICOLOR', colorLibre:false,
+    hojaColores:'COLORES.LICRA', colorLibre:false,
     tallas:'sin_dama', minUnidades:1
   },
 
@@ -6142,7 +6142,7 @@ const COT_HOJAS = {
   licra:'COLORES.LICRA', empresarial:'COLORES.FULLCOMFY',
   cortaviento_emp:'COLORES.FULLCOMFY',
   licra_suplex:'COLORES.COLECCION.UNICOLOR',
-  short_uni:'COLORES.COLECCION.UNICOLOR',
+  short_uni:'COLORES.LICRA',
   cortaviento_uni:'COLORES.LICRA'
 };
 
@@ -6334,6 +6334,8 @@ async function cotModalSelectApp(app){
     // Talla única
     document.getElementById('cotm-tallas-section').style.display='block';
     document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
+    const cantLblToalla=document.getElementById('cotm-cantidad-label');
+    if(cantLblToalla) cantLblToalla.textContent='toallas';
     cotmAddTalla(['Talla Unica']);
     document.getElementById('cotm-add-talla-btn').style.display='block';
     document.getElementById('cotm-guardar-btn').style.display='block';
@@ -6417,14 +6419,24 @@ async function cotModalSelectApp(app){
   if(['licra_suplex','short_uni','cortaviento_uni'].includes(app)){
     const pdata=await scriptGETjson({action:'leerPreciosColeccion'});
     if(pdata.ok){cotmPrecios=pdata; cotmTasaBCV=pdata.tasa_bcv||0;}
-    // Colores
+    // Colores — short_uni y cortaviento_uni usan tela de LICRA y vinil de FULLCOMFY (igual que empresarial)
     document.getElementById('cotm-colores-section').style.display='block';
-    document.getElementById('cotm-vinil-wrap').style.display='none';
+    const esUniConVinil=(app==='short_uni'||app==='cortaviento_uni');
+    document.getElementById('cotm-vinil-wrap').style.display=esUniConVinil?'block':'none';
     const data=await scriptGETjson({action:'leerColores', hoja:def.hojaColores});
     const sT=document.getElementById('cotm-tela');
     sT.innerHTML='<option value="">Seleccionar...</option>';
     if(data.ok){
       (data.telas||[]).forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;sT.appendChild(o);});
+    }
+    // Vinil: mismos colores que empresarial (COLORES.FULLCOMFY)
+    if(esUniConVinil){
+      const dataV=await scriptGETjson({action:'leerColores', hoja:'COLORES.FULLCOMFY'});
+      const sV=document.getElementById('cotm-vinil');
+      sV.innerHTML='<option value="">Seleccionar...</option>';
+      if(dataV.ok){
+        (dataV.viniles||[]).forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sV.appendChild(o);});
+      }
     }
     // Mostrar input de cantidad (como selector de pack pero llamado "Cantidad")
     const packSecUni=document.getElementById('cotm-pack-section');
@@ -6436,6 +6448,8 @@ async function cotModalSelectApp(app){
     // Etiqueta cantidad
     const lblUni=packSecUni.querySelector('div');
     if(lblUni) lblUni.textContent='Cantidad';
+    const cantLblUni=document.getElementById('cotm-cantidad-label');
+    if(cantLblUni) cantLblUni.textContent=app==='short_uni'?'shorts':app==='cortaviento_uni'?'cortavientos':'prendas';
     const inpUni=document.getElementById('cotm-cantidad');
     inpUni.min=1; inpUni.value=1; cotmPack='1';
 
@@ -6486,6 +6500,9 @@ async function cotModalSelectApp(app){
   capSec.style.display=def.capuchaCod?'block':'none';
   ['cotmc-sin','cotmc-con'].forEach(id=>{const el=document.getElementById(id);if(el){el.style.borderColor='var(--border)';el.style.color='var(--muted)';}});
   const sd=document.getElementById('cotmc-sin');if(sd){sd.style.borderColor='var(--accent)';sd.style.color='var(--accent)';}
+  // Reset label
+  const cantLblReset=document.getElementById('cotm-cantidad-label');
+  if(cantLblReset) cantLblReset.textContent='franelas';
   // Colores
   document.getElementById('cotm-colores-section').style.display='block';
   document.getElementById('cotm-vinil-wrap').style.display='block';
