@@ -6541,8 +6541,25 @@ function cotmSelPack(pk){
   const btn=document.getElementById('cotmpack-'+pk);
   if(btn){btn.style.borderColor='var(--accent)';btn.style.color='var(--accent)';btn.style.background='#0a2a1e';}
   const n=parseInt(pk)||1;
+  // Crear 1 sola fila con cantidad = n (usuario puede dividir con +Talla)
+  const elTot=document.getElementById('cotm-tallas-total'); if(elTot) elTot.remove();
   document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
-  for(let i=0;i<n;i++) cotmAddTalla(COT_TALLAS_TODAS);
+  cotmAddTalla(COT_TALLAS_TODAS);
+  // Setear el contador de esa fila al total del pack
+  const cantInput=document.querySelector('.cotm-talla-cant');
+  if(cantInput){ cantInput.value=n; }
+  // Usar cotm-cantidad como referencia del máximo para cotmTallaChange
+  let inpPrincipal=document.getElementById('cotm-cantidad');
+  if(!inpPrincipal){
+    // Si no hay input principal, crear uno oculto para llevar el maxVal
+    inpPrincipal=document.createElement('input');
+    inpPrincipal.type='number';
+    inpPrincipal.id='cotm-cantidad';
+    inpPrincipal.style.display='none';
+    document.getElementById('cotm-tallas').before(inpPrincipal);
+  }
+  inpPrincipal.value=n;
+  cotmTallaChange(null);
 }
 function cotmCantAdj(delta){
   const inp=document.getElementById('cotm-cantidad');
