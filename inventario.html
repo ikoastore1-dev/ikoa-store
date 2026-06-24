@@ -1107,6 +1107,14 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           </div>
         </div>
         <div class="field-group" style="margin-bottom:12px;">
+          <div class="field-label">Destino del pedido</div>
+          <div style="display:flex;gap:8px;margin-top:4px;">
+            <button id="rv-dest-tienda" onclick="rvSelDestino('Stock Tienda')" style="flex:1;padding:10px;border:2px solid var(--accent);border-radius:8px;background:#0a2a1e;color:var(--accent);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🏪 Stock Tienda</button>
+            <button id="rv-dest-taller" onclick="rvSelDestino('Envio Taller')" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🏭 Envío Taller</button>
+          </div>
+          <input type="hidden" id="rv-destino" value="Stock Tienda">
+        </div>
+        <div class="field-group" style="margin-bottom:12px;">
           <div class="field-label">Código de autorización</div>
           <input class="field-input" type="password" id="rv-unlock" placeholder="Tu código personal" maxlength="20">
           <div id="rv-unlock-error" style="font-size:12px;color:var(--danger);margin-top:4px;display:none;"></div>
@@ -1731,7 +1739,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGXpDa5Go7_Ja9guYNo5GRtH-6RkHdj2MlE79aTtvU_6aFmy50a2xqOMgPsvezFrJiIQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUT_slitdnX7vXoGsdpMjiR1Wdx4qwl_hGPqPi7NWUJVd2VW_ln8_aT4cYmTJKhHPsAw/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -3468,6 +3476,19 @@ function switchRespaldo(sub){
   if(sub==='historial') cargarHistorialRespaldo();
 }
 
+async function rvSelDestino(val){
+  document.getElementById('rv-destino').value=val;
+  const tienda=document.getElementById('rv-dest-tienda');
+  const taller=document.getElementById('rv-dest-taller');
+  const esTienda=val==='Stock Tienda';
+  tienda.style.borderColor=esTienda?'var(--accent)':'var(--border)';
+  tienda.style.color=esTienda?'var(--accent)':'var(--muted)';
+  tienda.style.background=esTienda?'#0a2a1e':'var(--surface2)';
+  taller.style.borderColor=!esTienda?'var(--accent)':'var(--border)';
+  taller.style.color=!esTienda?'var(--accent)':'var(--muted)';
+  taller.style.background=!esTienda?'#0a2a1e':'var(--surface2)';
+}
+
 async function guardarRespaldo(){
   const mensaje=document.getElementById('rv-mensaje').value.trim();
   const banco=document.getElementById('rv-banco').value;
@@ -3490,6 +3511,7 @@ async function guardarRespaldo(){
   msgEl.style.color='var(--muted)';
   msgEl.innerHTML='<span class="spinner">↻</span> Guardando...';
   try{
+    const destino=document.getElementById('rv-destino').value||'Stock Tienda';
     const data=await scriptGETjson({
       action:'addRespaldo',
       fecha:getFechaHora(),
@@ -3500,7 +3522,8 @@ async function guardarRespaldo(){
       monto:monto,
       factura:factura,
       tasa:tasa,
-      moneda:moneda
+      moneda:moneda,
+      destino:destino
     });
     if(data.ok){
       msgEl.style.background='var(--surface2)';
