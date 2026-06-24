@@ -6277,7 +6277,18 @@ async function cotModalSelectApp(app){
   if(app==='coleccion'){
     const pdata=await scriptGETjson({action:'leerPreciosColeccion'});
     if(pdata.ok){cotmPrecios=pdata; cotmTasaBCV=pdata.tasa_bcv||0;}
-    // Buscar o crear la sección de colección
+
+    // 1. CANTIDAD PRINCIPAL
+    document.getElementById('cotm-pack-section').style.display='block';
+    document.getElementById('cotm-packs').innerHTML='';
+    document.getElementById('cotm-packs').style.display='none';
+    document.getElementById('cotm-cantidad-wrap').style.display='block';
+    const cantLblCol=document.getElementById('cotm-cantidad-label');
+    if(cantLblCol) cantLblCol.textContent='prendas';
+    const inpCol=document.getElementById('cotm-cantidad');
+    inpCol.min=1; inpCol.value=1; cotmPack='1';
+
+    // 2. SERIE / COLOR y PRENDA
     let cs=document.getElementById('cotm-coleccion-section');
     if(!cs){
       cs=document.createElement('div');
@@ -6315,10 +6326,16 @@ async function cotModalSelectApp(app){
       </div>
       <div id="cotm-col-precio" style="font-size:12px;color:var(--accent);margin-bottom:8px;min-height:18px;"></div>
     `;
-    // Tallas iniciales
+
+    // 3. TALLAS — 1 fila con cantidad 1
     document.getElementById('cotm-tallas-section').style.display='block';
+    const elTotCol=document.getElementById('cotm-tallas-total'); if(elTotCol) elTotCol.remove();
     document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
+    const savedCol=inpCol.value; inpCol.value=0;
     cotmAddTalla(COT_TALLAS_TODAS);
+    inpCol.value=savedCol;
+    const cantInputCol=document.querySelector('.cotm-talla-cant');
+    if(cantInputCol){ cantInputCol.value=1; cotmTallaChange(null); }
     document.getElementById('cotm-add-talla-btn').style.display='block';
     document.getElementById('cotm-guardar-btn').style.display='none';
     return;
@@ -6367,13 +6384,24 @@ async function cotModalSelectApp(app){
       ['cotmc-sin','cotmc-con'].forEach(id=>{const el=document.getElementById(id);if(el){el.style.borderColor='var(--border)';el.style.color='var(--muted)';}});
       const sd=document.getElementById('cotmc-sin');if(sd){sd.style.borderColor='var(--accent)';sd.style.color='var(--accent)';}
     }
+    // Selector de cantidad (mínimo 6)
+    document.getElementById('cotm-pack-section').style.display='block';
+    document.getElementById('cotm-packs').innerHTML='';
+    document.getElementById('cotm-packs').style.display='none';
+    document.getElementById('cotm-cantidad-wrap').style.display='block';
+    const cantLblSub=document.getElementById('cotm-cantidad-label');
+    if(cantLblSub) cantLblSub.textContent='franelas';
+    const inpSub=document.getElementById('cotm-cantidad');
+    inpSub.min=6; inpSub.value=6; cotmPack='6';
+    // Tallas — 1 fila con cantidad 6
     document.getElementById('cotm-tallas-section').style.display='block';
-    document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
     const elTot2=document.getElementById('cotm-tallas-total'); if(elTot2) elTot2.remove();
+    document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
+    const savedSub=inpSub.value; inpSub.value=0;
     cotmAddTalla(COT_TALLAS_TODAS);
+    inpSub.value=savedSub;
     const subCantInput=document.querySelector('.cotm-talla-cant');
     if(subCantInput){ subCantInput.value=6; cotmTallaChange(null); }
-    cotmPack='6';
     document.getElementById('cotm-add-talla-btn').style.display='block';
     document.getElementById('cotm-guardar-btn').style.display='block';
     return;
@@ -6456,6 +6484,7 @@ async function cotModalSelectApp(app){
     const packsDivUni=document.getElementById('cotm-packs');
     packSecUni.style.display='block';
     packsDivUni.innerHTML='';
+    packsDivUni.style.display='none';
     cantWrapUni.style.display='block';
     // Etiqueta cantidad
     const lblUni=packSecUni.querySelector('div');
