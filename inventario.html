@@ -6426,11 +6426,33 @@ async function cotModalSelectApp(app){
     if(data.ok){
       (data.telas||[]).forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;sT.appendChild(o);});
     }
+    // Mostrar input de cantidad (como selector de pack pero llamado "Cantidad")
+    const packSecUni=document.getElementById('cotm-pack-section');
+    const cantWrapUni=document.getElementById('cotm-cantidad-wrap');
+    const packsDivUni=document.getElementById('cotm-packs');
+    packSecUni.style.display='block';
+    packsDivUni.innerHTML='';
+    cantWrapUni.style.display='block';
+    // Etiqueta cantidad
+    const lblUni=packSecUni.querySelector('div');
+    if(lblUni) lblUni.textContent='Cantidad';
+    const inpUni=document.getElementById('cotm-cantidad');
+    inpUni.min=1; inpUni.value=1; cotmPack='1';
+
     // Tallas según restricción
     const tallasOpts = app==='short_uni' ? COT_TALLAS_SIN_DAMA : COT_TALLAS_TODAS;
     document.getElementById('cotm-tallas-section').style.display='block';
+    const elTotUni=document.getElementById('cotm-tallas-total'); if(elTotUni) elTotUni.remove();
     document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
+    // 1 fila con cantidad 1 por defecto
+    const inpUniRef=document.getElementById('cotm-cantidad');
+    const savedUni=inpUniRef?inpUniRef.value:'';
+    if(inpUniRef) inpUniRef.value=0;
     cotmAddTalla(tallasOpts);
+    if(inpUniRef) inpUniRef.value=savedUni;
+    const cantInputUni=document.querySelector('.cotm-talla-cant');
+    if(cantInputUni){ cantInputUni.value=1; }
+    cotmTallaChange(null);
     document.getElementById('cotm-add-talla-btn').style.display='block';
     document.getElementById('cotm-guardar-btn').style.display='block';
     return;
@@ -6479,13 +6501,23 @@ async function cotModalSelectApp(app){
   const acciones={comfy:'leerPrecios',fullcomfy:'leerPreciosFullComfy',licra:'leerPreciosLicra'};
   const pdata=await scriptGETjson({action:acciones[app]});
   if(pdata.ok){cotmPrecios=pdata; cotmTasaBCV=pdata.tasa_bcv||0;}
-  // Tallas — para comfy/fullcomfy/licra: cantidad fija según input
+  // Tallas — 1 sola fila con cantidad inicial
   document.getElementById('cotm-tallas-section').style.display='block';
+  const elTotCFL=document.getElementById('cotm-tallas-total'); if(elTotCFL) elTotCFL.remove();
   document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
   const initN = (app==='comfy'||app==='fullcomfy'||app==='licra')
     ? parseInt(document.getElementById('cotm-cantidad').value)||1
     : 1;
-  for(let i=0;i<initN;i++) cotmAddTalla(COT_TALLAS_TODAS);
+  // Temporalmente poner maxVal=0 para que cotmAddTalla no calcule restante
+  const inpCFL=document.getElementById('cotm-cantidad');
+  const savedVal=inpCFL?inpCFL.value:'';
+  if(inpCFL) inpCFL.value=0;
+  cotmAddTalla(COT_TALLAS_TODAS);
+  if(inpCFL) inpCFL.value=savedVal;
+  // Setear el contador de la fila al initN
+  const cantInputCFL=document.querySelector('.cotm-talla-cant');
+  if(cantInputCFL){ cantInputCFL.value=initN; }
+  cotmTallaChange(null);
   // Mostrar botón +Talla siempre — cotmTallaChange controla si está habilitado o no
   document.getElementById('cotm-add-talla-btn').style.display='block';
   document.getElementById('cotm-guardar-btn').style.display='block';
