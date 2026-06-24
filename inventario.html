@@ -6331,13 +6331,25 @@ async function cotModalSelectApp(app){
     document.getElementById('cotm-color-libre-wrap').style.display='block';
     document.getElementById('cotm-color-libre').placeholder='Ej: Azul marino, Rojo, etc...';
     document.getElementById('cotm-color-libre').value='';
-    // Talla única
-    document.getElementById('cotm-tallas-section').style.display='block';
-    document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
+    // Mostrar selector de cantidad
+    document.getElementById('cotm-pack-section').style.display='block';
+    document.getElementById('cotm-packs').innerHTML='';
+    document.getElementById('cotm-cantidad-wrap').style.display='block';
     const cantLblToalla=document.getElementById('cotm-cantidad-label');
     if(cantLblToalla) cantLblToalla.textContent='toallas';
+    const inpToalla=document.getElementById('cotm-cantidad');
+    inpToalla.min=1; inpToalla.value=1; cotmPack='1';
+    // Talla única
+    document.getElementById('cotm-tallas-section').style.display='block';
+    const elTotToalla=document.getElementById('cotm-tallas-total'); if(elTotToalla) elTotToalla.remove();
+    document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
+    const savedToalla=inpToalla.value; inpToalla.value=0;
     cotmAddTalla(['Talla Unica']);
-    document.getElementById('cotm-add-talla-btn').style.display='block';
+    inpToalla.value=savedToalla;
+    const cantInputToalla=document.querySelector('.cotm-talla-cant');
+    if(cantInputToalla){ cantInputToalla.value=1; }
+    cotmTallaChange(null);
+    document.getElementById('cotm-add-talla-btn').style.display='none';
     document.getElementById('cotm-guardar-btn').style.display='block';
     return;
   }
