@@ -6486,9 +6486,8 @@ async function cotModalSelectApp(app){
     ? parseInt(document.getElementById('cotm-cantidad').value)||1
     : 1;
   for(let i=0;i<initN;i++) cotmAddTalla(COT_TALLAS_TODAS);
-  // Ocultar botón agregar para comfy/fullcomfy/licra (cantidad fija)
-  document.getElementById('cotm-add-talla-btn').style.display=
-    (app==='comfy'||app==='fullcomfy'||app==='licra')?'none':'block';
+  // Mostrar botón +Talla siempre — cotmTallaChange controla si está habilitado o no
+  document.getElementById('cotm-add-talla-btn').style.display='block';
   document.getElementById('cotm-guardar-btn').style.display='block';
 }
 
