@@ -7309,7 +7309,17 @@ function cotConstruirHTMLDocumento(items, datosCliente, montosFactura, codigoCot
     if(item.vinil)     dl2parts.push('VINIL: '+item.vinil.toUpperCase());
     if(item.colorLibre)dl2parts.push('COLOR: '+item.colorLibre.toUpperCase());
     if(item.estampado) dl2parts.push('ESTAMPADO: '+item.estampado.toUpperCase());
-    if(item.tallas.length && !paraCorreo) dl2parts.push(item.tallas.join(' - ').toUpperCase());
+    if(item.tallas.length){
+      if(paraCorreo){
+        // Resumir tallas: CABALLERO L x6, CABALLERO M x2
+        const tallaCount={};
+        item.tallas.forEach(t=>{ tallaCount[t]=(tallaCount[t]||0)+1; });
+        const resumen=Object.entries(tallaCount).map(([t,n])=>n>1?`${t.toUpperCase()} x${n}`:t.toUpperCase()).join(', ');
+        dl2parts.push(resumen);
+      } else {
+        dl2parts.push(item.tallas.join(' - ').toUpperCase());
+      }
+    }
     const dl1parts=[item.nombreApp.toUpperCase()];
     if(item.capucha&&item.capucha!=='Sin Capucha') dl1parts.push(item.capucha.toUpperCase());
     const recargasHTML=[];
@@ -7681,7 +7691,24 @@ async function cotbAbrirDetalle(codigo){
   items.forEach((it,idx)=>{
     const d=document.createElement('div');
     d.style.cssText='background:var(--surface2);border-radius:8px;padding:10px;font-size:12px;';
-    d.innerHTML=`<b>${idx+1}. ${it.nombreApp}</b> — ${it.pack} — $${(it.subtotalUSD||0).toFixed(2)} ${it.subtotalBs?('/ Bs '+it.subtotalBs.toLocaleString('es-VE',{maximumFractionDigits:2})):''}`;
+    // Resumen de tallas
+    const tallaCount={};
+    (it.tallas||[]).forEach(t=>{ tallaCount[t]=(tallaCount[t]||0)+1; });
+    const tallasResumen=Object.entries(tallaCount).map(([t,n])=>n>1?`${t} x${n}`:t).join(' · ')||'—';
+    const detalleExtra=[];
+    if(it.tela) detalleExtra.push(`Tela: ${it.tela}`);
+    if(it.vinil) detalleExtra.push(`Vinil: ${it.vinil}`);
+    if(it.estampado) detalleExtra.push(`Estampado: ${it.estampado}`);
+    if(it.capucha&&it.capucha!=='Sin Capucha') detalleExtra.push(`Capucha: ${it.capucha}`);
+    d.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <b style="font-size:13px;">${idx+1}. ${it.nombreApp}</b>
+        <span style="color:var(--accent);font-weight:700;">$${(it.subtotalUSD||0).toFixed(2)}</span>
+      </div>
+      <div style="color:var(--muted);margin-bottom:3px;">${it.pack} · $${(it.precioUnitUSD||0).toFixed(2)} c/u ${it.subtotalBs?'· Bs '+it.subtotalBs.toLocaleString('es-VE',{maximumFractionDigits:2}):''}</div>
+      ${detalleExtra.length?`<div style="color:var(--text);margin-bottom:3px;">${detalleExtra.join(' · ')}</div>`:''}
+      <div style="background:var(--bg);border-radius:6px;padding:5px 8px;font-size:11px;color:var(--text);">🧵 ${tallasResumen}</div>
+    `;
     itemsCont.appendChild(d);
   });
 
