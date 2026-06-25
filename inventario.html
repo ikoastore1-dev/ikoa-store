@@ -7603,9 +7603,15 @@ body{font-family:'Arial',sans-serif;background:#fff !important;color:#1a1a1a !im
 <div class="pie">
   <div class="pie-left">
     <div class="pit">Pago Movil:</div>
+    ${(datosCliente.desea_factura==='SI')?`
     <div>Rif: J505031716</div><div>Cel: 04121574901</div>
     <div>Ikoa Brand Corp C.A.</div>
     <div>BANESCO - 0134 0354 66 3541023205</div>
+    `:`
+    <div>V18265345</div><div>Cel: 04149450742</div>
+    <div>Johan Cazorla</div>
+    <div>BANESCO - 0134 0354 68 3543018016</div>
+    `}
   </div>
   <div class="pie-right">PAGO EN BS A TASA DOLAR BCV DEL DIA. CONSULTAR.</div>
 </div>
@@ -7680,10 +7686,17 @@ body{font-family:'Arial',sans-serif;background:#fff !important;color:#1a1a1a !im
   <tr>
     <td valign="top" style="font-size:10px;color:#1a1a1a;line-height:1.9;border:none;">
       <p style="font-size:10.5px;font-weight:700;margin:0 0 2px 0;">Pago Movil:</p>
+      ${(datosCliente.desea_factura==='SI')?`
       <p style="margin:0;">Rif: J505031716</p>
       <p style="margin:0;">Cel: 04121574901</p>
       <p style="margin:0;">Ikoa Brand Corp C.A.</p>
       <p style="margin:0;">BANESCO - 0134 0354 66 3541023205</p>
+      `:`
+      <p style="margin:0;">V18265345</p>
+      <p style="margin:0;">Cel: 04149450742</p>
+      <p style="margin:0;">Johan Cazorla</p>
+      <p style="margin:0;">BANESCO - 0134 0354 68 3543018016</p>
+      `}
     </td>
     <td valign="middle" style="text-align:right;font-size:10.5px;font-weight:700;color:#444;border:none;">PAGO EN BS A TASA DOLAR BCV DEL DIA. CONSULTAR.</td>
   </tr>
