@@ -1741,7 +1741,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyC3WhBe40Q79e8LEW0G-2n3bABcuE8Yf9FC4qdXSYWqs9eUFc64C0PPOJUCrz5nccuJQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyNNU8lpg3SzCW0qyaqpIWtrPzjlHJuCTle6br9lYC4bbV2NRuUwQCbcjlrUDYJRzcZTA/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -2711,33 +2711,43 @@ async function cargarCashea(){
     const activo=data.cashea_activo===true||data.cashea_activo==='true';
 
     const html=`
-    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">
-      Configuración exclusiva de la app <b style="color:var(--text);">Comfy Mega Promo</b> (pedidos.html). Al activar el switch, se mostrará la opción "Cancelar por Cashea" en esa app.
-    </div>
-
-    <!-- Switch ON/OFF -->
-    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:16px;">
-      <div>
-        <div style="font-size:15px;font-weight:700;color:var(--text);">Opción de pago Cashea</div>
-        <div style="font-size:12px;color:var(--muted);" id="cashea-status-label">${activo?'Activo — visible en pedidos.html':'Inactivo — oculto en pedidos.html'}</div>
+    <div style="background:var(--surface2);border:1.5px solid var(--accent);border-radius:12px;padding:18px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span style="font-size:18px;">🛒</span>
+        <div style="font-size:16px;font-weight:700;color:var(--text);">Cashea — Comfy Mega Promo</div>
       </div>
-      <label style="position:relative;display:inline-block;width:52px;height:28px;flex-shrink:0;">
-        <input type="checkbox" id="cashea-toggle" ${activo?'checked':''} onchange="toggleCashea()" style="opacity:0;width:0;height:0;">
-        <span id="cashea-toggle-track" style="position:absolute;cursor:pointer;inset:0;background:${activo?'var(--accent)':'var(--border)'};border-radius:28px;transition:.2s;"></span>
-        <span id="cashea-toggle-thumb" style="position:absolute;height:22px;width:22px;left:${activo?'27px':'3px'};top:3px;background:#fff;border-radius:50%;transition:.2s;"></span>
-      </label>
-    </div>
-
-    <!-- Porcentaje -->
-    <div class="field-group" style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:0;">
-      <div class="field-label">Porcentaje de incremento Cashea (%) <span style="color:var(--muted);">— 0 = sin incremento</span></div>
-      <div style="display:flex;gap:8px;">
-        <input type="number" id="cashea-pct-input" value="${pct}" min="0" step="0.01"
-          style="flex:1;background:var(--bg);border:1.5px solid var(--accent);border-radius:8px;padding:10px 12px;color:var(--text);font-size:15px;font-weight:700;outline:none;">
-        <button onclick="guardarCasheaPct()" style="padding:10px 20px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">💾 Guardar</button>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+        Configuración exclusiva de la app <b style="color:var(--text);">pedidos.html</b> (Comfy Mega Promo). Ambos controles pertenecen a la misma opción de pago.
       </div>
-      <div style="font-size:12px;color:var(--muted);margin-top:8px;">
-        Cálculo aplicado: Precio Cashea en Bs = Precio base en Bs × (1 + %/100). Divisa = resultado ÷ Tasa BCV actual.
+
+      <!-- Switch ON/OFF -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);">Mostrar opción "Cancelar por Cashea"</div>
+          <div style="font-size:12px;color:var(--muted);" id="cashea-status-label">${activo?'Activo — visible en pedidos.html':'Inactivo — oculto en pedidos.html'}</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:52px;height:28px;flex-shrink:0;">
+          <input type="checkbox" id="cashea-toggle" ${activo?'checked':''} onchange="toggleCashea()" style="opacity:0;width:0;height:0;">
+          <span id="cashea-toggle-track" style="position:absolute;cursor:pointer;inset:0;background:${activo?'var(--accent)':'var(--border)'};border-radius:28px;transition:.2s;"></span>
+          <span id="cashea-toggle-thumb" style="position:absolute;height:22px;width:22px;left:${activo?'27px':'3px'};top:3px;background:#fff;border-radius:50%;transition:.2s;"></span>
+        </label>
+      </div>
+
+      <!-- Porcentaje -->
+      <div class="field-group" style="margin-bottom:0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:8px;padding:10px 14px;margin-bottom:12px;">
+          <span style="font-size:13px;color:var(--muted);">Porcentaje actual</span>
+          <span id="cashea-pct-actual" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--accent);">${pct}%</span>
+        </div>
+        <div class="field-label">Nuevo porcentaje de incremento (%) <span style="color:var(--muted);">— 0 = sin incremento</span></div>
+        <div style="display:flex;gap:8px;">
+          <input type="number" id="cashea-pct-input" value="${pct}" min="0" step="0.01"
+            style="flex:1;background:var(--bg);border:1.5px solid var(--accent);border-radius:8px;padding:10px 12px;color:var(--text);font-size:15px;font-weight:700;outline:none;">
+          <button onclick="guardarCasheaPct()" style="padding:10px 20px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">💾 Guardar</button>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;">
+          Cálculo aplicado: Precio Cashea en Bs = Precio base en Bs × (1 + %/100). Divisa = resultado ÷ Tasa BCV actual.
+        </div>
       </div>
     </div>`;
     cont.innerHTML=html;
@@ -2779,13 +2789,17 @@ async function guardarCasheaPct(){
   const input=document.getElementById('cashea-pct-input');
   const pct=parseFloat(input.value)||0;
   if(pct<0){ alert('El porcentaje no puede ser negativo'); return; }
+  const unlock=await mostrarAuthGen('🛒','Actualizar Cashea',`¿Confirmar nuevo porcentaje de ${pct}%?`);
+  if(!unlock) return;
   const msgEl=document.getElementById('prog-msg');
   msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
   msgEl.innerHTML='<span class="spinner">↻</span> Guardando...';
   try{
-    const res=await scriptGETjson({action:'guardarConfigCashea', cashea_pct:pct});
+    const res=await scriptGETjson({action:'guardarConfigCashea', cashea_pct:pct, usuario:USUARIOS[unlock]||unlock, fecha:getFechaHora()});
     if(res.ok){
       msgEl.style.color='var(--accent)'; msgEl.innerHTML='Porcentaje guardado: '+pct+'%';
+      const actualEl=document.getElementById('cashea-pct-actual');
+      if(actualEl) actualEl.textContent=pct+'%';
       setTimeout(()=>{ msgEl.style.display='none'; }, 2000);
     } else throw new Error(res.error||'Error');
   }catch(e){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='Error: '+e.message; }
