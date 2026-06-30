@@ -1741,7 +1741,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyNNU8lpg3SzCW0qyaqpIWtrPzjlHJuCTle6br9lYC4bbV2NRuUwQCbcjlrUDYJRzcZTA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx02N5VEaX3SYLLNeJAFQqseEoEb9JAnwF28geB1ERvjiEdP3LSCoXa5USEou3NPDXd/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -2756,13 +2756,24 @@ async function cargarCashea(){
   }
 }
 
+const CASHEA_DIRECTOR_CODE='271010';
+
 async function toggleCashea(){
   const checkbox=document.getElementById('cashea-toggle');
   const nuevoEstado=checkbox.checked;
+  // Revertir visualmente de inmediato; solo se aplica tras autenticación exitosa
+  checkbox.checked=!nuevoEstado;
+  const unlock=await mostrarAuthGen('🔒','Solo Director','Esta acción está restringida al Director. Ingresa tu código.');
+  if(!unlock){ return; }
+  if(unlock!==CASHEA_DIRECTOR_CODE){
+    alert('Acceso denegado: solo el Director puede modificar la configuración de Cashea.');
+    return;
+  }
   const track=document.getElementById('cashea-toggle-track');
   const thumb=document.getElementById('cashea-toggle-thumb');
   const label=document.getElementById('cashea-status-label');
-  // Optimistic UI
+  // Optimistic UI (ya autenticado)
+  checkbox.checked=nuevoEstado;
   track.style.background=nuevoEstado?'var(--accent)':'var(--border)';
   thumb.style.left=nuevoEstado?'27px':'3px';
   label.textContent=nuevoEstado?'Activo — visible en pedidos.html':'Inactivo — oculto en pedidos.html';
@@ -2770,7 +2781,7 @@ async function toggleCashea(){
   msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
   msgEl.innerHTML='<span class="spinner">↻</span> Actualizando...';
   try{
-    const res=await scriptGETjson({action:'guardarConfigCashea', cashea_activo:nuevoEstado});
+    const res=await scriptGETjson({action:'guardarConfigCashea', cashea_activo:nuevoEstado, codigo_auth:unlock});
     if(res.ok){
       msgEl.style.color='var(--accent)'; msgEl.innerHTML=nuevoEstado?'Cashea activado':'Cashea desactivado';
       setTimeout(()=>{ msgEl.style.display='none'; }, 1500);
@@ -2789,13 +2800,17 @@ async function guardarCasheaPct(){
   const input=document.getElementById('cashea-pct-input');
   const pct=parseFloat(input.value)||0;
   if(pct<0){ alert('El porcentaje no puede ser negativo'); return; }
-  const unlock=await mostrarAuthGen('🛒','Actualizar Cashea',`¿Confirmar nuevo porcentaje de ${pct}%?`);
+  const unlock=await mostrarAuthGen('🔒','Solo Director',`Confirmar nuevo porcentaje de ${pct}%. Ingresa tu código de Director.`);
   if(!unlock) return;
+  if(unlock!==CASHEA_DIRECTOR_CODE){
+    alert('Acceso denegado: solo el Director puede modificar la configuración de Cashea.');
+    return;
+  }
   const msgEl=document.getElementById('prog-msg');
   msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
   msgEl.innerHTML='<span class="spinner">↻</span> Guardando...';
   try{
-    const res=await scriptGETjson({action:'guardarConfigCashea', cashea_pct:pct, usuario:USUARIOS[unlock]||unlock, fecha:getFechaHora()});
+    const res=await scriptGETjson({action:'guardarConfigCashea', cashea_pct:pct, usuario:USUARIOS[unlock]||unlock, fecha:getFechaHora(), codigo_auth:unlock});
     if(res.ok){
       msgEl.style.color='var(--accent)'; msgEl.innerHTML='Porcentaje guardado: '+pct+'%';
       const actualEl=document.getElementById('cashea-pct-actual');
