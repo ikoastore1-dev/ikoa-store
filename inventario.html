@@ -1741,7 +1741,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx02N5VEaX3SYLLNeJAFQqseEoEb9JAnwF28geB1ERvjiEdP3LSCoXa5USEou3NPDXd/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPDRxy85cMSLTgejKxoGW-6D28tV7mLCV774-VSVbfPAta7bjTDzEToKFYwcr8gyDubw/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -3972,6 +3972,7 @@ async function cargarCola(){
           </div>
           <span style="background:${filtroCola==='Pagado'?'#2a1f0a':'var(--surface2)'};border:1px solid ${filtroCola==='Pagado'?'var(--warn)':'var(--accent)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:${filtroCola==='Pagado'?'var(--warn)':'var(--accent)'};">${filtroCola==='Pagado'?'EN COLA':'EN PRODUCCIÓN'}</span>
         </div>
+        ${v(32)==='SI'?`<div style="background:#0f2b1a;border:1px solid var(--accent);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px;display:inline-block;">🛒 CASHEA${v(33)?' · '+v(33)+'%':''}</div>`:''}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:10px;">
           <div><span style="color:var(--muted);">Correo:</span> ${v(8)}</div>
           <div><span style="color:var(--muted);">Cédula:</span> ${v(9)}</div>
@@ -4021,6 +4022,8 @@ async function cargarCola(){
           agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),
           banco:v(22),codpago:v(23),
           urgente:v(31)||'',
+          cashea:v(32)||'NO',
+          casheaPct:v(33)||'',
           tela:allPacks[0]?.tela||'',
           vinil:allPacks[0]?.vinil||'',
           piezas:allPacks[0]?.piezas||''
@@ -4337,7 +4340,9 @@ async function confirmarPlanificacion(){
         fecha_apro:fechaProd,
         fecha_produccion:fechaProd,
         usuario_produccion:USUARIOS[unlock],
-        urgente:pendingCola.urgente||''
+        urgente:pendingCola.urgente||'',
+        cashea_flag:pendingCola.cashea||'NO',
+        cashea_pct_aplicado:pendingCola.casheaPct||''
       });
     }catch(e){ console.warn('registrarProduccion error:',e); }
     if(response.ok||response.type==='opaque'){
