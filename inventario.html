@@ -2759,65 +2759,117 @@ async function cargarCashea(){
 const CASHEA_DIRECTOR_CODE='271010';
 
 async function toggleCashea(){
-  const checkbox=document.getElementById('cashea-toggle');
-  const nuevoEstado=checkbox.checked;
-  // Revertir visualmente de inmediato; solo se aplica tras autenticación exitosa
-  checkbox.checked=!nuevoEstado;
-  const unlock=await mostrarAuthGen('🔒','Solo Director','Esta acción está restringida al Director. Ingresa tu código.');
-  if(!unlock){ return; }
-  if(unlock!==CASHEA_DIRECTOR_CODE){
-    alert('Acceso denegado: solo el Director puede modificar la configuración de Cashea.');
-    return;
-  }
-  const track=document.getElementById('cashea-toggle-track');
-  const thumb=document.getElementById('cashea-toggle-thumb');
-  const label=document.getElementById('cashea-status-label');
-  // Optimistic UI (ya autenticado)
-  checkbox.checked=nuevoEstado;
-  track.style.background=nuevoEstado?'var(--accent)':'var(--border)';
-  thumb.style.left=nuevoEstado?'27px':'3px';
-  label.textContent=nuevoEstado?'Activo — visible en pedidos.html':'Inactivo — oculto en pedidos.html';
-  const msgEl=document.getElementById('prog-msg');
-  msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
-  msgEl.innerHTML='<span class="spinner">↻</span> Actualizando...';
   try{
-    const res=await scriptGETjson({action:'guardarConfigCashea', cashea_activo:nuevoEstado, codigo_auth:unlock});
-    if(res.ok){
-      msgEl.style.color='var(--accent)'; msgEl.innerHTML=nuevoEstado?'Cashea activado':'Cashea desactivado';
-      setTimeout(()=>{ msgEl.style.display='none'; }, 1500);
-    } else throw new Error(res.error||'Error');
-  }catch(e){
-    // revertir si falla
+    const checkbox=document.getElementById('cashea-toggle');
+    if(!checkbox){ alert('Error: no se encontró el switch. Recarga la página.'); return; }
+    const nuevoEstado=checkbox.checked;
+    // Revertir visualmente de inmediato; solo se aplica tras autenticación exitosa
     checkbox.checked=!nuevoEstado;
-    track.style.background=!nuevoEstado?'var(--accent)':'var(--border)';
-    thumb.style.left=!nuevoEstado?'27px':'3px';
-    label.textContent=!nuevoEstado?'Activo — visible en pedidos.html':'Inactivo — oculto en pedidos.html';
-    msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='Error: '+e.message;
+
+    const unlock=await mostrarAuthGen('🔒','Solo Director','Esta acción está restringida al Director. Ingresa tu código.');
+    if(!unlock){ return; } // usuario canceló el modal
+
+    if(unlock!==CASHEA_DIRECTOR_CODE){
+      alert('Acceso denegado: solo el Director puede modificar la configuración de Cashea.');
+      return;
+    }
+
+    const track=document.getElementById('cashea-toggle-track');
+    const thumb=document.getElementById('cashea-toggle-thumb');
+    const label=document.getElementById('cashea-status-label');
+    // Optimistic UI (ya autenticado)
+    checkbox.checked=nuevoEstado;
+    if(track) track.style.background=nuevoEstado?'var(--accent)':'var(--border)';
+    if(thumb) thumb.style.left=nuevoEstado?'27px':'3px';
+    if(label) label.textContent=nuevoEstado?'Activo — visible en pedidos.html':'Inactivo — oculto en pedidos.html';
+
+    const msgEl=document.getElementById('prog-msg');
+    if(msgEl){
+      msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
+      msgEl.innerHTML='<span class="spinner">↻</span> Actualizando...';
+    }
+
+    const res=await scriptGETjson({action:'guardarConfigCashea', cashea_activo:nuevoEstado, codigo_auth:unlock});
+
+    if(res&&res.ok){
+      if(msgEl){
+        msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)';
+        msgEl.innerHTML=nuevoEstado?'✅ Cashea activado':'✅ Cashea desactivado';
+        setTimeout(()=>{ msgEl.style.display='none'; }, 1800);
+      }
+    } else {
+      throw new Error((res&&res.error)||'Respuesta inválida del servidor');
+    }
+  }catch(e){
+    console.error('Error en toggleCashea:', e);
+    // revertir visualmente si algo falló
+    const checkbox=document.getElementById('cashea-toggle');
+    const track=document.getElementById('cashea-toggle-track');
+    const thumb=document.getElementById('cashea-toggle-thumb');
+    const label=document.getElementById('cashea-status-label');
+    if(checkbox){
+      const estadoRevertido=!checkbox.checked;
+      checkbox.checked=estadoRevertido;
+      if(track) track.style.background=estadoRevertido?'var(--accent)':'var(--border)';
+      if(thumb) thumb.style.left=estadoRevertido?'27px':'3px';
+      if(label) label.textContent=estadoRevertido?'Activo — visible en pedidos.html':'Inactivo — oculto en pedidos.html';
+    }
+    const msgEl=document.getElementById('prog-msg');
+    if(msgEl){
+      msgEl.style.display='block';
+      msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)';
+      msgEl.innerHTML='✗ Error: '+(e.message||'Error desconocido');
+    } else {
+      alert('Error al actualizar Cashea: '+(e.message||'Error desconocido'));
+    }
   }
 }
 
 async function guardarCasheaPct(){
-  const input=document.getElementById('cashea-pct-input');
-  const pct=parseFloat(input.value)||0;
-  if(pct<0){ alert('El porcentaje no puede ser negativo'); return; }
-  const unlock=await mostrarAuthGen('🔒','Solo Director',`Confirmar nuevo porcentaje de ${pct}%. Ingresa tu código de Director.`);
-  if(!unlock) return;
-  if(unlock!==CASHEA_DIRECTOR_CODE){
-    alert('Acceso denegado: solo el Director puede modificar la configuración de Cashea.');
-    return;
-  }
-  const msgEl=document.getElementById('prog-msg');
-  msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
-  msgEl.innerHTML='<span class="spinner">↻</span> Guardando...';
   try{
+    const input=document.getElementById('cashea-pct-input');
+    if(!input){ alert('Error: no se encontró el campo de porcentaje. Recarga la página.'); return; }
+    const pct=parseFloat(input.value);
+    if(isNaN(pct)||pct<0){ alert('Ingresa un porcentaje válido (0 o mayor).'); return; }
+
+    const unlock=await mostrarAuthGen('🔒','Solo Director',`Confirmar nuevo porcentaje de ${pct}%. Ingresa tu código de Director.`);
+    if(!unlock) return; // usuario canceló el modal
+
+    if(unlock!==CASHEA_DIRECTOR_CODE){
+      alert('Acceso denegado: solo el Director puede modificar la configuración de Cashea.');
+      return;
+    }
+
+    const msgEl=document.getElementById('prog-msg');
+    if(msgEl){
+      msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
+      msgEl.innerHTML='<span class="spinner">↻</span> Guardando porcentaje...';
+    }
+
     const res=await scriptGETjson({action:'guardarConfigCashea', cashea_pct:pct, usuario:USUARIOS[unlock]||unlock, fecha:getFechaHora(), codigo_auth:unlock});
-    if(res.ok){
-      msgEl.style.color='var(--accent)'; msgEl.innerHTML='Porcentaje guardado: '+pct+'%';
+
+    if(res&&res.ok){
+      if(msgEl){
+        msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)';
+        msgEl.innerHTML='✅ Porcentaje guardado: '+pct+'%';
+        setTimeout(()=>{ msgEl.style.display='none'; }, 2500);
+      }
       const actualEl=document.getElementById('cashea-pct-actual');
       if(actualEl) actualEl.textContent=pct+'%';
-      setTimeout(()=>{ msgEl.style.display='none'; }, 2000);
-    } else throw new Error(res.error||'Error');
-  }catch(e){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='Error: '+e.message; }
+    } else {
+      throw new Error((res&&res.error)||'Respuesta inválida del servidor');
+    }
+  }catch(e){
+    console.error('Error en guardarCasheaPct:', e);
+    const msgEl=document.getElementById('prog-msg');
+    if(msgEl){
+      msgEl.style.display='block';
+      msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)';
+      msgEl.innerHTML='✗ Error: '+(e.message||'Error desconocido');
+    } else {
+      alert('Error al guardar: '+(e.message||'Error desconocido'));
+    }
+  }
 }
 
 async function cargarColores(app){
@@ -3377,7 +3429,7 @@ function confirmarAuthGen(){
     document.getElementById('auth-gen-unlock').value='';
     return;
   }
-  cerrarAuthGen();
+  document.getElementById('modal-auth-gen').classList.add('hidden');
   if(authGenResolve){ authGenResolve(unlock); authGenResolve=null; }
 }
 
