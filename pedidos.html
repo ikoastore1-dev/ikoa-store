@@ -363,9 +363,10 @@ window.addEventListener('load',function(){
     <!-- MÉTODO DE PAGO -->
     <div class="card">
       <div class="card-title">¿Cómo deseas pagar?</div>
-      <div class="option-grid cols2">
+      <div class="option-grid cols2" id="pago-metodos-grid">
         <button class="opt-btn" id="btn-pago-bs" onclick="seleccionarPago('bs')">💵 Bolívares<span class="sub">Pago Móvil</span></button>
         <button class="opt-btn" id="btn-pago-usd" onclick="seleccionarPago('usd')">💲 Divisa<span class="sub">Binance</span></button>
+        <button class="opt-btn" id="btn-pago-cashea" onclick="seleccionarPago('cashea')" style="display:none;">🛒 Cashea<span class="sub">Cancelar por Cashea</span></button>
       </div>
     </div>
 
@@ -414,6 +415,24 @@ window.addEventListener('load',function(){
       </div>
     </div>
 
+    <!-- DATOS PAGO CASHEA -->
+    <div class="card" id="pago-cashea-card" style="display:none;">
+      <div class="card-title">🛒 Pago por Cashea</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;line-height:2.2;">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
+          <span><span style="color:var(--muted);">Plataforma:</span> <b>App Cashea</b></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);">
+          <span>Incluye recargo Cashea (<b id="cashea-pct-label" style="color:var(--accent);">0</b>%)</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;"><span><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-cashea" style="color:var(--accent);">—</b></span><button onclick="copiarMonto('cashea','btn-copy-monto-cashea')" id="btn-copy-monto-cashea" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button></div>
+      </div>
+      <div class="field-group" style="margin-top:14px;margin-bottom:0;">
+        <div class="field-label">Número de orden Cashea * <span style="color:var(--danger);">(obligatorio)</span></div>
+        <input class="field-input" type="text" id="pago-ref-cashea" placeholder="Ingresa el número de orden de Cashea" oninput="validarRef()">
+      </div>
+    </div>
+
     <div class="nav-row" style="margin-top:14px;">
       <button class="btn-back" onclick="goStep(5)">← Atrás</button>
       <button class="btn-next" id="btn-ir-resumen" onclick="irAlResumen()" disabled style="opacity:.4;cursor:not-allowed;">Siguiente →</button>
@@ -456,7 +475,7 @@ window.addEventListener('load',function(){
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyteamB5iEgMCXBU_LIA-vFOSOrPUoGoHB2HJcFmMEQaW7p4vKbP0ri6dw977IdfV9WKg/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyC3WhBe40Q79e8LEW0G-2n3bABcuE8Yf9FC4qdXSYWqs9eUFc64C0PPOJUCrz5nccuJQ/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
@@ -1006,6 +1025,7 @@ function savePiezas(){
 // ── PAGO ──────────────────────────────────────────────────────
 let precioComfy={bs:0,usd:0}, precioRecarga={bs:0,usd:0};
 let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
+let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
 
 async function calcularPago(){
   try{
@@ -1014,8 +1034,18 @@ async function calcularPago(){
       precioComfy={bs:parseFloat(data.comfy_bs)||0, usd:parseFloat(data.comfy_usd)||0};
       precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
       if(data.tasa_bcv){
-        document.getElementById('pago-tasa-bcv').textContent='Bs '+parseFloat(data.tasa_bcv).toFixed(2);
+        tasaBcvActual=parseFloat(data.tasa_bcv)||0;
+        document.getElementById('pago-tasa-bcv').textContent='Bs '+tasaBcvActual.toFixed(2);
       }
+      casheaPct=parseFloat(data.cashea_pct)||0;
+      document.getElementById('cashea-pct-label').textContent=casheaPct;
+      const casheaActivo=data.cashea_activo===true||data.cashea_activo==='true';
+      const btnCashea=document.getElementById('btn-pago-cashea');
+      const gridPago=document.getElementById('pago-metodos-grid');
+      if(btnCashea) btnCashea.style.display=casheaActivo?'':'none';
+      if(gridPago) gridPago.classList.toggle('cols3',casheaActivo);
+      if(gridPago) gridPago.classList.toggle('cols2',!casheaActivo);
+      if(!casheaActivo&&pagoMoneda==='cashea'){ pagoMoneda=''; document.getElementById('pago-cashea-card').style.display='none'; }
     }
   }catch(e){ console.error('Error leyendo precios:',e); }
 
@@ -1035,6 +1065,8 @@ async function calcularPago(){
 
   pagoTotalBs=Math.round((totalFranelas*precioComfy.bs + totalRecargas*precioRecarga.bs)*100)/100;
   pagoTotalUsd=Math.round((totalFranelas*precioComfy.usd + totalRecargas*precioRecarga.usd)*100)/100;
+  pagoTotalCasheaBs=Math.round(pagoTotalBs*(1+casheaPct/100)*100)/100;
+  pagoTotalCasheaUsd=tasaBcvActual>0?Math.round((pagoTotalCasheaBs/tasaBcvActual)*100)/100:0;
 
   document.getElementById('pago-desglose').innerHTML=
     desglose.join('<br>')+
@@ -1044,19 +1076,25 @@ async function calcularPago(){
   document.getElementById('pago-total-usd').textContent='$'+pagoTotalUsd.toFixed(2);
   document.getElementById('pm-monto-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
   document.getElementById('pm-monto-usd').textContent='$'+pagoTotalUsd.toFixed(2);
+  document.getElementById('pm-monto-cashea').textContent='Bs '+pagoTotalCasheaBs.toFixed(2)+' ($'+pagoTotalCasheaUsd.toFixed(2)+')';
 }
 
 function seleccionarPago(tipo){
   pagoMoneda=tipo;
   document.getElementById('btn-pago-bs').classList.toggle('selected',tipo==='bs');
   document.getElementById('btn-pago-usd').classList.toggle('selected',tipo==='usd');
+  document.getElementById('btn-pago-cashea').classList.toggle('selected',tipo==='cashea');
   document.getElementById('pago-bs-card').style.display=tipo==='bs'?'block':'none';
   document.getElementById('pago-usd-card').style.display=tipo==='usd'?'block':'none';
+  document.getElementById('pago-cashea-card').style.display=tipo==='cashea'?'block':'none';
   validarRef();
 }
 
 function validarRef(){
-  const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim():document.getElementById('pago-ref-usd')?.value.trim();
+  const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim()
+    :pagoMoneda==='usd'?document.getElementById('pago-ref-usd')?.value.trim()
+    :pagoMoneda==='cashea'?document.getElementById('pago-ref-cashea')?.value.trim()
+    :'';
   const btn=document.getElementById('btn-ir-resumen');
   const ok=pagoMoneda&&ref&&ref.length>3;
   btn.disabled=!ok;
@@ -1064,19 +1102,21 @@ function validarRef(){
   btn.style.cursor=ok?'pointer':'not-allowed';
   if(ok){
     pagoRef=ref;
-    pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
+    pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':pagoMoneda==='usd'?'Divisa':'Cashea';
     pedido.pagoRef=ref;
-    pedido.pagoMonto=pagoMoneda==='bs'?pagoTotalBs:pagoTotalUsd;
+    pedido.pagoMonto=pagoMoneda==='bs'?pagoTotalBs:pagoMoneda==='usd'?pagoTotalUsd:pagoTotalCasheaBs;
   }
 }
 
 function irAlResumen(){
   if(!pagoMoneda){ alert('Selecciona el método de pago'); return; }
-  const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim():document.getElementById('pago-ref-usd')?.value.trim();
+  const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim()
+    :pagoMoneda==='usd'?document.getElementById('pago-ref-usd')?.value.trim()
+    :document.getElementById('pago-ref-cashea')?.value.trim();
   if(!ref||ref.length<3){ alert('Ingresa la referencia o código de confirmación'); return; }
-  pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
+  pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':pagoMoneda==='usd'?'Divisa':'Cashea';
   pedido.pagoRef=ref;
-  pedido.pagoMonto=pagoMoneda==='bs'?pagoTotalBs:pagoTotalUsd;
+  pedido.pagoMonto=pagoMoneda==='bs'?pagoTotalBs:pagoMoneda==='usd'?pagoTotalUsd:pagoTotalCasheaBs;
   const curEl=document.getElementById('step6');
   curEl.classList.remove('active');
   currentStep=7;
@@ -1087,10 +1127,10 @@ function irAlResumen(){
 }
 
 function copiarMonto(moneda, btnId){
-  const el=document.getElementById(moneda==='bs'?'pm-monto-bs':'pm-monto-usd');
+  const el=document.getElementById(moneda==='bs'?'pm-monto-bs':moneda==='usd'?'pm-monto-usd':'pm-monto-cashea');
   if(!el) return;
   // Extract numeric value only
-  const texto=el.textContent.replace('Bs ','').replace('$','').trim();
+  const texto=el.textContent.replace('Bs ','').replace('$','').replace(/\s*\(.*\)/,'').trim();
   navigator.clipboard.writeText(texto).then(()=>{
     const btn=document.getElementById(btnId);
     if(btn){ btn.textContent='✅ Copiado'; setTimeout(()=>{ btn.textContent='📋 Copiar'; }, 2000); }
@@ -1129,7 +1169,7 @@ function buildResumen(){
       <div class="resumen-label">🚚 Entrega</div>
       <div class="resumen-block"><b>Agencia:</b> ${pedido.agencia}<br><b>Retira:</b> ${retiraText}</div>
       <div class="resumen-label">💳 Pago</div>
-      <div class="resumen-block"><b>Moneda:</b> ${pedido.pagoMoneda||'—'}<br><b>Monto:</b> ${pedido.pagoMoneda==='Bs'?'Bs':'$'}${pedido.pagoMonto||'—'}<br><b>Referencia:</b> ${pedido.pagoRef||'—'}</div>
+      <div class="resumen-block"><b>Moneda:</b> ${pedido.pagoMoneda||'—'}<br><b>Monto:</b> ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto||'—'}<br><b>Referencia:</b> ${pedido.pagoRef||'—'}</div>
     </div>`;
 }
 
@@ -1139,7 +1179,7 @@ function buildMensaje(){
     const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla} — ${p.nombre}`).join('\n');
     return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: ${pk.modelo} ${pk.manga} ${pk.capucha}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
   }).join('\n\n');
-  return `🛍️ *PEDIDO IKOA & BEKATE*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Bs'?'Bs':'$'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
+  return `🛍️ *PEDIDO IKOA & BEKATE*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
 }
 
 async function guardarEnSheets(){

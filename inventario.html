@@ -1727,6 +1727,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <button class="tab" id="ptab-unicolor" onclick="switchProg('unicolor')" style="font-size:13px;padding:8px 14px;">⚪ UNICOLOR</button>
       <button class="tab" id="ptab-toalla" onclick="switchProg('toalla')" style="font-size:13px;padding:8px 14px;">🏖️ TOALLA</button>
       <button class="tab" id="ptab-celapi" onclick="switchProg('celapi')" style="font-size:13px;padding:8px 14px;">📱 CEL - API</button>
+      <button class="tab" id="ptab-cashea" onclick="switchProg('cashea')" style="font-size:13px;padding:8px 14px;">🛒 CASHEA</button>
     </div>
 
     <div id="prog-msg" style="display:none;padding:12px;border-radius:10px;text-align:center;font-size:14px;font-weight:600;margin-bottom:12px;"></div>
@@ -1740,7 +1741,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyteamB5iEgMCXBU_LIA-vFOSOrPUoGoHB2HJcFmMEQaW7p4vKbP0ri6dw977IdfV9WKg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyC3WhBe40Q79e8LEW0G-2n3bABcuE8Yf9FC4qdXSYWqs9eUFc64C0PPOJUCrz5nccuJQ/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -2617,6 +2618,7 @@ async function switchProg(app){
   const btn=document.getElementById('ptab-'+app);
   if(btn) btn.classList.add('active');
   if(app==='celapi') await cargarCelApi();
+  else if(app==='cashea') await cargarCashea();
   else await cargarColores(app);
 }
 
@@ -2694,6 +2696,97 @@ async function eliminarCelApi(celular, fecha){
     if(res.ok){
       msgEl.style.color='var(--accent)'; msgEl.innerHTML='Registro eliminado';
       setTimeout(()=>{ msgEl.style.display='none'; cargarCelApi(); }, 2000);
+    } else throw new Error(res.error||'Error');
+  }catch(e){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='Error: '+e.message; }
+}
+
+// ── CASHEA (Comfy Mega Promo) ───────────────────────────────────
+async function cargarCashea(){
+  const cont=document.getElementById('prog-content');
+  cont.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">⏳ Cargando...</div>';
+  try{
+    const data=await scriptGETjson({action:'leerConfigCashea'});
+    if(!data.ok) throw new Error(data.error||'Error');
+    const pct=parseFloat(data.cashea_pct)||0;
+    const activo=data.cashea_activo===true||data.cashea_activo==='true';
+
+    const html=`
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+      Configuración exclusiva de la app <b style="color:var(--text);">Comfy Mega Promo</b> (pedidos.html). Al activar el switch, se mostrará la opción "Cancelar por Cashea" en esa app.
+    </div>
+
+    <!-- Switch ON/OFF -->
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:16px;">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);">Opción de pago Cashea</div>
+        <div style="font-size:12px;color:var(--muted);" id="cashea-status-label">${activo?'Activo — visible en pedidos.html':'Inactivo — oculto en pedidos.html'}</div>
+      </div>
+      <label style="position:relative;display:inline-block;width:52px;height:28px;flex-shrink:0;">
+        <input type="checkbox" id="cashea-toggle" ${activo?'checked':''} onchange="toggleCashea()" style="opacity:0;width:0;height:0;">
+        <span id="cashea-toggle-track" style="position:absolute;cursor:pointer;inset:0;background:${activo?'var(--accent)':'var(--border)'};border-radius:28px;transition:.2s;"></span>
+        <span id="cashea-toggle-thumb" style="position:absolute;height:22px;width:22px;left:${activo?'27px':'3px'};top:3px;background:#fff;border-radius:50%;transition:.2s;"></span>
+      </label>
+    </div>
+
+    <!-- Porcentaje -->
+    <div class="field-group" style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:0;">
+      <div class="field-label">Porcentaje de incremento Cashea (%) <span style="color:var(--muted);">— 0 = sin incremento</span></div>
+      <div style="display:flex;gap:8px;">
+        <input type="number" id="cashea-pct-input" value="${pct}" min="0" step="0.01"
+          style="flex:1;background:var(--bg);border:1.5px solid var(--accent);border-radius:8px;padding:10px 12px;color:var(--text);font-size:15px;font-weight:700;outline:none;">
+        <button onclick="guardarCasheaPct()" style="padding:10px 20px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">💾 Guardar</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;">
+        Cálculo aplicado: Precio Cashea en Bs = Precio base en Bs × (1 + %/100). Divisa = resultado ÷ Tasa BCV actual.
+      </div>
+    </div>`;
+    cont.innerHTML=html;
+  }catch(e){
+    cont.innerHTML=`<div style="color:var(--danger);text-align:center;padding:20px;">✗ Error: ${e.message}</div>`;
+  }
+}
+
+async function toggleCashea(){
+  const checkbox=document.getElementById('cashea-toggle');
+  const nuevoEstado=checkbox.checked;
+  const track=document.getElementById('cashea-toggle-track');
+  const thumb=document.getElementById('cashea-toggle-thumb');
+  const label=document.getElementById('cashea-status-label');
+  // Optimistic UI
+  track.style.background=nuevoEstado?'var(--accent)':'var(--border)';
+  thumb.style.left=nuevoEstado?'27px':'3px';
+  label.textContent=nuevoEstado?'Activo — visible en pedidos.html':'Inactivo — oculto en pedidos.html';
+  const msgEl=document.getElementById('prog-msg');
+  msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
+  msgEl.innerHTML='<span class="spinner">↻</span> Actualizando...';
+  try{
+    const res=await scriptGETjson({action:'guardarConfigCashea', cashea_activo:nuevoEstado});
+    if(res.ok){
+      msgEl.style.color='var(--accent)'; msgEl.innerHTML=nuevoEstado?'Cashea activado':'Cashea desactivado';
+      setTimeout(()=>{ msgEl.style.display='none'; }, 1500);
+    } else throw new Error(res.error||'Error');
+  }catch(e){
+    // revertir si falla
+    checkbox.checked=!nuevoEstado;
+    track.style.background=!nuevoEstado?'var(--accent)':'var(--border)';
+    thumb.style.left=!nuevoEstado?'27px':'3px';
+    label.textContent=!nuevoEstado?'Activo — visible en pedidos.html':'Inactivo — oculto en pedidos.html';
+    msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='Error: '+e.message;
+  }
+}
+
+async function guardarCasheaPct(){
+  const input=document.getElementById('cashea-pct-input');
+  const pct=parseFloat(input.value)||0;
+  if(pct<0){ alert('El porcentaje no puede ser negativo'); return; }
+  const msgEl=document.getElementById('prog-msg');
+  msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
+  msgEl.innerHTML='<span class="spinner">↻</span> Guardando...';
+  try{
+    const res=await scriptGETjson({action:'guardarConfigCashea', cashea_pct:pct});
+    if(res.ok){
+      msgEl.style.color='var(--accent)'; msgEl.innerHTML='Porcentaje guardado: '+pct+'%';
+      setTimeout(()=>{ msgEl.style.display='none'; }, 2000);
     } else throw new Error(res.error||'Error');
   }catch(e){ msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='Error: '+e.message; }
 }
