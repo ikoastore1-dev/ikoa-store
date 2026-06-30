@@ -424,10 +424,6 @@ window.addEventListener('load',function(){
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;"><span><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-cashea" style="color:var(--accent);">—</b></span><button onclick="copiarMonto('cashea','btn-copy-monto-cashea')" id="btn-copy-monto-cashea" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button></div>
       </div>
-      <div class="field-group" style="margin-top:14px;margin-bottom:0;">
-        <div class="field-label">Número de orden Cashea * <span style="color:var(--danger);">(obligatorio)</span></div>
-        <input class="field-input" type="text" id="pago-ref-cashea" placeholder="Ingresa el número de orden de Cashea" oninput="validarRef()">
-      </div>
     </div>
 
     <div class="nav-row" style="margin-top:14px;">
@@ -446,6 +442,9 @@ window.addEventListener('load',function(){
     </button>
     <button id="btn-sin-whatsapp" onclick="enviarSinWhatsApp()" style="width:100%;padding:16px;background:transparent;border:2px solid var(--border);border-radius:14px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-top:10px;">
       📋 Enviar pedido sin copia en WhatsApp
+    </button>
+    <button class="btn-send" id="btn-aprobar-cashea" onclick="aprobarSolicitudCashea()" style="display:none;">
+      <span style="font-size:22px;">✅</span> Aprobar Solicitud
     </button>
     <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px;" id="sending-note"></div>
     <div class="nav-row" style="margin-top:12px;"><button class="btn-back" onclick="goStep(6)">← Editar pago</button></div>
@@ -1083,13 +1082,25 @@ function seleccionarPago(tipo){
   document.getElementById('pago-bs-card').style.display=tipo==='bs'?'block':'none';
   document.getElementById('pago-usd-card').style.display=tipo==='usd'?'block':'none';
   document.getElementById('pago-cashea-card').style.display=tipo==='cashea'?'block':'none';
+  const btnResumen=document.getElementById('btn-ir-resumen');
+  if(btnResumen) btnResumen.textContent='Siguiente →';
   validarRef();
 }
 
 function validarRef(){
+  if(pagoMoneda==='cashea'){
+    const btn=document.getElementById('btn-ir-resumen');
+    btn.disabled=false;
+    btn.style.opacity='1';
+    btn.style.cursor='pointer';
+    pagoRef='CASHEA';
+    pedido.pagoMoneda='Cashea';
+    pedido.pagoRef='CASHEA';
+    pedido.pagoMonto=pagoTotalCasheaBs;
+    return;
+  }
   const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim()
     :pagoMoneda==='usd'?document.getElementById('pago-ref-usd')?.value.trim()
-    :pagoMoneda==='cashea'?document.getElementById('pago-ref-cashea')?.value.trim()
     :'';
   const btn=document.getElementById('btn-ir-resumen');
   const ok=pagoMoneda&&ref&&ref.length>3;
@@ -1098,21 +1109,26 @@ function validarRef(){
   btn.style.cursor=ok?'pointer':'not-allowed';
   if(ok){
     pagoRef=ref;
-    pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':pagoMoneda==='usd'?'Divisa':'Cashea';
+    pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
     pedido.pagoRef=ref;
-    pedido.pagoMonto=pagoMoneda==='bs'?pagoTotalBs:pagoMoneda==='usd'?pagoTotalUsd:pagoTotalCasheaBs;
+    pedido.pagoMonto=pagoMoneda==='bs'?pagoTotalBs:pagoTotalUsd;
   }
 }
 
 function irAlResumen(){
   if(!pagoMoneda){ alert('Selecciona el método de pago'); return; }
-  const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim()
-    :pagoMoneda==='usd'?document.getElementById('pago-ref-usd')?.value.trim()
-    :document.getElementById('pago-ref-cashea')?.value.trim();
-  if(!ref||ref.length<3){ alert('Ingresa la referencia o código de confirmación'); return; }
-  pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':pagoMoneda==='usd'?'Divisa':'Cashea';
-  pedido.pagoRef=ref;
-  pedido.pagoMonto=pagoMoneda==='bs'?pagoTotalBs:pagoMoneda==='usd'?pagoTotalUsd:pagoTotalCasheaBs;
+  if(pagoMoneda==='cashea'){
+    pedido.pagoMoneda='Cashea';
+    pedido.pagoRef='CASHEA';
+    pedido.pagoMonto=pagoTotalCasheaBs;
+  } else {
+    const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim()
+      :document.getElementById('pago-ref-usd')?.value.trim();
+    if(!ref||ref.length<3){ alert('Ingresa la referencia o código de confirmación'); return; }
+    pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
+    pedido.pagoRef=ref;
+    pedido.pagoMonto=pagoMoneda==='bs'?pagoTotalBs:pagoTotalUsd;
+  }
   const curEl=document.getElementById('step6');
   curEl.classList.remove('active');
   currentStep=7;
@@ -1167,6 +1183,13 @@ function buildResumen(){
       <div class="resumen-label">💳 Pago</div>
       <div class="resumen-block"><b>Moneda:</b> ${pedido.pagoMoneda||'—'}<br><b>Monto:</b> ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto||'—'}<br><b>Referencia:</b> ${pedido.pagoRef||'—'}</div>
     </div>`;
+  const esCashea=pagoMoneda==='cashea';
+  const btnWA=document.getElementById('btn-whatsapp');
+  const btnSin=document.getElementById('btn-sin-whatsapp');
+  const btnCashea=document.getElementById('btn-aprobar-cashea');
+  if(btnWA) btnWA.style.display=esCashea?'none':'';
+  if(btnSin) btnSin.style.display=esCashea?'none':'';
+  if(btnCashea) btnCashea.style.display=esCashea?'':'none';
 }
 
 function buildMensaje(){
@@ -1239,6 +1262,25 @@ async function enviarSinWhatsApp(){
   await notificarNuevoPedido();
   await marcarTokenUsado();
   document.getElementById('pantalla-exito').style.display='block';
+}
+
+async function aprobarSolicitudCashea(){
+  const btn=document.getElementById('btn-aprobar-cashea');
+  if(!btn) return;
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner">↻</span> Enviando solicitud...';
+  try{
+    await guardarEnSheets();
+    await notificarNuevoPedido();
+    await marcarTokenUsado();
+    window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(buildMensaje())}`,'_blank');
+    document.getElementById('pantalla-exito').style.display='block';
+  }catch(e){
+    console.error('Error en aprobarSolicitudCashea:', e);
+    btn.disabled=false;
+    btn.innerHTML='<span style="font-size:22px;">✅</span> Aprobar Solicitud';
+    alert('Ocurrió un error al enviar la solicitud. Intenta de nuevo.');
+  }
 }
 
 async function enviarWhatsApp(){
