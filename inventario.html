@@ -1741,7 +1741,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPDRxy85cMSLTgejKxoGW-6D28tV7mLCV774-VSVbfPAta7bjTDzEToKFYwcr8gyDubw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydRrbEmwyC_7HZvambrhxlGu0Y87varhINlQqYABlxpJxTvCc4lJr7mbbSHuwIak_X3A/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -8396,12 +8396,17 @@ async function cotbActualizarPrecio(){
 }
 
 async function cotbConfirmarRechazo(){
-  const unlock=document.getElementById('cotb-rechazo-unlock')?.value.trim().toUpperCase()||'';
-  const motivo=document.getElementById('cotb-rechazo-motivo')?.value.trim()||'';
-  if(!USUARIOS[unlock]){ alert('Código incorrecto'); return; }
+  const unlock=document.getElementById('cotb-unlock-rechazo')?.value.trim().toUpperCase()||'';
+  const motivo=document.getElementById('cotb-motivo-rechazo')?.value.trim()||'';
+  const errorEl=document.getElementById('cotb-error-rechazo');
+  if(!USUARIOS[unlock]){
+    if(errorEl) errorEl.textContent='❌ Código incorrecto';
+    return;
+  }
   if(!motivo){ alert('Por favor indica el motivo del rechazo.'); return; }
+  if(errorEl) errorEl.textContent='';
   try{
-    const resp=await scriptGETjson({action:'rechazarCotizacion',codigo:cotbCotizacionActual.codigo,motivo,usuario:USUARIOS[unlock]});
+    const resp=await scriptGETjson({action:'rechazarCotizacion',codigo:cotbCotizacionActual.codigo,motivo,usuario:USUARIOS[unlock],fecha:getFechaHora()});
     if(resp.ok){ location.reload(); } else { alert('Error al rechazar: '+(resp.error||'desconocido')); }
   } catch(e){ alert('Error al rechazar la cotización.'); }
 }
