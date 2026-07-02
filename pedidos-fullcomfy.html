@@ -1291,6 +1291,25 @@ async function notificarNuevoPedido(){
     await fetch('https://hook.us2.make.com/f3mbneb3oliah6tv4ut64rb6x1pamiwa',{method:'POST',body:wb,mode:'no-cors'});
   }catch(e){ console.warn('Notify error:',e); }
 }
+async function aprobarSolicitudCashea(){
+  const btn=document.getElementById('btn-aprobar-cashea');
+  if(!btn) return;
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner">↻</span> Enviando solicitud...';
+  try{
+    await guardarEnSheets();
+    await notificarNuevoPedido();
+    await marcarTokenUsado();
+    window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(buildMensaje())}`,'_blank');
+    document.getElementById('pantalla-exito').style.display='block';
+  }catch(e){
+    console.error('Error en aprobarSolicitudCashea:', e);
+    btn.disabled=false;
+    btn.innerHTML='<span style="font-size:22px;">✅</span> Aprobar Solicitud';
+    alert('Ocurrió un error al enviar la solicitud. Intenta de nuevo.');
+  }
+}
+
 async function enviarSinWhatsApp(){
   const btn=document.getElementById('btn-sin-whatsapp');
   const btnWA=document.getElementById('btn-whatsapp');
