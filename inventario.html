@@ -994,6 +994,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <button class="apro-sub-btn" data-sub="Reprobado" onclick="switchAprobaciones('Reprobado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✗ Reprobadas</button>
       <button class="apro-sub-btn" data-sub="Cola" onclick="switchAprobaciones('Cola')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Cola</button>
       <button class="apro-sub-btn" data-sub="GiftCard" onclick="switchAprobaciones('GiftCard')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🎁 GiftCard</button>
+      <button class="apro-sub-btn" data-sub="Cashea" onclick="switchAprobaciones('Cashea')" style="flex:1;padding:8px;border:2px solid var(--accent);border-radius:8px;background:var(--surface2);color:var(--accent);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🛒 Cashea</button>
     </div>
     <!-- Búsqueda para Aprobadas/Reprobadas -->
     <div id="historial-apro-search" style="display:none;margin-bottom:12px;">
@@ -1035,6 +1036,12 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       </div>
       <div id="cola-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
       <div id="cola-list"></div>
+    </div>
+
+    <!-- SECCIÓN CASHEA -->
+    <div id="aprosec-cashea" style="display:none;">
+      <div id="cashea-apro-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
+      <div id="cashea-apro-list"></div>
     </div>
   </div>
 
@@ -1741,7 +1748,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjMeNs1rN_KzzusDkyEbDnyO9v_IatKx40HIPifpIBebMNWfpADed943bw3wl7V5FpGw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmmtxa-TLB4XnlMzlXzlv-6QhVQPqWbTHO5YgmbrL-FkK71UPfA7fHFGcPuY4R02glbQ/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -3352,8 +3359,8 @@ function switchStock(sub){
 function switchAprobaciones(sub){
   document.querySelectorAll('.apro-sub-btn').forEach(b=>{
     const active=b.dataset.sub===sub;
-    const colors={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)',Cola:'var(--warn)',GiftCard:'#cc66ff'};
-    const bgs={Pendiente:'#2a1f0a',Pagado:'var(--surface2)',Reprobado:'#2a1010',Cola:'#2a1f0a',GiftCard:'#1a0f2b'};
+    const colors={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)',Cola:'var(--warn)',GiftCard:'#cc66ff',Cashea:'var(--accent)'};
+    const bgs={Pendiente:'#2a1f0a',Pagado:'var(--surface2)',Reprobado:'#2a1010',Cola:'#2a1f0a',GiftCard:'#1a0f2b',Cashea:'#0a2a1a'};
     b.style.borderColor=active?colors[sub]:'var(--border)';
     b.style.background=active?bgs[sub]:'var(--surface2)';
     b.style.color=active?colors[sub]:'var(--muted)';
@@ -3363,12 +3370,133 @@ function switchAprobaciones(sub){
     searchEl.style.display=(sub==='Pagado'||sub==='Reprobado')?'block':'none';
     if(sub==='Pagado'||sub==='Reprobado') document.getElementById('historial-apro-input').value='';
   }
-  document.getElementById('aprosec-solicitudes').style.display=(sub==='Cola'||sub==='GiftCard')?'none':'block';
+  document.getElementById('aprosec-solicitudes').style.display=(sub==='Cola'||sub==='GiftCard'||sub==='Cashea')?'none':'block';
   document.getElementById('aprosec-cola').style.display=sub==='Cola'?'block':'none';
   document.getElementById('aprosec-giftcard').style.display=sub==='GiftCard'?'block':'none';
+  document.getElementById('aprosec-cashea').style.display=sub==='Cashea'?'block':'none';
   if(sub==='Cola') cargarCola();
   else if(sub==='GiftCard'){ gcSubActual='pendiente'; switchGCSub('pendiente'); }
+  else if(sub==='Cashea') cargarAprobacionesCashea();
   else cargarSolicitudes(sub);
+}
+
+async function cargarAprobacionesCashea(){
+  const listEl=document.getElementById('cashea-apro-list');
+  const msgEl=document.getElementById('cashea-apro-msg');
+  listEl.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">⏳ Cargando...</div>';
+  try{
+    const data=await scriptGETjson({action:'leerCashea'});
+    if(!data.ok) throw new Error(data.error||'Error');
+    const rows=data.rows||[];
+    if(!rows.length){ listEl.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">No hay pedidos Cashea pendientes</div>'; return; }
+    listEl.innerHTML=rows.map((r,i)=>{
+      const cod=r[0]||'', fecha=r[4]||'', nombre=r[7]||'', celular=r[10]||'';
+      const pack=r[14]||'', tela=r[15]||'', piezas=r[17]||'', agencia=r[18]||'';
+      const monto=r[29]||'', casheaPct=r[33]||'';
+      const key=`cashea_${i}`;
+      window[`_casheaData_${key}`]={cod, fecha, nombre, celular, pack, tela, piezas, agencia, monto, casheaPct, row: r};
+      return `
+      <div style="background:var(--surface2);border:1.5px solid var(--accent);border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:13px;font-weight:700;color:var(--accent);">${cod}</span>
+          <span style="background:#0a2a1a;border:1px solid var(--accent);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--accent);">🛒 CASHEA ${casheaPct?'· '+casheaPct+'%':''}</span>
+        </div>
+        <div style="font-size:13px;color:var(--text);margin-bottom:4px;"><b>${nombre}</b> · ${celular}</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">${pack} · ${tela} · ${piezas}</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Agencia: ${agencia} · Monto: Bs ${monto}</div>
+        <button onclick="abrirModalAprobarCashea('${key}')" style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✅ Aprobar Solicitud Cashea</button>
+      </div>`;
+    }).join('');
+  }catch(e){
+    listEl.innerHTML=`<div style="color:var(--danger);text-align:center;padding:20px;">✗ Error: ${e.message}</div>`;
+  }
+}
+
+let _casheaModalKey=null;
+function abrirModalAprobarCashea(key){
+  _casheaModalKey=key;
+  const data=window[`_casheaData_${key}`]||{};
+  // Reusar el modal de aprobación existente adaptado para Cashea
+  const modal=document.getElementById('modal-aprobar-cashea');
+  if(!modal){
+    // Crear modal dinámico
+    const div=document.createElement('div');
+    div.id='modal-aprobar-cashea';
+    div.style.cssText='position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:20px;';
+    div.innerHTML=`
+      <div style="background:var(--surface2);border-radius:14px;padding:20px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto;">
+        <div style="font-size:16px;font-weight:700;color:var(--accent);margin-bottom:4px;">🛒 Aprobar Solicitud Cashea</div>
+        <div id="cashea-modal-info" style="font-size:13px;color:var(--muted);margin-bottom:16px;"></div>
+        <div class="field-group" style="margin-bottom:12px;">
+          <div class="field-label">COD Cashea *</div>
+          <input class="field-input" type="text" id="cashea-cod-input" placeholder="Número de orden Cashea">
+        </div>
+        <div class="field-group" style="margin-bottom:16px;">
+          <div class="field-label">Porcentaje Inicial % *</div>
+          <input class="field-input" type="number" id="cashea-pct-inicial-input" placeholder="Ej: 50" min="0" max="100" step="0.01">
+        </div>
+        <div class="field-group" style="margin-bottom:16px;">
+          <div class="field-label">Código de autorización *</div>
+          <input class="field-input" type="password" id="cashea-auth-input" placeholder="Tu código de usuario">
+          <div id="cashea-modal-error" style="color:var(--danger);font-size:12px;margin-top:4px;display:none;"></div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="cerrarModalCashea()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Cancelar</button>
+          <button onclick="confirmarAprobarCashea()" style="flex:2;padding:12px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✅ Confirmar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(div);
+  }
+  document.getElementById('cashea-modal-info').textContent=`${data.nombre||''} · Bs ${data.monto||''} · Cashea ${data.casheaPct||''}%`;
+  document.getElementById('cashea-cod-input').value='';
+  document.getElementById('cashea-pct-inicial-input').value='';
+  document.getElementById('cashea-auth-input').value='';
+  document.getElementById('cashea-modal-error').style.display='none';
+  document.getElementById('modal-aprobar-cashea').style.display='flex';
+}
+
+function cerrarModalCashea(){
+  const modal=document.getElementById('modal-aprobar-cashea');
+  if(modal) modal.style.display='none';
+}
+
+async function confirmarAprobarCashea(){
+  const cod=document.getElementById('cashea-cod-input').value.trim();
+  const pctInicial=document.getElementById('cashea-pct-inicial-input').value.trim();
+  const auth=document.getElementById('cashea-auth-input').value.trim().toUpperCase();
+  const errEl=document.getElementById('cashea-modal-error');
+
+  if(!cod){ errEl.textContent='Ingresa el COD Cashea'; errEl.style.display='block'; return; }
+  if(!pctInicial){ errEl.textContent='Ingresa el porcentaje inicial'; errEl.style.display='block'; return; }
+  if(!USUARIOS[auth]){ errEl.textContent='❌ Código incorrecto'; errEl.style.display='block'; return; }
+  errEl.style.display='none';
+
+  const data=window[`_casheaData_${_casheaModalKey}`]||{};
+  const btnConf=document.querySelector('#modal-aprobar-cashea button:last-child');
+  if(btnConf){ btnConf.disabled=true; btnConf.textContent='⏳ Procesando...'; }
+
+  try{
+    const res=await scriptGETjson({
+      action:'aprobarCashea',
+      codigo_s: data.cod,
+      cod_cashea: cod,
+      pct_inicial: pctInicial,
+      fecha_aprobacion: getFechaHora(),
+      usuario: USUARIOS[auth]||auth,
+      banco: 'CASHEA'
+    });
+    if(res.ok){
+      cerrarModalCashea();
+      const msgEl=document.getElementById('cashea-apro-msg');
+      if(msgEl){ msgEl.style.display='block'; msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)'; msgEl.innerHTML=`✅ Aprobado → ${res.codigoC||''} | FACTURAS.CASHEA registrado`; setTimeout(()=>{ msgEl.style.display='none'; },3000); }
+      cargarAprobacionesCashea();
+    } else {
+      throw new Error(res.error||'Error al aprobar');
+    }
+  }catch(e){
+    if(btnConf){ btnConf.disabled=false; btnConf.textContent='✅ Confirmar'; }
+    errEl.textContent='✗ '+e.message; errEl.style.display='block';
+  }
 }
 
 function refreshAprobaciones(){
