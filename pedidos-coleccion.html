@@ -1178,7 +1178,7 @@ let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
 
 async function calcularPago(){
   try{
-    const data=await scriptGETjson({action:'leerPreciosColeccion',codigo:pedido.codigoProducto});
+    const data=await scriptGETjson({action:'leerTodosLosPrecios',codigo:pedido.codigoProducto});
     if(data.ok){
       precioRecarga={bs:parseFloat(data.recarga_bs)||0,usd:parseFloat(data.recarga_usd)||0};
       precioCapucha={bs:parseFloat(data.capucha_bs)||0,usd:parseFloat(data.capucha_usd)||0};
@@ -1186,8 +1186,8 @@ async function calcularPago(){
         tasaBcvActual=parseFloat(data.tasa_bcv)||0;
         document.getElementById('pago-tasa-bcv').textContent='Bs '+tasaBcvActual.toFixed(2);
       }
-      casheaPct=parseFloat(data.cashea_pct)||0;
-      const casheaActivo=data.cashea_activo===true||data.cashea_activo==='true';
+      casheaPct=parseFloat(data.cashea&&data.cashea.coleccion?data.cashea.coleccion.cashea_pct:0)||0;
+      const casheaActivo=data.cashea&&data.cashea.coleccion?data.cashea.coleccion.cashea_activo===true||data.cashea.coleccion.cashea_activo==='true':false;
       const btnCashea=document.getElementById('btn-pago-cashea');
       const gridPago=document.getElementById('pago-metodos-grid');
       if(btnCashea) btnCashea.style.display=casheaActivo?'':'none';

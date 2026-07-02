@@ -705,11 +705,11 @@ window.addEventListener('DOMContentLoaded',async()=>{
       document.getElementById('pantalla-seleccion').style.display='block';
       // Precargar productos y tasa BCV
       try{
-        const pd=await scriptGETjson({action:'leerPrecios'});
+        const pd=await scriptGETjson({action:'leerTodosLosPrecios'});
         if(pd.ok){
           tasaBCV=pd.tasa_bcv||0;
-          casheaPctGC=parseFloat(pd.cashea_pct)||0;
-          const casheaActivo=pd.cashea_activo===true||pd.cashea_activo==='true';
+          casheaPctGC=parseFloat(pd.cashea&&pd.cashea.giftcard?pd.cashea.giftcard.cashea_pct:pd.cashea_pct)||0;
+          const casheaActivo=pd.cashea&&pd.cashea.giftcard?pd.cashea.giftcard.cashea_activo===true||pd.cashea.giftcard.cashea_activo==='true':pd.cashea_activo===true||pd.cashea_activo==='true';
           const btnGCCashea=document.getElementById('pm-cashea');
           const gridGC=document.getElementById('pago-gc-grid');
           if(btnGCCashea) btnGCCashea.style.display=casheaActivo?'':'none';

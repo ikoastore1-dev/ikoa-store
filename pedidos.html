@@ -1025,16 +1025,16 @@ let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
 
 async function calcularPago(){
   try{
-    const data=await scriptGETjson({action:'leerPrecios'});
+    const data=await scriptGETjson({action:'leerTodosLosPrecios'});
     if(data.ok){
-      precioComfy={bs:parseFloat(data.comfy_bs)||0, usd:parseFloat(data.comfy_usd)||0};
+      precioComfy={bs:parseFloat(data.pack_precios&&data.pack_precios.COMFY11?data.pack_precios.COMFY11.bs:data.comfy_bs)||0, usd:parseFloat(data.pack_precios&&data.pack_precios.COMFY11?data.pack_precios.COMFY11.usd:data.comfy_usd)||0};
       precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
       if(data.tasa_bcv){
         tasaBcvActual=parseFloat(data.tasa_bcv)||0;
         document.getElementById('pago-tasa-bcv').textContent='Bs '+tasaBcvActual.toFixed(2);
       }
-      casheaPct=parseFloat(data.cashea_pct)||0;
-      const casheaActivo=data.cashea_activo===true||data.cashea_activo==='true';
+      casheaPct=parseFloat(data.cashea&&data.cashea.comfy?data.cashea.comfy.cashea_pct:data.cashea_pct)||0;
+      const casheaActivo=data.cashea&&data.cashea.comfy?data.cashea.comfy.cashea_activo===true||data.cashea.comfy.cashea_activo==='true':data.cashea_activo===true||data.cashea_activo==='true';
       const btnCashea=document.getElementById('btn-pago-cashea');
       const gridPago=document.getElementById('pago-metodos-grid');
       if(btnCashea) btnCashea.style.display=casheaActivo?'':'none';
