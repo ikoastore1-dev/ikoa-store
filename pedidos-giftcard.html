@@ -522,9 +522,10 @@ main{max-width:480px;margin:0 auto;padding:16px;}
         </div>
       </div>
       <div class="card-title">¿Cómo deseas pagar?</div>
-      <div class="option-grid cols2">
+      <div class="option-grid cols2" id="pago-gc-grid">
         <button class="opt-btn" id="pm-bs" onclick="selectPagoGC('bs')">🏦 Bolívares<span class="sub" id="pm-monto-bs">—</span></button>
         <button class="opt-btn" id="pm-usd" onclick="selectPagoGC('usd')">💵 Divisa<span class="sub" id="pm-monto-usd">—</span></button>
+        <button class="opt-btn" id="pm-cashea" onclick="selectPagoGC('cashea')" style="display:none;">🛒 Cashea<span class="sub" id="pm-monto-cashea">—</span></button>
       </div>
     </div>
 
@@ -597,6 +598,21 @@ main{max-width:480px;margin:0 auto;padding:16px;}
       </div>
     </div>
 
+    <!-- DATOS PAGO CASHEA GC -->
+    <div id="pago-cashea-card" style="display:none;">
+      <div class="card" style="background:#0d1f1a;border:1.5px solid var(--accent);">
+        <div style="font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">🛒 Pago por Cashea</div>
+        <div style="background:#0a2a1a;border-radius:8px;padding:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;">
+            <span style="color:#aaaaaa;font-size:13px;">Monto Cashea</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span id="cashea-monto-display" style="color:var(--accent);font-size:18px;font-weight:700;">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="nav-row">
       <button class="btn-back" onclick="goStep(5)">← Atrás</button>
       <button class="btn-next" onclick="validarStep6()">Siguiente →</button>
@@ -617,6 +633,9 @@ main{max-width:480px;margin:0 auto;padding:16px;}
     <button id="btn-sin-whatsapp" onclick="enviarSinWhatsApp()" style="width:100%;padding:16px;background:transparent;border:2px solid var(--border);border-radius:14px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-top:10px;">
       Continuar sin WhatsApp
     </button>
+    <button class="btn-send" id="btn-aprobar-cashea" onclick="aprobarSolicitudCasheaGC()" style="display:none;">
+      <span style="font-size:22px;">✅</span> Aprobar Solicitud
+    </button>
   </div>
 </main>
 </div>
@@ -630,13 +649,13 @@ main{max-width:480px;margin:0 auto;padding:16px;}
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbydRrbEmwyC_7HZvambrhxlGu0Y87varhINlQqYABlxpJxTvCc4lJr7mbbSHuwIak_X3A/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyteUOeVKOfgUrW6Jywor_2D9qScsNk-3T2j-XwmoGXHR7o5QKNgbdC4gdv3LGn4dGSWw/exec';
 const WHATSAPP_NUM='584149450742';
 const WEBHOOK_NOTIFY='https://hook.us2.make.com/f3mbneb3oliah6tv4ut64rb6x1pamiwa';
 const TOTAL_STEPS=7;
 
 let tokenActual='';
-let tasaBCV=0;
+let tasaBCV=0, casheaPctGC=0;
 let gc={
   nombre:'',cedula:'',celular:'',correo:'',
   ocasion:'',
@@ -687,7 +706,15 @@ window.addEventListener('DOMContentLoaded',async()=>{
       // Precargar productos y tasa BCV
       try{
         const pd=await scriptGETjson({action:'leerPrecios'});
-        if(pd.ok) tasaBCV=pd.tasa_bcv||0;
+        if(pd.ok){
+          tasaBCV=pd.tasa_bcv||0;
+          casheaPctGC=parseFloat(pd.cashea_pct)||0;
+          const casheaActivo=pd.cashea_activo===true||pd.cashea_activo==='true';
+          const btnGCCashea=document.getElementById('pm-cashea');
+          const gridGC=document.getElementById('pago-gc-grid');
+          if(btnGCCashea) btnGCCashea.style.display=casheaActivo?'':'none';
+          if(gridGC){ gridGC.classList.toggle('cols3',casheaActivo); gridGC.classList.toggle('cols2',!casheaActivo); }
+        }
       }catch(e){}
       cargarProductosGC();
     }catch(e){ showBloq('Error al verificar el link.'); }
@@ -953,19 +980,33 @@ function selectPagoGC(tipo){
   pagoSeleccionado=tipo;
   document.getElementById('pm-bs').classList.toggle('selected',tipo==='bs');
   document.getElementById('pm-usd').classList.toggle('selected',tipo==='usd');
+  document.getElementById('pm-cashea').classList.toggle('selected',tipo==='cashea');
   document.getElementById('pago-bs-card').style.display=tipo==='bs'?'block':'none';
   document.getElementById('pago-usd-card').style.display=tipo==='usd'?'block':'none';
+  document.getElementById('pago-cashea-card').style.display=tipo==='cashea'?'block':'none';
+  const totalCasheaBs=Math.round(gc.totalBs*(1+casheaPctGC/100)*100)/100;
+  const totalCasheaUsd=tasaBCV>0?Math.round((totalCasheaBs/tasaBCV)*100)/100:gc.totalUsd;
   if(tipo==='bs'){
     document.getElementById('bs-monto-display').textContent=gc.totalBs?'Bs '+gc.totalBs.toFixed(2):'—';
     document.getElementById('bs-monto-raw').value=gc.totalBs?gc.totalBs.toFixed(2):'';
-  } else {
+  } else if(tipo==='usd'){
     document.getElementById('usd-monto-display').textContent=gc.totalUsd?'$'+gc.totalUsd.toFixed(2):'—';
     document.getElementById('usd-monto-raw').value=gc.totalUsd?gc.totalUsd.toFixed(2):'';
+  } else {
+    const el=document.getElementById('cashea-monto-display');
+    if(el) el.textContent='Bs '+totalCasheaBs.toFixed(2)+' ($'+totalCasheaUsd.toFixed(2)+')';
+    const subEl=document.getElementById('pm-monto-cashea');
+    if(subEl) subEl.textContent='Bs '+totalCasheaBs.toFixed(2);
   }
 }
 
 function validarStep6(){
   if(!pagoSeleccionado){ alert('Selecciona el método de pago'); return; }
+  if(pagoSeleccionado==='cashea'){
+    const totalCasheaBs=Math.round(gc.totalBs*(1+casheaPctGC/100)*100)/100;
+    gc.pagoMoneda='Cashea'; gc.pagoRef='CASHEA'; gc.pagoMonto=totalCasheaBs;
+    renderResumenGC(); goStep(7); return;
+  }
   const ref=pagoSeleccionado==='bs'
     ? document.getElementById('s6-ref-bs').value.trim()
     : document.getElementById('s6-ref-usd').value.trim();
@@ -988,7 +1029,14 @@ function renderResumenGC(){
     <div class="resumen-block"><b>Ocasión:</b> ${gc.ocasion}<br><b>Modalidad:</b> ${gc.modalidad==='monto'?'Monto Fijo':'Por Productos'}</div>
     <div class="resumen-block"><b>GiftCard:</b> ${productosDesc}<br><b>Total:</b> $${gc.totalUsd}${gc.totalBs?' · Bs '+gc.totalBs:''}</div>
     <div class="resumen-block"><b>Beneficiario:</b> ${gc.benNombre}<br><b>Cel:</b> ${gc.benCelular}<br><b>Correo:</b> ${gc.benCorreo}</div>
-    <div class="resumen-block"><b>Pago:</b> ${gc.pagoMoneda} ${gc.pagoMonto}<br><b>Ref:</b> ${gc.pagoRef}</div>`;
+    <div class="resumen-block"><b>Pago:</b> ${gc.pagoMoneda==='Divisa'?'$':gc.pagoMoneda==='Cashea'?'Bs (Cashea)':'Bs'} ${gc.pagoMonto}<br><b>Ref:</b> ${gc.pagoRef}</div>`;
+  const esCasheaGC=pagoSeleccionado==='cashea';
+  const bWA=document.getElementById('btn-whatsapp');
+  const bSin=document.getElementById('btn-sin-whatsapp');
+  const bCash=document.getElementById('btn-aprobar-cashea');
+  if(bWA) bWA.style.display=esCasheaGC?'none':'';
+  if(bSin) bSin.style.display=esCasheaGC?'none':'';
+  if(bCash) bCash.style.display=esCasheaGC?'':'none';
 }
 
 function buildMensaje(){
@@ -1020,7 +1068,9 @@ async function guardarGiftCard(){
       ocasion:gc.ocasion,
       pago_moneda:gc.pagoMoneda,
       pago_monto:String(gc.pagoMonto||''),
-      pago_ref:gc.pagoRef
+      pago_ref:gc.pagoRef,
+      cashea_flag:pagoSeleccionado==='cashea'?'SI':'NO',
+      cashea_pct_aplicado:pagoSeleccionado==='cashea'?String(casheaPctGC):''
     });
   }catch(e){ console.warn('Error guardando GiftCard:',e); }
 }
@@ -1038,6 +1088,24 @@ async function notificarGiftCard(){
 
 async function marcarTokenUsado(){
   if(tokenActual) try{ await scriptGETjson({action:'usarToken',token:tokenActual}); }catch(e){}
+}
+
+async function aprobarSolicitudCasheaGC(){
+  const btn=document.getElementById('btn-aprobar-cashea');
+  if(!btn) return;
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner">↻</span> Enviando solicitud...';
+  try{
+    await guardarGiftCard();
+    await marcarTokenUsado();
+    window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(buildMensaje())}`,'_blank');
+    document.getElementById('pantalla-exito').style.display='block';
+  }catch(e){
+    console.error('Error en aprobarSolicitudCasheaGC:', e);
+    btn.disabled=false;
+    btn.innerHTML='<span style="font-size:22px;">✅</span> Aprobar Solicitud';
+    alert('Ocurrió un error al enviar la solicitud. Intenta de nuevo.');
+  }
 }
 
 async function enviarSinWhatsApp(){

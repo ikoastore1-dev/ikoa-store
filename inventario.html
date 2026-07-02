@@ -1741,7 +1741,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydRrbEmwyC_7HZvambrhxlGu0Y87varhINlQqYABlxpJxTvCc4lJr7mbbSHuwIak_X3A/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyteUOeVKOfgUrW6Jywor_2D9qScsNk-3T2j-XwmoGXHR7o5QKNgbdC4gdv3LGn4dGSWw/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -2707,50 +2707,56 @@ async function cargarCashea(){
   try{
     const data=await scriptGETjson({action:'leerConfigCashea'});
     if(!data.ok) throw new Error(data.error||'Error');
-    const pct=parseFloat(data.cashea_pct)||0;
-    const activo=data.cashea_activo===true||data.cashea_activo==='true';
+    const cfg=data.config||{};
 
-    const html=`
-    <div style="background:var(--surface2);border:1.5px solid var(--accent);border-radius:12px;padding:18px;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-        <span style="font-size:18px;">🛒</span>
-        <div style="font-size:16px;font-weight:700;color:var(--text);">Cashea — Comfy Mega Promo</div>
-      </div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
-        Configuración exclusiva de la app <b style="color:var(--text);">pedidos.html</b> (Comfy Mega Promo). Ambos controles pertenecen a la misma opción de pago.
-      </div>
+    const lineas=[
+      {key:'comfy',     icon:'👕', label:'Mega Promo Comfy',   app:'pedidos.html'},
+      {key:'fullcomfy', icon:'🛡️', label:'Full Comfy Protect', app:'pedidos-fullcomfy.html'},
+      {key:'licra',     icon:'🌊', label:'Licra Protect',      app:'pedidos-licra.html'},
+      {key:'coleccion', icon:'🎨', label:'Licra Colección',    app:'pedidos-coleccion.html'},
+      {key:'giftcard',  icon:'🎁', label:'Gift Card',          app:'pedidos-giftcard.html'},
+    ];
 
-      <!-- Switch ON/OFF -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--border);">
-        <div>
-          <div style="font-size:14px;font-weight:700;color:var(--text);">Mostrar opción "Cancelar por Cashea"</div>
-          <div style="font-size:12px;color:var(--muted);" id="cashea-status-label">${activo?'Activo — visible en pedidos.html':'Inactivo — oculto en pedidos.html'}</div>
+    const cards=lineas.map(l=>{
+      const pct=parseFloat(cfg[l.key]?.cashea_pct)||0;
+      const activo=cfg[l.key]?.cashea_activo===true||cfg[l.key]?.cashea_activo==='true';
+      return `
+      <div style="background:var(--surface2);border:1.5px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span style="font-size:16px;">${l.icon}</span>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">${l.label}</div>
         </div>
-        <label style="position:relative;display:inline-block;width:52px;height:28px;flex-shrink:0;">
-          <input type="checkbox" id="cashea-toggle" ${activo?'checked':''} onchange="toggleCashea()" style="opacity:0;width:0;height:0;">
-          <span id="cashea-toggle-track" style="position:absolute;cursor:pointer;inset:0;background:${activo?'var(--accent)':'var(--border)'};border-radius:28px;transition:.2s;"></span>
-          <span id="cashea-toggle-thumb" style="position:absolute;height:22px;width:22px;left:${activo?'27px':'3px'};top:3px;background:#fff;border-radius:50%;transition:.2s;"></span>
-        </label>
-      </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">${l.app}</div>
 
-      <!-- Porcentaje -->
-      <div class="field-group" style="margin-bottom:0;">
-        <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:8px;padding:10px 14px;margin-bottom:12px;">
-          <span style="font-size:13px;color:var(--muted);">Porcentaje actual</span>
-          <span id="cashea-pct-actual" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--accent);">${pct}%</span>
+        <!-- Switch -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Mostrar opción Cashea</div>
+            <div style="font-size:11px;color:var(--muted);" id="cashea-status-${l.key}">${activo?'Activo':'Inactivo'}</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:52px;height:28px;flex-shrink:0;">
+            <input type="checkbox" id="cashea-toggle-${l.key}" ${activo?'checked':''} onchange="toggleCashea('${l.key}')" style="opacity:0;width:0;height:0;">
+            <span id="cashea-track-${l.key}" style="position:absolute;cursor:pointer;inset:0;background:${activo?'var(--accent)':'var(--border)'};border-radius:28px;transition:.2s;"></span>
+            <span id="cashea-thumb-${l.key}" style="position:absolute;height:22px;width:22px;left:${activo?'27px':'3px'};top:3px;background:#fff;border-radius:50%;transition:.2s;"></span>
+          </label>
         </div>
-        <div class="field-label">Nuevo porcentaje de incremento (%) <span style="color:var(--muted);">— 0 = sin incremento</span></div>
+
+        <!-- Porcentaje -->
+        <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:8px;padding:8px 12px;margin-bottom:10px;">
+          <span style="font-size:12px;color:var(--muted);">Porcentaje actual</span>
+          <span id="cashea-pct-actual-${l.key}" style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);">${pct}%</span>
+        </div>
         <div style="display:flex;gap:8px;">
-          <input type="number" id="cashea-pct-input" value="${pct}" min="0" step="0.01"
-            style="flex:1;background:var(--bg);border:1.5px solid var(--accent);border-radius:8px;padding:10px 12px;color:var(--text);font-size:15px;font-weight:700;outline:none;">
-          <button onclick="guardarCasheaPct()" style="padding:10px 20px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:700;cursor:pointer;">💾 Guardar</button>
+          <input type="number" id="cashea-pct-input-${l.key}" value="${pct}" min="0" step="0.01"
+            style="flex:1;background:var(--bg);border:1.5px solid var(--accent);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;font-weight:700;outline:none;">
+          <button onclick="guardarCasheaPct('${l.key}')" style="padding:8px 16px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:12px;font-weight:700;cursor:pointer;">💾 Guardar</button>
         </div>
-        <div style="font-size:12px;color:var(--muted);margin-top:8px;">
-          Cálculo aplicado: Precio Cashea en Bs = Precio base en Bs × (1 + %/100). Divisa = resultado ÷ Tasa BCV actual.
-        </div>
-      </div>
-    </div>`;
-    cont.innerHTML=html;
+      </div>`;
+    }).join('');
+
+    cont.innerHTML=`
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Configuración de Cashea por línea de producto. Solo el Director puede modificar estos valores.</div>
+      ${cards}`;
   }catch(e){
     cont.innerHTML=`<div style="color:var(--danger);text-align:center;padding:20px;">✗ Error: ${e.message}</div>`;
   }
@@ -2758,117 +2764,82 @@ async function cargarCashea(){
 
 const CASHEA_DIRECTOR_CODE='271010';
 
-async function toggleCashea(){
+async function toggleCashea(linea){
+  linea=linea||'comfy';
   try{
-    const checkbox=document.getElementById('cashea-toggle');
+    const checkbox=document.getElementById('cashea-toggle-'+linea);
     if(!checkbox){ alert('Error: no se encontró el switch. Recarga la página.'); return; }
     const nuevoEstado=checkbox.checked;
-    // Revertir visualmente de inmediato; solo se aplica tras autenticación exitosa
     checkbox.checked=!nuevoEstado;
 
     const unlock=await mostrarAuthGen('🔒','Solo Director','Esta acción está restringida al Director. Ingresa tu código.');
-    if(!unlock){ return; } // usuario canceló el modal
+    if(!unlock){ return; }
 
     if(unlock!==CASHEA_DIRECTOR_CODE){
       alert('Acceso denegado: solo el Director puede modificar la configuración de Cashea.');
       return;
     }
 
-    const track=document.getElementById('cashea-toggle-track');
-    const thumb=document.getElementById('cashea-toggle-thumb');
-    const label=document.getElementById('cashea-status-label');
-    // Optimistic UI (ya autenticado)
+    const track=document.getElementById('cashea-track-'+linea);
+    const thumb=document.getElementById('cashea-thumb-'+linea);
+    const label=document.getElementById('cashea-status-'+linea);
     checkbox.checked=nuevoEstado;
     if(track) track.style.background=nuevoEstado?'var(--accent)':'var(--border)';
     if(thumb) thumb.style.left=nuevoEstado?'27px':'3px';
-    if(label) label.textContent=nuevoEstado?'Activo — visible en pedidos.html':'Inactivo — oculto en pedidos.html';
+    if(label) label.textContent=nuevoEstado?'Activo':'Inactivo';
 
     const msgEl=document.getElementById('prog-msg');
-    if(msgEl){
-      msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
-      msgEl.innerHTML='<span class="spinner">↻</span> Actualizando...';
-    }
+    if(msgEl){ msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)'; msgEl.innerHTML='<span class="spinner">↻</span> Actualizando...'; }
 
-    const res=await scriptGETjson({action:'guardarConfigCashea', cashea_activo:nuevoEstado, codigo_auth:unlock});
+    const res=await scriptGETjson({action:'guardarConfigCashea', linea, cashea_activo:nuevoEstado, codigo_auth:unlock});
 
     if(res&&res.ok){
-      if(msgEl){
-        msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)';
-        msgEl.innerHTML=nuevoEstado?'✅ Cashea activado':'✅ Cashea desactivado';
-        setTimeout(()=>{ msgEl.style.display='none'; }, 1800);
-      }
-    } else {
-      throw new Error((res&&res.error)||'Respuesta inválida del servidor');
-    }
+      if(msgEl){ msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)'; msgEl.innerHTML=nuevoEstado?'✅ Cashea activado':'✅ Cashea desactivado'; setTimeout(()=>{ msgEl.style.display='none'; }, 1800); }
+    } else { throw new Error((res&&res.error)||'Respuesta inválida'); }
   }catch(e){
     console.error('Error en toggleCashea:', e);
-    // revertir visualmente si algo falló
-    const checkbox=document.getElementById('cashea-toggle');
-    const track=document.getElementById('cashea-toggle-track');
-    const thumb=document.getElementById('cashea-toggle-thumb');
-    const label=document.getElementById('cashea-status-label');
+    const checkbox=document.getElementById('cashea-toggle-'+linea);
+    const track=document.getElementById('cashea-track-'+linea);
+    const thumb=document.getElementById('cashea-thumb-'+linea);
+    const label=document.getElementById('cashea-status-'+linea);
     if(checkbox){
-      const estadoRevertido=!checkbox.checked;
-      checkbox.checked=estadoRevertido;
-      if(track) track.style.background=estadoRevertido?'var(--accent)':'var(--border)';
-      if(thumb) thumb.style.left=estadoRevertido?'27px':'3px';
-      if(label) label.textContent=estadoRevertido?'Activo — visible en pedidos.html':'Inactivo — oculto en pedidos.html';
+      const est=!checkbox.checked; checkbox.checked=est;
+      if(track) track.style.background=est?'var(--accent)':'var(--border)';
+      if(thumb) thumb.style.left=est?'27px':'3px';
+      if(label) label.textContent=est?'Activo':'Inactivo';
     }
     const msgEl=document.getElementById('prog-msg');
-    if(msgEl){
-      msgEl.style.display='block';
-      msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)';
-      msgEl.innerHTML='✗ Error: '+(e.message||'Error desconocido');
-    } else {
-      alert('Error al actualizar Cashea: '+(e.message||'Error desconocido'));
-    }
+    if(msgEl){ msgEl.style.display='block'; msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='✗ Error: '+(e.message||'Error desconocido'); }
+    else{ alert('Error: '+(e.message||'Error desconocido')); }
   }
 }
 
-async function guardarCasheaPct(){
+async function guardarCasheaPct(linea){
+  linea=linea||'comfy';
   try{
-    const input=document.getElementById('cashea-pct-input');
-    if(!input){ alert('Error: no se encontró el campo de porcentaje. Recarga la página.'); return; }
+    const input=document.getElementById('cashea-pct-input-'+linea);
+    if(!input){ alert('Error: no se encontró el campo. Recarga la página.'); return; }
     const pct=parseFloat(input.value);
     if(isNaN(pct)||pct<0){ alert('Ingresa un porcentaje válido (0 o mayor).'); return; }
 
-    const unlock=await mostrarAuthGen('🔒','Solo Director',`Confirmar nuevo porcentaje de ${pct}%. Ingresa tu código de Director.`);
-    if(!unlock) return; // usuario canceló el modal
-
-    if(unlock!==CASHEA_DIRECTOR_CODE){
-      alert('Acceso denegado: solo el Director puede modificar la configuración de Cashea.');
-      return;
-    }
+    const unlock=await mostrarAuthGen('🔒','Solo Director',`Confirmar ${pct}% para ${linea}. Ingresa tu código de Director.`);
+    if(!unlock) return;
+    if(unlock!==CASHEA_DIRECTOR_CODE){ alert('Acceso denegado: solo el Director puede modificar la configuración de Cashea.'); return; }
 
     const msgEl=document.getElementById('prog-msg');
-    if(msgEl){
-      msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)';
-      msgEl.innerHTML='<span class="spinner">↻</span> Guardando porcentaje...';
-    }
+    if(msgEl){ msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)'; msgEl.innerHTML='<span class="spinner">↻</span> Guardando...'; }
 
-    const res=await scriptGETjson({action:'guardarConfigCashea', cashea_pct:pct, usuario:USUARIOS[unlock]||unlock, fecha:getFechaHora(), codigo_auth:unlock});
-
+    const res=await scriptGETjson({action:'guardarConfigCashea', linea, cashea_pct:pct, usuario:USUARIOS[unlock]||unlock, fecha:getFechaHora(), codigo_auth:unlock});
     if(res&&res.ok){
-      if(msgEl){
-        msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)';
-        msgEl.innerHTML='✅ Porcentaje guardado: '+pct+'%';
-        setTimeout(()=>{ msgEl.style.display='none'; }, 2500);
-      }
-      const actualEl=document.getElementById('cashea-pct-actual');
+      if(msgEl){ msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)'; msgEl.innerHTML='✅ Porcentaje guardado: '+pct+'%'; setTimeout(()=>{ msgEl.style.display='none'; }, 2000); }
+      const actualEl=document.getElementById('cashea-pct-actual-'+linea);
       if(actualEl) actualEl.textContent=pct+'%';
-    } else {
-      throw new Error((res&&res.error)||'Respuesta inválida del servidor');
-    }
+    } else { throw new Error((res&&res.error)||'Respuesta inválida'); }
   }catch(e){
     console.error('Error en guardarCasheaPct:', e);
     const msgEl=document.getElementById('prog-msg');
-    if(msgEl){
-      msgEl.style.display='block';
-      msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)';
-      msgEl.innerHTML='✗ Error: '+(e.message||'Error desconocido');
-    } else {
-      alert('Error al guardar: '+(e.message||'Error desconocido'));
-    }
+    if(msgEl){ msgEl.style.display='block'; msgEl.style.background='#2a1010'; msgEl.style.color='var(--danger)'; msgEl.innerHTML='✗ Error: '+(e.message||'Error desconocido'); }
+    else{ alert('Error al guardar: '+(e.message||'Error desconocido')); }
   }
 }
 

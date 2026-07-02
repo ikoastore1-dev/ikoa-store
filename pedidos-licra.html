@@ -386,9 +386,10 @@ window.addEventListener('load',function(){
     <!-- MÉTODO DE PAGO -->
     <div class="card">
       <div class="card-title">¿Cómo deseas pagar?</div>
-      <div class="option-grid cols2">
+      <div class="option-grid cols2" id="pago-metodos-grid">
         <button class="opt-btn" id="btn-pago-bs" onclick="seleccionarPago('bs')">💵 Bolívares<span class="sub">Pago Móvil</span></button>
         <button class="opt-btn" id="btn-pago-usd" onclick="seleccionarPago('usd')">💲 Divisa<span class="sub">Binance</span></button>
+        <button class="opt-btn" id="btn-pago-cashea" onclick="seleccionarPago('cashea')" style="display:none;">🛒 Cashea<span class="sub">Cancelar por Cashea</span></button>
       </div>
     </div>
 
@@ -437,6 +438,17 @@ window.addEventListener('load',function(){
       </div>
     </div>
 
+    <!-- DATOS PAGO CASHEA -->
+    <div class="card" id="pago-cashea-card" style="display:none;">
+      <div class="card-title">🛒 Pago por Cashea</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;line-height:2.2;">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
+          <span><span style="color:var(--muted);">Plataforma:</span> <b>App Cashea</b></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;"><span><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-cashea" style="color:var(--accent);">—</b></span><button onclick="copiarMonto('cashea','btn-copy-monto-cashea')" id="btn-copy-monto-cashea" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button></div>
+      </div>
+    </div>
+
     <div class="nav-row" style="margin-top:14px;">
       <button class="btn-back" onclick="goStep(5)">← Atrás</button>
       <button class="btn-next" id="btn-ir-resumen" onclick="irAlResumen()" disabled style="opacity:.4;cursor:not-allowed;">Siguiente →</button>
@@ -453,6 +465,9 @@ window.addEventListener('load',function(){
     </button>
     <button id="btn-sin-whatsapp" onclick="enviarSinWhatsApp()" style="width:100%;padding:16px;background:transparent;border:2px solid var(--border);border-radius:14px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-top:10px;">
       📋 Enviar pedido sin copia en WhatsApp
+    </button>
+    <button class="btn-send" id="btn-aprobar-cashea" onclick="aprobarSolicitudCashea()" style="display:none;">
+      <span style="font-size:22px;">✅</span> Aprobar Solicitud
     </button>
     <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px;" id="sending-note"></div>
     <div class="nav-row" style="margin-top:12px;"><button class="btn-back" onclick="goStep(6)">← Editar pago</button></div>
@@ -479,7 +494,7 @@ window.addEventListener('load',function(){
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbydRrbEmwyC_7HZvambrhxlGu0Y87varhINlQqYABlxpJxTvCc4lJr7mbbSHuwIak_X3A/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyteUOeVKOfgUrW6Jywor_2D9qScsNk-3T2j-XwmoGXHR7o5QKNgbdC4gdv3LGn4dGSWw/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
@@ -1094,6 +1109,7 @@ function savePiezas(){
 // ── PAGO ──────────────────────────────────────────────────────
 let precioComfy={bs:0,usd:0}, precioRecarga={bs:0,usd:0}, precioCapucha={bs:0,usd:0};
 let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
+let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
 
 // Descompone N franelas en combinación óptima de packs 4+3+2
 function descomponerPacks(n){
@@ -1113,7 +1129,17 @@ async function calcularPago(){
       precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
       precioCapucha={bs:parseFloat(data.capucha_bs)||0, usd:parseFloat(data.capucha_usd)||0};
       // tasa BCV
-      if(data.tasa_bcv) document.getElementById('pago-tasa-bcv').textContent='Bs '+parseFloat(data.tasa_bcv).toFixed(2);
+      if(data.tasa_bcv){
+        tasaBcvActual=parseFloat(data.tasa_bcv)||0;
+        document.getElementById('pago-tasa-bcv').textContent='Bs '+tasaBcvActual.toFixed(2);
+      }
+      casheaPct=parseFloat(data.cashea_pct)||0;
+      const casheaActivo=data.cashea_activo===true||data.cashea_activo==='true';
+      const btnCashea=document.getElementById('btn-pago-cashea');
+      const gridPago=document.getElementById('pago-metodos-grid');
+      if(btnCashea) btnCashea.style.display=casheaActivo?'':'none';
+      if(gridPago) gridPago.classList.toggle('cols3',casheaActivo);
+      if(gridPago) gridPago.classList.toggle('cols2',!casheaActivo);
       // precios por pack
       window._packPrecios=data.pack_precios||{};
     }
@@ -1169,24 +1195,33 @@ async function calcularPago(){
   document.getElementById('pago-total-usd').textContent='$'+pagoTotalUsd.toFixed(2);
   document.getElementById('pm-monto-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
   document.getElementById('pm-monto-usd').textContent='$'+pagoTotalUsd.toFixed(2);
+  const elCashea=document.getElementById('pm-monto-cashea');
+  if(elCashea) elCashea.textContent='Bs '+pagoTotalCasheaBs.toFixed(2)+' ($'+pagoTotalCasheaUsd.toFixed(2)+')';
 }
 
 function seleccionarPago(tipo){
   pagoMoneda=tipo;
   document.getElementById('btn-pago-bs').classList.toggle('selected',tipo==='bs');
   document.getElementById('btn-pago-usd').classList.toggle('selected',tipo==='usd');
+  document.getElementById('btn-pago-cashea').classList.toggle('selected',tipo==='cashea');
   document.getElementById('pago-bs-card').style.display=tipo==='bs'?'block':'none';
   document.getElementById('pago-usd-card').style.display=tipo==='usd'?'block':'none';
+  document.getElementById('pago-cashea-card').style.display=tipo==='cashea'?'block':'none';
   validarRef();
 }
 
 function validarRef(){
+  if(pagoMoneda==='cashea'){
+    const btn=document.getElementById('btn-ir-resumen');
+    btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer';
+    pagoRef='CASHEA';
+    pedido.pagoMoneda='Cashea'; pedido.pagoRef='CASHEA'; pedido.pagoMonto=pagoTotalCasheaBs;
+    return;
+  }
   const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim():document.getElementById('pago-ref-usd')?.value.trim();
   const btn=document.getElementById('btn-ir-resumen');
   const ok=pagoMoneda&&ref&&ref.length>3;
-  btn.disabled=!ok;
-  btn.style.opacity=ok?'1':'0.4';
-  btn.style.cursor=ok?'pointer':'not-allowed';
+  btn.disabled=!ok; btn.style.opacity=ok?'1':'0.4'; btn.style.cursor=ok?'pointer':'not-allowed';
   if(ok){
     pagoRef=ref;
     pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
@@ -1197,11 +1232,15 @@ function validarRef(){
 
 function irAlResumen(){
   if(!pagoMoneda){ alert('Selecciona el método de pago'); return; }
-  const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim():document.getElementById('pago-ref-usd')?.value.trim();
-  if(!ref||ref.length<3){ alert('Ingresa la referencia o código de confirmación'); return; }
-  pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
-  pedido.pagoRef=ref;
-  pedido.pagoMonto=pagoMoneda==='bs'?pagoTotalBs:pagoTotalUsd;
+  if(pagoMoneda==='cashea'){
+    pedido.pagoMoneda='Cashea'; pedido.pagoRef='CASHEA'; pedido.pagoMonto=pagoTotalCasheaBs;
+  } else {
+    const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim():document.getElementById('pago-ref-usd')?.value.trim();
+    if(!ref||ref.length<3){ alert('Ingresa la referencia o código de confirmación'); return; }
+    pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
+    pedido.pagoRef=ref;
+    pedido.pagoMonto=pagoMoneda==='bs'?pagoTotalBs:pagoTotalUsd;
+  }
   const curEl=document.getElementById('step6');
   curEl.classList.remove('active');
   currentStep=7;
@@ -1212,10 +1251,10 @@ function irAlResumen(){
 }
 
 function copiarMonto(moneda, btnId){
-  const el=document.getElementById(moneda==='bs'?'pm-monto-bs':'pm-monto-usd');
+  const el=document.getElementById(moneda==='bs'?'pm-monto-bs':moneda==='usd'?'pm-monto-usd':'pm-monto-cashea');
   if(!el) return;
   // Extract numeric value only
-  const texto=el.textContent.replace('Bs ','').replace('$','').trim();
+  const texto=el.textContent.replace('Bs ','').replace('$','').replace(/\s*\(.*\)/,'').trim();
   navigator.clipboard.writeText(texto).then(()=>{
     const btn=document.getElementById(btnId);
     if(btn){ btn.textContent='✅ Copiado'; setTimeout(()=>{ btn.textContent='📋 Copiar'; }, 2000); }
@@ -1254,8 +1293,15 @@ function buildResumen(){
       <div class="resumen-label">🚚 Entrega</div>
       <div class="resumen-block"><b>Agencia:</b> ${pedido.agencia}<br><b>Retira:</b> ${retiraText}</div>
       <div class="resumen-label">💳 Pago</div>
-      <div class="resumen-block"><b>Moneda:</b> ${pedido.pagoMoneda||'—'}<br><b>Monto:</b> ${pedido.pagoMoneda==='Bs'?'Bs':'$'}${pedido.pagoMonto||'—'}<br><b>Referencia:</b> ${pedido.pagoRef||'—'}</div>
+      <div class="resumen-block"><b>Moneda:</b> ${pedido.pagoMoneda||'—'}<br><b>Monto:</b> ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto||'—'}<br><b>Referencia:</b> ${pedido.pagoRef||'—'}</div>
     </div>`;
+  const esCashea=pagoMoneda==='cashea';
+  const btnWA=document.getElementById('btn-whatsapp');
+  const btnSin=document.getElementById('btn-sin-whatsapp');
+  const btnCash=document.getElementById('btn-aprobar-cashea');
+  if(btnWA) btnWA.style.display=esCashea?'none':'';
+  if(btnSin) btnSin.style.display=esCashea?'none':'';
+  if(btnCash) btnCash.style.display=esCashea?'':'none';
 }
 
 function buildMensaje(){
@@ -1270,7 +1316,7 @@ function buildMensaje(){
       return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: LICRA PROTECT ${pk.manga}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
     }).join('\n\n');
   }
-  return `🛍️ *PEDIDO IKOA & BEKATE — ${tipoProductoLicra==='toalla'?'TOALLA':'LICRA PROTECT'}*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Bs'?'Bs':'$'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
+  return `🛍️ *PEDIDO IKOA & BEKATE — ${tipoProductoLicra==='toalla'?'TOALLA':'LICRA PROTECT'}*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
 }
 
 async function guardarEnSheets(){
@@ -1325,7 +1371,9 @@ async function guardarEnSheets(){
         codigo_principal: codigoPrincipal,
         pago_moneda: pedido.pagoMoneda||'',
         pago_monto: String(pedido.pagoMonto||''),
-        pago_ref: pedido.pagoRef||''
+        pago_ref: pedido.pagoRef||'',
+        cashea_flag: pagoMoneda==='cashea' ? 'SI' : 'NO',
+        cashea_pct_aplicado: pagoMoneda==='cashea' ? String(casheaPct) : ''
       });
       if(i===0 && res.ok) codigoPrincipal=res.codigo;
     }catch(e){ console.error(e); }
