@@ -991,10 +991,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
       <button class="apro-sub-btn" data-sub="Cashea" onclick="switchAprobaciones('Cashea')" style="flex:1;padding:8px;border:2px solid var(--accent);border-radius:8px;background:var(--surface2);color:var(--accent);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🛒 Cashea</button>
       <button class="apro-sub-btn" data-sub="Pendiente" onclick="switchAprobaciones('Pendiente')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Pendientes</button>
-      <button class="apro-sub-btn" data-sub="Pagado" onclick="switchAprobaciones('Pagado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✅ Aprobadas</button>
-      <button class="apro-sub-btn" data-sub="Reprobado" onclick="switchAprobaciones('Reprobado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✗ Reprobadas</button>
-      <button class="apro-sub-btn" data-sub="Cola" onclick="switchAprobaciones('Cola')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Cola</button>
       <button class="apro-sub-btn" data-sub="GiftCard" onclick="switchAprobaciones('GiftCard')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🎁 GiftCard</button>
+      <button class="apro-sub-btn" data-sub="Cola" onclick="switchAprobaciones('Cola')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Cola</button>
     </div>
     <!-- Búsqueda para Aprobadas/Reprobadas -->
     <div id="historial-apro-search" style="display:none;margin-bottom:12px;">
@@ -1004,6 +1002,16 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
     <!-- SOLICITUDES -->
     <div id="aprosec-solicitudes">
+      <!-- Sub-pestañas de Pendientes -->
+      <div style="display:flex;gap:6px;margin-bottom:12px;">
+        <button class="pend-sub-btn" data-pend="Pendiente" onclick="switchPendienteSub('Pendiente')" style="flex:1;padding:8px;border:2px solid var(--warn);border-radius:8px;background:#1a1a10;color:var(--warn);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Por Aprobar</button>
+        <button class="pend-sub-btn" data-pend="Pagado" onclick="switchPendienteSub('Pagado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✅ Aprobadas</button>
+        <button class="pend-sub-btn" data-pend="Reprobado" onclick="switchPendienteSub('Reprobado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✗ Reprobadas</button>
+      </div>
+      <!-- Búsqueda para Aprobadas/Reprobadas -->
+      <div id="historial-apro-search" style="display:none;margin-bottom:10px;">
+        <input class="search-input" type="text" id="historial-apro-input" placeholder="Buscar por nombre, cédula o código..." style="width:100%;" oninput="buscarHistorialApro(this.value)">
+      </div>
       <div id="apro-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
       <div id="solicitudes-list"></div>
     </div>
@@ -2717,54 +2725,42 @@ async function cargarCashea(){
     const cfg=data.config||{};
 
     const lineas=[
-      {key:'comfy',       icon:'👕', label:'Mega Promo Comfy',   app:'pedidos.html'},
-      {key:'fullcomfy',   icon:'🛡️', label:'Full Comfy Protect', app:'pedidos-fullcomfy.html'},
-      {key:'licra',       icon:'🌊', label:'Licra Protect',      app:'pedidos-licra.html'},
-      {key:'coleccion',   icon:'🎨', label:'Licra Colección',    app:'pedidos-coleccion.html'},
-      {key:'giftcard',    icon:'🎁', label:'Gift Card',          app:'pedidos-giftcard.html'},
-      {key:'empresarial', icon:'🏢', label:'Empresarial',        app:'pedidos-empresarial.html'},
+      {key:'comfy',       icon:'👕', label:'Mega Promo Comfy'},
+      {key:'fullcomfy',   icon:'🛡️', label:'Full Comfy Protect'},
+      {key:'licra',       icon:'🌊', label:'Licra Protect'},
+      {key:'coleccion',   icon:'🎨', label:'Licra Colección'},
+      {key:'giftcard',    icon:'🎁', label:'Gift Card'},
+      {key:'empresarial', icon:'🏢', label:'Empresarial'},
     ];
 
-    const cards=lineas.map(l=>{
+    const rows=lineas.map(l=>{
       const pct=parseFloat(cfg[l.key]?.cashea_pct)||0;
       const activo=cfg[l.key]?.cashea_activo===true||cfg[l.key]?.cashea_activo==='true';
       return `
-      <div style="background:var(--surface2);border:1.5px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:14px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <span style="font-size:16px;">${l.icon}</span>
-          <div style="font-size:15px;font-weight:700;color:var(--text);">${l.label}</div>
-        </div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">${l.app}</div>
-
+      <div style="display:grid;grid-template-columns:auto 1fr auto auto auto;gap:8px;align-items:center;padding:10px 12px;background:var(--surface2);border-radius:10px;margin-bottom:6px;">
+        <!-- Icono + Nombre -->
+        <span style="font-size:16px;">${l.icon}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text);">${l.label}</span>
         <!-- Switch -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border);">
-          <div>
-            <div style="font-size:13px;font-weight:700;color:var(--text);">Mostrar opción Cashea</div>
-            <div style="font-size:11px;color:var(--muted);" id="cashea-status-${l.key}">${activo?'Activo':'Inactivo'}</div>
-          </div>
-          <label style="position:relative;display:inline-block;width:52px;height:28px;flex-shrink:0;">
-            <input type="checkbox" id="cashea-toggle-${l.key}" ${activo?'checked':''} onchange="toggleCashea('${l.key}')" style="opacity:0;width:0;height:0;">
-            <span id="cashea-track-${l.key}" style="position:absolute;cursor:pointer;inset:0;background:${activo?'var(--accent)':'var(--border)'};border-radius:28px;transition:.2s;"></span>
-            <span id="cashea-thumb-${l.key}" style="position:absolute;height:22px;width:22px;left:${activo?'27px':'3px'};top:3px;background:#fff;border-radius:50%;transition:.2s;"></span>
-          </label>
-        </div>
-
-        <!-- Porcentaje -->
-        <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:8px;padding:8px 12px;margin-bottom:10px;">
-          <span style="font-size:12px;color:var(--muted);">Porcentaje actual</span>
-          <span id="cashea-pct-actual-${l.key}" style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);">${pct}%</span>
-        </div>
-        <div style="display:flex;gap:8px;">
+        <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;">
+          <input type="checkbox" id="cashea-toggle-${l.key}" ${activo?'checked':''} onchange="toggleCashea('${l.key}')" style="opacity:0;width:0;height:0;">
+          <span id="cashea-track-${l.key}" style="position:absolute;cursor:pointer;inset:0;background:${activo?'var(--accent)':'var(--border)'};border-radius:24px;transition:.2s;"></span>
+          <span id="cashea-thumb-${l.key}" style="position:absolute;height:18px;width:18px;left:${activo?'23px':'3px'};top:3px;background:#fff;border-radius:50%;transition:.2s;"></span>
+        </label>
+        <!-- Input % -->
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span id="cashea-pct-actual-${l.key}" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--accent);min-width:40px;text-align:right;">${pct}%</span>
           <input type="number" id="cashea-pct-input-${l.key}" value="${pct}" min="0" step="0.01"
-            style="flex:1;background:var(--bg);border:1.5px solid var(--accent);border-radius:8px;padding:8px 10px;color:var(--text);font-size:14px;font-weight:700;outline:none;">
-          <button onclick="guardarCasheaPct('${l.key}')" style="padding:8px 16px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:12px;font-weight:700;cursor:pointer;">💾 Guardar</button>
+            style="width:64px;background:var(--bg);border:1.5px solid var(--accent);border-radius:8px;padding:5px 8px;color:var(--text);font-size:13px;font-weight:700;outline:none;text-align:center;">
         </div>
+        <!-- Botón guardar -->
+        <button onclick="guardarCasheaPct('${l.key}')" style="padding:6px 12px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">💾</button>
       </div>`;
     }).join('');
 
     cont.innerHTML=`
-      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Configuración de Cashea por línea de producto. Solo el Director puede modificar estos valores.</div>
-      ${cards}`;
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Solo el Director puede modificar estos valores.</div>
+      ${rows}`;
   }catch(e){
     cont.innerHTML=`<div style="color:var(--danger);text-align:center;padding:20px;">✗ Error: ${e.message}</div>`;
   }
@@ -2793,7 +2789,7 @@ async function toggleCashea(linea){
     const label=document.getElementById('cashea-status-'+linea);
     checkbox.checked=nuevoEstado;
     if(track) track.style.background=nuevoEstado?'var(--accent)':'var(--border)';
-    if(thumb) thumb.style.left=nuevoEstado?'27px':'3px';
+    if(thumb) thumb.style.left=nuevoEstado?'23px':'3px';
     if(label) label.textContent=nuevoEstado?'Activo':'Inactivo';
 
     const msgEl=document.getElementById('prog-msg');
@@ -3359,17 +3355,12 @@ function switchStock(sub){
 function switchAprobaciones(sub){
   document.querySelectorAll('.apro-sub-btn').forEach(b=>{
     const active=b.dataset.sub===sub;
-    const colors={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)',Cola:'var(--warn)',GiftCard:'#cc66ff',Cashea:'var(--accent)'};
-    const bgs={Pendiente:'#2a1f0a',Pagado:'var(--surface2)',Reprobado:'#2a1010',Cola:'#2a1f0a',GiftCard:'#1a0f2b',Cashea:'#0a2a1a'};
-    b.style.borderColor=active?colors[sub]:'var(--border)';
-    b.style.background=active?bgs[sub]:'var(--surface2)';
-    b.style.color=active?colors[sub]:'var(--muted)';
+    const colors={Pendiente:'var(--warn)',Cola:'var(--warn)',GiftCard:'#cc66ff',Cashea:'var(--accent)'};
+    const bgs={Pendiente:'#2a1f0a',Cola:'#2a1f0a',GiftCard:'#1a0f2b',Cashea:'#0a2a1a'};
+    b.style.borderColor=active?(colors[sub]||'var(--accent)'):'var(--border)';
+    b.style.background=active?(bgs[sub]||'var(--surface2)'):'var(--surface2)';
+    b.style.color=active?(colors[sub]||'var(--accent)'):'var(--muted)';
   });
-  const searchEl=document.getElementById('historial-apro-search');
-  if(searchEl){
-    searchEl.style.display=(sub==='Pagado'||sub==='Reprobado')?'block':'none';
-    if(sub==='Pagado'||sub==='Reprobado') document.getElementById('historial-apro-input').value='';
-  }
   document.getElementById('aprosec-solicitudes').style.display=(sub==='Cola'||sub==='GiftCard'||sub==='Cashea')?'none':'block';
   document.getElementById('aprosec-cola').style.display=sub==='Cola'?'block':'none';
   document.getElementById('aprosec-giftcard').style.display=sub==='GiftCard'?'block':'none';
@@ -3377,7 +3368,24 @@ function switchAprobaciones(sub){
   if(sub==='Cola') cargarCola();
   else if(sub==='GiftCard'){ gcSubActual='pendiente'; switchGCSub('pendiente'); }
   else if(sub==='Cashea') cargarAprobacionesCashea();
-  else cargarSolicitudes(sub);
+  else if(sub==='Pendiente') switchPendienteSub('Pendiente');
+}
+
+function switchPendienteSub(pend){
+  document.querySelectorAll('.pend-sub-btn').forEach(b=>{
+    const active=b.dataset.pend===pend;
+    const colors={Pendiente:'var(--warn)',Pagado:'var(--accent)',Reprobado:'var(--danger)'};
+    const bgs={Pendiente:'#2a1f0a',Pagado:'var(--surface2)',Reprobado:'#2a1010'};
+    b.style.borderColor=active?colors[pend]:'var(--border)';
+    b.style.background=active?bgs[pend]:'var(--surface2)';
+    b.style.color=active?colors[pend]:'var(--muted)';
+  });
+  const searchEl=document.getElementById('historial-apro-search');
+  if(searchEl){
+    searchEl.style.display=(pend==='Pagado'||pend==='Reprobado')?'block':'none';
+    if(pend==='Pagado'||pend==='Reprobado') document.getElementById('historial-apro-input').value='';
+  }
+  cargarSolicitudes(pend);
 }
 
 async function cargarAprobacionesCashea(){
