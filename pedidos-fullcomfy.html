@@ -1112,6 +1112,8 @@ async function calcularPago(){
 
   pagoTotalBs=Math.round(totalBs*100)/100;
   pagoTotalUsd=Math.round(totalUsd*100)/100;
+  pagoTotalCasheaBs=Math.round(pagoTotalBs*(1+casheaPct/100)*100)/100;
+  pagoTotalCasheaUsd=tasaBcvActual>0?Math.round((pagoTotalCasheaBs/tasaBcvActual)*100)/100:0;
 
   document.getElementById('pago-desglose').innerHTML=desglose.join('<br>');
   document.getElementById('pago-total-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
