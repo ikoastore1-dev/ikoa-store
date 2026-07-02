@@ -1469,6 +1469,12 @@ document.addEventListener('input', function(e){
 });
 
 verificarToken();
+
+function marthaConfirmar(){
+  try{ window.close(); } catch(e){}
+  // Si window.close() falla (bloqueado por el navegador), redirigir
+  setTimeout(()=>{ window.location.href='about:blank'; }, 300);
+}
 </script>
 </body>
 </html>
