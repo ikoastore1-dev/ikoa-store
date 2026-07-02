@@ -989,12 +989,12 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     </div>
     <!-- SUB-PESTAÑAS -->
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
-      <button class="apro-sub-btn" data-sub="Pendiente" onclick="switchAprobaciones('Pendiente')" style="flex:1;padding:8px;border:2px solid var(--warn);border-radius:8px;background:#1a1a10;color:var(--warn);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Pendientes</button>
+      <button class="apro-sub-btn" data-sub="Cashea" onclick="switchAprobaciones('Cashea')" style="flex:1;padding:8px;border:2px solid var(--accent);border-radius:8px;background:var(--surface2);color:var(--accent);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🛒 Cashea</button>
+      <button class="apro-sub-btn" data-sub="Pendiente" onclick="switchAprobaciones('Pendiente')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Pendientes</button>
       <button class="apro-sub-btn" data-sub="Pagado" onclick="switchAprobaciones('Pagado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✅ Aprobadas</button>
       <button class="apro-sub-btn" data-sub="Reprobado" onclick="switchAprobaciones('Reprobado')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✗ Reprobadas</button>
       <button class="apro-sub-btn" data-sub="Cola" onclick="switchAprobaciones('Cola')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Cola</button>
       <button class="apro-sub-btn" data-sub="GiftCard" onclick="switchAprobaciones('GiftCard')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🎁 GiftCard</button>
-      <button class="apro-sub-btn" data-sub="Cashea" onclick="switchAprobaciones('Cashea')" style="flex:1;padding:8px;border:2px solid var(--accent);border-radius:8px;background:var(--surface2);color:var(--accent);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🛒 Cashea</button>
     </div>
     <!-- Búsqueda para Aprobadas/Reprobadas -->
     <div id="historial-apro-search" style="display:none;margin-bottom:12px;">
@@ -2605,7 +2605,7 @@ function switchTab(tab){
     const el=document.getElementById(id);
     if(el) el.style.display='none';
   });
-  if(tab==='aprobaciones') switchAprobaciones('Pendiente');
+  if(tab==='aprobaciones') switchAprobaciones('Cashea');
   if(tab==='respaldo'){ switchRespaldo('nuevo'); }
   if(tab==='tasa') cargarTasas();
   if(tab==='stock') switchStock('inventario');
@@ -3383,30 +3383,80 @@ function switchAprobaciones(sub){
 async function cargarAprobacionesCashea(){
   const listEl=document.getElementById('cashea-apro-list');
   const msgEl=document.getElementById('cashea-apro-msg');
-  listEl.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">⏳ Cargando...</div>';
+  listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>';
   try{
     const data=await scriptGETjson({action:'leerCashea'});
     if(!data.ok) throw new Error(data.error||'Error');
     const rows=data.rows||[];
-    if(!rows.length){ listEl.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">No hay pedidos Cashea pendientes</div>'; return; }
-    listEl.innerHTML=rows.map((r,i)=>{
-      const cod=r[0]||'', fecha=r[4]||'', nombre=r[7]||'', celular=r[10]||'';
-      const pack=r[14]||'', tela=r[15]||'', piezas=r[17]||'', agencia=r[18]||'';
-      const monto=r[29]||'', casheaPct=r[33]||'';
-      const key=`cashea_${i}`;
-      window[`_casheaData_${key}`]={cod, fecha, nombre, celular, pack, tela, piezas, agencia, monto, casheaPct, row: r};
-      return `
-      <div style="background:var(--surface2);border:1.5px solid var(--accent);border-radius:12px;padding:14px;margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <span style="font-size:13px;font-weight:700;color:var(--accent);">${cod}</span>
-          <span style="background:#0a2a1a;border:1px solid var(--accent);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--accent);">🛒 CASHEA ${casheaPct?'· '+casheaPct+'%':''}</span>
+    if(!rows.length){
+      listEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:12px;"><div style="font-size:32px;margin-bottom:10px;">🛒</div><div style="font-size:15px;">No hay pedidos Cashea pendientes</div></div>';
+      return;
+    }
+    // Agrupar por base igual que Pendientes
+    const grupos={};
+    rows.forEach(r=>{
+      const codigo=String(r[0]||'').trim();
+      const base=codigo.split('.')[0].split('-').slice(0,2).join('-');
+      if(!grupos[base]) grupos[base]=[];
+      grupos[base].push(r);
+    });
+    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${Object.keys(grupos).length} pedido(s) · ${rows.length} pack(s)</div>`;
+    Object.entries(grupos).forEach(([base, packs])=>{
+      const r=packs[0];
+      const v=i=>String(r[i]||'').trim();
+      const casheaPct=v(33);
+      const card=document.createElement('div');
+      card.style.cssText='background:var(--surface);border:1.5px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:14px;animation:slideUp .3s ease;';
+      let html=`
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;">${v(7)}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;">
+              <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text);">${base}</span>
+              ${packs.length>1?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">${packs.length} packs</span>`:''}
+              <span style="font-size:11px;color:var(--muted);">🕐 ${v(4)}</span>
+            </div>
+          </div>
+          <span style="background:#0a2a1a;border:1px solid var(--accent);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--accent);">🛒 CASHEA${casheaPct?' · '+casheaPct+'%':''}</span>
         </div>
-        <div style="font-size:13px;color:var(--text);margin-bottom:4px;"><b>${nombre}</b> · ${celular}</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">${pack} · ${tela} · ${piezas}</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Agencia: ${agencia} · Monto: Bs ${monto}</div>
-        <button onclick="abrirModalAprobarCashea('${key}')" style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✅ Aprobar Solicitud Cashea</button>
-      </div>`;
-    }).join('');
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:12px;">
+          <div><span style="color:var(--muted);">Correo:</span> ${v(8)}</div>
+          <div><span style="color:var(--muted);">Cédula:</span> ${v(9)}</div>
+          <div><span style="color:var(--muted);">Celular:</span> ${v(10)}</div>
+          <div><span style="color:var(--muted);">Agencia:</span> ${v(18)}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
+          <span style="color:var(--muted);">Retira:</span> ${v(19)}${v(20)?` · C.I: ${v(20)}`:''}${v(21)?` · Cel: ${v(21)}`:''}
+        </div>
+        <div style="background:var(--surface2);border:1px solid #0a2a1a;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:12px;">
+          <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px;">🛒 Pago Cashea</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <div><span style="color:var(--muted);">Moneda:</span> <b>Cashea</b></div>
+            <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent);">Bs ${v(29)||'—'}</b></div>
+            <div><span style="color:var(--muted);">% Cashea:</span> <b>${casheaPct||'—'}%</b></div>
+            <div><span style="color:var(--muted);">Ref:</span> <b style="color:var(--warn);">${v(30)||'—'}</b></div>
+          </div>
+        </div>`;
+      packs.forEach((pk,idx)=>{
+        const vp=i=>String(pk[i]||'').trim();
+        html+=`<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);">
+          <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Pack ${idx+1} · ${vp(14)} · <span style="color:var(--muted);font-size:13px;">${vp(0)}</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:8px;">
+            <div><span style="color:var(--muted);">Modelo:</span> ${vp(11)||'—'}</div>
+            <div><span style="color:var(--muted);">Manga:</span> ${vp(12)}</div>
+            <div><span style="color:var(--muted);">Tela:</span> ${vp(15)}</div>
+            <div><span style="color:var(--muted);">Vinil:</span> ${vp(16)}</div>
+          </div>
+          ${vp(17)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${vp(17).split(' | ').join('<br>')}</div>`:''}
+        </div>`;
+      });
+      // Botón aprobar
+      const aproKey='cashea_'+base.replace(/[^a-zA-Z0-9]/g,'_');
+      window[`_casheaData_${aproKey}`]={cod:base, fecha:v(4), nombre:v(7), celular:v(10), pack:v(14), tela:v(15), piezas:v(17), agencia:v(18), monto:v(29), casheaPct:casheaPct, row:r};
+      html+=`<button onclick="abrirModalAprobarCashea('${aproKey}')" style="width:100%;padding:12px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;">✅ Aprobar Solicitud Cashea</button>`;
+      card.innerHTML=html;
+      listEl.appendChild(card);
+    });
   }catch(e){
     listEl.innerHTML=`<div style="color:var(--danger);text-align:center;padding:20px;">✗ Error: ${e.message}</div>`;
   }
