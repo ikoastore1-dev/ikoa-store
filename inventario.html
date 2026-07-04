@@ -1048,8 +1048,26 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
     <!-- SECCIÓN CASHEA -->
     <div id="aprosec-cashea" style="display:none;">
-      <div id="cashea-apro-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
-      <div id="cashea-apro-list"></div>
+      <!-- Sub-pestañas Cashea -->
+      <div style="display:flex;gap:6px;margin-bottom:12px;">
+        <button class="cashea-sub-btn" data-csub="aprobaciones" onclick="switchCasheaSub('aprobaciones')" style="flex:1;padding:8px;border:2px solid var(--accent);border-radius:8px;background:#0a2a1a;color:var(--accent);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">🛒 Aprobaciones</button>
+        <button class="cashea-sub-btn" data-csub="pendientes" onclick="switchCasheaSub('pendientes')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">💳 Cuotas Pendientes</button>
+        <button class="cashea-sub-btn" data-csub="pagadas" onclick="switchCasheaSub('pagadas')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">✅ Cuotas Pagadas</button>
+      </div>
+      <!-- Aprobaciones Cashea -->
+      <div id="cashea-sec-aprobaciones">
+        <div id="cashea-apro-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
+        <div id="cashea-apro-list"></div>
+      </div>
+      <!-- Cuotas Pendientes -->
+      <div id="cashea-sec-pendientes" style="display:none;">
+        <div id="cashea-cuotas-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
+        <div id="cashea-cuotas-list"></div>
+      </div>
+      <!-- Cuotas Pagadas -->
+      <div id="cashea-sec-pagadas" style="display:none;">
+        <div id="cashea-pagadas-list"></div>
+      </div>
     </div>
   </div>
 
@@ -1756,7 +1774,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxizgH6iI-FdrT7_OdWN-2G1SNigWGPz-xD9BWBYLFqDGlJJpHjevls62UBZtutf-K-3g/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6tzWprxCSgsCsI4E5VE0N80sig5CukJGDmtQSIr9B9UAsMkSi2DK0-16WNVWmv3bAwg/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -3367,7 +3385,7 @@ function switchAprobaciones(sub){
   document.getElementById('aprosec-cashea').style.display=sub==='Cashea'?'block':'none';
   if(sub==='Cola') cargarCola();
   else if(sub==='GiftCard'){ gcSubActual='pendiente'; switchGCSub('pendiente'); }
-  else if(sub==='Cashea') cargarAprobacionesCashea();
+  else if(sub==='Cashea') switchCasheaSub('aprobaciones');
   else if(sub==='Pendiente') switchPendienteSub('Pendiente');
 }
 
@@ -3388,14 +3406,199 @@ function switchPendienteSub(pend){
   cargarSolicitudes(pend);
 }
 
+function switchCasheaSub(sub){
+  document.querySelectorAll('.cashea-sub-btn').forEach(b=>{
+    const active=b.dataset.csub===sub;
+    b.style.borderColor=active?'var(--accent)':'var(--border)';
+    b.style.background=active?'#0a2a1a':'var(--surface2)';
+    b.style.color=active?'var(--accent)':'var(--muted)';
+  });
+  document.getElementById('cashea-sec-aprobaciones').style.display=sub==='aprobaciones'?'block':'none';
+  document.getElementById('cashea-sec-pendientes').style.display=sub==='pendientes'?'block':'none';
+  document.getElementById('cashea-sec-pagadas').style.display=sub==='pagadas'?'block':'none';
+  if(sub==='aprobaciones') cargarAprobacionesCashea();
+  else if(sub==='pendientes') cargarCuotasPendientes();
+  else if(sub==='pagadas') cargarCuotasPagadas();
+}
+
+async function cargarCuotasPendientes(){
+  const listEl=document.getElementById('cashea-cuotas-list');
+  listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>';
+  try{
+    const data=await scriptGETjson({action:'leerCuotasCashea'});
+    if(!data.ok) throw new Error(data.error||'Error');
+    const rows=data.rows||[];
+    if(!rows.length){
+      listEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:12px;"><div style="font-size:32px;margin-bottom:10px;">💳</div><div style="font-size:15px;">No hay cuotas pendientes</div></div>';
+      return;
+    }
+    const ALERTAS={
+      vencida:{bg:'#2a0a0a',border:'var(--danger)',badge:'🔴 VENCIDA',badgeBg:'#5a0a0a',badgeColor:'var(--danger)'},
+      hoy:    {bg:'#2a1f0a',border:'var(--warn)', badge:'🟡 VENCE HOY',badgeBg:'#3a2a0a',badgeColor:'var(--warn)'},
+      proximo:{bg:'#1a1f0a',border:'#aacc00',    badge:'🟠 PRÓXIMA',  badgeBg:'#2a2a0a',badgeColor:'#aacc00'},
+      ok:     {bg:'var(--surface)',border:'var(--border)',badge:'🟢 PENDIENTE',badgeBg:'#0a1a0a',badgeColor:'var(--accent)'},
+    };
+    listEl.innerHTML=rows.map(r=>{
+      const a=ALERTAS[r.alerta]||ALERTAS.ok;
+      return `
+      <div style="background:${a.bg};border:1.5px solid ${a.border};border-radius:12px;padding:14px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div>
+            <span style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;">${r.cliente}</span>
+            <span style="font-size:12px;color:var(--muted);margin-left:8px;">${r.codigo_c} · COD: ${r.cod_cashea}</span>
+          </div>
+          <span style="background:${a.badgeBg};border:1px solid ${a.border};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:${a.badgeColor};">${a.badge}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:13px;margin-bottom:10px;">
+          <div><span style="color:var(--muted);">Cuota:</span> <b>${r.nro_cuota} de 3</b></div>
+          <div><span style="color:var(--muted);">Vence:</span> <b style="color:${a.badgeColor};">${r.fecha_vencimiento}</b></div>
+          <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent);">Bs ${parseFloat(r.monto_cuota_bs||0).toLocaleString('es-VE')}</b></div>
+        </div>
+        <button onclick="abrirModalPagarCuota(${JSON.stringify(r).replace(/"/g,'&quot;')})" 
+          style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
+          💳 Registrar Pago
+        </button>
+      </div>`;
+    }).join('');
+  }catch(e){
+    listEl.innerHTML=`<div style="color:var(--danger);text-align:center;padding:20px;">✗ Error: ${e.message}</div>`;
+  }
+}
+
+async function cargarCuotasPagadas(){
+  const listEl=document.getElementById('cashea-pagadas-list');
+  listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>';
+  try{
+    const data=await scriptGETjson({action:'leerCuotasPagadas'});
+    if(!data.ok) throw new Error(data.error||'Error');
+    const rows=data.rows||[];
+    if(!rows.length){
+      listEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:12px;"><div style="font-size:32px;margin-bottom:10px;">✅</div><div style="font-size:15px;">No hay cuotas pagadas aún</div></div>';
+      return;
+    }
+    listEl.innerHTML=rows.map(r=>`
+      <div style="background:var(--surface);border:1px solid #0a2a0a;border-radius:10px;padding:12px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:14px;font-weight:700;">${r.cliente}</span>
+          <span style="background:#0a2a0a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">✅ Cuota ${r.nro_cuota} de 3</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:12px;">
+          <div><span style="color:var(--muted);">Pagado:</span> <b>${r.fecha_pago}</b></div>
+          <div><span style="color:var(--muted);">Monto Bs:</span> <b style="color:var(--accent);">${parseFloat(r.monto_pagado_bs||0).toLocaleString('es-VE')}</b></div>
+          <div><span style="color:var(--muted);">USD:</span> <b>$${parseFloat(r.monto_pagado_usd||0).toFixed(2)}</b></div>
+          <div><span style="color:var(--muted);">Tasa:</span> <b>Bs ${r.tasa_bcv_pago}</b></div>
+          <div><span style="color:var(--muted);">Ref:</span> <b>${r.referencia||'—'}</b></div>
+          <div><span style="color:var(--muted);">COD:</span> <b>${r.cod_cashea}</b></div>
+        </div>
+      </div>`).join('');
+  }catch(e){
+    listEl.innerHTML=`<div style="color:var(--danger);text-align:center;padding:20px;">✗ Error: ${e.message}</div>`;
+  }
+}
+
+let _cuotaModalData=null;
+function abrirModalPagarCuota(r){
+  _cuotaModalData=r;
+  let modal=document.getElementById('modal-pagar-cuota');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='modal-pagar-cuota';
+    modal.style.cssText='position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:20px;';
+    modal.innerHTML=`
+      <div style="background:var(--surface2);border-radius:14px;padding:20px;width:100%;max-width:400px;">
+        <div style="font-size:16px;font-weight:700;color:var(--accent);margin-bottom:4px;">💳 Registrar Pago Cuota</div>
+        <div id="cuota-modal-info" style="font-size:13px;color:var(--muted);margin-bottom:16px;"></div>
+        <div class="field-group" style="margin-bottom:12px;">
+          <div class="field-label">Monto pagado en Bs *</div>
+          <input class="field-input" type="number" id="cuota-monto-bs" placeholder="Monto en Bs" min="0" step="0.01">
+        </div>
+        <div class="field-group" style="margin-bottom:12px;">
+          <div class="field-label">Tasa BCV del día *</div>
+          <input class="field-input" type="number" id="cuota-tasa-bcv" placeholder="Tasa BCV" min="0" step="0.01">
+        </div>
+        <div class="field-group" style="margin-bottom:12px;">
+          <div class="field-label">Referencia de pago</div>
+          <input class="field-input" type="text" id="cuota-referencia" placeholder="Número de referencia o transferencia">
+        </div>
+        <div class="field-group" style="margin-bottom:16px;">
+          <div class="field-label">Código de usuario *</div>
+          <input class="field-input" type="password" id="cuota-auth" placeholder="Tu código">
+          <div id="cuota-modal-error" style="color:var(--danger);font-size:12px;margin-top:4px;display:none;"></div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="cerrarModalPagarCuota()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Cancelar</button>
+          <button onclick="confirmarPagarCuota()" style="flex:2;padding:12px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✅ Confirmar Pago</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+  document.getElementById('cuota-modal-info').textContent=`${r.cliente} · Cuota ${r.nro_cuota} de 3 · Bs ${parseFloat(r.monto_cuota_bs||0).toLocaleString('es-VE')} · Vence: ${r.fecha_vencimiento}`;
+  document.getElementById('cuota-monto-bs').value=r.monto_cuota_bs||'';
+  document.getElementById('cuota-tasa-bcv').value='';
+  document.getElementById('cuota-referencia').value='';
+  document.getElementById('cuota-auth').value='';
+  document.getElementById('cuota-modal-error').style.display='none';
+  modal.style.display='flex';
+  // Cargar tasa BCV actual
+  scriptGETjson({action:'leerTodosLosPrecios'}).then(d=>{
+    if(d&&d.tasa_bcv) document.getElementById('cuota-tasa-bcv').value=d.tasa_bcv.toFixed(2);
+  }).catch(()=>{});
+}
+
+function cerrarModalPagarCuota(){
+  const m=document.getElementById('modal-pagar-cuota');
+  if(m) m.style.display='none';
+}
+
+async function confirmarPagarCuota(){
+  const monto=parseFloat(document.getElementById('cuota-monto-bs').value);
+  const tasa=parseFloat(document.getElementById('cuota-tasa-bcv').value);
+  const ref=document.getElementById('cuota-referencia').value.trim();
+  const auth=document.getElementById('cuota-auth').value.trim().toUpperCase();
+  const errEl=document.getElementById('cuota-modal-error');
+  if(!monto||monto<=0){errEl.textContent='Ingresa el monto pagado';errEl.style.display='block';return;}
+  if(!tasa||tasa<=0){errEl.textContent='Ingresa la tasa BCV del día';errEl.style.display='block';return;}
+  if(!USUARIOS[auth]){errEl.textContent='❌ Código incorrecto';errEl.style.display='block';return;}
+  errEl.style.display='none';
+  const btn=document.querySelector('#modal-pagar-cuota button:last-child');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Procesando...';}
+  try{
+    const res=await scriptGETjson({
+      action:'pagarCuotaCashea',
+      fila:_cuotaModalData.fila,
+      monto_pagado_bs:monto,
+      tasa_bcv_pago:tasa,
+      referencia:ref,
+      fecha_pago:getFechaHora()
+    });
+    if(res.ok){
+      cerrarModalPagarCuota();
+      const msgEl=document.getElementById('cashea-cuotas-msg');
+      if(msgEl){
+        msgEl.style.display='block';msgEl.style.background='#0a2a0a';msgEl.style.color='var(--accent)';
+        msgEl.innerHTML=`✅ Cuota ${_cuotaModalData.nro_cuota} registrada · Bs ${monto.toLocaleString('es-VE')} · $${res.monto_pagado_usd?.toFixed(2)||'—'}${res.todas_pagadas?' · 🎉 ¡Todas las cuotas pagadas!':''}`;
+        setTimeout(()=>msgEl.style.display='none',4000);
+      }
+      cargarCuotasPendientes();
+    } else throw new Error(res.error||'Error al registrar');
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Pago';}
+    errEl.textContent='✗ '+e.message;errEl.style.display='block';
+  }
+}
+
 async function cargarAprobacionesCashea(){
   const listEl=document.getElementById('cashea-apro-list');
   const msgEl=document.getElementById('cashea-apro-msg');
   listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>';
   try{
-    const data=await scriptGETjson({action:'leerCashea'});
+    const [data, dataTasa] = await Promise.all([
+      scriptGETjson({action:'leerCashea'}),
+      scriptGETjson({action:'leerTodosLosPrecios'})
+    ]);
     if(!data.ok) throw new Error(data.error||'Error');
     const rows=data.rows||[];
+    const tasaBCV = parseFloat(dataTasa?.tasa_bcv)||0;
     if(!rows.length){
       listEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:12px;"><div style="font-size:32px;margin-bottom:10px;">🛒</div><div style="font-size:15px;">No hay pedidos Cashea pendientes</div></div>';
       return;
@@ -3444,6 +3647,22 @@ async function cargarAprobacionesCashea(){
             <div><span style="color:var(--muted);">% Cashea:</span> <b>${casheaPct||'—'}%</b></div>
             <div><span style="color:var(--muted);">Ref:</span> <b style="color:var(--warn);">${v(30)||'—'}</b></div>
           </div>
+        </div>
+        <div style="background:#0a2a1a;border:2px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:12px;">
+          <div style="font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">📱 DATOS PARA APP CASHEA</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">🪪 Cédula</div>
+              <div style="font-size:18px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif;">${v(9)||'—'}</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">💵 Monto USD (Tasa BCV)</div>
+              <div style="font-size:18px;font-weight:700;color:#00ff88;font-family:'Barlow Condensed',sans-serif;" id="cashea-usd-${base.replace(/[^a-zA-Z0-9]/g,'_')}">
+                ${tasaBCV>0 ? '$'+(Math.round((parseFloat(v(29)||0)/tasaBCV)*100)/100).toFixed(2) : '—'}
+              </div>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:8px;">💱 Tasa BCV: Bs ${tasaBCV.toFixed(2)}</div>
         </div>`;
       packs.forEach((pk,idx)=>{
         const vp=i=>String(pk[i]||'').trim();
