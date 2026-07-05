@@ -1774,7 +1774,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6tzWprxCSgsCsI4E5VE0N80sig5CukJGDmtQSIr9B9UAsMkSi2DK0-16WNVWmv3bAwg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqLsNiPYbs-R-62Avflb5R9uRhdJWZ2fYTp3EXo0a9guZXiDcl2Mk8FChuXbRb9XJwCA/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -3432,32 +3432,73 @@ async function cargarCuotasPendientes(){
       listEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:12px;"><div style="font-size:32px;margin-bottom:10px;">💳</div><div style="font-size:15px;">No hay cuotas pendientes</div></div>';
       return;
     }
-    const ALERTAS={
-      vencida:{bg:'#2a0a0a',border:'var(--danger)',badge:'🔴 VENCIDA',badgeBg:'#5a0a0a',badgeColor:'var(--danger)'},
-      hoy:    {bg:'#2a1f0a',border:'var(--warn)', badge:'🟡 VENCE HOY',badgeBg:'#3a2a0a',badgeColor:'var(--warn)'},
-      proximo:{bg:'#1a1f0a',border:'#aacc00',    badge:'🟠 PRÓXIMA',  badgeBg:'#2a2a0a',badgeColor:'#aacc00'},
-      ok:     {bg:'var(--surface)',border:'var(--border)',badge:'🟢 PENDIENTE',badgeBg:'#0a1a0a',badgeColor:'var(--accent)'},
+
+    // Agrupar por codigo_c
+    const grupos={};
+    rows.forEach(r=>{
+      const key=r.codigo_c||r.codigo_s;
+      if(!grupos[key]) grupos[key]=[];
+      grupos[key].push(r);
+    });
+
+    const ALERTA={
+      vencida:{icon:'🔴',color:'var(--danger)'},
+      hoy:    {icon:'🟡',color:'var(--warn)'},
+      proximo:{icon:'🟠',color:'#aacc00'},
+      ok:     {icon:'🟢',color:'var(--accent)'},
     };
-    listEl.innerHTML=rows.map(r=>{
-      const a=ALERTAS[r.alerta]||ALERTAS.ok;
+
+    const prioridad=['vencida','hoy','proximo','ok'];
+
+    listEl.innerHTML=Object.entries(grupos).filter(([key,cuotas])=>{
+      // Solo mostrar si hay al menos una cuota pendiente
+      return cuotas.some(c=>c.status!=='Pagada');
+    }).map(([key,cuotas])=>{
+      const r0=cuotas[0];
+      const monto_total_bs=parseFloat(r0.monto_total_bs||0);
+      const monto_total_usd=parseFloat(r0.monto_total_usd||0);
+      const pct_ini=parseFloat(r0.pct_inicial||0);
+      const monto_ini_bs=Math.round(monto_total_bs*pct_ini/100*100)/100;
+      const monto_resto_bs=Math.round((monto_total_bs-monto_ini_bs)*100)/100;
+      const monto_resto_usd=Math.round((monto_total_usd*(1-pct_ini/100))*100)/100;
+
+      // Crédito restante = cuotas aún pendientes
+      const cuotasPend=cuotas.filter(c=>c.status!=='Pagada');
+      const credito_bs=cuotasPend.reduce((s,c)=>s+parseFloat(c.monto_cuota_bs||0),0);
+      const credito_usd=cuotasPend.reduce((s,c)=>s+parseFloat(c.monto_cuota_usd_original||0),0);
+
+      // Alerta más crítica
+      const alertaPrincipal=prioridad.find(a=>cuotas.some(c=>c.alerta===a))||'ok';
+      const borderColor=ALERTA[alertaPrincipal].color;
+
+      const cuotasHtml=cuotas.map(r=>{
+        const a=ALERTA[r.alerta]||ALERTA.ok;
+        const pagada=r.status==='Pagada';
+        return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--surface2);border-radius:8px;margin-bottom:5px;gap:8px;">
+          <span style="font-size:12px;font-weight:700;color:var(--text);min-width:50px;">Cuota ${r.nro_cuota}</span>
+          <span style="font-size:12px;color:var(--muted);flex:1;">${r.fecha_vencimiento}</span>
+          <span style="font-size:12px;font-weight:700;color:var(--accent);">Bs ${parseFloat(r.monto_cuota_bs||0).toLocaleString('es-VE')}</span>
+          ${pagada
+            ? `<span style="font-size:12px;color:var(--accent);">✅ PAGADA</span>`
+            : `<span style="font-size:13px;">${a.icon}</span>
+               <button onclick="abrirModalPagarCuota(${JSON.stringify(r).replace(/"/g,'&quot;')})"
+                style="padding:4px 12px;background:var(--accent);border:none;border-radius:6px;color:#000;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Pagar</button>`
+          }
+        </div>`;
+      }).join('');
+
       return `
-      <div style="background:${a.bg};border:1.5px solid ${a.border};border-radius:12px;padding:14px;margin-bottom:10px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <div>
-            <span style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;">${r.cliente}</span>
-            <span style="font-size:12px;color:var(--muted);margin-left:8px;">${r.codigo_c} · COD: ${r.cod_cashea}</span>
-          </div>
-          <span style="background:${a.badgeBg};border:1px solid ${a.border};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:${a.badgeColor};">${a.badge}</span>
+      <div style="background:var(--surface);border:1.5px solid ${borderColor};border-radius:12px;padding:12px;margin-bottom:10px;">
+        <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;margin-bottom:2px;">${r0.cliente} <span style="font-size:12px;color:var(--muted);font-weight:400;">· ${r0.codigo_c} · COD: ${r0.cod_cashea}</span></div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:2px;">
+          Total: <b style="color:var(--text);">Bs ${monto_total_bs.toLocaleString('es-VE')}</b> · <b>$${monto_total_usd.toFixed(2)}</b>
+          · Inicial ${pct_ini}%: <b style="color:var(--accent);">Bs ${monto_ini_bs.toLocaleString('es-VE')}</b>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:13px;margin-bottom:10px;">
-          <div><span style="color:var(--muted);">Cuota:</span> <b>${r.nro_cuota} de 3</b></div>
-          <div><span style="color:var(--muted);">Vence:</span> <b style="color:${a.badgeColor};">${r.fecha_vencimiento}</b></div>
-          <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent);">Bs ${parseFloat(r.monto_cuota_bs||0).toLocaleString('es-VE')}</b></div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">
+          Crédito restante: <b style="color:${borderColor};">Bs ${(Math.round(credito_bs*100)/100).toLocaleString('es-VE')}</b> · <b>$${(Math.round(credito_usd*100)/100).toFixed(2)}</b>
         </div>
-        <button onclick="abrirModalPagarCuota(${JSON.stringify(r).replace(/"/g,'&quot;')})" 
-          style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
-          💳 Registrar Pago
-        </button>
+        ${cuotasHtml}
       </div>`;
     }).join('');
   }catch(e){
