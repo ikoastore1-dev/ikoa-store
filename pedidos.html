@@ -150,8 +150,8 @@ window.addEventListener('load',function(){
   </div>
 
   <!-- STEP 0: MODALIDAD -->
-  <div class="step active" id="step0">
-    <div class="step-header"><div class="step-num">Paso 1 de 7</div><div class="step-title">Selecciona tu modalidad</div></div>
+  <div class="step active" id="step1">
+    <div class="step-header"><div class="step-num">Paso 2 de 7</div><div class="step-title">Selecciona tu modalidad</div></div>
     <div class="card">
       <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">¿Cómo deseas personalizar tus franelas?</div>
       <div style="display:flex;flex-direction:column;gap:14px;">
@@ -168,8 +168,8 @@ window.addEventListener('load',function(){
   </div>
 
   <!-- STEP 1: DATOS PERSONALES -->
-  <div class="step" id="step1">
-    <div class="step-header"><div class="step-num">Paso 2 de 7</div><div class="step-title">Tus datos personales</div></div>
+  <div class="step" id="step0">
+    <div class="step-header"><div class="step-num">Paso 1 de 7</div><div class="step-title">Tus datos personales</div></div>
     <div class="card">
       <div class="field-group">
         <div class="field-label">Nombre y Apellido *</div>
@@ -677,7 +677,7 @@ function seleccionarModalidad(op){
   // Actualizar texto del pack mínimo según modalidad
   const minEl = document.getElementById('pack-minimo-label');
   if(minEl) minEl.textContent = op==='B' ? 'Mínimo 3 unidades · Diferentes telas · Mismo vinil' : 'Mínimo 2 unidades · Mismo color tela y vinil';
-  setTimeout(()=>goStep(1), 300);
+  setTimeout(()=>goStep(2), 300);
 }
 
 function goStep(n){
@@ -733,7 +733,7 @@ async function intentarPaso2(){
   const confirmado=await mostrarModalDatos(pedido.cedula, pedido.celular, pedido.correo);
   if(!confirmado) return; // vuelve al paso 1 sin avanzar
   // Avanzar
-  document.getElementById('step1').classList.remove('active');
+  document.getElementById('step0').classList.remove('active');
   currentStep=2;
   document.getElementById('step2').classList.add('active');
   updateProgress();
@@ -775,13 +775,18 @@ function renderPacksResumen(){
 
 function agregarOtroPack(){
   // Resetear campos de modelo/pack para nuevo pack
-  pedido.pack=0; pedido.modelo='Comfy'; pedido.manga='Manga Larga'; pedido.capucha='Sin Capucha';  pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
+  pedido.pack=0; pedido.modelo='Comfy'; pedido.manga='Manga Larga'; pedido.capucha='Sin Capucha'; pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
+  modalidadComfy='A';
   // Limpiar selecciones visuales
   document.querySelectorAll('#tela-opts .opt-btn, #vinil-opts .opt-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('btn-modal-a').style.borderColor='var(--border)';
+  document.getElementById('btn-modal-b').style.borderColor='var(--border)';
+  document.getElementById('btn-modal-a').style.background='var(--surface2)';
+  document.getElementById('btn-modal-b').style.background='var(--surface2)';
   document.getElementById('step45').classList.remove('active');
-  currentStep=2;
-  document.getElementById('step2').classList.add('active');
+  currentStep=1;
+  document.getElementById('step1').classList.add('active');
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
 }
