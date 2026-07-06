@@ -149,9 +149,27 @@ window.addEventListener('load',function(){
     <div class="prog-dot" id="pd7"></div>
   </div>
 
+  <!-- STEP 0: MODALIDAD -->
+  <div class="step active" id="step0">
+    <div class="step-header"><div class="step-num">Paso 1 de 7</div><div class="step-title">Selecciona tu modalidad</div></div>
+    <div class="card">
+      <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">¿Cómo deseas personalizar tus franelas?</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <button onclick="seleccionarModalidad('A')" id="btn-modal-a" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;margin-bottom:4px;">🎨 Opción A</div>
+          <div style="font-size:13px;font-weight:400;color:var(--muted);">Mínimo 2 unidades · Mismo color de tela y vinil</div>
+        </button>
+        <button onclick="seleccionarModalidad('B')" id="btn-modal-b" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;margin-bottom:4px;">🌈 Opción B</div>
+          <div style="font-size:13px;font-weight:400;color:var(--muted);">Mínimo 3 unidades · Diferentes telas · Mismo vinil</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- STEP 1: DATOS PERSONALES -->
-  <div class="step active" id="step1">
-    <div class="step-header"><div class="step-num">Paso 1 de 6</div><div class="step-title">Tus datos personales</div></div>
+  <div class="step" id="step1">
+    <div class="step-header"><div class="step-num">Paso 2 de 7</div><div class="step-title">Tus datos personales</div></div>
     <div class="card">
       <div class="field-group">
         <div class="field-label">Nombre y Apellido *</div>
@@ -197,10 +215,10 @@ window.addEventListener('load',function(){
 
   <!-- STEP 2: PACK -->
   <div class="step" id="step2">
-    <div class="step-header"><div class="step-num">Paso 2 de 6</div><div class="step-title">¿Cuántas franelas deseas?</div></div>
+    <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title">¿Cuántas franelas deseas?</div></div>
     <div class="card">
       <div class="card-title">Selecciona tu pack</div>
-      <div class="card-note">Cada pack incluye franelas del mismo color de tela y vinil.</div>
+      <div class="card-note" id="pack-minimo-label">Mínimo 2 unidades · Mismo color tela y vinil.</div>
       <div class="option-grid cols3" id="pack-grid">
         <button class="opt-btn" onclick="selectPack(this,2)">2 PACK<span class="sub">2 franelas</span></button>
         <button class="opt-btn" onclick="selectPack(this,3)">3 PACK<span class="sub">3 franelas</span></button>
@@ -254,7 +272,7 @@ window.addEventListener('load',function(){
 
   <!-- STEP 4: PIEZAS -->
   <div class="step" id="step4">
-    <div class="step-header"><div class="step-num">Paso 4 de 6</div><div class="step-title">Tallas y nombres</div></div>
+    <div class="step-header"><div class="step-num">Paso 5 de 7</div><div class="step-title">Tallas y nombres</div></div>
     <div class="nota" style="margin-bottom:14px;">📌 Nombre en <b>manga derecha</b>, sin iniciales ni logos.<br>Completa las <b id="pack-total-lbl">—</b> franelas de tu pack.<br>Usa el contador <b>+/−</b> para repetir franelas iguales.</div>
     <div id="franelas-progreso" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;color:var(--warn);"></div>
     <div class="alerta-min" id="alerta-min"></div>
@@ -267,7 +285,7 @@ window.addEventListener('load',function(){
 
   <!-- STEP 4.5: ¿OTRO PACK? -->
   <div class="step" id="step45">
-    <div class="step-header"><div class="step-num">Paso 4 de 6</div><div class="step-title">¿Deseas agregar otro pack?</div></div>
+    <div class="step-header"><div class="step-num">Paso 5 de 7</div><div class="step-title">¿Deseas agregar otro pack?</div></div>
     <div class="card">
       <div style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Puedes agregar otro pack con diferente modelo, color de tela o vinil. Todos los packs van en el mismo pedido.</div>
       <!-- RESUMEN PACKS AGREGADOS -->
@@ -281,7 +299,7 @@ window.addEventListener('load',function(){
 
   <!-- STEP 5: ENTREGA -->
   <div class="step" id="step5">
-    <div class="step-header"><div class="step-num">Paso 5 de 6</div><div class="step-title">Datos de entrega</div></div>
+    <div class="step-header"><div class="step-num">Paso 6 de 7</div><div class="step-title">Datos de entrega</div></div>
     <div class="card">
       <div class="card-title">Tipo de entrega</div>
       <div class="card-note">📦 Envío cobro en destino por MRW, TEALCA y ZOOM y delivery.</div>
@@ -471,11 +489,11 @@ window.addEventListener('load',function(){
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwEgB7li75BIXx6DcOWLDGY0h-1foFxL-UQt92gNKtAQmviVO-9x-Jgjy2HAtzph0hemg/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzg8tFVMC6P50F9VvUzgcRXclqe5X-o_BQiKoY8TLNblcFsTCKTumxDPfgaMUtN0OdT9g/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
-let currentStep=1;
+let currentStep=0;
 let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:0,modelo:'Comfy',manga:'Manga Larga',capucha:'Sin Capucha',tela:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:'',packs:[],pagoMoneda:'',pagoRef:'',pagoMonto:0};
 // packs = [{pack, modelo, manga, capucha, tela, vinil, piezas:[]}]
 let piezaCount=0;
@@ -647,6 +665,21 @@ function sonColoresSimilares(a,b){
 }
 
 // ── NAVEGACIÓN ────────────────────────────────────────────────
+let modalidadComfy = 'A'; // 'A' o 'B'
+
+function seleccionarModalidad(op){
+  modalidadComfy = op;
+  document.getElementById('btn-modal-a').style.borderColor = op==='A' ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('btn-modal-b').style.borderColor = op==='B' ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('btn-modal-a').style.background = op==='A' ? '#0a2a1a' : 'var(--surface2)';
+  document.getElementById('btn-modal-b').style.background = op==='B' ? '#0a2a1a' : 'var(--surface2)';
+  pedido.modalidad = op;
+  // Actualizar texto del pack mínimo según modalidad
+  const minEl = document.getElementById('pack-minimo-label');
+  if(minEl) minEl.textContent = op==='B' ? 'Mínimo 3 unidades · Diferentes telas · Mismo vinil' : 'Mínimo 2 unidades · Mismo color tela y vinil';
+  setTimeout(()=>goStep(1), 300);
+}
+
 function goStep(n){
   // Atrás siempre sin validar
   if(n<currentStep){
@@ -783,7 +816,7 @@ function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidCel(c){ return c.replace(/\D/g,'').length>=7; }
 
 function validateStep(n){
-  if(n===2){ if(!pedido.pack||pedido.pack<2){ alert('Selecciona la cantidad de franelas'); return false; } return true; }
+  if(n===2){ if(!pedido.pack||pedido.pack<(modalidadComfy==='B'?3:2)){ alert('Selecciona la cantidad de franelas (mínimo '+(modalidadComfy==='B'?3:2)+')'); return false; } return true; }
   if(n===3){
     if(!pedido.modelo){ alert('Selecciona el modelo'); return false; }
     if(!pedido.manga){ alert('Selecciona el tipo de manga'); return false; }
@@ -1218,7 +1251,7 @@ async function guardarEnSheets(){
         correo:pedido.correo,
         cedula:pedido.cedula,
         celular:pedido.celular,
-        modelo:'COMFY MEGA PROMO',
+        modelo:'COMFY MEGA PROMO ' + (modalidadComfy==='B'?'(Opción B)':'(Opción A)'),
         manga:pk.manga,
         capucha:pk.capucha,
         pack:`${pk.pack}PACK`,
