@@ -677,6 +677,12 @@ function seleccionarModalidad(op){
   // Actualizar texto del pack mínimo según modalidad
   const minEl = document.getElementById('pack-minimo-label');
   if(minEl) minEl.textContent = op==='B' ? 'Mínimo 3 unidades · Diferentes telas · Mismo vinil' : 'Mínimo 2 unidades · Mismo color tela y vinil';
+  // Ocultar/mostrar 2 PACK según modalidad
+  const btn2pack = document.querySelector('#pack-grid .opt-btn[onclick="selectPack(this,2)"]');
+  if(btn2pack) btn2pack.style.display = op==='B' ? 'none' : '';
+  // Actualizar min del campo custom
+  const customEl = document.getElementById('pack-custom');
+  if(customEl) customEl.min = op==='B' ? '3' : '2';
   setTimeout(()=>goStep(2), 300);
 }
 
