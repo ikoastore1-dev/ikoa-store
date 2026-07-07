@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>IKOA — Hacer un Pedido</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--surface3:#252533;--accent:#00e5b0;--accent2:#0099ff;--warn:#e8a020;--danger:#ff4444;--text:#f0f0f5;--muted:#7a7a99;--border:#2a2a3a;--radius:14px;}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 20px;text-align:center;}
+.logo{font-family:'Barlow',sans-serif;font-size:26px;font-weight:700;letter-spacing:.15em;}
+.logo .i{color:var(--accent)}.logo .sep{color:var(--muted);margin:0 8px;font-weight:300}.logo .b{color:var(--text)}
+.tagline{font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:.08em;}
+main{max-width:640px;margin:0 auto;padding:20px 16px 60px;}
+.step{display:none;animation:slideUp .3s ease;}.step.active{display:block;}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes bounceIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+.step-header{margin-bottom:20px;}
+.step-num{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:600;margin-bottom:4px;}
+.step-title{font-family:'Barlow',sans-serif;font-size:26px;font-weight:700;color:var(--text);}
+.progress-bar{display:flex;gap:6px;margin-bottom:24px;}
+.prog-dot{flex:1;height:4px;border-radius:2px;background:var(--surface2);transition:background .3s;}
+.prog-dot.done{background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);}.prog-dot.active{background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);opacity:.5;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;}
+.card-title{font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;}
+.card-note{font-size:12px;color:var(--muted);margin-top:-8px;margin-bottom:12px;line-height:1.5;}
+.field-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.field-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;}
+.field-note{font-size:11px;color:var(--warn);margin-top:3px;line-height:1.4;}
+.field-input{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:border-color .2s;width:100%;}
+input[type="text"].field-input, input[type="tel"].field-input{text-transform:uppercase;}
+.field-input:focus{border-color:var(--accent);}.field-input::placeholder{color:var(--muted);}.field-input.error{border-color:var(--danger);}
+select.field-input option{background:var(--surface2);color:var(--text);}
+.input-row{display:flex;gap:8px;}.input-row select{flex:0 0 90px;}.input-row input{flex:1;}
+.option-grid{display:grid;gap:10px;margin-bottom:14px;}
+.option-grid.cols2{grid-template-columns:1fr 1fr;}.option-grid.cols3{grid-template-columns:1fr 1fr 1fr;}
+.opt-btn{padding:14px 10px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;letter-spacing:.03em;width:100%;}
+.opt-btn:hover{border-color:var(--accent);}.opt-btn.selected{border-color:var(--accent);background:#0f2b1a;color:var(--accent);}
+.opt-btn .sub{font-size:11px;font-weight:400;color:var(--muted);margin-top:3px;display:block;font-family:'Barlow',sans-serif;}
+.opt-btn.selected .sub{color:var(--accent);opacity:.7;}
+.pieza-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;position:relative;}
+.pieza-num{font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;}
+.pieza-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.remove-btn{position:absolute;top:12px;right:12px;background:transparent;border:1px solid #3a1a1a;border-radius:6px;color:var(--danger);padding:4px 10px;font-size:12px;cursor:pointer;}
+.mult-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.mult-btn{padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;}
+.mult-btn:hover{border-color:var(--accent);color:var(--accent);}
+.nav-row{display:flex;gap:10px;margin-top:20px;}
+.btn-back{flex:1;padding:14px;background:transparent;border:1px solid var(--border);border-radius:12px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:17px;font-weight:600;cursor:pointer;}
+.btn-next{flex:2;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:12px;color:#000;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;}
+.btn-send{width:100%;padding:16px;background:linear-gradient(135deg,#25d366,#128c7e);border:none;border-radius:12px;color:#000;font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;cursor:pointer;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:10px;}
+.resumen-block{background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:10px;font-size:13px;line-height:1.9;}
+.resumen-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;}
+.nota{background:#1a1a10;border:1px solid #3a3a10;border-radius:10px;padding:12px 14px;font-size:13px;color:var(--warn);line-height:1.6;margin-top:12px;}
+.alerta-min{background:#2a1010;border:1px solid var(--danger);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--danger);text-align:center;margin-bottom:10px;display:none;}
+.err-msg{font-size:12px;color:var(--danger);margin-top:4px;display:none;}
+.spinner{display:inline-block;animation:spin 1s linear infinite;}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease;}
+.modal-overlay.hidden{display:none;}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:26px 22px;width:100%;max-width:380px;}
+.modal-icon{font-size:36px;text-align:center;margin-bottom:10px;}
+.modal-title{font-family:'Barlow',sans-serif;font-size:22px;font-weight:700;text-align:center;margin-bottom:8px;}
+.modal-body{font-size:14px;color:var(--muted);text-align:center;margin-bottom:18px;line-height:1.7;}
+.modal-data{background:var(--surface2);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:14px;line-height:2;}
+.modal-btns{display:flex;gap:10px;}
+.mbtn-cancel{flex:1;padding:13px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:16px;font-weight:600;cursor:pointer;}
+.mbtn-ok{flex:2;padding:13px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;}
+.mbtn-warn{flex:2;padding:13px;background:var(--warn);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;}
+/* BLOQUEADA */
+#pantalla-bloqueada{position:fixed;inset:0;background:var(--bg);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;}
+</style>
+</head>
+<body>
+<!-- SPLASH SCREEN -->
+<div id="splash" style="position:fixed;inset:0;background:#0a0a0f;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s ease;">
+  <div style="text-align:center;animation:splashIn .8s cubic-bezier(.16,1,.3,1) forwards;">
+    <div style="font-family:'Rajdhani',sans-serif;font-size:64px;font-weight:700;letter-spacing:.25em;color:#00e5b0;line-height:1;">IKOA</div>
+    <div style="width:40px;height:2px;background:#00e5b0;margin:12px auto 14px;border-radius:2px;animation:splashLine 1s ease .4s both;transform:scaleX(0);transform-origin:center;"></div>
+    <div style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:400;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;animation:splashIn 1s ease .6s both;opacity:0;">Ropa Técnica · vivir el sol sin límites</div>
+  </div>
+</div>
+<style>
+@keyframes splashIn{from{opacity:0;transform:scale(.92) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes splashLine{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+</style>
+<script>
+window.addEventListener('load',function(){
+  setTimeout(function(){
+    const s=document.getElementById('splash');
+    s.style.opacity='0';
+    setTimeout(function(){ s.style.display='none'; },600);
+  }, 1950);
+});
+</script>
+
+
+<!-- MODAL CONFIRMACIÓN DATOS -->
+<div class="modal-overlay hidden" id="modal-confirmar-datos">
+  <div class="modal-box">
+    <div class="modal-icon">🔍</div>
+    <div class="modal-title">Confirma tus datos</div>
+    <div class="modal-body">¿Son correctos tu correo, cédula y número de WhatsApp?</div>
+    <div class="modal-data" id="modal-datos-content"></div>
+    <div class="modal-btns">
+      <button class="mbtn-cancel" onclick="cerrarModalDatos(false)">✏️ Corregir</button>
+      <button class="mbtn-ok" onclick="cerrarModalDatos(true)">✓ Sí, son correctos</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COLORES IGUALES -->
+<div class="modal-overlay hidden" id="modal-colores-iguales">
+  <div class="modal-box">
+    <div class="modal-icon">⚠️</div>
+    <div class="modal-title">¡Atención con los colores!</div>
+    <div class="modal-body">Elegiste el <b style="color:var(--warn)">mismo color para la tela y el vinil</b>.<br><br>Con esta combinación el nombre y los logos <b>casi no se van a detallar</b> ya que se mezclan con la tela.<br><br>¿Deseas continuar así o prefieres corregirlo?</div>
+    <div class="modal-btns">
+      <button class="mbtn-cancel" onclick="cerrarModalColores(false)">✏️ Corregir</button>
+      <button class="mbtn-warn" onclick="cerrarModalColores(true)">Sí, me gusta así</button>
+    </div>
+  </div>
+</div>
+
+<div id="pantalla-bloqueada" style="display:flex;">
+  <div style="font-size:56px;margin-bottom:20px;" id="bloqueo-icon">⏳</div>
+  <div style="font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;color:var(--text);margin-bottom:10px;" id="bloqueo-titulo">Verificando acceso...</div>
+  <div style="font-size:15px;color:var(--muted);line-height:1.7;max-width:320px;" id="bloqueo-texto">Por favor espera.</div>
+  <div style="margin-top:24px;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.15em;"><span style="color:var(--accent);">IKOA</span><span style="color:var(--muted);margin:0 8px;">—</span><span style="color:var(--text);">BEKATE</span></div>
+</div>
+
+<header>
+  <div class="logo"><span class="i">IKOA</span><span class="sep">—</span><span class="b">BEKATE</span></div>
+  <div class="tagline">✨ Formulario de Pedido · 5 días hábiles de entrega</div>
+</header>
+
+<main>
+  <div class="progress-bar">
+    <div class="prog-dot active" id="pd1"></div>
+    <div class="prog-dot" id="pd2"></div>
+    <div class="prog-dot" id="pd3"></div>
+    <div class="prog-dot" id="pd4"></div>
+    <div class="prog-dot" id="pd5"></div>
+    <div class="prog-dot" id="pd6"></div>
+    <div class="prog-dot" id="pd7"></div>
+  </div>
+
+  <!-- STEP 0: MODALIDAD -->
+  <div class="step" id="step1">
+    <div class="step-header"><div class="step-num">Paso 2 de 7</div><div class="step-title">Selecciona tu modalidad</div></div>
+    <div class="card">
+      <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">¿Cómo deseas personalizar tus franelas?</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <button onclick="seleccionarModalidad('A')" id="btn-modal-a" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;margin-bottom:4px;">🎨 Opción A</div>
+          <div style="font-size:13px;font-weight:400;color:var(--muted);">Mínimo 2 unidades · Mismo color de tela y vinil</div>
+        </button>
+        <button onclick="seleccionarModalidad('B')" id="btn-modal-b" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;margin-bottom:4px;">🌈 Opción B</div>
+          <div style="font-size:13px;font-weight:400;color:var(--muted);">Mínimo 3 unidades · Diferentes telas · Mismo vinil</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1: DATOS PERSONALES -->
+  <div class="step active" id="step0">
+    <div class="step-header"><div class="step-num">Paso 1 de 7</div><div class="step-title">Tus datos personales</div></div>
+    <div class="card">
+      <div class="field-group">
+        <div class="field-label">Nombre y Apellido *</div>
+        <input class="field-input" type="text" id="p-nombre" placeholder="Nombre Apellido">
+        <div class="err-msg" id="err-nombre">Ingresa tu nombre y apellido</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Correo electrónico *</div>
+        <input class="field-input" type="email" id="p-correo" placeholder="ejemplo@correo.com">
+        <div class="err-msg" id="err-correo">Ingresa un correo válido (ej: nombre@gmail.com)</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Cédula / RIF *</div>
+        <div class="input-row">
+          <select class="field-input" id="p-cedula-tipo">
+            <option value="V-">V-</option>
+            <option value="E-">E-</option>
+            <option value="J-">J-</option>
+          </select>
+          <input class="field-input" type="text" id="p-cedula-num" placeholder="12345678" inputmode="numeric">
+        </div>
+        <div class="err-msg" id="err-cedula">Ingresa tu número de cédula</div>
+      </div>
+      <div class="field-group" style="margin-bottom:0">
+        <div class="field-label">WhatsApp *</div>
+        <div class="input-row">
+          <select class="field-input" id="p-cel-pais" style="flex:0 0 110px;">
+            <option value="+58">🇻🇪 +58</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+57">🇨🇴 +57</option>
+            <option value="+51">🇵🇪 +51</option>
+            <option value="+52">🇲🇽 +52</option>
+            <option value="+34">🇪🇸 +34</option>
+          </select>
+          <input class="field-input" type="tel" id="p-celular-num" placeholder="4141234567" inputmode="numeric">
+        </div>
+        <div class="field-note">📱 Preferiblemente número de WhatsApp</div>
+        <div class="err-msg" id="err-celular">Ingresa un número válido</div>
+      </div>
+    </div>
+    <div class="nav-row"><button class="btn-next" onclick="intentarPaso1()">Siguiente →</button></div>
+  </div>
+
+  <!-- STEP 1: MODALIDAD -->
+  <div class="step" id="step2">
+    <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title">¿Cuántas franelas deseas?</div></div>
+    <div class="card">
+      <div class="card-title">Selecciona tu pack</div>
+      <div class="card-note" id="pack-minimo-label">Mínimo 2 unidades · Mismo color tela y vinil.</div>
+      <div class="option-grid cols3" id="pack-grid">
+        <button class="opt-btn" id="btn-pack-2" onclick="selectPack(this,2)">2 PACK<span class="sub">2 franelas</span></button>
+        <button class="opt-btn" onclick="selectPack(this,3)">3 PACK<span class="sub">3 franelas</span></button>
+        <button class="opt-btn" onclick="selectPack(this,4)">4 PACK<span class="sub">4 franelas</span></button>
+        <button class="opt-btn" onclick="selectPack(this,5)">5 PACK<span class="sub">5 franelas</span></button>
+        <button class="opt-btn" onclick="selectPack(this,6)">6 PACK<span class="sub">6 franelas</span></button>
+        <button class="opt-btn" onclick="selectPack(this,7)">7 PACK<span class="sub">7 franelas</span></button>
+      </div>
+      <div class="field-group" style="margin-bottom:0">
+        <div class="field-label">¿Otra cantidad?</div>
+        <input class="field-input" type="number" id="pack-custom" placeholder="Ej: 8, 10, 12..." min="2" max="50" oninput="setCustomPack(this.value)">
+      </div>
+    </div>
+    <div id="pack-seleccionado" style="display:none;background:#0f2b1a;border:1px solid var(--accent);border-radius:10px;padding:12px 16px;text-align:center;margin-bottom:12px;">
+      <span style="font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="pack-label">—</span>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goStep(1)">← Atrás</button>
+      <button class="btn-next" onclick="goStep(3)">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3B: OPCIÓN B — 3 FRANELAS INDIVIDUALES -->
+  <div class="step" id="step3b">
+    <div class="step-header"><div class="step-num">Paso 4 de 7</div><div class="step-title">Configura tus 3 franelas</div></div>
+    <div class="card">
+      <div class="card-title">🎨 Vinil (mismo para todas)</div>
+      <div class="option-grid cols2" id="vinil-opts-b"></div>
+    </div>
+    <div id="franelas-b-container"></div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goStep(1)">← Atrás</button>
+      <button class="btn-next" onclick="intentarPaso4B()">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: MODELO -->
+  <div class="step" id="step3">
+    <div class="step-header"><div class="step-num">Paso 4 de 7</div><div class="step-title">Modelo · Color de Tela · Vinil</div></div>
+    <div class="card">
+      <!-- MODELO FIJO - solo informativo -->
+      <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Modelo seleccionado</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">COMFY — MEGA PROMO</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px;">Manga Larga · Sin Capucha</div>
+      </div>
+    </div>
+    <div class="card">
+      
+      <div class="card-title">Color de Tela</div>
+      <div class="option-grid cols2" id="tela-opts">
+        <div style="color:var(--muted);font-size:13px;padding:8px;">⏳ Cargando colores...</div>
+      </div>
+      <div class="card-title" style="margin-top:4px;">Color de Vinil</div>
+      <div id="vinil-warn" style="display:none;background:#1a1a10;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--warn);margin-bottom:8px;">⚠️ Este color de vinil puede no contrastar bien con la tela seleccionada.</div>
+      <div class="option-grid cols2" id="vinil-opts">
+        <div style="color:var(--muted);font-size:13px;padding:8px;">⏳ Cargando colores...</div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="modalidadComfy==='B'?goStep(1):goStep(2)">← Atrás</button>
+      <button class="btn-next" onclick="intentarPaso4()">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: PIEZAS -->
+  <div class="step" id="step4">
+    <div class="step-header"><div class="step-num">Paso 5 de 7</div><div class="step-title">Tallas y nombres</div></div>
+    <div class="nota" style="margin-bottom:14px;">📌 Nombre en <b>manga derecha</b>, sin iniciales ni logos.<br>Completa las <b id="pack-total-lbl">—</b> franelas de tu pack.<br>Usa el contador <b>+/−</b> para repetir franelas iguales.</div>
+    <div id="franelas-progreso" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;color:var(--warn);"></div>
+    <div class="alerta-min" id="alerta-min"></div>
+    <div id="piezas-container"></div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goStep(3)">← Atrás</button>
+      <button class="btn-next" onclick="intentarPaso45()">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4.5: ¿OTRO PACK? -->
+  <div class="step" id="step45">
+    <div class="step-header"><div class="step-num">Paso 5 de 7</div><div class="step-title">¿Deseas agregar otro pack?</div></div>
+    <div class="card">
+      <div style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Puedes agregar otro pack con diferente modelo, color de tela o vinil. Todos los packs van en el mismo pedido.</div>
+      <!-- RESUMEN PACKS AGREGADOS -->
+      <div id="packs-resumen" style="margin-bottom:16px;"></div>
+      <div class="option-grid cols2">
+        <button class="opt-btn" style="border-color:var(--accent);color:var(--accent);background:#0f2b1a;" onclick="agregarOtroPack()">✅ SÍ, agregar otro pack</button>
+        <button class="opt-btn" onclick="goStep(5)">➡️ NO, continuar con entrega</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5: ENTREGA -->
+  <div class="step" id="step5">
+    <div class="step-header"><div class="step-num">Paso 6 de 7</div><div class="step-title">Datos de entrega</div></div>
+    <div class="card">
+      <div class="card-title">Tipo de entrega</div>
+      <div class="card-note">📦 Envío cobro en destino por MRW, TEALCA y ZOOM y delivery.</div>
+      <div class="option-grid cols2" id="tipo-entrega-grid">
+        <button class="opt-btn" onclick="selectTipoEntrega(this,'MRW')">MRW</button>
+        <button class="opt-btn" onclick="selectTipoEntrega(this,'TEALCA')">TEALCA</button>
+        <button class="opt-btn" onclick="selectTipoEntrega(this,'ZOOM')">ZOOM</button>
+        <button class="opt-btn" onclick="selectTipoEntrega(this,'Tienda MCY')">🏪 Retirar en<br>Tienda Maracay</button>
+        <button class="opt-btn" onclick="selectTipoEntrega(this,'Delivery Maracay')">🛵 Delivery<br>Maracay</button>
+      </div>
+    </div>
+    <div class="card" id="card-agencia" style="display:none">
+      <div class="card-title">Selecciona tu agencia</div>
+      <div class="field-group">
+        <div class="field-label">Estado</div>
+        <select class="field-input" id="sel-estado"><option value="">Selecciona tu estado...</option></select>
+      </div>
+      <div class="field-group" id="agencia-wrap" style="display:none;">
+        <div class="field-label">Agencia</div>
+        <select class="field-input" id="sel-agencia"><option value="">Selecciona la agencia...</option></select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Persona que retira</div>
+      <div class="field-group">
+        <div class="field-label">¿Es la misma persona del pedido?</div>
+        <div class="option-grid cols2" style="margin-bottom:0">
+          <button class="opt-btn selected" id="mismo-si" onclick="setMismoEnvio(true)">SÍ, soy yo</button>
+          <button class="opt-btn" id="mismo-no" onclick="setMismoEnvio(false)">NO, otra persona</button>
+        </div>
+      </div>
+      <div id="envio-diferente" style="display:none;margin-top:12px;">
+        <div class="field-group"><div class="field-label">Nombre y Apellido</div><input class="field-input" type="text" id="e-nombre" placeholder="Nombre Apellido"></div>
+        <div class="field-group">
+          <div class="field-label">Cédula *</div>
+          <div class="input-row">
+            <select class="field-input" id="e-cedula-tipo"><option value="V-">V-</option><option value="E-">E-</option><option value="J-">J-</option></select>
+            <input class="field-input" type="text" id="e-cedula-num" placeholder="12345678" inputmode="numeric">
+          </div>
+        </div>
+        <div class="field-group" style="margin-bottom:0">
+          <div class="field-label">Celular *</div>
+          <div class="input-row">
+            <select class="field-input" id="e-cel-pais" style="flex:0 0 110px;"><option value="+58">🇻🇪 +58</option><option value="+1">🇺🇸 +1</option><option value="+57">🇨🇴 +57</option><option value="+51">🇵🇪 +51</option><option value="+52">🇲🇽 +52</option></select>
+            <input class="field-input" type="tel" id="e-cel-num" placeholder="4141234567" inputmode="numeric">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goStep(4)">← Atrás</button>
+      <button class="btn-next" onclick="goStep(6)">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- STEP 6: PAGO -->
+  <div class="step" id="step6">
+    <div class="step-header"><div class="step-num">Paso 7 de 7</div><div class="step-title">💳 Pago</div></div>
+
+    <!-- PRECIO TOTAL -->
+    <div class="card" id="pago-precio-card">
+      <div class="card-title">Monto total de tu pedido</div>
+      <div id="pago-tasa-info" style="background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:12px;text-align:center;">
+        <span style="color:var(--muted);">Tasa BCV:</span> <b id="pago-tasa-bcv" style="color:var(--accent);">Cargando...</b>
+      </div>
+      <div id="pago-desglose" style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.8;"></div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:4px;">
+        <div style="text-align:center;background:var(--surface2);border-radius:10px;padding:14px 20px;flex:1;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Oferta en Bs</div>
+          <div id="pago-total-bs" style="font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;color:var(--accent);">—</div>
+        </div>
+        <div style="text-align:center;background:var(--surface2);border-radius:10px;padding:14px 20px;flex:1;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Oferta en Divisa</div>
+          <div id="pago-total-usd" style="font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;color:var(--warn);">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÉTODO DE PAGO -->
+    <div class="card">
+      <div class="card-title">¿Cómo deseas pagar?</div>
+      <div class="option-grid cols2" id="pago-metodos-grid">
+        <button class="opt-btn" id="btn-pago-bs" onclick="seleccionarPago('bs')">💵 Bolívares<span class="sub">Pago Móvil</span></button>
+        <button class="opt-btn" id="btn-pago-usd" onclick="seleccionarPago('usd')">💲 Divisa<span class="sub">Binance</span></button>
+        <button class="opt-btn" id="btn-pago-cashea" onclick="seleccionarPago('cashea')" style="display:none;">🛒 Cashea<span class="sub">Cancelar por Cashea</span></button>
+      </div>
+    </div>
+
+    <!-- DATOS PAGO BS -->
+    <div class="card" id="pago-bs-card" style="display:none;">
+      <div class="card-title">📱 Datos para Pago Móvil</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;line-height:2.2;">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
+          <span><span style="color:var(--muted);">Banco:</span> <b>Banesco</b></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
+          <span><span style="color:var(--muted);">Celular:</span> <b id="pm-cel">04149450742</b></span>
+          <div style="display:flex;gap:4px;">
+            <button onclick="copiarDato('04149450742','btn-copy-cel')" id="btn-copy-cel" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Completo</button>
+            <button onclick="copiarDato('9450742','btn-copy-cel2')" id="btn-copy-cel2" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Sin código</button>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
+          <span><span style="color:var(--muted);">Cédula:</span> <b id="pm-ci">18265345</b></span>
+          <button onclick="copiarDato('18265345','btn-copy-ci')" id="btn-copy-ci" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;"><span><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-bs" style="color:var(--accent);">—</b></span><button onclick="copiarMonto('bs','btn-copy-monto-bs')" id="btn-copy-monto-bs" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button></div>
+      </div>
+      <div class="field-group" style="margin-top:14px;margin-bottom:0;">
+        <div class="field-label">Número de referencia * <span style="color:var(--danger);">(obligatorio)</span></div>
+        <input class="field-input" type="text" id="pago-ref-bs" placeholder="Ingresa el número de referencia" inputmode="numeric" oninput="validarRef()">
+      </div>
+    </div>
+
+    <!-- DATOS PAGO USD -->
+    <div class="card" id="pago-usd-card" style="display:none;">
+      <div class="card-title">💲 Datos para pago en Divisa</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;line-height:2.2;">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
+          <span><span style="color:var(--muted);">Plataforma:</span> <b>Binance</b></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
+          <span><span style="color:var(--muted);">Correo:</span> <b id="bin-correo">johancazorla@gmail.com</b></span>
+          <button onclick="copiarDato('johancazorla@gmail.com','btn-copy-bin')" id="btn-copy-bin" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;"><span><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-usd" style="color:var(--warn);">—</b></span><button onclick="copiarMonto('usd','btn-copy-monto-usd')" id="btn-copy-monto-usd" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--warn);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button></div>
+      </div>
+      <div class="field-group" style="margin-top:14px;margin-bottom:0;">
+        <div class="field-label">Código de confirmación * <span style="color:var(--danger);">(obligatorio)</span></div>
+        <input class="field-input" type="text" id="pago-ref-usd" placeholder="Ingresa el código de confirmación" oninput="validarRef()">
+      </div>
+    </div>
+
+    <!-- DATOS PAGO CASHEA -->
+    <div class="card" id="pago-cashea-card" style="display:none;">
+      <div class="card-title">🛒 Pago por Cashea</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;line-height:2.2;">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
+          <span><span style="color:var(--muted);">Plataforma:</span> <b>App Cashea</b></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;"><span><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-cashea" style="color:var(--accent);">—</b></span><button onclick="copiarMonto('cashea','btn-copy-monto-cashea')" id="btn-copy-monto-cashea" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button></div>
+      </div>
+    </div>
+
+    <div class="nav-row" style="margin-top:14px;">
+      <button class="btn-back" onclick="goStep(5)">← Atrás</button>
+      <button class="btn-next" id="btn-ir-resumen" onclick="irAlResumen()" disabled style="opacity:.4;cursor:not-allowed;">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- STEP 7: RESUMEN -->
+  <div class="step" id="step7">
+    <div class="step-header"><div class="step-num">Paso 7 de 7</div><div class="step-title">Resumen del pedido</div></div>
+    <div id="resumen-container"></div>
+    <div class="nota">⏱️ <b>Tiempo de entrega:</b> 5 días hábiles desde la confirmación.<br>📞 Ante cualquier duda, consúltanos. <b>Estamos para ayudarte.</b></div>
+    <button class="btn-send" id="btn-whatsapp" onclick="enviarWhatsApp()">
+      <span style="font-size:22px;">💬</span> Enviar pedido por WhatsApp
+    </button>
+    <button id="btn-sin-whatsapp" onclick="enviarSinWhatsApp()" style="width:100%;padding:16px;background:transparent;border:2px solid var(--border);border-radius:14px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-top:10px;">
+      📋 Enviar pedido sin copia en WhatsApp
+    </button>
+    <button class="btn-send" id="btn-aprobar-cashea" onclick="aprobarSolicitudCashea()" style="display:none;">
+      <span style="font-size:22px;">✅</span> Aprobar Solicitud
+    </button>
+    <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px;" id="sending-note"></div>
+    <div class="nav-row" style="margin-top:12px;"><button class="btn-back" onclick="goStep(6)">← Editar pago</button></div>
+  </div>
+</main>
+
+<!-- PANTALLA DE ÉXITO - MARTHA -->
+<div id="pantalla-exito" style="display:none;position:fixed;inset:0;z-index:999;background:var(--bg);overflow-y:auto;padding:24px 20px;">
+  <div style="max-width:480px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:56px;margin-bottom:8px;">🦅</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:24px;font-weight:700;color:var(--accent);letter-spacing:.04em;">¡Pedido Recibido!</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;font-size:14px;color:var(--text);line-height:1.8;">
+      <p style="margin:0 0 14px;">¡Hola! 💌 Soy Martha, tu asistente online del Team IKOA 🦅. Quiero darte las gracias por la compra que acabas de realizar, ya hemos recibido tu pedido con muchísimo cariño.</p>
+      <p style="margin:0 0 14px;">🧵 Actualmente está siendo procesado por nuestro equipo de producción para aprobar tu solicitud.</p>
+      <p style="margin:0 0 14px;">📅 En el siguiente día hábil o según la programación de planificación por lote de venta, se te asignará un Código Único de Producción (COD) por nuestro sistema de gestión de Calidad y se notifica por correo.</p>
+      <p style="margin:0 0 14px;">⏱ En un lapso de 2 a 5 días hábiles, tu pedido estará listo para ser enviado. <span style="color:var(--muted);font-size:13px;">Nota: en temporadas altas puedes durar hasta alrededor de 10 días hábiles. Alguna duda con esto consultar con tu asesor de venta.</span></p>
+      <p style="margin:0 0 14px;">📦 Una vez realizado el envío, te notificaremos por correo electrónico con la guía de despacho.</p>
+      <p style="margin:0;">📸 Y si deseas compartir tu experiencia, puedes etiquetarnos en Instagram o enviarnos una foto por WhatsApp <b style="color:var(--accent);">+584149450742</b>.</p>
+    </div>
+    <button onclick="marthaConfirmar()" style="width:100%;margin-top:20px;padding:18px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:14px;color:#000;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;cursor:pointer;letter-spacing:.04em;">✓ Entendido · Confirmar lectura</button>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzg8tFVMC6P50F9VvUzgcRXclqe5X-o_BQiKoY8TLNblcFsTCKTumxDPfgaMUtN0OdT9g/exec';
+const WHATSAPP_NUM='584149450742';
+const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
+const TOTAL_STEPS=7;
+let currentStep=0;
+let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:0,modelo:'Comfy',manga:'Manga Larga',capucha:'Sin Capucha',tela:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:'',packs:[],pagoMoneda:'',pagoRef:'',pagoMonto:0};
+// packs = [{pack, modelo, manga, capucha, tela, vinil, piezas:[]}]
+let piezaCount=0;
+let AGENCIAS_DATA=[];
+let tokenActual='';
+
+const TALLAS_KIDS=['1','2','4','6','8','10','12','14','16'];
+const TALLAS_ADULTO=['XS','S','M','L','XL','2XL','3XL'];
+const AGENCIAS_ENVIO=['MRW','TEALCA','ZOOM'];
+const ENTREGA_DIRECTA={
+  'Tienda MCY':'Retirar en Tienda Maracay — C.C. HIPER JUMBO LOCAL PB 39. TIENDA IKOA.',
+  'Delivery Maracay':'Delivery desde Maracay — SE EJECUTA DESDE C.C. HIPER JUMBO LOCAL PB 39. TIENDA IKOA.',
+  'Showroom Caracas':'Retirar en Showroom Caracas — LAS MERCEDES, CARACAS.',
+  'Delivery Caracas':'Delivery desde Caracas — SE EJECUTA DESDE LAS MERCEDES, CARACAS.'
+};
+
+// ── JSONP ─────────────────────────────────────────────────────
+function scriptGETjson(params){
+  return new Promise((resolve,reject)=>{
+    const cb='_cb_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
+    const qs=Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v??'')).join('&');
+    const script=document.createElement('script');
+    window[cb]=(data)=>{ delete window[cb]; try{document.body.removeChild(script);}catch(e){} resolve(data); };
+    script.onerror=()=>{ delete window[cb]; try{document.body.removeChild(script);}catch(e){} reject(new Error('Error de red')); };
+    script.src=SCRIPT_URL+'?'+qs+'&callback='+cb;
+    document.body.appendChild(script);
+    setTimeout(()=>{ if(window[cb]){ delete window[cb]; try{document.body.removeChild(script);}catch(e){} reject(new Error('Timeout')); }},10000);
+  });
+}
+function scriptGET(params){
+  const qs=Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v??'')).join('&');
+  return fetch(SCRIPT_URL+'?'+qs,{mode:'no-cors'});
+}
+
+// ── TOKEN ─────────────────────────────────────────────────────
+async function verificarToken(){
+  const bl=document.getElementById('pantalla-bloqueada');
+  bl.style.display='flex';
+  const params=new URLSearchParams(window.location.search);
+  const token=params.get('token');
+  if(!token){ mostrarBloqueo('🚫','Link inválido','Solicita uno nuevo a IKOA & BEKATE.'); return; }
+  try{
+    const data=await scriptGETjson({action:'verificarToken',token});
+    if(data && data.ok){ tokenActual=token; bl.style.display='none'; cargarAgencias(); cargarColoresApp(); }
+    else if(data){
+      const m={'usado':['✅','Link ya utilizado','Este link ya fue usado.'],'expirado':['⏰','Link expirado','Venció (4h). Solicita uno nuevo.'],'invalido':['🚫','Link inválido','No es válido.']};
+      const [i,t,x]=m[data.error]||m['invalido'];
+      mostrarBloqueo(i,t,x);
+    } else {
+      mostrarBloqueo('⚠️','Error de respuesta','El servidor no respondió correctamente. Intenta de nuevo.');
+    }
+  }catch(e){ 
+    mostrarBloqueo('⚠️','Error de conexión','Verifica tu conexión e intenta de nuevo. ('+e.message+')'); 
+  }
+}
+function mostrarBloqueo(i,t,x){
+  document.getElementById('bloqueo-icon').textContent=i;
+  document.getElementById('bloqueo-titulo').textContent=t;
+  document.getElementById('bloqueo-texto').textContent=x;
+  document.getElementById('pantalla-bloqueada').style.display='flex';
+}
+async function marcarTokenUsado(){ if(tokenActual) try{ await scriptGETjson({action:'usarToken',token:tokenActual}); }catch(e){} }
+
+// ── AGENCIAS ──────────────────────────────────────────────────
+async function cargarColoresApp(){
+  try{
+    const data=await scriptGETjson({action:'leerColores',hoja:'COLORES.COMFY'});
+    if(!data.ok) return;
+    const telaOpts=document.getElementById('tela-opts');
+    const vinilOpts=document.getElementById('vinil-opts');
+    telaOpts.innerHTML=(data.telas||[]).map(t=>`<button class="opt-btn" onclick="selectColor(this,'tela','${t}')">${t.toUpperCase()}</button>`).join('');
+    vinilOpts.innerHTML=(data.viniles||[]).map(v=>`<button class="opt-btn" onclick="selectColor(this,'vinil','${v}')">${v.toUpperCase()}</button>`).join('');
+  }catch(e){ console.warn('Error cargando colores:',e); }
+}
+
+async function cargarAgencias(){
+  try{
+    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=AGENCIAS&cachebust=${Date.now()}`;
+    const res=await fetch(url);
+    const text=await res.text();
+    const json=JSON.parse(text.replace(/^[^(]+\(/,'').replace(/\);\s*$/,''));
+    AGENCIAS_DATA=(json.table.rows||[]).filter(r=>r.c&&r.c[0]).map(r=>({
+      estado:String(r.c[0]?.v||'').trim(),transportista:String(r.c[1]?.v||'').trim(),
+      nombre:String(r.c[2]?.v||'').trim(),ciudad:String(r.c[3]?.v||'').trim()
+    }));
+  }catch(e){ console.error(e); }
+}
+
+function selectTipoEntrega(btn,tipo){
+  document.querySelectorAll('#tipo-entrega-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected'); pedido.tipoEntrega=tipo; pedido.agencia='';
+  const ca=document.getElementById('card-agencia');
+  if(AGENCIAS_ENVIO.includes(tipo)){ ca.style.display='block'; poblarEstados(tipo); }
+  else{ ca.style.display='none'; pedido.agencia=ENTREGA_DIRECTA[tipo]||tipo; }
+}
+function poblarEstados(trans){
+  const sel=document.getElementById('sel-estado');
+  const wrap=document.getElementById('agencia-wrap');
+  wrap.style.display='none'; pedido.agencia='';
+  const estados=[...new Set(AGENCIAS_DATA.filter(a=>a.transportista===trans).map(a=>a.estado))].sort();
+  sel.innerHTML='<option value="">Selecciona tu estado...</option>';
+  estados.forEach(e=>{ const o=document.createElement('option'); o.value=e; o.textContent=e; sel.appendChild(o); });
+  sel.onchange=()=>{
+    const estado=sel.value; const wrap2=document.getElementById('agencia-wrap');
+    const sel2=document.getElementById('sel-agencia');
+    pedido.agencia='';
+    if(!estado){ wrap2.style.display='none'; return; }
+    const filtradas=AGENCIAS_DATA.filter(a=>a.estado===estado&&a.transportista===trans);
+    sel2.innerHTML='<option value="">Selecciona la agencia...</option>';
+    filtradas.forEach(a=>{ const o=document.createElement('option'); o.value=a.nombre+' ('+a.ciudad+')'; o.textContent=a.nombre+' · '+a.ciudad; sel2.appendChild(o); });
+    sel2.onchange=()=>{ pedido.agencia=trans+' — '+sel2.value; };
+    wrap2.style.display='block';
+  };
+}
+
+// ── MODALES DE CONFIRMACIÓN ───────────────────────────────────
+let modalDatosResolve=null;
+let modalColoresResolve=null;
+
+function selectColor(btn, tipo, valor){
+  const container = tipo==='tela' ? document.getElementById('tela-opts') : document.getElementById('vinil-opts');
+  container.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  if(tipo==='tela') pedido.tela=valor;
+  else pedido.vinil=valor;
+  // Verificar contraste tela-vinil
+  checkContrasteColores();
+}
+
+function checkContrasteColores(){
+  const warnEl=document.getElementById('vinil-warn');
+  if(!warnEl) return;
+  // Combinaciones con poco contraste
+  const malas=[['Negro','Turquesa'],['Azul Rey','Turquesa'],['Azul Marino','Turquesa']];
+  const esMala=malas.some(([t,v])=>pedido.tela===t&&pedido.vinil===v);
+  warnEl.style.display=esMala?'block':'none';
+}
+
+function mostrarModalDatos(cedula,celular,correo){
+  return new Promise(resolve=>{
+    modalDatosResolve=resolve;
+    document.getElementById('modal-datos-content').innerHTML=
+      `✉️ <b>Correo:</b> <span style="color:var(--accent)">${correo}</span><br>📋 <b>Cédula:</b> <span style="color:var(--accent)">${cedula}</span><br>📱 <b>WhatsApp:</b> <span style="color:var(--accent)">${celular}</span>`;
+    document.getElementById('modal-confirmar-datos').classList.remove('hidden');
+  });
+}
+function cerrarModalDatos(ok){
+  document.getElementById('modal-confirmar-datos').classList.add('hidden');
+  if(modalDatosResolve){ modalDatosResolve(ok); modalDatosResolve=null; }
+}
+
+function mostrarModalColores(tela,vinil){
+  return new Promise(resolve=>{
+    modalColoresResolve=resolve;
+    document.getElementById('modal-colores-iguales').querySelector('.modal-body').innerHTML=
+      `Elegiste <b style="color:var(--warn)">${tela}</b> para la tela y <b style="color:var(--warn)">${vinil}</b> para el vinil.<br><br>Con colores iguales o muy similares, el nombre y los logos <b>casi no se van a detallar</b>.<br><br>¿Deseas continuar así o prefieres corregirlo?`;
+    document.getElementById('modal-colores-iguales').classList.remove('hidden');
+  });
+}
+function cerrarModalColores(ok){
+  document.getElementById('modal-colores-iguales').classList.add('hidden');
+  if(modalColoresResolve){ modalColoresResolve(ok); modalColoresResolve=null; }
+}
+
+function sonColoresSimilares(a,b){
+  if(!a||!b) return false;
+  const norm=s=>s.toLowerCase().trim().replace(/\s+/g,' ');
+  return norm(a)===norm(b);
+}
+
+// ── NAVEGACIÓN ────────────────────────────────────────────────
+let modalidadComfy = 'A'; // 'A' o 'B'
+
+function seleccionarModalidad(op){
+  modalidadComfy = op;
+  document.getElementById('btn-modal-a').style.borderColor = op==='A' ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('btn-modal-b').style.borderColor = op==='B' ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('btn-modal-a').style.background = op==='A' ? '#0a2a1a' : 'var(--surface2)';
+  document.getElementById('btn-modal-b').style.background = op==='B' ? '#0a2a1a' : 'var(--surface2)';
+  pedido.modalidad = op;
+  const minEl = document.getElementById('pack-minimo-label');
+  if(minEl) minEl.textContent = op==='B' ? 'Mínimo 3 unidades · Diferentes telas · Mismo vinil' : 'Mínimo 2 unidades · Mismo color tela y vinil';
+  const btn2pack = document.getElementById('btn-pack-2');
+  if(btn2pack) btn2pack.style.display = op==='B' ? 'none' : '';
+  const customEl = document.getElementById('pack-custom');
+  if(customEl) customEl.min = op==='B' ? '3' : '2';
+  if(op==='B'){
+    // Fijar pack en 3 y ir al step3b
+    pedido.pack = 3;
+    document.getElementById('step1').classList.remove('active');
+    currentStep = '3b';
+    document.getElementById('step3b').classList.add('active');
+    inicializarStep3B();
+    updateProgress();
+    window.scrollTo({top:0,behavior:'smooth'});
+  } else {
+    setTimeout(()=>goStep(2), 300);
+  }
+}
+
+function goStep(n){
+  // Salir del step actual
+  const curId = currentStep==='3b' ? 'step3b' : 'step'+(currentStep===45?'45':currentStep);
+  const curEl = document.getElementById(curId);
+  if(curEl) curEl.classList.remove('active');
+
+  // Atrás sin validar
+  const curNum = currentStep==='3b' ? 3 : currentStep;
+  if(n < curNum || n==='3b'){
+    currentStep = n;
+    const nEl = document.getElementById(n==='3b'?'step3b':'step'+(n===45?'45':n));
+    if(nEl) nEl.classList.add('active');
+    if(n==='3b') inicializarStep3B();
+    updateProgress();
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+
+  if(!validateStep(currentStep==='3b'?'3b':currentStep)) return;
+
+  currentStep = n;
+  const nEl = document.getElementById(n==='3b'?'step3b':'step'+(n===45?'45':n));
+  if(nEl) nEl.classList.add('active');
+
+  if(n==='3b') inicializarStep3B();
+  if(n===4) inicializarPiezas();
+  if(n===3){
+    pedido.modelo='Comfy'; pedido.manga='Manga Larga'; pedido.capucha='Sin Capucha';
+  }
+  if(n===5){
+    if(pedido.packs.length===0){
+      pedido.packs.push({pack:pedido.pack,modelo:pedido.modelo,manga:pedido.manga,capucha:pedido.capucha,tela:pedido.tela,vinil:pedido.vinil,piezas:JSON.parse(JSON.stringify(pedido.piezas))});
+    }
+  }
+  if(n===6) calcularPago();
+  if(n===7) buildResumen();
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── OPCIÓN B: 3 FRANELAS INDIVIDUALES ────────────────────────
+let franelasB = [{tela:'',talla:'',nombre:''},{tela:'',talla:'',nombre:''},{tela:'',talla:'',nombre:''}];
+let vinilB = '';
+
+function inicializarStep3B(){
+  const vinilOpts=document.getElementById('vinil-opts-b');
+  const vinilOptsA=document.getElementById('vinil-opts');
+  if(vinilOptsA && vinilOpts){
+    vinilOpts.innerHTML=vinilOptsA.innerHTML
+      .replace(/selectColor\(this,'vinil','([^']+)'\)/g,"selectVinilB(this,'$1')");
+  }
+  if(vinilB){
+    document.querySelectorAll('#vinil-opts-b .opt-btn').forEach(b=>{
+      if(b.textContent.trim().toLowerCase()===vinilB.toLowerCase()) b.classList.add('selected');
+    });
+  }
+  renderFranelasB();
+}
+
+function selectVinilB(btn, valor){
+  document.querySelectorAll('#vinil-opts-b .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  vinilB = valor;
+}
+
+function renderFranelasB(){
+  const container=document.getElementById('franelas-b-container');
+  const telaOptsA=document.getElementById('tela-opts');
+  const telasBtns = telaOptsA ? telaOptsA.innerHTML : '';
+  container.innerHTML = [0,1,2].map(i=>`
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-title" style="color:var(--accent);">👕 Franela ${i+1}</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Color de tela</div>
+      <div class="option-grid cols2" id="tela-opts-b${i}">
+        ${telasBtns.replace(/selectColor\(this,'tela','([^']+)'\)/g, `selectTelaB(this,${i},'$1')`)}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Género</div>
+          <select class="field-input" id="genero-b${i}" onchange="actualizarTallasB(${i})" style="padding:8px;">
+            <option value="Dama">Dama</option>
+            <option value="Caballero">Caballero</option>
+            <option value="Kids">Kids</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Talla</div>
+          <select class="field-input" id="talla-b${i}" style="padding:8px;">
+            <option value="">Seleccionar</option>
+            ${TALLAS_ADULTO.map(t=>`<option value="${t}">${t}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Nombre en manga</div>
+        <input class="field-input" type="text" id="nombre-b${i}" placeholder="Ej: Juan · SIN NOMBRE EN MANGA" maxlength="30"
+          style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+      </div>
+    </div>
+  `).join('');
+  [0,1,2].forEach(i=>{
+    if(franelasB[i].tela){
+      document.querySelectorAll(`#tela-opts-b${i} .opt-btn`).forEach(b=>{
+        if(b.textContent.trim().toLowerCase()===franelasB[i].tela.toLowerCase()) b.classList.add('selected');
+      });
+    }
+    if(franelasB[i].talla) document.getElementById(`talla-b${i}`).value=franelasB[i].talla;
+    if(franelasB[i].nombre) document.getElementById(`nombre-b${i}`).value=franelasB[i].nombre;
+  });
+}
+
+function selectTelaB(btn, idx, valor){
+  document.querySelectorAll(`#tela-opts-b${idx} .opt-btn`).forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  franelasB[idx].tela = valor;
+}
+
+function actualizarTallasB(idx){
+  const genero=document.getElementById(`genero-b${idx}`).value;
+  const tallas=genero==='Kids'?TALLAS_KIDS:TALLAS_ADULTO;
+  const sel=document.getElementById(`talla-b${idx}`);
+  sel.innerHTML='<option value="">Seleccionar</option>'+tallas.map(t=>`<option value="${t}">${t}</option>`).join('');
+}
+
+function intentarPaso4B(){
+  if(!vinilB){ alert('Selecciona el color de vinil'); return; }
+  const telasUsadas=[];
+  for(let i=0;i<3;i++){
+    const telaEl=document.querySelectorAll(`#tela-opts-b${i} .opt-btn.selected`)[0];
+    const tela=telaEl?telaEl.textContent.trim():(franelasB[i].tela||'');
+    const talla=document.getElementById(`talla-b${i}`)?.value||'';
+    const nombre=document.getElementById(`nombre-b${i}`)?.value.trim()||'';
+    if(!tela){ alert(`Selecciona el color de tela para la Franela ${i+1}`); return; }
+    if(!talla){ alert(`Selecciona la talla para la Franela ${i+1}`); return; }
+    if(!nombre){ alert(`Ingresa el nombre en manga para la Franela ${i+1} (o escribe SIN NOMBRE EN MANGA)`); return; }
+    if(telasUsadas.includes(tela.toLowerCase())){
+      alert(`La Franela ${i+1} debe tener un color de tela diferente a las anteriores`); return;
+    }
+    telasUsadas.push(tela.toLowerCase());
+    franelasB[i]={tela, talla, nombre};
+  }
+  pedido.vinil = vinilB;
+  pedido.tela = franelasB.map(f=>f.tela).join(' / ');
+  pedido.piezas = franelasB.map(f=>({talla:f.talla, nombre:f.nombre, genero: document.getElementById(`genero-b${franelasB.indexOf(f)}`)?.value||'Dama'}));
+  pedido.packs.push({
+    pack:3, modelo:'COMFY MEGA PROMO (Opción B)',
+    manga:'Manga Larga', capucha:'Sin Capucha',
+    tela: pedido.tela, vinil: vinilB,
+    piezas: JSON.parse(JSON.stringify(pedido.piezas))
+  });
+  document.getElementById('step3b').classList.remove('active');
+  currentStep=5;
+  document.getElementById('step5').classList.add('active');
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Paso 1 → 2: con confirmación de datos
+async function intentarPaso1(){
+  clearErrs();
+  let ok=true;
+  if(!document.getElementById('p-nombre').value.trim()){ showErr('err-nombre',true); document.getElementById('p-nombre').classList.add('error'); ok=false; }
+  const correo=document.getElementById('p-correo').value.trim();
+  if(!isValidEmail(correo)){ showErr('err-correo',true); document.getElementById('p-correo').classList.add('error'); ok=false; }
+  if(!document.getElementById('p-cedula-num').value.trim()){ showErr('err-cedula',true); ok=false; }
+  if(!isValidCel(document.getElementById('p-celular-num').value)){ showErr('err-celular',true); ok=false; }
+  if(!ok)return;
+  // Guardar datos
+  pedido.nombre=document.getElementById('p-nombre').value.trim();
+  pedido.correo=correo;
+  pedido.cedula=document.getElementById('p-cedula-tipo').value+document.getElementById('p-cedula-num').value.trim();
+  pedido.celular=document.getElementById('p-cel-pais').value+document.getElementById('p-celular-num').value.trim();
+  // Modal confirmación
+  const confirmado=await mostrarModalDatos(pedido.cedula, pedido.celular, pedido.correo);
+  if(!confirmado) return;
+  // Avanzar al step1 (modalidad)
+  document.getElementById('step0').classList.remove('active');
+  currentStep=1;
+  document.getElementById('step1').classList.add('active');
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+async function intentarPaso2(){
+  clearErrs();
+  let ok=true;
+  if(!document.getElementById('p-nombre').value.trim()){ showErr('err-nombre',true); document.getElementById('p-nombre').classList.add('error'); ok=false; }
+  const correo=document.getElementById('p-correo').value.trim();
+  if(!isValidEmail(correo)){ showErr('err-correo',true); document.getElementById('p-correo').classList.add('error'); ok=false; }
+  if(!document.getElementById('p-cedula-num').value.trim()){ showErr('err-cedula',true); ok=false; }
+  if(!isValidCel(document.getElementById('p-celular-num').value)){ showErr('err-celular',true); ok=false; }
+  if(!ok)return;
+  // Guardar datos
+  pedido.nombre=document.getElementById('p-nombre').value.trim();
+  pedido.correo=correo;
+  pedido.cedula=document.getElementById('p-cedula-tipo').value+document.getElementById('p-cedula-num').value.trim();
+  pedido.celular=document.getElementById('p-cel-pais').value+document.getElementById('p-celular-num').value.trim();
+  // Modal confirmación
+  const confirmado=await mostrarModalDatos(pedido.cedula, pedido.celular, pedido.correo);
+  if(!confirmado) return; // vuelve al paso 1 sin avanzar
+  // Avanzar
+  document.getElementById('step0').classList.remove('active');
+  currentStep=2;
+  document.getElementById('step2').classList.add('active');
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Paso 4 → 4.5: guardar pack actual y preguntar si agrega otro
+async function intentarPaso45(){
+  if(!validateStep(4)) return;
+  // Guardar pack actual en lista de packs
+  pedido.packs.push({
+    pack: pedido.pack,
+    modelo: pedido.modelo,
+    manga: pedido.manga,
+    capucha: pedido.capucha,
+    tela: pedido.tela,
+    vinil: pedido.vinil,
+    piezas: JSON.parse(JSON.stringify(pedido.piezas))
+  });
+  // Mostrar resumen de packs agregados
+  renderPacksResumen();
+  document.getElementById('step4').classList.remove('active');
+  currentStep=45;
+  document.getElementById('step45').classList.add('active');
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderPacksResumen(){
+  const el=document.getElementById('packs-resumen');
+  if(!el||!pedido.packs.length) return;
+  el.innerHTML=`<div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Packs en este pedido:</div>`+
+    pedido.packs.map((p,i)=>`
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;">
+        <b style="color:var(--accent)">Pack ${i+1}</b> · ${p.pack}PACK · ${p.modelo} · ${p.tela} / ${p.vinil}
+        <span style="color:var(--muted);font-size:12px;"> · ${p.piezas.length} franelas</span>
+      </div>`).join('');
+}
+
+function agregarOtroPack(){
+  // Resetear campos de modelo/pack para nuevo pack
+  pedido.pack=0; pedido.modelo='Comfy'; pedido.manga='Manga Larga'; pedido.capucha='Sin Capucha'; pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
+  modalidadComfy='A';
+  // Limpiar selecciones visuales
+  document.querySelectorAll('#tela-opts .opt-btn, #vinil-opts .opt-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('btn-modal-a').style.borderColor='var(--border)';
+  document.getElementById('btn-modal-b').style.borderColor='var(--border)';
+  document.getElementById('btn-modal-a').style.background='var(--surface2)';
+  document.getElementById('btn-modal-b').style.background='var(--surface2)';
+  document.getElementById('step45').classList.remove('active');
+  currentStep=1;
+  document.getElementById('step1').classList.add('active');
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function intentarPaso4(){
+  if(!validateStep(3))return;
+  const tela=pedido.tela||'';
+  const vinil=pedido.vinil||'';
+  if(sonColoresSimilares(tela,vinil)){
+    const continuar=await mostrarModalColores(tela,vinil);
+    if(!continuar) return;
+  }
+  document.getElementById('step3').classList.remove('active');
+  currentStep=4;
+  document.getElementById('step4').classList.add('active');
+  updateProgress();
+  inicializarPiezas();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function updateProgress(){
+  for(let i=1;i<=TOTAL_STEPS;i++){
+    const d=document.getElementById('pd'+i);
+    d.classList.remove('done','active');
+    if(i<currentStep)d.classList.add('done');
+    else if(i===currentStep)d.classList.add('active');
+  }
+}
+
+function showErr(id,show){ const el=document.getElementById(id); if(el)el.style.display=show?'block':'none'; }
+function clearErrs(){ document.querySelectorAll('.err-msg').forEach(e=>e.style.display='none'); document.querySelectorAll('.field-input').forEach(e=>e.classList.remove('error')); }
+function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function isValidCel(c){ return c.replace(/\D/g,'').length>=7; }
+
+function validateStep(n){
+  if(n===2){ if(!pedido.pack||pedido.pack<(modalidadComfy==='B'?3:2)){ alert('Selecciona la cantidad de franelas (mínimo '+(modalidadComfy==='B'?3:2)+')'); return false; } return true; }
+  if(n===3){
+    if(!pedido.modelo){ alert('Selecciona el modelo'); return false; }
+    if(!pedido.manga){ alert('Selecciona el tipo de manga'); return false; }
+    if(!pedido.capucha){ alert('Selecciona si deseas capucha'); return false; }
+    if(!pedido.tela){ alert('Selecciona el color de tela'); return false; }
+    if(!pedido.vinil){ alert('Selecciona el color del vinil'); return false; }
+    return true;
+  }
+  if(n===4){
+    savePiezas();
+    const alerta=document.getElementById('alerta-min');
+    if(getTotalRepeticiones()<pedido.pack){
+      alerta.style.display='block';
+      alerta.textContent=`⚠️ Debes completar las ${pedido.pack} franelas (llevas ${getTotalRepeticiones()})`;
+      return false;
+    }
+    alerta.style.display='none';
+    for(let i=0; i<pedido.piezas.length; i++){
+      const p=pedido.piezas[i];
+      if(!p.genero||!p.talla){ alert(`Completa género y talla en la franela ${i+1}`); return false; }
+      if(!p.sinNombre && !p.nombre){ alert(`⚠️ La franela ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
+    }
+    return true;
+  }
+  if(n===5){
+    if(!pedido.agencia){ alert('Selecciona la agencia de entrega'); return false; }
+    if(!pedido.mismoEnvio){
+      pedido.eNombre=document.getElementById('e-nombre').value.trim();
+      const eCedTipo=document.getElementById('e-cedula-tipo').value;
+      const eCedNum=document.getElementById('e-cedula-num').value.trim();
+      const eCelPais=document.getElementById('e-cel-pais').value;
+      const eCelNum=document.getElementById('e-cel-num').value.trim();
+      if(!pedido.eNombre||!eCedNum||!isValidCel(eCelNum)){ alert('Completa los datos de quien retira'); return false; }
+      pedido.eCi=eCedTipo+eCedNum;
+      pedido.eCel=eCelPais+eCelNum;
+    }
+    return true;
+  }
+  return true;
+}
+
+// ── PACK ──────────────────────────────────────────────────────
+function selectPack(btn,n){
+  document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected'); pedido.pack=n;
+  document.getElementById('pack-custom').value='';
+  document.getElementById('pack-seleccionado').style.display='block';
+  document.getElementById('pack-label').textContent=n+'PACK — '+n+' franelas';
+}
+function setCustomPack(val){
+  const n=parseInt(val);
+  if(n>=2){ pedido.pack=n; document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected')); document.getElementById('pack-seleccionado').style.display='block'; document.getElementById('pack-label').textContent=n+'PACK — '+n+' franelas'; }
+}
+
+function selectOpt(btn,field,val){
+  const parent=btn.closest('.option-grid');
+  parent.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected'); pedido[field]=val;
+}
+function setMismoEnvio(val){
+  pedido.mismoEnvio=val;
+  document.getElementById('mismo-si').classList.toggle('selected',val);
+  document.getElementById('mismo-no').classList.toggle('selected',!val);
+  document.getElementById('envio-diferente').style.display=val?'none':'block';
+}
+
+// ── PIEZAS ────────────────────────────────────────────────────
+function inicializarPiezas(){
+  if(!pedido.pack||pedido.pack<1){ alert('Selecciona el tamaño del pack primero'); goStep(2); return; }
+  document.getElementById('pack-total-lbl').textContent=pedido.pack+' franelas';
+  const container=document.getElementById('piezas-container');
+  // Limpiar siempre para el pack actual
+  container.innerHTML='';
+  piezaCount=0;
+  pedido.piezas=[];
+  for(let i=0;i<pedido.pack;i++) addPieza();
+  actualizarBotonesMult();
+}
+
+function addPieza(copiarDe=null){
+  piezaCount++;
+  const id=piezaCount;
+  const div=document.createElement('div');
+  div.className='pieza-card'; div.id='pieza-'+id;
+  const genCopy=copiarDe?document.getElementById('pz-genero-'+copiarDe)?.value:'';
+  const talCopy=copiarDe?document.getElementById('pz-talla-'+copiarDe)?.value:'';
+  const nomCopy=copiarDe?document.getElementById('pz-nombre-'+copiarDe)?.value:'';
+  const sinCopy=copiarDe?document.getElementById('pz-sinombre-'+copiarDe)?.checked:false;
+  const total=document.getElementById('piezas-container').querySelectorAll('.pieza-card').length+1;
+  div.innerHTML=`
+    <div class="pieza-num">Franela #${id} ${total>pedido.pack?'<span style="color:var(--warn);font-size:11px;">(extra)</span>':''}</div>
+    ${total>pedido.pack?`<button class="remove-btn" onclick="removePieza(${id})">✕</button>`:''}
+    <div class="pieza-grid">
+      <div class="field-group">
+        <div class="field-label">Género</div>
+        <select class="field-input" id="pz-genero-${id}" onchange="updateTallas(${id})">
+          <option value="">Seleccionar</option>
+          <option value="Kids"${genCopy==='Kids'?' selected':''}>Kids</option>
+          <option value="Dama"${genCopy==='Dama'?' selected':''}>Dama</option>
+          <option value="Caballero"${genCopy==='Caballero'?' selected':''}>Caballero</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Talla</div>
+        <select class="field-input" id="pz-talla-${id}">
+          <option value="">Seleccionar</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-group" style="margin-bottom:6px">
+      <div class="field-label">Nombre en la prenda</div>
+      <div class="field-note">Manga derecha · Sin iniciales ni logos</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;margin-top:4px;">
+        <input type="checkbox" id="pz-sinombre-${id}" onchange="toggleNombrePrenda(${id})" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);"${sinCopy?' checked':''}>
+        <label for="pz-sinombre-${id}" style="font-size:13px;color:var(--muted);cursor:pointer;">Sin nombre en manga derecha</label>
+      </div>
+      <input class="field-input" type="text" id="pz-nombre-${id}" placeholder="Ej: María, Carlos..." value="${nomCopy}" style="${sinCopy?'display:none':''}">
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 10px;background:var(--surface2);border-radius:8px;">
+      <div style="font-size:12px;color:var(--muted);flex:1;">Repetir esta franela:</div>
+      <button onclick="cambiarRepeticion(${id},-1)" style="width:32px;height:32px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+      <span id="rep-count-${id}" style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);min-width:28px;text-align:center;">1</span>
+      <button onclick="cambiarRepeticion(${id},+1)" style="width:32px;height:32px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+      <div id="rep-label-${id}" style="font-size:11px;color:var(--muted);min-width:40px;"></div>
+    </div>`;
+  document.getElementById('piezas-container').appendChild(div);
+  if(genCopy) updateTallas(id,talCopy);
+  actualizarBotonesMult();
+}
+
+function actualizarBotonesMult(){
+  // Solo actualiza labels de contadores
+  const cards=document.getElementById('piezas-container').querySelectorAll('.pieza-card');
+  const totalFranelas=getTotalRepeticiones();
+  cards.forEach(card=>{
+    const id=card.id.replace('pieza-','');
+    const cnt=parseInt(document.getElementById('rep-count-'+id)?.textContent||'1');
+    const lbl=document.getElementById('rep-label-'+id);
+    if(lbl) lbl.textContent=cnt>1?'×'+cnt+' uds':'';
+  });
+}
+
+function getTotalRepeticiones(){
+  let total=0;
+  document.querySelectorAll('[id^="rep-count-"]').forEach(el=>{ total+=parseInt(el.textContent||'1'); });
+  return total;
+}
+
+function cambiarRepeticion(id, delta){
+  const cntEl=document.getElementById('rep-count-'+id);
+  if(!cntEl) return;
+  const actual=parseInt(cntEl.textContent||'1');
+  const nuevo=actual+delta;
+
+  // No bajar de 1
+  if(nuevo<1) return;
+
+  // No subir más allá del total del pack
+  if(nuevo>pedido.pack) return;
+
+  // Actualizar contador
+  cntEl.textContent=nuevo;
+
+  if(delta>0){
+    // Subimos → eliminar franelas del final (excepto la actual) hasta cuadrar
+    const cards=[...document.getElementById('piezas-container').querySelectorAll('.pieza-card')];
+    for(let i=cards.length-1;i>=0&&getTotalRepeticiones()>pedido.pack;i--){
+      const cid=cards[i].id.replace('pieza-','');
+      if(String(cid)!==String(id)){
+        cards[i].remove();
+      }
+    }
+  } else {
+    // Bajamos → agregar franelas vacías hasta completar el pack
+    while(getTotalRepeticiones()<pedido.pack){
+      addPieza();
+    }
+  }
+
+  actualizarBotonesMult();
+  actualizarContadorFranelas();
+}
+
+function actualizarContadorFranelas(){
+  const total=getTotalRepeticiones();
+  const lbl=document.getElementById('pack-total-lbl');
+  if(lbl) lbl.textContent=pedido.pack;
+  // Mostrar progreso
+  const progEl=document.getElementById('franelas-progreso');
+  if(progEl){
+    const ok=total===pedido.pack;
+    progEl.textContent=total+' / '+pedido.pack+' franelas';
+    progEl.style.color=ok?'var(--accent)':'var(--warn)';
+  }
+}
+
+function updateTallas(id,seleccionar=null){
+  const genero=document.getElementById('pz-genero-'+id).value;
+  const tallaSelect=document.getElementById('pz-talla-'+id);
+  const tallas=genero==='Kids'?TALLAS_KIDS:TALLAS_ADULTO;
+  tallaSelect.innerHTML='<option value="">Seleccionar</option>'+tallas.map(t=>`<option value="${t}"${t===seleccionar?' selected':''}>${t}</option>`).join('');
+}
+
+function toggleNombrePrenda(id){
+  const check=document.getElementById('pz-sinombre-'+id);
+  const input=document.getElementById('pz-nombre-'+id);
+  if(check.checked){ input.style.display='none'; input.value='SIN NOMBRE EN MANGA'; }
+  else{ input.style.display='block'; input.value=''; }
+}
+
+function removePieza(id){
+  const container=document.getElementById('piezas-container');
+  const total=container.querySelectorAll('.pieza-card').length;
+  if(total<=pedido.pack){ alert(`Necesitas al menos ${pedido.pack} franelas`); return; }
+  document.getElementById('pieza-'+id).remove();
+  actualizarBotonesMult();
+}
+
+function savePiezas(){
+  pedido.piezas=[];
+  document.querySelectorAll('.pieza-card').forEach(card=>{
+    const id=card.id.replace('pieza-','');
+    const g=document.getElementById('pz-genero-'+id)?.value||'';
+    const t=document.getElementById('pz-talla-'+id)?.value||'';
+    const sinNombre=document.getElementById('pz-sinombre-'+id)?.checked||false;
+    const n=sinNombre?'SIN NOMBRE EN MANGA':(document.getElementById('pz-nombre-'+id)?.value.trim()||'');
+    const rep=parseInt(document.getElementById('rep-count-'+id)?.textContent||'1');
+    // Expandir repeticiones
+    for(let i=0;i<rep;i++){
+      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre});
+    }
+  });
+}
+
+// ── PAGO ──────────────────────────────────────────────────────
+let precioComfy={bs:0,usd:0}, precioRecarga={bs:0,usd:0};
+let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
+let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
+
+async function calcularPago(){
+  try{
+    const data=await scriptGETjson({action:'leerTodosLosPrecios'});
+    if(data.ok){
+      precioComfy={bs:parseFloat(data.pack_precios&&data.pack_precios.COMFY11?data.pack_precios.COMFY11.bs:data.comfy_bs)||0, usd:parseFloat(data.pack_precios&&data.pack_precios.COMFY11?data.pack_precios.COMFY11.usd:data.comfy_usd)||0};
+      precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
+      if(data.tasa_bcv){
+        tasaBcvActual=parseFloat(data.tasa_bcv)||0;
+        document.getElementById('pago-tasa-bcv').textContent='Bs '+tasaBcvActual.toFixed(2);
+      }
+      casheaPct=parseFloat(data.cashea&&data.cashea.comfy?data.cashea.comfy.cashea_pct:data.cashea_pct)||0;
+      const casheaActivo=data.cashea&&data.cashea.comfy?data.cashea.comfy.cashea_activo===true||data.cashea.comfy.cashea_activo==='true':data.cashea_activo===true||data.cashea_activo==='true';
+      const btnCashea=document.getElementById('btn-pago-cashea');
+      const gridPago=document.getElementById('pago-metodos-grid');
+      if(btnCashea) btnCashea.style.display=casheaActivo?'':'none';
+      if(gridPago) gridPago.classList.toggle('cols3',casheaActivo);
+      if(gridPago) gridPago.classList.toggle('cols2',!casheaActivo);
+      if(!casheaActivo&&pagoMoneda==='cashea'){ pagoMoneda=''; document.getElementById('pago-cashea-card').style.display='none'; }
+    }
+  }catch(e){ console.error('Error leyendo precios:',e); }
+
+  // Contar franelas totales y recargas
+  const tallasGrandes=['XL','XXL','3XL','XXXL','2XL',
+    'DAMA XL','DAMA XXL','DAMA 3XL','DAMA XXXL','DAMA 2XL',
+    'CABALLERO XL','CABALLERO XXL','CABALLERO 3XL','CABALLERO XXXL','CABALLERO 2XL'];
+  let totalFranelas=0, totalRecargas=0;
+  let desglose=[];
+  pedido.packs.forEach((pk,i)=>{
+    const franelas=pk.piezas.length||pk.pack||0;
+    const recargas=pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase().trim())).length;
+    totalFranelas+=franelas;
+    totalRecargas+=recargas;
+    desglose.push(`Pack ${i+1}: ${franelas} franelas${recargas>0?` + ${recargas} recarga(s) talla grande`:''}`);
+  });
+
+  pagoTotalBs=Math.round((totalFranelas*precioComfy.bs + totalRecargas*precioRecarga.bs)*100)/100;
+  pagoTotalUsd=Math.round((totalFranelas*precioComfy.usd + totalRecargas*precioRecarga.usd)*100)/100;
+  pagoTotalCasheaBs=Math.round(pagoTotalBs*(1+casheaPct/100)*100)/100;
+  pagoTotalCasheaUsd=tasaBcvActual>0?Math.round((pagoTotalCasheaBs/tasaBcvActual)*100)/100:0;
+
+  document.getElementById('pago-desglose').innerHTML=
+    desglose.join('<br>')+
+    `<br><span style="color:var(--muted);">• Precio/franela:</span> Bs ${precioComfy.bs.toFixed(2)} / $${precioComfy.usd.toFixed(2)}`+
+    (totalRecargas>0?`<br><span style="color:var(--muted);">• Recarga talla grande:</span> Bs ${precioRecarga.bs.toFixed(2)} / $${precioRecarga.usd.toFixed(2)}`:'');
+  document.getElementById('pago-total-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
+  document.getElementById('pago-total-usd').textContent='$'+pagoTotalUsd.toFixed(2);
+  document.getElementById('pm-monto-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
+  document.getElementById('pm-monto-usd').textContent='$'+pagoTotalUsd.toFixed(2);
+  document.getElementById('pm-monto-cashea').textContent='Bs '+pagoTotalCasheaBs.toFixed(2)+' ($'+pagoTotalCasheaUsd.toFixed(2)+')';
+}
+
+function seleccionarPago(tipo){
+  pagoMoneda=tipo;
+  document.getElementById('btn-pago-bs').classList.toggle('selected',tipo==='bs');
+  document.getElementById('btn-pago-usd').classList.toggle('selected',tipo==='usd');
+  document.getElementById('btn-pago-cashea').classList.toggle('selected',tipo==='cashea');
+  document.getElementById('pago-bs-card').style.display=tipo==='bs'?'block':'none';
+  document.getElementById('pago-usd-card').style.display=tipo==='usd'?'block':'none';
+  document.getElementById('pago-cashea-card').style.display=tipo==='cashea'?'block':'none';
+  const btnResumen=document.getElementById('btn-ir-resumen');
+  if(btnResumen) btnResumen.textContent='Siguiente →';
+  validarRef();
+}
+
+function validarRef(){
+  if(pagoMoneda==='cashea'){
+    const btn=document.getElementById('btn-ir-resumen');
+    btn.disabled=false;
+    btn.style.opacity='1';
+    btn.style.cursor='pointer';
+    pagoRef='CASHEA';
+    pedido.pagoMoneda='Cashea';
+    pedido.pagoRef='CASHEA';
+    pedido.pagoMonto=pagoTotalCasheaBs;
+    return;
+  }
+  const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim()
+    :pagoMoneda==='usd'?document.getElementById('pago-ref-usd')?.value.trim()
+    :'';
+  const btn=document.getElementById('btn-ir-resumen');
+  const ok=pagoMoneda&&ref&&ref.length>3;
+  btn.disabled=!ok;
+  btn.style.opacity=ok?'1':'0.4';
+  btn.style.cursor=ok?'pointer':'not-allowed';
+  if(ok){
+    pagoRef=ref;
+    pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
+    pedido.pagoRef=ref;
+    pedido.pagoMonto=pagoMoneda==='bs'?pagoTotalBs:pagoTotalUsd;
+  }
+}
+
+function irAlResumen(){
+  if(!pagoMoneda){ alert('Selecciona el método de pago'); return; }
+  if(pagoMoneda==='cashea'){
+    pedido.pagoMoneda='Cashea';
+    pedido.pagoRef='CASHEA';
+    pedido.pagoMonto=pagoTotalCasheaBs;
+  } else {
+    const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim()
+      :document.getElementById('pago-ref-usd')?.value.trim();
+    if(!ref||ref.length<3){ alert('Ingresa la referencia o código de confirmación'); return; }
+    pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
+    pedido.pagoRef=ref;
+    pedido.pagoMonto=pagoMoneda==='bs'?pagoTotalBs:pagoTotalUsd;
+  }
+  const curEl=document.getElementById('step6');
+  curEl.classList.remove('active');
+  currentStep=7;
+  document.getElementById('step7').classList.add('active');
+  updateProgress();
+  buildResumen();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function copiarMonto(moneda, btnId){
+  const el=document.getElementById(moneda==='bs'?'pm-monto-bs':moneda==='usd'?'pm-monto-usd':'pm-monto-cashea');
+  if(!el) return;
+  // Extract numeric value only
+  const texto=el.textContent.replace('Bs ','').replace('$','').replace(/\s*\(.*\)/,'').trim();
+  navigator.clipboard.writeText(texto).then(()=>{
+    const btn=document.getElementById(btnId);
+    if(btn){ btn.textContent='✅ Copiado'; setTimeout(()=>{ btn.textContent='📋 Copiar'; }, 2000); }
+  }).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=texto; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    const btn=document.getElementById(btnId);
+    if(btn){ btn.textContent='✅ Copiado'; setTimeout(()=>{ btn.textContent='📋 Copiar'; }, 2000); }
+  });
+}
+function copiarDato(texto, btnId){
+  navigator.clipboard.writeText(texto).then(()=>{
+    const btn=document.getElementById(btnId);
+    const orig=btn.textContent;
+    btn.textContent='✓ Copiado';
+    btn.style.color='var(--accent)';
+    setTimeout(()=>{ btn.textContent=orig; btn.style.color=''; }, 2000);
+  }).catch(()=>{ alert('No se pudo copiar. Copia manualmente: '+texto); });
+}
+
+// ── RESUMEN ───────────────────────────────────────────────────
+function buildResumen(){
+  const retiraText=pedido.mismoEnvio?`${pedido.nombre} · ${pedido.cedula} · ${pedido.celular}`:`${pedido.eNombre} · ${pedido.eCi} · ${pedido.eCel}`;
+  const packsHtml=pedido.packs.map((pk,i)=>{
+    const piezasHtml=pk.piezas.map((p,j)=>`<b>Franela ${j+1}:</b> ${p.genero} Talla ${p.talla} — ${p.nombre}`).join('<br>');
+    return `<div class="resumen-label">📦 Pack ${i+1} · ${pk.pack}PACK</div>
+      <div class="resumen-block"><b>Modelo:</b> ${pk.modelo} ${pk.manga} ${pk.capucha}<br><b>Tela:</b> ${pk.tela} · <b>Vinil:</b> ${pk.vinil}</div>
+      <div class="resumen-label">📏 Franelas (${pk.piezas.length})</div>
+      <div class="resumen-block">${piezasHtml}</div>`;
+  }).join('');
+  document.getElementById('resumen-container').innerHTML=`
+    <div class="card">
+      <div class="resumen-label">👤 Cliente</div>
+      <div class="resumen-block"><b>Nombre:</b> ${pedido.nombre}<br><b>Correo:</b> ${pedido.correo}<br><b>Cédula:</b> ${pedido.cedula}<br><b>WhatsApp:</b> ${pedido.celular}</div>
+      ${packsHtml}
+      <div class="resumen-label">🚚 Entrega</div>
+      <div class="resumen-block"><b>Agencia:</b> ${pedido.agencia}<br><b>Retira:</b> ${retiraText}</div>
+      <div class="resumen-label">💳 Pago</div>
+      <div class="resumen-block"><b>Moneda:</b> ${pedido.pagoMoneda||'—'}<br><b>Monto:</b> ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto||'—'}<br><b>Referencia:</b> ${pedido.pagoRef||'—'}</div>
+    </div>`;
+  const esCashea=pagoMoneda==='cashea';
+  const btnWA=document.getElementById('btn-whatsapp');
+  const btnSin=document.getElementById('btn-sin-whatsapp');
+  const btnCashea=document.getElementById('btn-aprobar-cashea');
+  if(btnWA) btnWA.style.display=esCashea?'none':'';
+  if(btnSin) btnSin.style.display=esCashea?'none':'';
+  if(btnCashea) btnCashea.style.display=esCashea?'':'none';
+}
+
+function buildMensaje(){
+  const retiraText=pedido.mismoEnvio?'Mismo titular':`${pedido.eNombre} | C.I: ${pedido.eCi} | Cel: ${pedido.eCel}`;
+  const packsText=pedido.packs.map((pk,i)=>{
+    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla} — ${p.nombre}`).join('\n');
+    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: ${pk.modelo} ${pk.manga} ${pk.capucha}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
+  }).join('\n\n');
+  return `🛍️ *PEDIDO IKOA & BEKATE*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
+}
+
+async function guardarEnSheets(){
+  const retiraNombre=pedido.mismoEnvio?pedido.nombre:pedido.eNombre;
+  const retiraCi=pedido.mismoEnvio?pedido.cedula:pedido.eCi;
+  const retiraCel=pedido.mismoEnvio?pedido.celular:pedido.eCel;
+  // Guardar una solicitud por cada pack, enlazadas por código S-N, S-N.2, S-N.3...
+  let codigoPrincipal='';
+  for(let i=0; i<pedido.packs.length; i++){
+    const pk=pedido.packs[i];
+    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla} - ${p.nombre}`).join(' | ');
+    try{
+      const res=await scriptGETjson({
+        action:'addSolicitud',
+        fecha:new Date().toLocaleString('es-VE'),
+        nombre:pedido.nombre,
+        correo:pedido.correo,
+        cedula:pedido.cedula,
+        celular:pedido.celular,
+        modelo:'COMFY MEGA PROMO ' + (modalidadComfy==='B'?'(Opción B)':'(Opción A)'),
+        manga:pk.manga,
+        capucha:pk.capucha,
+        pack:`${pk.pack}PACK`,
+        tela:pk.tela,
+        vinil:pk.vinil,
+        piezas:piezasText,
+        agencia:pedido.agencia,
+        retira_nombre:retiraNombre,
+        retira_ci:retiraCi,
+        retira_cel:retiraCel,
+        subindex: i===0 ? '0' : String(i+1),
+        codigo_principal: codigoPrincipal,
+        pago_moneda: pedido.pagoMoneda||'',
+        pago_monto: String(pedido.pagoMonto||''),
+        pago_ref: pedido.pagoRef||'',
+        cashea_flag: pagoMoneda==='cashea' ? 'SI' : 'NO',
+        cashea_pct_aplicado: pagoMoneda==='cashea' ? String(casheaPct) : ''
+      });
+      if(i===0 && res.ok) codigoPrincipal=res.codigo;
+    }catch(e){ console.error(e); }
+  }
+}
+
+
+async function notificarNuevoPedido(){
+  try{
+    const msg=`Nuevo pedido recibido. Cliente ${pedido.nombre||''}. Revisar pago: ${pedido.pagoMoneda||''} ${pedido.pagoMonto||''}. Nombre: ${pedido.nombre||''}. Ref: ${pedido.pagoRef||''}`;
+    const wb=new FormData();
+    wb.append('celular','584149450742');
+    wb.append('nombre',pedido.nombre||'');
+    wb.append('mensaje',msg);
+    await fetch('https://hook.us2.make.com/f3mbneb3oliah6tv4ut64rb6x1pamiwa',{method:'POST',body:wb,mode:'no-cors'});
+  }catch(e){ console.warn('Notify error:',e); }
+}
+async function enviarSinWhatsApp(){
+  const btn=document.getElementById('btn-sin-whatsapp');
+  const btnWA=document.getElementById('btn-whatsapp');
+  btn.disabled=true; btnWA.disabled=true;
+  btn.innerHTML='<span class="spinner">↻</span> Registrando pedido...';
+  await guardarEnSheets();
+  await notificarNuevoPedido();
+  await marcarTokenUsado();
+  document.getElementById('pantalla-exito').style.display='block';
+}
+
+async function aprobarSolicitudCashea(){
+  const btn=document.getElementById('btn-aprobar-cashea');
+  if(!btn) return;
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner">↻</span> Enviando solicitud...';
+  try{
+    await guardarEnSheets();
+    await notificarNuevoPedido();
+    await marcarTokenUsado();
+    window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(buildMensaje())}`,'_blank');
+    document.getElementById('pantalla-exito').style.display='block';
+  }catch(e){
+    console.error('Error en aprobarSolicitudCashea:', e);
+    btn.disabled=false;
+    btn.innerHTML='<span style="font-size:22px;">✅</span> Aprobar Solicitud';
+    alert('Ocurrió un error al enviar la solicitud. Intenta de nuevo.');
+  }
+}
+
+async function enviarWhatsApp(){
+  const btn=document.getElementById('btn-whatsapp');
+  const btnSin=document.getElementById('btn-sin-whatsapp');
+  btn.disabled=true; if(btnSin) btnSin.disabled=true;
+  btn.innerHTML='<span class="spinner">↻</span> Enviando...';
+  await guardarEnSheets();
+  await notificarNuevoPedido();
+  await marcarTokenUsado();
+  window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(buildMensaje())}`,'_blank');
+  document.getElementById('pantalla-exito').style.display='block';
+}
+
+// Auto-uppercase en campos de texto (excepto correo y referencias)
+document.addEventListener('input', function(e){
+  const el=e.target;
+  if(el.tagName==='INPUT'&&el.type==='text'&&!el.id.includes('correo')&&!el.id.includes('email')){
+    const pos=el.selectionStart;
+    el.value=el.value.toUpperCase();
+    el.setSelectionRange(pos,pos);
+  }
+});
+
+verificarToken();
+
+function marthaConfirmar(){
+  try{ window.close(); } catch(e){}
+  // Si window.close() falla (bloqueado por el navegador), redirigir
+  setTimeout(()=>{ window.location.href='about:blank'; }, 300);
+}
+</script>
+</body>
+</html>
