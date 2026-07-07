@@ -803,8 +803,12 @@ function renderFranelasB(){
       </div>
       <div style="margin-top:10px;">
         <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Nombre en manga</div>
-        <input class="field-input" type="text" id="nombre-b${i}" placeholder="Ej: Juan · SIN NOMBRE EN MANGA" maxlength="30"
+        <input class="field-input" type="text" id="nombre-b${i}" placeholder="Ej: JUAN" maxlength="30"
           style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+        <button type="button" onclick="document.getElementById('nombre-b${i}').value='SIN NOMBRE EN MANGA'"
+          style="margin-top:6px;padding:5px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">
+          Sin nombre en manga
+        </button>
       </div>
     </div>
   `).join('');
