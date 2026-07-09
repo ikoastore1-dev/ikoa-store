@@ -516,6 +516,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <button class="tab" onclick="switchTab('respaldo')">💬 Respaldo</button>
     <button class="tab" onclick="switchTab('gestion')">📋 Gestión</button>
     <button class="tab" onclick="switchTab('programacion')">📅 Programación</button>
+    <button class="tab" onclick="switchTab('ventas')">📊 Ventas</button>
+    <button class="tab" onclick="switchTab('gastos')">💸 Gastos</button>
   </div>
 
   <!-- TAB TASA -->
@@ -1746,6 +1748,142 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
   </div>
 
+  <!-- TAB VENTAS -->
+  <div id="tab-ventas" style="display:none;padding:16px;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;">📊 Ventas</div>
+
+    <!-- Filtros -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="venta-periodo-btn" data-p="semana" onclick="setVentasPeriodo('semana')" style="padding:6px 14px;border:1.5px solid var(--accent);border-radius:20px;background:#0a2a1a;color:var(--accent);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Esta semana</button>
+        <button class="venta-periodo-btn" data-p="mes" onclick="setVentasPeriodo('mes')" style="padding:6px 14px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Este mes</button>
+        <button class="venta-periodo-btn" data-p="mes_ant" onclick="setVentasPeriodo('mes_ant')" style="padding:6px 14px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Mes anterior</button>
+        <button class="venta-periodo-btn" data-p="todo" onclick="setVentasPeriodo('todo')" style="padding:6px 14px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Todo</button>
+      </div>
+      <div style="display:flex;gap:4px;align-items:center;">
+        <input type="date" id="venta-desde" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 8px;color:var(--text);font-size:12px;" onchange="setVentasPeriodo('rango')">
+        <span style="color:var(--muted);font-size:12px;">→</span>
+        <input type="date" id="venta-hasta" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 8px;color:var(--text);font-size:12px;" onchange="setVentasPeriodo('rango')">
+      </div>
+      <select id="venta-fuente" onchange="renderVentas()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px;">
+        <option value="">Todas las fuentes</option>
+        <option value="Cola">Cola</option>
+        <option value="Gestión">Gestión</option>
+        <option value="Respaldo">Respaldo</option>
+      </select>
+      <button onclick="cargarVentas()" style="padding:6px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer;">↻ Actualizar</button>
+    </div>
+
+    <!-- KPI Cards -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px;" id="ventas-kpis">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Total Bs</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--accent);" id="kpi-total-bs">—</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Pedidos</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--text);" id="kpi-total-ped">—</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Cashea</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:#00ff88;" id="kpi-cashea">—</div>
+        <div style="font-size:11px;color:var(--muted);" id="kpi-cashea-pct">—</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Ticket Prom.</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--warn);" id="kpi-ticket">—</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Total Gastos</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--danger);" id="kpi-gastos">—</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Balance</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;" id="kpi-balance">—</div>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <!-- Barras por día -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">Ventas por día</div>
+        <div id="chart-dias" style="height:150px;display:flex;align-items:flex-end;gap:4px;overflow-x:auto;"></div>
+      </div>
+      <!-- Dona por fuente -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">Por fuente</div>
+        <div id="chart-fuente" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+    </div>
+
+    <!-- Top productos -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">🏆 Top productos</div>
+      <div id="chart-productos" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+
+    <!-- Tabla de ventas -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">📋 Detalle de ventas</div>
+      <div style="overflow-x:auto;">
+        <table id="ventas-tabla" style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr style="background:var(--surface2);">
+              <th style="padding:8px;text-align:left;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border);">Código</th>
+              <th style="padding:8px;text-align:left;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border);">Fecha</th>
+              <th style="padding:8px;text-align:left;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border);">Cliente</th>
+              <th style="padding:8px;text-align:left;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border);">Modelo</th>
+              <th style="padding:8px;text-align:right;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border);">Monto Bs</th>
+              <th style="padding:8px;text-align:center;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border);">Cashea</th>
+              <th style="padding:8px;text-align:center;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border);">Fuente</th>
+            </tr>
+          </thead>
+          <tbody id="ventas-tabla-body">
+            <tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB GASTOS -->
+  <div id="tab-gastos" style="display:none;padding:16px;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;">💸 Registrar Gasto</div>
+    <div class="card" style="max-width:480px;">
+      <div class="field-group" style="margin-bottom:12px;">
+        <div class="field-label">Fecha *</div>
+        <input class="field-input" type="date" id="gasto-fecha">
+      </div>
+      <div class="field-group" style="margin-bottom:12px;">
+        <div class="field-label">Título del gasto *</div>
+        <input class="field-input" type="text" id="gasto-titulo" placeholder="Ej: Compra de tela, Pago de local...">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div class="field-group">
+          <div class="field-label">Monto *</div>
+          <input class="field-input" type="number" id="gasto-monto" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Moneda *</div>
+          <select class="field-input" id="gasto-moneda">
+            <option value="Bs">Bs</option>
+            <option value="USD">USD</option>
+            <option value="COP">COP</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group" style="margin-bottom:16px;">
+        <div class="field-label">Código de usuario *</div>
+        <input class="field-input" type="password" id="gasto-auth" placeholder="Tu código personal">
+      </div>
+      <div id="gasto-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;margin-bottom:12px;text-align:center;"></div>
+      <button onclick="registrarGasto()" style="width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">
+        💾 Registrar Gasto
+      </button>
+    </div>
+  </div>
+
   <!-- TAB PROGRAMACION -->
   <div id="tab-programacion" style="display:none;padding:16px;">
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;">📅 Programación de Colores</div>
@@ -1774,7 +1912,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwK1InDwV2z9NCLl2yb4irfyM9jB7S8JNLeE5ULtAklaTUdE109OhXu2a8lLq19P5rc9w/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGhgwBgshaxVknnKUQPtqs2tNesHFNWsj1b9REwYJp0zh93QbXSfhdtODXeO7EI_bcXQ/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -2614,6 +2752,226 @@ function stopScanner(){
 }
 
 // ── TABS ──────────────────────────────────────────────────────
+// ── GASTOS ────────────────────────────────────────────────────
+async function registrarGasto(){
+  const fecha = document.getElementById('gasto-fecha').value;
+  const titulo = document.getElementById('gasto-titulo').value.trim();
+  const monto = parseFloat(document.getElementById('gasto-monto').value||0);
+  const moneda = document.getElementById('gasto-moneda').value;
+  const auth = document.getElementById('gasto-auth').value.trim().toUpperCase();
+  const msgEl = document.getElementById('gasto-msg');
+
+  if(!fecha){ msgEl.style.display='block'; msgEl.style.background='#2a0a0a'; msgEl.style.color='var(--danger)'; msgEl.textContent='Selecciona la fecha'; return; }
+  if(!titulo){ msgEl.style.display='block'; msgEl.style.background='#2a0a0a'; msgEl.style.color='var(--danger)'; msgEl.textContent='Ingresa el título del gasto'; return; }
+  if(!monto||monto<=0){ msgEl.style.display='block'; msgEl.style.background='#2a0a0a'; msgEl.style.color='var(--danger)'; msgEl.textContent='Ingresa el monto'; return; }
+  if(!USUARIOS[auth]){ msgEl.style.display='block'; msgEl.style.background='#2a0a0a'; msgEl.style.color='var(--danger)'; msgEl.textContent='❌ Código incorrecto'; return; }
+
+  msgEl.style.display='block'; msgEl.style.background='var(--surface2)'; msgEl.style.color='var(--muted)'; msgEl.textContent='⏳ Registrando...';
+
+  try{
+    const res = await scriptGETjson({
+      action:'addGasto',
+      fecha, titulo, monto, moneda,
+      usuario: USUARIOS[auth]||auth
+    });
+    if(res.ok){
+      msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)';
+      msgEl.textContent='✅ Gasto registrado correctamente';
+      document.getElementById('gasto-titulo').value='';
+      document.getElementById('gasto-monto').value='';
+      document.getElementById('gasto-auth').value='';
+      setTimeout(()=>msgEl.style.display='none',3000);
+    } else throw new Error(res.error||'Error');
+  }catch(e){
+    msgEl.style.background='#2a0a0a'; msgEl.style.color='var(--danger)';
+    msgEl.textContent='✗ '+e.message;
+  }
+}
+
+// Inicializar fecha de hoy en el formulario de gastos
+function initGastos(){
+  const hoy = new Date();
+  const dd = String(hoy.getDate()).padStart(2,'0');
+  const mm = String(hoy.getMonth()+1).padStart(2,'0');
+  const yyyy = hoy.getFullYear();
+  const fechaEl = document.getElementById('gasto-fecha');
+  if(fechaEl) fechaEl.value = `${yyyy}-${mm}-${dd}`;
+}
+
+// ── VENTAS KPI ────────────────────────────────────────────────
+let _ventasData = [];
+let _gastosData = [];
+let _ventasPeriodo = 'semana';
+
+function setVentasPeriodo(p){
+  _ventasPeriodo = p;
+  document.querySelectorAll('.venta-periodo-btn').forEach(b=>{
+    const active = b.dataset.p === p;
+    b.style.borderColor = active ? 'var(--accent)' : 'var(--border)';
+    b.style.background = active ? '#0a2a1a' : 'var(--surface2)';
+    b.style.color = active ? 'var(--accent)' : 'var(--muted)';
+  });
+  renderVentas();
+}
+
+async function cargarVentas(){
+  const tbody = document.getElementById('ventas-tabla-body');
+  if(tbody) tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">⏳ Cargando...</td></tr>';
+  try{
+    const [dataV, dataG] = await Promise.all([
+      scriptGETjson({action:'leerVentas'}),
+      scriptGETjson({action:'leerGastos'})
+    ]);
+    if(!dataV.ok) throw new Error(dataV.error||'Error');
+    _ventasData = dataV.rows||[];
+    _gastosData = dataG.ok ? (dataG.rows||[]) : [];
+    renderVentas();
+  }catch(e){
+    if(tbody) tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--danger);">✗ ${e.message}</td></tr>`;
+  }
+}
+
+function filtrarVentas(){
+  const ahora = new Date();
+  const fuente = document.getElementById('venta-fuente')?.value||'';
+  return _ventasData.filter(r=>{
+    // Filtro fuente
+    if(fuente && String(r.fuente||'') !== fuente) return false;
+    // Filtro período
+    let fecha = null;
+    try{
+      const fs = String(r.fecha||'');
+      if(fs.includes('/')){
+        const p = fs.split('/');
+        fecha = new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));
+      } else {
+        fecha = new Date(fs);
+      }
+    }catch(e){}
+    if(!fecha || isNaN(fecha.getTime())) return true;
+    if(_ventasPeriodo==='semana'){
+      const ini = new Date(ahora); ini.setDate(ahora.getDate()-ahora.getDay());
+      ini.setHours(0,0,0,0);
+      return fecha >= ini;
+    } else if(_ventasPeriodo==='mes'){
+      return fecha.getMonth()===ahora.getMonth() && fecha.getFullYear()===ahora.getFullYear();
+    } else if(_ventasPeriodo==='mes_ant'){
+      const ant = new Date(ahora.getFullYear(), ahora.getMonth()-1, 1);
+      return fecha.getMonth()===ant.getMonth() && fecha.getFullYear()===ant.getFullYear();
+    } else if(_ventasPeriodo==='rango'){
+      const desde = document.getElementById('venta-desde')?.value;
+      const hasta = document.getElementById('venta-hasta')?.value;
+      if(desde && fecha < new Date(desde)) return false;
+      if(hasta && fecha > new Date(hasta+'T23:59:59')) return false;
+      return true;
+    }
+    return true;
+  });
+}
+
+function renderVentas(){
+  const rows = filtrarVentas();
+  // KPIs
+  const totalBs = rows.reduce((s,r)=>s+(parseFloat(r.monto)||0),0);
+  const totalPed = rows.length;
+  const cashea = rows.filter(r=>String(r.cashea||'').toUpperCase()==='SI'||String(r.cashea||'').toUpperCase()==='YES'||String(r.cashea||'')==='true');
+  const ticket = totalPed>0 ? totalBs/totalPed : 0;
+
+  document.getElementById('kpi-total-bs').textContent = 'Bs '+totalBs.toLocaleString('es-VE',{maximumFractionDigits:2});
+  document.getElementById('kpi-total-ped').textContent = totalPed;
+  document.getElementById('kpi-cashea').textContent = cashea.length;
+  document.getElementById('kpi-cashea-pct').textContent = totalPed>0 ? Math.round(cashea.length/totalPed*100)+'%' : '0%';
+  document.getElementById('kpi-ticket').textContent = 'Bs '+ticket.toLocaleString('es-VE',{maximumFractionDigits:0});
+
+  // KPIs Gastos
+  const gastosFiltrados = _gastosData.filter(g=>{
+    let fecha=null;
+    try{ const p=String(g.fecha||'').split('/'); fecha=p.length===3?new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])):new Date(g.fecha); }catch(e){}
+    if(!fecha||isNaN(fecha.getTime())) return true;
+    const ahora=new Date();
+    if(_ventasPeriodo==='semana'){ const ini=new Date(ahora); ini.setDate(ahora.getDate()-ahora.getDay()); ini.setHours(0,0,0,0); return fecha>=ini; }
+    if(_ventasPeriodo==='mes') return fecha.getMonth()===ahora.getMonth()&&fecha.getFullYear()===ahora.getFullYear();
+    if(_ventasPeriodo==='mes_ant'){ const ant=new Date(ahora.getFullYear(),ahora.getMonth()-1,1); return fecha.getMonth()===ant.getMonth()&&fecha.getFullYear()===ant.getFullYear(); }
+    return true;
+  });
+  const totalGastos = gastosFiltrados.reduce((s,g)=>s+(parseFloat(g.monto)||0),0);
+  const balance = totalBs - totalGastos;
+  const gastosEl = document.getElementById('kpi-gastos');
+  const balanceEl = document.getElementById('kpi-balance');
+  if(gastosEl) gastosEl.textContent = 'Bs '+totalGastos.toLocaleString('es-VE',{maximumFractionDigits:2});
+  if(balanceEl){ balanceEl.textContent = 'Bs '+balance.toLocaleString('es-VE',{maximumFractionDigits:2}); balanceEl.style.color = balance>=0?'var(--accent)':'var(--danger)'; }
+
+  // Gráfico por días
+  const diasMap={};
+  rows.forEach(r=>{
+    const fs = String(r.fecha||'').split(' ')[0].split('T')[0];
+    diasMap[fs]=(diasMap[fs]||0)+1;
+  });
+  const diasKeys = Object.keys(diasMap).sort().slice(-14);
+  const maxDia = Math.max(...diasKeys.map(k=>diasMap[k]),1);
+  const chartDias = document.getElementById('chart-dias');
+  if(chartDias) chartDias.innerHTML = diasKeys.map(k=>`
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:28px;">
+      <div style="font-size:10px;color:var(--muted);">${diasMap[k]}</div>
+      <div style="width:20px;background:var(--accent);border-radius:3px 3px 0 0;" title="${k}: ${diasMap[k]}"
+        style="height:${Math.round(diasMap[k]/maxDia*120)}px;width:20px;background:var(--accent);border-radius:3px 3px 0 0;min-height:4px;">
+      </div>
+      <div style="font-size:9px;color:var(--muted);transform:rotate(-45deg);white-space:nowrap;">${k.slice(5)}</div>
+    </div>`).join('') || '<div style="color:var(--muted);font-size:12px;padding:20px;">Sin datos</div>';
+
+  // Corregir altura de barras
+  if(chartDias){
+    chartDias.querySelectorAll('[title]').forEach(el=>{
+      const k = el.title.split(':')[0].trim();
+      el.style.height = Math.max(4, Math.round(diasMap[k]/maxDia*120))+'px';
+    });
+  }
+
+  // Gráfico por fuente
+  const fuenteMap={};
+  rows.forEach(r=>{ const f=r.fuente||'—'; fuenteMap[f]=(fuenteMap[f]||0)+1; });
+  const FUENTE_COLORS={'Cola':'var(--accent)','Gestión':'var(--warn)','Respaldo':'#cc66ff'};
+  const chartFuente = document.getElementById('chart-fuente');
+  if(chartFuente) chartFuente.innerHTML = Object.entries(fuenteMap).map(([f,n])=>`
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:10px;height:10px;border-radius:50%;background:${FUENTE_COLORS[f]||'var(--muted)'};flex-shrink:0;"></div>
+      <div style="font-size:12px;color:var(--text);flex:1;">${f}</div>
+      <div style="font-size:12px;font-weight:700;color:var(--text);">${n}</div>
+      <div style="flex:2;background:var(--surface2);border-radius:4px;height:8px;">
+        <div style="height:8px;border-radius:4px;background:${FUENTE_COLORS[f]||'var(--muted)'};width:${Math.round(n/totalPed*100)||0}%;"></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);min-width:30px;">${Math.round(n/totalPed*100)||0}%</div>
+    </div>`).join('') || '<div style="color:var(--muted);font-size:12px;">Sin datos</div>';
+
+  // Top productos
+  const prodMap={};
+  rows.forEach(r=>{ const m=r.modelo||r.pack||'—'; prodMap[m]=(prodMap[m]||0)+1; });
+  const topProd = Object.entries(prodMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxProd = topProd[0]?.[1]||1;
+  const chartProd = document.getElementById('chart-productos');
+  if(chartProd) chartProd.innerHTML = topProd.map(([m,n])=>`
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="font-size:12px;color:var(--text);min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m}</div>
+      <div style="flex:1;background:var(--surface2);border-radius:4px;height:10px;">
+        <div style="height:10px;border-radius:4px;background:var(--accent);width:${Math.round(n/maxProd*100)}%;"></div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--accent);min-width:24px;text-align:right;">${n}</div>
+    </div>`).join('') || '<div style="color:var(--muted);font-size:12px;">Sin datos</div>';
+
+  // Tabla
+  const tbody = document.getElementById('ventas-tabla-body');
+  if(tbody) tbody.innerHTML = rows.length ? rows.slice().reverse().map(r=>`
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:7px 8px;color:var(--accent);font-weight:700;">${r.codigoC||r.codigo||'—'}</td>
+      <td style="padding:7px 8px;color:var(--muted);">${String(r.fecha||'').split(' ')[0]}</td>
+      <td style="padding:7px 8px;">${r.nombre||'—'}</td>
+      <td style="padding:7px 8px;color:var(--muted);">${r.modelo||r.pack||'—'}</td>
+      <td style="padding:7px 8px;text-align:right;font-weight:700;">Bs ${parseFloat(r.monto||0).toLocaleString('es-VE',{maximumFractionDigits:2})}</td>
+      <td style="padding:7px 8px;text-align:center;">${String(r.cashea||'').toUpperCase()==='SI'?'🛒':''}</td>
+      <td style="padding:7px 8px;text-align:center;"><span style="background:var(--surface2);border-radius:10px;padding:2px 8px;font-size:11px;">${r.fuente||'—'}</span></td>
+    </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">Sin ventas en este período</td></tr>';
+}
+
 function switchTab(tab){
   ['tasa','stock','etiquetas','aprobaciones','respaldo','gestion','programacion'].forEach(t=>{
     const el=document.getElementById('tab-'+t);
@@ -2631,7 +2989,8 @@ function switchTab(tab){
     const el=document.getElementById(id);
     if(el) el.style.display='none';
   });
-  if(tab==='aprobaciones') switchAprobaciones('Cashea');
+  if(tab==='ventas'){ setVentasPeriodo('semana'); cargarVentas(); }
+  if(tab==='gastos') initGastos();
   if(tab!=='aprobaciones'){
     // Ocultar sección cashea al salir de aprobaciones
     const cashea=document.getElementById('aprosec-cashea');
