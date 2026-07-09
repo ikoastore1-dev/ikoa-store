@@ -1774,7 +1774,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZFYI_sTLGmx3VNcWzR4Da_URpRdMBjecldrq8ze0pGam_IkVVMumlny0om6uwyNIU2g/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwK1InDwV2z9NCLl2yb4irfyM9jB7S8JNLeE5ULtAklaTUdE109OhXu2a8lLq19P5rc9w/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -4851,13 +4851,18 @@ async function confirmarPlanificacion(){
         retira_cel:pendingCola.retiraCel||'',
         banco:pendingCola.banco||'',
         cod_pago:pendingCola.codpago||'',
+        moneda:pendingCola.pagoMoneda||'',
+        monto:pendingCola.pagoMonto||'',
+        referencia:pendingCola.codpago||'',
         usuario:USUARIOS[unlock],
         fecha_apro:fechaProd,
         fecha_produccion:fechaProd,
         usuario_produccion:USUARIOS[unlock],
         urgente:pendingCola.urgente||'',
         cashea_flag:pendingCola.cashea||'NO',
-        cashea_pct_aplicado:pendingCola.casheaPct||''
+        cashea_pct_aplicado:pendingCola.casheaPct||'',
+        monto_cashea_usd:pendingCola.codCashea||'',
+        fuente:'Cola'
       });
     }catch(e){ console.warn('registrarProduccion error:',e); }
     // Generar SVG de nombres y subir a Dropbox
@@ -5661,7 +5666,8 @@ document.getElementById('gestion-form').addEventListener('submit',async function
           usuario:nombreUsuario,
           fecha_produccion:fecha,
           usuario_produccion:nombreUsuario,
-          urgente:formData.get('urgente')||''
+          urgente:formData.get('urgente')||'',
+          fuente:'Gestión'
         });
       }catch(e){ console.warn('registrarProduccion COD error:',e); }
       // Generar SVG de nombres y subir a Dropbox
