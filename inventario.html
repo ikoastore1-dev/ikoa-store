@@ -1774,7 +1774,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEgB7li75BIXx6DcOWLDGY0h-1foFxL-UQt92gNKtAQmviVO-9x-Jgjy2HAtzph0hemg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxXKi7-J-NyshSaozSGBGHVa3uUIXt4ZBwJfqFnRFqsI7NHJMgGNkQTSRTNP1fmVPyfkw/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -2632,6 +2632,11 @@ function switchTab(tab){
     if(el) el.style.display='none';
   });
   if(tab==='aprobaciones') switchAprobaciones('Cashea');
+  if(tab!=='aprobaciones'){
+    // Ocultar sección cashea al salir de aprobaciones
+    const cashea=document.getElementById('aprosec-cashea');
+    if(cashea) cashea.style.display='none';
+  }
   if(tab==='respaldo'){ switchRespaldo('nuevo'); }
   if(tab==='tasa') cargarTasas();
   if(tab==='stock') switchStock('inventario');
@@ -3721,7 +3726,11 @@ async function cargarAprobacionesCashea(){
       // Botón aprobar
       const aproKey='cashea_'+base.replace(/[^a-zA-Z0-9]/g,'_');
       window[`_casheaData_${aproKey}`]={cod:base, fecha:v(4), nombre:v(7), celular:v(10), pack:v(14), tela:v(15), piezas:v(17), agencia:v(18), monto:v(29), casheaPct:casheaPct, row:r};
-      html+=`<button onclick="abrirModalAprobarCashea('${aproKey}')" style="width:100%;padding:12px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;">✅ Aprobar Solicitud Cashea</button>`;
+      html+=`
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button onclick="abrirModalReprobarCashea('${aproKey}')" style="flex:1;padding:12px;background:var(--surface2);border:1.5px solid var(--danger);border-radius:8px;color:var(--danger);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✗ Reprobar</button>
+        <button onclick="abrirModalAprobarCashea('${aproKey}')" style="flex:2;padding:12px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✅ Aprobar Solicitud Cashea</button>
+      </div>`;
       card.innerHTML=html;
       listEl.appendChild(card);
     });
@@ -3731,6 +3740,28 @@ async function cargarAprobacionesCashea(){
 }
 
 let _casheaModalKey=null;
+function abrirModalReprobarCashea(key){
+  const data=window[`_casheaData_${key}`]||{};
+  if(!confirm(`¿Reprobar la solicitud Cashea de ${data.nombre||''}?\n\nEl pedido pasará a Reprobadas.`)) return;
+  const auth=prompt('Ingresa tu código de usuario:');
+  if(!auth) return;
+  const authUp=auth.trim().toUpperCase();
+  if(!USUARIOS[authUp]){ alert('❌ Código incorrecto'); return; }
+  scriptGETjson({
+    action:'reprobarSolicitud',
+    codigo_s: data.cod,
+    usuario: USUARIOS[authUp]||authUp,
+    fecha: getFechaHora(),
+    motivo: 'Cashea — cliente no completó pago'
+  }).then(res=>{
+    if(res.ok){
+      const msgEl=document.getElementById('cashea-apro-msg');
+      if(msgEl){ msgEl.style.display='block'; msgEl.style.background='#2a0a0a'; msgEl.style.color='var(--danger)'; msgEl.innerHTML=`✗ Solicitud reprobada`; setTimeout(()=>msgEl.style.display='none',3000); }
+      cargarAprobacionesCashea();
+    } else alert('Error: '+(res.error||'desconocido'));
+  }).catch(e=>alert('Error: '+e.message));
+}
+
 function abrirModalAprobarCashea(key){
   _casheaModalKey=key;
   const data=window[`_casheaData_${key}`]||{};
@@ -4829,6 +4860,17 @@ async function confirmarPlanificacion(){
         cashea_pct_aplicado:pendingCola.casheaPct||''
       });
     }catch(e){ console.warn('registrarProduccion error:',e); }
+    // Generar SVG de nombres y subir a Dropbox
+    try{
+      const piezasStr = (pendingCola.allPacks||[]).map(pk=>pk.piezas||'').join(' | ');
+      const svgRes = await scriptGETjson({
+        action:'generarSVGNombres',
+        codigo_c: codMake||lastCodigoP,
+        piezas: piezasStr
+      });
+      if(svgRes.ok) console.log('SVG generado:', svgRes.archivo);
+      else console.warn('SVG error:', svgRes.error);
+    }catch(e){ console.warn('SVG nombres error:',e); }
     if(response.ok||response.type==='opaque'){
       msgEl.style.background='var(--surface2)';
       msgEl.style.border='1px solid #1a4a2a';
@@ -5622,6 +5664,16 @@ document.getElementById('gestion-form').addEventListener('submit',async function
           urgente:formData.get('urgente')||''
         });
       }catch(e){ console.warn('registrarProduccion COD error:',e); }
+      // Generar SVG de nombres y subir a Dropbox
+      try{
+        const svgRes = await scriptGETjson({
+          action:'generarSVGNombres',
+          codigo_c: codMake,
+          piezas: formData.get('descripcion')||''
+        });
+        if(svgRes.ok) console.log('SVG generado:', svgRes.archivo);
+        else console.warn('SVG error:', svgRes.error);
+      }catch(e){ console.warn('SVG nombres error:',e); }
     } else if(tipo==='Enviado'){
       const codEnviado=formData.get('codigo')||'';
       if(codEnviado) try{ await eliminarDeProduccion(codEnviado); }catch(e){ console.warn('eliminarProduccion error:',e); }
