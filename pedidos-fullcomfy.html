@@ -1134,10 +1134,15 @@ async function calcularPago(){
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
 
     let packBs=0, packUsd=0;
+    const esMangaCorta = pk.manga === 'Manga Corta' || pk.modelo === 'Full Comfy Protect Manga Corta';
 
-    if(franelas===1){
-      // Prenda individual → usar codPrecioFC (COMFY01 o COMFY06), sin recarga talla plus
-      const pp=window._packPrecios&&window._packPrecios[codPrecioFC];
+    if(esMangaCorta){
+      // Manga Corta → precio COMFY06 × cantidad de franelas
+      const pp=window._packPrecios&&window._packPrecios['COMFY06'];
+      if(pp){ packBs=(parseFloat(pp.bs)||0)*franelas; packUsd=(parseFloat(pp.usd)||0)*franelas; }
+    } else if(franelas===1){
+      // Prenda individual Manga Larga → usar COMFY01
+      const pp=window._packPrecios&&window._packPrecios['COMFY01'];
       if(pp){ packBs=parseFloat(pp.bs)||0; packUsd=parseFloat(pp.usd)||0; }
     } else {
       const combos=descomponerPacks(franelas);
