@@ -515,6 +515,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <button class="main-tab tab" onclick="switchTab('aprobaciones')">✅ Aprobaciones</button>
     <button class="main-tab tab" onclick="switchTab('respaldo')">💬 Respaldo</button>
     <button class="main-tab tab" onclick="switchTab('gestion')">📋 Gestión</button>
+    <button class="main-tab tab" onclick="switchTab('taller')">🏭 Taller</button>
     <button class="main-tab tab" onclick="switchTab('programacion')">📅 Programación</button>
     <button class="main-tab tab" onclick="switchTab('ventas')">📊 Ventas</button>
     <button class="main-tab tab" onclick="switchTab('gastos')">💸 Gastos</button>
@@ -1883,6 +1884,35 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     </div>
   </div>
 
+  <!-- TAB TALLER -->
+  <div id="tab-taller" style="display:none;padding:16px;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">🏭 Taller — Cortador &amp; Estampador</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Selecciona los pedidos en producción para generar el reporte de corte y el reporte de estampado.</div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+        <input type="checkbox" id="taller-check-todos" onchange="tallerSeleccionarTodos(this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+        Seleccionar todos
+      </label>
+      <button onclick="cargarTaller()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;cursor:pointer;">🔄 Recargar</button>
+    </div>
+
+    <div id="taller-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;margin-bottom:12px;text-align:center;"></div>
+    <div id="taller-lista"></div>
+
+    <div style="position:sticky;bottom:0;background:var(--bg);padding:14px 0;margin-top:10px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+      <div style="font-size:13px;color:var(--muted);"><b id="taller-contador">0</b> pedido(s) seleccionado(s)</div>
+      <button id="taller-btn-generar" onclick="generarReportesTaller()" disabled style="padding:14px 20px;background:var(--accent);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;opacity:.5;">
+        📄 Generar Reportes de Taller
+      </button>
+    </div>
+
+    <div id="taller-resultado" style="display:none;margin-top:16px;padding:16px;background:var(--surface);border:1px solid var(--accent);border-radius:12px;">
+      <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--accent);margin-bottom:10px;">✅ Reportes generados</div>
+      <div id="taller-resultado-links" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+    </div>
+  </div>
+
   <!-- TAB PROGRAMACION -->
   <div id="tab-programacion" style="display:none;padding:16px;">
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;">📅 Programación de Colores</div>
@@ -2972,12 +3002,12 @@ function renderVentas(){
 }
 
 function switchTab(tab){
-  ['tasa','stock','etiquetas','aprobaciones','respaldo','gestion','programacion','ventas','gastos'].forEach(t=>{
+  ['tasa','stock','etiquetas','aprobaciones','respaldo','gestion','taller','programacion','ventas','gastos'].forEach(t=>{
     const el=document.getElementById('tab-'+t);
     if(el) el.style.display=t===tab?'block':'none';
   });
   document.querySelectorAll('.main-tab').forEach((b,i)=>{
-    b.classList.toggle('active',['tasa','stock','etiquetas','aprobaciones','respaldo','gestion','programacion','ventas','gastos'][i]===tab);
+    b.classList.toggle('active',['tasa','stock','etiquetas','aprobaciones','respaldo','gestion','taller','programacion','ventas','gastos'][i]===tab);
   });
   ['product-area','msg-area','historial-list','solicitudes-list','cola-list',
    'rv-list','rv-historial-list','apro-msg','cola-msg'].forEach(id=>{
@@ -2999,6 +3029,7 @@ function switchTab(tab){
   if(tab==='tasa') cargarTasas();
   if(tab==='stock') switchStock('inventario');
   if(tab==='etiquetas') switchEtiqueta('nuevo');
+  if(tab==='taller') cargarTaller();
   if(tab==='programacion'){ switchProg('comfy'); }
 }
 
@@ -6691,6 +6722,269 @@ async function cargarProduccion(){
   }catch(e){
     msg.style.background='#2a1010'; msg.style.color='var(--danger)';
     msg.innerHTML='✗ '+e.message;
+  }
+}
+
+// ── TALLER (Cortador & Estampador) ─────────────────────────────
+let tallerGrupos = {};           // { cod: {cod,nombre,correo,cedula,celular,fecha,urgente,packs:[...]} }
+let tallerSeleccionados = new Set();
+
+async function cargarTaller(){
+  const msg=document.getElementById('taller-msg');
+  const lista=document.getElementById('taller-lista');
+  tallerSeleccionados.clear();
+  tallerActualizarContador();
+  document.getElementById('taller-resultado').style.display='none';
+  document.getElementById('taller-check-todos').checked=false;
+  msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
+  msg.innerHTML='<span class="spinner">↻</span> Cargando pedidos en producción...';
+  try{
+    const data=await scriptGETjson({action:'leerProduccion'});
+    const rows=data.rows||[];
+    tallerGrupos={};
+    if(rows.length===0){
+      msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
+      msg.innerHTML='✅ No hay pedidos en producción';
+      lista.innerHTML=''; return;
+    }
+    msg.style.display='none';
+    rows.forEach(r=>{
+      const v=i=>String(r[i]||'').trim();
+      const cod=v(2)||v(1)||v(0);
+      if(!tallerGrupos[cod]) tallerGrupos[cod]={
+        cod, nombre:v(4), correo:v(5), cedula:v(6), celular:v(7),
+        fecha:v(25)||v(3), urgente:v(27), packs:[]
+      };
+      tallerGrupos[cod].packs.push({
+        modelo:v(8), manga:v(9), capucha:v(10), pack:v(11),
+        tela:v(12), vinil:v(13), piezas:v(14)
+      });
+    });
+    const codigos=Object.keys(tallerGrupos);
+    lista.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${codigos.length} pedido(s) disponibles</div>`;
+    codigos.forEach(cod=>{
+      const g=tallerGrupos[cod];
+      const resumenPacks=g.packs.map(p=>`${p.pack||'—'}× ${p.modelo||''} ${p.manga||''}`.trim()).join(' · ');
+      const card=document.createElement('label');
+      card.style.cssText=`display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid ${g.urgente?'var(--warn)':'var(--border)'};border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;`;
+      card.innerHTML=`
+        <input type="checkbox" class="taller-check-item" data-cod="${cod}" onchange="toggleTallerSel('${cod}',this.checked)" style="width:20px;height:20px;margin-top:2px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;">
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+            <span style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;">${g.nombre}</span>
+            <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;">${cod}</span>
+            ${g.urgente?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">⚡ ${g.urgente}</span>`:''}
+          </div>
+          <div style="font-size:12px;color:var(--muted);">${resumenPacks||'—'}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Cédula: ${g.cedula||'—'} · Fecha: ${g.fecha||'—'}</div>
+        </div>`;
+      lista.appendChild(card);
+    });
+  }catch(e){
+    msg.style.background='#2a1010'; msg.style.color='var(--danger)';
+    msg.innerHTML='✗ '+e.message;
+  }
+}
+
+function toggleTallerSel(cod, checked){
+  if(checked) tallerSeleccionados.add(cod); else tallerSeleccionados.delete(cod);
+  tallerActualizarContador();
+}
+
+function tallerSeleccionarTodos(checked){
+  document.querySelectorAll('.taller-check-item').forEach(chk=>{
+    chk.checked=checked;
+    const cod=chk.getAttribute('data-cod');
+    if(checked) tallerSeleccionados.add(cod); else tallerSeleccionados.delete(cod);
+  });
+  tallerActualizarContador();
+}
+
+function tallerActualizarContador(){
+  const n=tallerSeleccionados.size;
+  document.getElementById('taller-contador').textContent=n;
+  const btn=document.getElementById('taller-btn-generar');
+  btn.disabled=n===0;
+  btn.style.opacity=n===0?'.5':'1';
+}
+
+// Parsea el string "Piezas" generado por las apps de venta.
+// Formato: "Genero Talla[ CON CAPUCHA] - Nombre[ | LogoPecho: X][ | LogoEspalda: Y][ | LogoManga: Z] | Genero Talla - Nombre | ..."
+function tallerParsearPiezas(piezasStr){
+  if(!piezasStr) return [];
+  const tokens=piezasStr.split('|').map(t=>t.trim()).filter(Boolean);
+  const piezas=[];
+  tokens.forEach(tok=>{
+    const mAnno=tok.match(/^Logo(Pecho|Espalda|Manga)\s*:\s*(.+)$/i);
+    if(mAnno && piezas.length){
+      piezas[piezas.length-1]['logo'+mAnno[1].charAt(0).toUpperCase()+mAnno[1].slice(1).toLowerCase()]=mAnno[2].trim();
+      return;
+    }
+    const m=tok.match(/^(\S+)\s+(\S+)(\s+CON\s+CAPUCHA)?\s*-\s*(.+)$/i);
+    if(m){
+      piezas.push({genero:m[1].trim(), talla:m[2].trim(), capucha:!!m[3], nombre:m[4].trim()});
+    } else {
+      piezas.push({genero:'', talla:'', capucha:false, nombre:tok, raw:true});
+    }
+  });
+  return piezas;
+}
+
+function tallerDescripcionPack(p){
+  const partes=[(p.pack||'').toString().trim()+'PACK','IKOA',(p.modelo||'').toUpperCase()];
+  if(p.manga) partes.push(p.manga.toUpperCase());
+  if(p.capucha && p.capucha!=='Sin Capucha') partes.push(p.capucha.toUpperCase());
+  return partes.filter(Boolean).join(' ');
+}
+
+function tallerFechaHoy(){
+  const hoy=new Date();
+  return hoy.toLocaleDateString('es-VE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+}
+
+// ── Construcción HTML: REPORTE CORTADOR (tabla única, todos los COD) ──
+function tallerConstruirCortadorHTML(codigos){
+  const fecha=tallerFechaHoy();
+  let filas='';
+  codigos.forEach(cod=>{
+    const g=tallerGrupos[cod];
+    if(!g) return;
+    g.packs.forEach(p=>{
+      const desc=tallerDescripcionPack(p);
+      const piezas=tallerParsearPiezas(p.piezas);
+      // Agrupar por Genero+Talla (ignorando nombre) para el cortador
+      const grupos={};
+      piezas.forEach(pz=>{
+        const key=(pz.genero||'—')+'||'+(pz.talla||'—')+(pz.capucha?'||CAP':'');
+        if(!grupos[key]) grupos[key]={genero:pz.genero||'—', talla:pz.talla||'—', capucha:pz.capucha, unds:0};
+        grupos[key].unds++;
+      });
+      Object.values(grupos).forEach(gr=>{
+        filas+=`<tr>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${cod}</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${desc}</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${gr.talla.toUpperCase()}</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${gr.genero.toUpperCase()}</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${gr.unds}</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${(p.tela||'—').toUpperCase()}</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${gr.capucha?'CON CAPUCHA':''}</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;color:#b00;font-weight:700;">${g.urgente?'URGENTE':''}</td>
+        </tr>`;
+      });
+    });
+  });
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Reporte Cortador - ${fecha}</title>
+<style>table{border-collapse:collapse;}@page{margin:8mm;size:A4 landscape;}</style>
+</head>
+<body style="font-family:Arial,sans-serif;color:#1a1a1a;margin:0;padding:6px;">
+<p style="font-size:14px;font-weight:700;margin:0 0 10px 0;text-transform:capitalize;">${fecha}</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #999;">
+  <thead>
+    <tr style="background:#000;color:#fff;">
+      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">COD</th>
+      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">DESCRIPCION</th>
+      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">TALLA</th>
+      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">GENERO</th>
+      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">UNDS</th>
+      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">COLOR</th>
+      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">OBSERVACION</th>
+      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">URGENTE</th>
+    </tr>
+  </thead>
+  <tbody>${filas}</tbody>
+</table>
+</body></html>`;
+}
+
+// ── Construcción HTML: REPORTE ESTAMPADOR (una sección por COD) ──
+function tallerConstruirEstampadorHTML(codigos){
+  const fecha=tallerFechaHoy();
+  let bloques='';
+  codigos.forEach((cod,idx)=>{
+    const g=tallerGrupos[cod];
+    if(!g) return;
+    let packsHtml='';
+    g.packs.forEach(p=>{
+      const desc=tallerDescripcionPack(p);
+      const piezas=tallerParsearPiezas(p.piezas);
+      // Agrupar por Genero+Talla+Nombre para mostrar "GENERO TALLA - NOMBRE (N UNDS)"
+      const grupos={};
+      const logos={pecho:new Set(), espalda:new Set(), manga:new Set()};
+      piezas.forEach(pz=>{
+        const key=(pz.genero||'—')+'||'+(pz.talla||'—')+'||'+(pz.nombre||'')+(pz.capucha?'||CAP':'');
+        if(!grupos[key]) grupos[key]={genero:pz.genero||'—', talla:pz.talla||'—', nombre:pz.nombre||'', capucha:pz.capucha, unds:0};
+        grupos[key].unds++;
+        if(pz.logoPecho) logos.pecho.add(pz.logoPecho);
+        if(pz.logoEspalda) logos.espalda.add(pz.logoEspalda);
+        if(pz.logoManga) logos.manga.add(pz.logoManga);
+      });
+      const lineasTalla=Object.values(grupos).map(gr=>
+        `${gr.genero.toUpperCase()} ${gr.talla.toUpperCase()}${gr.capucha?' (CON CAPUCHA)':''} - ${gr.nombre.toUpperCase()} (${gr.unds} UNDS)`
+      ).join('<br>');
+      const logoLineas=[];
+      if(logos.pecho.size)   logoLineas.push('PECHO: '+[...logos.pecho].join(', ').toUpperCase());
+      if(logos.espalda.size) logoLineas.push('ESPALDA: '+[...logos.espalda].join(', ').toUpperCase()+' (EN GRANDE)');
+      if(logos.manga.size)   logoLineas.push('MANGA: '+[...logos.manga].join(', ').toUpperCase());
+      packsHtml+=`
+        <p style="font-size:11px;font-weight:700;margin:10px 0 2px 0;">${desc}</p>
+        <p style="font-size:10.5px;margin:0 0 4px 0;">TELA ${(p.tela||'—').toUpperCase()} - VINIL ${(p.vinil||'—').toUpperCase()}</p>
+        <p style="font-size:10.5px;margin:0 0 4px 0;">${lineasTalla}</p>
+        ${logoLineas.length?`<p style="font-size:10.5px;font-weight:700;margin:0 0 4px 0;">${logoLineas.join('<br>')}</p>`:''}
+      `;
+    });
+    bloques+=`
+      <div style="${idx>0?'page-break-before:always;':''}padding-top:${idx>0?'10px':'0'};">
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
+          <tr><td width="170" valign="top">${COT_LOGO_HTML}</td>
+          <td valign="top" style="padding-left:16px;">
+            <p style="font-size:13px;font-weight:700;margin:0 0 1px 0;">IKOA BRAND CORP, C.A.</p>
+            <p style="font-size:11px;font-weight:700;margin:0 0 8px 0;">RIF: J-50503171-6</p>
+          </td></tr>
+        </table>
+        <p style="font-size:11px;font-weight:700;margin:0 0 3px 0;">CLIENTE : ${(g.nombre||'').toUpperCase()} / C.I: ${g.cedula||''} / COD - ${cod}</p>
+        <p style="font-size:10.5px;margin:0 0 10px 0;">CORREO : ${g.correo||''} / CEL: ${g.celular||''} /</p>
+        <div style="border-top:1px dashed #999;margin-bottom:6px;"></div>
+        ${packsHtml}
+      </div>`;
+  });
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Reporte Estampador - ${fecha}</title>
+<style>@page{margin:10mm;size:A4;}</style>
+</head>
+<body style="font-family:Arial,sans-serif;color:#1a1a1a;margin:0;padding:6px;">
+${bloques}
+</body></html>`;
+}
+
+async function generarReportesTaller(){
+  const codigos=[...tallerSeleccionados];
+  if(!codigos.length) return;
+  const btn=document.getElementById('taller-btn-generar');
+  const resWrap=document.getElementById('taller-resultado');
+  const resLinks=document.getElementById('taller-resultado-links');
+  btn.disabled=true;
+  const txtOriginal=btn.textContent;
+  resWrap.style.display='none';
+  try{
+    btn.textContent='⏳ Generando Cortador...';
+    const htmlCortador=tallerConstruirCortadorHTML(codigos);
+    const infoCortador=await cotGenerarPDFViaAppsScript(htmlCortador, 'Taller_Cortador_'+Date.now());
+
+    btn.textContent='⏳ Generando Estampador...';
+    const htmlEstampador=tallerConstruirEstampadorHTML(codigos);
+    const infoEstampador=await cotGenerarPDFViaAppsScript(htmlEstampador, 'Taller_Estampador_'+Date.now());
+
+    resLinks.innerHTML=`
+      <a href="${infoCortador.pdf_url}" target="_blank" style="flex:1;min-width:180px;text-align:center;padding:12px;background:var(--accent);border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-weight:700;text-decoration:none;">✂️ Descargar Cortador</a>
+      <a href="${infoEstampador.pdf_url}" target="_blank" style="flex:1;min-width:180px;text-align:center;padding:12px;background:var(--accent);border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-weight:700;text-decoration:none;">🖨️ Descargar Estampador</a>
+    `;
+    resWrap.style.display='block';
+  }catch(e){
+    alert('Error generando reportes: '+e.message);
+  }finally{
+    btn.disabled=tallerSeleccionados.size===0;
+    btn.textContent=txtOriginal;
   }
 }
 
