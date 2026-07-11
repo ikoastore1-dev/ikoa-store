@@ -161,6 +161,15 @@ window.addEventListener('load',function(){
         <button onclick="seleccionarModelo('Full Comfy Protect Manga Corta','Manga Corta','COMFY06','COMFY06')" id="btn-modelo-mc" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
           <div style="font-size:18px;">👕 Full Comfy Protect Manga Corta</div>
         </button>
+        <button onclick="seleccionarModelo('Full Comfy Protect Manga Cero','Manga Cero','COMFY07','COMFY07')" id="btn-modelo-mce" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;">👕 Full Comfy Protect Manga Cero</div>
+        </button>
+        <button onclick="seleccionarModelo('Comfy Dress Manga Larga','Manga Larga Dress','COMFY04','COMFY04')" id="btn-modelo-cdml" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;">👗 Comfy Dress Manga Larga</div>
+        </button>
+        <button onclick="seleccionarModelo('Comfy Dress Manga Cero','Manga Cero Dress','COMFY03','COMFY03')" id="btn-modelo-cdmc" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;">👗 Comfy Dress Manga Cero</div>
+        </button>
       </div>
     </div>
   </div>
@@ -494,7 +503,7 @@ window.addEventListener('load',function(){
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwm6p1KqCN1l7QKhigr1V4yfIvnam3yJP-WpByIkSGXHotdzRNOe5cgMPZOmL5SVEc9fA/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyTNaMr_WDJvfgu_P8kAcaGhuUtciXlGfvJRj6rFlK5mp1k_wdN3c-mKG6rnXAfD0aN1Q/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
@@ -798,8 +807,7 @@ function renderPacksResumen(){
 function agregarOtroPack(){
   pedido.pack=0; pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
   modeloFC='Comfy Protect'; mangaFC='Manga Larga'; pedido.modelo=modeloFC; pedido.manga=mangaFC;
-  if(document.getElementById('btn-modelo-cp')){ document.getElementById('btn-modelo-cp').style.borderColor='var(--border)'; document.getElementById('btn-modelo-cp').style.background='var(--surface2)'; }
-  if(document.getElementById('btn-modelo-mc')){ document.getElementById('btn-modelo-mc').style.borderColor='var(--border)'; document.getElementById('btn-modelo-mc').style.background='var(--surface2)'; }
+  ['btn-modelo-cp','btn-modelo-mc','btn-modelo-mce','btn-modelo-cdml','btn-modelo-cdmc'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.style.borderColor='var(--border)'; el.style.background='var(--surface2)'; } });
   document.querySelectorAll('#tela-opts .opt-btn, #vinil-opts .opt-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('step45').classList.remove('active');
@@ -1186,10 +1194,21 @@ async function calcularPago(){
 
     let packBs=0, packUsd=0;
     const esMangaCorta = pk.manga === 'Manga Corta' || pk.modelo === 'Full Comfy Protect Manga Corta';
+    const esMangaCero  = pk.manga === 'Manga Cero'  || pk.modelo === 'Full Comfy Protect Manga Cero';
+    const esDressML    = pk.modelo === 'Comfy Dress Manga Larga';
+    const esDressMC    = pk.modelo === 'Comfy Dress Manga Cero';
 
     if(esMangaCorta){
-      // Manga Corta → precio COMFY06 × cantidad de franelas
       const pp=window._packPrecios&&window._packPrecios['COMFY06'];
+      if(pp){ packBs=(parseFloat(pp.bs)||0)*franelas; packUsd=(parseFloat(pp.usd)||0)*franelas; }
+    } else if(esMangaCero){
+      const pp=window._packPrecios&&window._packPrecios['COMFY07'];
+      if(pp){ packBs=(parseFloat(pp.bs)||0)*franelas; packUsd=(parseFloat(pp.usd)||0)*franelas; }
+    } else if(esDressML){
+      const pp=window._packPrecios&&window._packPrecios['COMFY04'];
+      if(pp){ packBs=(parseFloat(pp.bs)||0)*franelas; packUsd=(parseFloat(pp.usd)||0)*franelas; }
+    } else if(esDressMC){
+      const pp=window._packPrecios&&window._packPrecios['COMFY03'];
       if(pp){ packBs=(parseFloat(pp.bs)||0)*franelas; packUsd=(parseFloat(pp.usd)||0)*franelas; }
     } else if(franelas===1){
       // Prenda individual Manga Larga → usar COMFY01

@@ -207,6 +207,12 @@ window.addEventListener('load',function(){
         <button onclick="seleccionarModeloLicra('Licra Protect Manga Corta','Manga Corta','LICRA06')" id="btn-modelo-lmc" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
           <div style="font-size:18px;">🌊 Licra Protect Manga Corta</div>
         </button>
+        <button onclick="seleccionarModeloLicra('Licra Dress Manga Larga','Manga Larga','LICRA04')" id="btn-modelo-ldml" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;">👗 Licra Dress Manga Larga</div>
+        </button>
+        <button onclick="seleccionarModeloLicra('Licra Dress Manga Cero','Manga Cero','LICRA03')" id="btn-modelo-ldmc" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;">👗 Licra Dress Manga Cero</div>
+        </button>
         <button onclick="seleccionarModeloLicra('Toalla','Toalla','TOALLA.01')" id="btn-modelo-toalla" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
           <div style="font-size:18px;">🏖️ Toalla Microfibra</div>
         </button>
@@ -500,7 +506,7 @@ window.addEventListener('load',function(){
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwm6p1KqCN1l7QKhigr1V4yfIvnam3yJP-WpByIkSGXHotdzRNOe5cgMPZOmL5SVEc9fA/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyTNaMr_WDJvfgu_P8kAcaGhuUtciXlGfvJRj6rFlK5mp1k_wdN3c-mKG6rnXAfD0aN1Q/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
@@ -770,7 +776,7 @@ function seleccionarModeloLicra(modelo, manga, cod){
   modeloLicra = modelo; mangaLicra = manga; codPrecioLicra = cod;
   pedido.modelo = modelo; pedido.manga = manga;
   // Actualizar botones
-  ['btn-modelo-ll','btn-modelo-lmc','btn-modelo-toalla'].forEach(id=>{
+  ['btn-modelo-ll','btn-modelo-lmc','btn-modelo-ldml','btn-modelo-ldmc','btn-modelo-toalla'].forEach(id=>{
     const el = document.getElementById(id);
     if(el){ el.style.borderColor='var(--border)'; el.style.background='var(--surface2)'; }
   });
@@ -858,7 +864,7 @@ function agregarOtroPack(){
   pedido.pack=0; pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
   modeloLicra='Licra Protect Manga Larga'; mangaLicra='Manga Larga'; codPrecioLicra='LICRA01'; tipoProductoLicra='licra';
   pedido.modelo=modeloLicra; pedido.manga=mangaLicra;
-  ['btn-modelo-ll','btn-modelo-lmc','btn-modelo-toalla'].forEach(id=>{
+  ['btn-modelo-ll','btn-modelo-lmc','btn-modelo-ldml','btn-modelo-ldmc','btn-modelo-toalla'].forEach(id=>{
     const el=document.getElementById(id);
     if(el){ el.style.borderColor='var(--border)'; el.style.background='var(--surface2)'; }
   });
@@ -1236,10 +1242,17 @@ async function calcularPago(){
 
     let packBs=0, packUsd=0;
     const esMangaCorta = pk.manga === 'Manga Corta' || pk.modelo === 'Licra Protect Manga Corta';
+    const esDressML = pk.modelo === 'Licra Dress Manga Larga';
+    const esDressMC = pk.modelo === 'Licra Dress Manga Cero';
 
     if(esMangaCorta){
-      // Manga Corta → precio LICRA06 × cantidad
       const pp=window._packPrecios&&window._packPrecios['LICRA06'];
+      if(pp){ packBs=(parseFloat(pp.bs)||0)*franelas; packUsd=(parseFloat(pp.usd)||0)*franelas; }
+    } else if(esDressML){
+      const pp=window._packPrecios&&window._packPrecios['LICRA04'];
+      if(pp){ packBs=(parseFloat(pp.bs)||0)*franelas; packUsd=(parseFloat(pp.usd)||0)*franelas; }
+    } else if(esDressMC){
+      const pp=window._packPrecios&&window._packPrecios['LICRA03'];
       if(pp){ packBs=(parseFloat(pp.bs)||0)*franelas; packUsd=(parseFloat(pp.usd)||0)*franelas; }
     } else if(franelas===1){
       // Prenda individual → usar LICRA01
