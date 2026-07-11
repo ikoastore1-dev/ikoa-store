@@ -149,9 +149,27 @@ window.addEventListener('load',function(){
     <div class="prog-dot" id="pd7"></div>
   </div>
 
+  <!-- STEP 0: SELECCIÓN DE MODELO -->
+  <div class="step" id="step1">
+    <div class="step-header"><div class="step-num">Paso 2 de 7</div><div class="step-title">Selecciona tu modelo</div></div>
+    <div class="card">
+      <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">¿Qué modelo deseas ordenar?</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <button onclick="seleccionarModelo('Comfy Protect','Manga Larga','COMFY01','2PACK.C.01.40OFF')" id="btn-modelo-cp" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;margin-bottom:4px;">🛡️ Comfy Protect</div>
+          <div style="font-size:13px;font-weight:400;color:var(--muted);">Manga Larga · Packs de 1 a 7 franelas</div>
+        </button>
+        <button onclick="seleccionarModelo('Comfy Manga Corta','Manga Corta','COMFY06','COMFY06')" id="btn-modelo-mc" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;margin-bottom:4px;">👕 Comfy Manga Corta</div>
+          <div style="font-size:13px;font-weight:400;color:var(--muted);">Manga Corta · 1 prenda</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- STEP 1: DATOS PERSONALES -->
-  <div class="step active" id="step1">
-    <div class="step-header"><div class="step-num">Paso 1 de 6</div><div class="step-title">Tus datos personales</div></div>
+  <div class="step active" id="step0">
+    <div class="step-header"><div class="step-num">Paso 1 de 7</div><div class="step-title">Tus datos personales</div></div>
     <div class="card">
       <div class="field-group">
         <div class="field-label">Nombre y Apellido *</div>
@@ -192,12 +210,12 @@ window.addEventListener('load',function(){
         <div class="err-msg" id="err-celular">Ingresa un número válido</div>
       </div>
     </div>
-    <div class="nav-row"><button class="btn-next" onclick="intentarPaso2()">Siguiente →</button></div>
+    <div class="nav-row"><button class="btn-next" onclick="intentarPaso1()">Siguiente →</button></div>
   </div>
 
   <!-- STEP 2: PACK -->
   <div class="step" id="step2">
-    <div class="step-header"><div class="step-num">Paso 2 de 6</div><div class="step-title">¿Cuántas franelas deseas?</div></div>
+    <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title">¿Cuántas franelas deseas?</div></div>
     <div class="card">
       <div class="card-title">Selecciona tu pack</div>
       <div class="card-note">Cada pack incluye franelas del mismo color de tela y vinil.</div>
@@ -231,8 +249,8 @@ window.addEventListener('load',function(){
       <!-- MODELO FIJO - solo informativo -->
       <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center;">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Modelo seleccionado</div>
-        <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">COMFY PROTECT</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:2px;">Manga Larga</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;color:var(--accent);" id="modelo-info-fc">COMFY PROTECT</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px;" id="manga-info-fc">Manga Larga</div>
       </div>
       <!-- CAPUCHA -->
       <div class="card-title">¿Con o sin capucha?</div>
@@ -254,14 +272,14 @@ window.addEventListener('load',function(){
       </div>
     </div>
     <div class="nav-row">
-      <button class="btn-back" onclick="goStep(2)">← Atrás</button>
+      <button class="btn-back" onclick="mangaFC==='Manga Corta'?goStep(1):goStep(2)">← Atrás</button>
       <button class="btn-next" onclick="intentarPaso4()">Siguiente →</button>
     </div>
   </div>
 
   <!-- STEP 4: PIEZAS -->
   <div class="step" id="step4">
-    <div class="step-header"><div class="step-num">Paso 4 de 6</div><div class="step-title">Tallas y nombres</div></div>
+    <div class="step-header"><div class="step-num">Paso 5 de 7</div><div class="step-title">Tallas y nombres</div></div>
     <div class="nota" style="margin-bottom:14px;">📌 Nombre en <b>manga derecha</b>, sin iniciales ni logos.<br>Completa las <b id="pack-total-lbl">—</b> franelas de tu pack.<br>Usa el contador <b>+/−</b> para repetir franelas iguales.</div>
     <div id="franelas-progreso" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;color:var(--warn);"></div>
     <div class="alerta-min" id="alerta-min"></div>
@@ -274,7 +292,7 @@ window.addEventListener('load',function(){
 
   <!-- STEP 4.5: ¿OTRO PACK? -->
   <div class="step" id="step45">
-    <div class="step-header"><div class="step-num">Paso 4 de 6</div><div class="step-title">¿Deseas agregar otro pack?</div></div>
+    <div class="step-header"><div class="step-num">Paso 5 de 7</div><div class="step-title">¿Deseas agregar otro pack?</div></div>
     <div class="card">
       <div style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Puedes agregar otro pack con diferente modelo, color de tela o vinil. Todos los packs van en el mismo pedido.</div>
       <!-- RESUMEN PACKS AGREGADOS -->
@@ -288,7 +306,7 @@ window.addEventListener('load',function(){
 
   <!-- STEP 5: ENTREGA -->
   <div class="step" id="step5">
-    <div class="step-header"><div class="step-num">Paso 5 de 6</div><div class="step-title">Datos de entrega</div></div>
+    <div class="step-header"><div class="step-num">Paso 6 de 7</div><div class="step-title">Datos de entrega</div></div>
     <div class="card">
       <div class="card-title">Tipo de entrega</div>
       <div class="card-note">📦 Envío cobro en destino por MRW, TEALCA y ZOOM y delivery.</div>
@@ -482,7 +500,39 @@ const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyIWetn0yZdhsrbQfxBU36
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
-let currentStep=1;
+let modeloFC = 'Comfy Protect';
+let mangaFC = 'Manga Larga';
+let codPrecioFC = 'COMFY01';
+
+function seleccionarModelo(modelo, manga, cod, codPack){
+  modeloFC = modelo;
+  mangaFC = manga;
+  codPrecioFC = cod;
+  pedido.modelo = modelo;
+  pedido.manga = manga;
+  document.getElementById('btn-modelo-cp').style.borderColor = modelo==='Comfy Protect' ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('btn-modelo-mc').style.borderColor = manga==='Manga Corta' ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('btn-modelo-cp').style.background = modelo==='Comfy Protect' ? '#0a2a1a' : 'var(--surface2)';
+  document.getElementById('btn-modelo-mc').style.background = manga==='Manga Corta' ? '#0a2a1a' : 'var(--surface2)';
+  document.getElementById('step1').classList.remove('active');
+  if(manga === 'Manga Corta'){
+    // Manga Corta → ir al Paso 4 (tela/vinil con pack seleccionable)
+    currentStep = 3;
+    document.getElementById('step3').classList.add('active');
+    const modeloInfoEl = document.getElementById('modelo-info-fc');
+  const mangaInfoEl = document.getElementById('manga-info-fc');
+  if(modeloInfoEl) modeloInfoEl.textContent = modelo.toUpperCase();
+  if(mangaInfoEl) mangaInfoEl.textContent = manga;
+  } else {
+    // Manga Larga → ir al Paso 3 (pack)
+    currentStep = 2;
+    document.getElementById('step2').classList.add('active');
+  }
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+let currentStep=0;
 let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:0,modelo:'Comfy Protect',manga:'Manga Larga',capucha:'',tela:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:'',packs:[],pagoMoneda:'',pagoRef:'',pagoMonto:0};
 // packs = [{pack, modelo, manga, capucha, tela, vinil, piezas:[]}]
 let piezaCount=0;
@@ -667,14 +717,25 @@ function goStep(n){
   if(!validateStep(currentStep))return;
   const curEl=document.getElementById('step'+(currentStep===45?'45':currentStep));
   if(curEl) curEl.classList.remove('active');
+  // Si Manga Corta y se intenta ir al step2 (pack) → saltar a step3
+  if(n===2 && mangaFC==='Manga Corta'){
+    currentStep=3;
+    document.getElementById('step3').classList.add('active');
+    updateProgress();
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
   currentStep=n;
   const nEl=document.getElementById('step'+(n===45?'45':n));
   if(nEl) nEl.classList.add('active');
   updateProgress();
   if(n===4) inicializarPiezas();
   if(n===3){
-    // Asignar valores fijos ANTES de avanzar
-    pedido.modelo='Comfy Protect'; pedido.manga='Manga Larga'; // capucha se selecciona manualmente
+    pedido.modelo=modeloFC; pedido.manga=mangaFC;
+    const modeloInfoEl = document.getElementById('modelo-info-fc');
+    const mangaInfoEl = document.getElementById('manga-info-fc');
+    if(modeloInfoEl) modeloInfoEl.textContent = modeloFC.toUpperCase();
+    if(mangaInfoEl) mangaInfoEl.textContent = mangaFC;
   }
   if(n===5){
     if(pedido.packs.length===0){
@@ -686,8 +747,8 @@ function goStep(n){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// Paso 1 → 2: con confirmación de datos
-async function intentarPaso2(){
+// Paso 0 → 1: validar datos personales y avanzar
+async function intentarPaso1(){
   clearErrs();
   let ok=true;
   if(!document.getElementById('p-nombre').value.trim()){ showErr('err-nombre',true); document.getElementById('p-nombre').classList.add('error'); ok=false; }
@@ -704,10 +765,10 @@ async function intentarPaso2(){
   // Modal confirmación
   const confirmado=await mostrarModalDatos(pedido.cedula, pedido.celular, pedido.correo);
   if(!confirmado) return; // vuelve al paso 1 sin avanzar
-  // Avanzar
-  document.getElementById('step1').classList.remove('active');
-  currentStep=2;
-  document.getElementById('step2').classList.add('active');
+  // Avanzar al step1 (selección de modelo)
+  document.getElementById('step0').classList.remove('active');
+  currentStep=1;
+  document.getElementById('step1').classList.add('active');
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -746,14 +807,15 @@ function renderPacksResumen(){
 }
 
 function agregarOtroPack(){
-  // Resetear campos de modelo/pack para nuevo pack
-  pedido.pack=0; pedido.modelo='Comfy Protect'; pedido.manga='Manga Larga'; // capucha se selecciona manualmente  pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
-  // Limpiar selecciones visuales
+  pedido.pack=0; pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
+  modeloFC='Comfy Protect'; mangaFC='Manga Larga'; pedido.modelo=modeloFC; pedido.manga=mangaFC;
+  if(document.getElementById('btn-modelo-cp')){ document.getElementById('btn-modelo-cp').style.borderColor='var(--border)'; document.getElementById('btn-modelo-cp').style.background='var(--surface2)'; }
+  if(document.getElementById('btn-modelo-mc')){ document.getElementById('btn-modelo-mc').style.borderColor='var(--border)'; document.getElementById('btn-modelo-mc').style.background='var(--surface2)'; }
   document.querySelectorAll('#tela-opts .opt-btn, #vinil-opts .opt-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('step45').classList.remove('active');
-  currentStep=2;
-  document.getElementById('step2').classList.add('active');
+  currentStep=0;
+  document.getElementById('step0').classList.add('active');
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -1082,8 +1144,8 @@ async function calcularPago(){
     let packBs=0, packUsd=0;
 
     if(franelas===1){
-      // Prenda individual → usar COMFY01, sin recarga talla plus
-      const pp=window._packPrecios&&window._packPrecios['COMFY01'];
+      // Prenda individual → usar codPrecioFC (COMFY01 o COMFY06), sin recarga talla plus
+      const pp=window._packPrecios&&window._packPrecios[codPrecioFC];
       if(pp){ packBs=parseFloat(pp.bs)||0; packUsd=parseFloat(pp.usd)||0; }
     } else {
       const combos=descomponerPacks(franelas);
