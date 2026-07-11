@@ -149,9 +149,25 @@ window.addEventListener('load',function(){
     <div class="prog-dot" id="pd7"></div>
   </div>
 
+  <!-- STEP 0: SELECCIÓN DE MODELO -->
+  <div class="step active" id="step0">
+    <div class="step-header"><div class="step-num">Paso 1 de 7</div><div class="step-title">Selecciona tu modelo</div></div>
+    <div class="card">
+      <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">¿Qué modelo deseas ordenar?</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <button onclick="seleccionarModeloLicra('Licra Protect Manga Larga','Manga Larga','LICRA01')" id="btn-modelo-ll" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;">🌊 Licra Protect Manga Larga</div>
+        </button>
+        <button onclick="seleccionarModeloLicra('Licra Protect Manga Corta','Manga Corta','LICRA06')" id="btn-modelo-lmc" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;">🌊 Licra Protect Manga Corta</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- STEP 1: DATOS PERSONALES -->
-  <div class="step active" id="step1">
-    <div class="step-header"><div class="step-num">Paso 1 de 6</div><div class="step-title">Tus datos personales</div></div>
+  <div class="step" id="step1">
+    <div class="step-header"><div class="step-num">Paso 2 de 7</div><div class="step-title">Tus datos personales</div></div>
     <div class="card">
       <div class="field-group">
         <div class="field-label">Nombre y Apellido *</div>
@@ -192,12 +208,12 @@ window.addEventListener('load',function(){
         <div class="err-msg" id="err-celular">Ingresa un número válido</div>
       </div>
     </div>
-    <div class="nav-row"><button class="btn-next" onclick="intentarPaso2()">Siguiente →</button></div>
+    <div class="nav-row"><button class="btn-next" onclick="intentarPaso1Licra()">Siguiente →</button></div>
   </div>
 
   <!-- STEP 2: PRODUCTO Y PACK -->
   <div class="step" id="step2">
-    <div class="step-header"><div class="step-num">Paso 2 de 6</div><div class="step-title">Selecciona tu producto</div></div>
+    <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title">Selecciona tu producto</div></div>
     <div class="card">
       <div class="card-title">¿Qué deseas ordenar?</div>
       <div class="option-grid cols1" style="gap:10px;">
@@ -275,7 +291,7 @@ window.addEventListener('load',function(){
 
   <!-- STEP 4: PIEZAS -->
   <div class="step" id="step4">
-    <div class="step-header"><div class="step-num">Paso 4 de 6</div><div class="step-title">Tallas y nombres</div></div>
+    <div class="step-header"><div class="step-num">Paso 5 de 7</div><div class="step-title">Tallas y nombres</div></div>
     <div class="nota" style="margin-bottom:14px;">📌 Nombre en <b>manga derecha</b>, sin iniciales ni logos.<br>Completa las <b id="pack-total-lbl">—</b> franelas de tu pack.<br>Usa el contador <b>+/−</b> para repetir franelas iguales.</div>
     <div id="franelas-progreso" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;color:var(--warn);"></div>
     <div class="alerta-min" id="alerta-min"></div>
@@ -288,7 +304,7 @@ window.addEventListener('load',function(){
 
   <!-- STEP 4.5: ¿OTRO PACK? -->
   <div class="step" id="step45">
-    <div class="step-header"><div class="step-num">Paso 4 de 6</div><div class="step-title">¿Deseas agregar otro pack?</div></div>
+    <div class="step-header"><div class="step-num">Paso 5 de 7</div><div class="step-title">¿Deseas agregar otro pack?</div></div>
     <div class="card">
       <div style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Puedes agregar otro pack con diferente modelo, color de tela o vinil. Todos los packs van en el mismo pedido.</div>
       <!-- RESUMEN PACKS AGREGADOS -->
@@ -302,7 +318,7 @@ window.addEventListener('load',function(){
 
   <!-- STEP 5: ENTREGA -->
   <div class="step" id="step5">
-    <div class="step-header"><div class="step-num">Paso 5 de 6</div><div class="step-title">Datos de entrega</div></div>
+    <div class="step-header"><div class="step-num">Paso 6 de 7</div><div class="step-title">Datos de entrega</div></div>
     <div class="card">
       <div class="card-title">Tipo de entrega</div>
       <div class="card-note">📦 Envío cobro en destino por MRW, TEALCA y ZOOM y delivery.</div>
@@ -492,11 +508,14 @@ window.addEventListener('load',function(){
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyIWetn0yZdhsrbQfxBU36SFeHq3E-D20PfPauYNwlWWLli0VHuiniHK6LSgr43QHxIjA/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwm6p1KqCN1l7QKhigr1V4yfIvnam3yJP-WpByIkSGXHotdzRNOe5cgMPZOmL5SVEc9fA/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
-let currentStep=1;
+let modeloLicra = "Licra Protect Manga Larga";
+let mangaLicra = "Manga Larga";
+let codPrecioLicra = "LICRA01";
+let currentStep=0;
 let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:0,modelo:'Licra Protect',manga:'Manga Larga',capucha:'',tela:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:'',packs:[],pagoMoneda:'',pagoRef:'',pagoMonto:0};
 let tipoProductoLicra='licra'; // 'licra' o 'toalla'
 
@@ -739,8 +758,11 @@ function goStep(n){
   updateProgress();
   if(n===4) inicializarPiezas();
   if(n===3){
-    // Asignar valores fijos ANTES de avanzar
-    pedido.modelo='Licra Protect'; pedido.manga='Manga Larga'; // capucha se selecciona manualmente
+    pedido.modelo=modeloLicra; pedido.manga=mangaLicra;
+    const modeloInfoEl = document.getElementById('modelo-display');
+    const mangaInfoEl = document.getElementById('modelo-sub');
+    if(modeloInfoEl) modeloInfoEl.textContent = modeloLicra.toUpperCase();
+    if(mangaInfoEl) mangaInfoEl.textContent = mangaLicra;
   }
   if(n===5){
     if(pedido.packs.length===0){
@@ -752,8 +774,25 @@ function goStep(n){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// Paso 1 → 2: con confirmación de datos
-async function intentarPaso2(){
+function seleccionarModeloLicra(modelo, manga, cod){
+  modeloLicra = modelo; mangaLicra = manga; codPrecioLicra = cod;
+  pedido.modelo = modelo; pedido.manga = manga;
+  document.getElementById('btn-modelo-ll').style.borderColor = manga==='Manga Larga' ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('btn-modelo-lmc').style.borderColor = manga==='Manga Corta' ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('btn-modelo-ll').style.background = manga==='Manga Larga' ? '#0a2a1a' : 'var(--surface2)';
+  document.getElementById('btn-modelo-lmc').style.background = manga==='Manga Corta' ? '#0a2a1a' : 'var(--surface2)';
+  const modeloInfoEl = document.getElementById('modelo-display') || document.getElementById('modelo-info-licra');
+  const mangaInfoEl = document.getElementById('modelo-sub') || document.getElementById('manga-info-licra');
+  if(modeloInfoEl) modeloInfoEl.textContent = modelo.toUpperCase();
+  if(mangaInfoEl) mangaInfoEl.textContent = manga;
+  document.getElementById('step1').classList.remove('active');
+  currentStep=2;
+  document.getElementById('step2').classList.add('active');
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+async function intentarPaso1Licra(){
   clearErrs();
   let ok=true;
   if(!document.getElementById('p-nombre').value.trim()){ showErr('err-nombre',true); document.getElementById('p-nombre').classList.add('error'); ok=false; }
@@ -762,18 +801,15 @@ async function intentarPaso2(){
   if(!document.getElementById('p-cedula-num').value.trim()){ showErr('err-cedula',true); ok=false; }
   if(!isValidCel(document.getElementById('p-celular-num').value)){ showErr('err-celular',true); ok=false; }
   if(!ok)return;
-  // Guardar datos
   pedido.nombre=document.getElementById('p-nombre').value.trim();
   pedido.correo=correo;
   pedido.cedula=document.getElementById('p-cedula-tipo').value+document.getElementById('p-cedula-num').value.trim();
   pedido.celular=document.getElementById('p-cel-pais').value+document.getElementById('p-celular-num').value.trim();
-  // Modal confirmación
   const confirmado=await mostrarModalDatos(pedido.cedula, pedido.celular, pedido.correo);
-  if(!confirmado) return; // vuelve al paso 1 sin avanzar
-  // Avanzar
-  document.getElementById('step1').classList.remove('active');
-  currentStep=2;
-  document.getElementById('step2').classList.add('active');
+  if(!confirmado) return;
+  document.getElementById('step0').classList.remove('active');
+  currentStep=1;
+  document.getElementById('step1').classList.add('active');
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -812,14 +848,16 @@ function renderPacksResumen(){
 }
 
 function agregarOtroPack(){
-  // Resetear campos de modelo/pack para nuevo pack
-  pedido.pack=0; pedido.modelo='Licra Protect'; pedido.manga='Manga Larga'; // capucha se selecciona manualmente  pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
-  // Limpiar selecciones visuales
+  pedido.pack=0; pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
+  modeloLicra='Licra Protect Manga Larga'; mangaLicra='Manga Larga'; codPrecioLicra='LICRA01';
+  pedido.modelo=modeloLicra; pedido.manga=mangaLicra;
+  if(document.getElementById('btn-modelo-ll')){ document.getElementById('btn-modelo-ll').style.borderColor='var(--border)'; document.getElementById('btn-modelo-ll').style.background='var(--surface2)'; }
+  if(document.getElementById('btn-modelo-lmc')){ document.getElementById('btn-modelo-lmc').style.borderColor='var(--border)'; document.getElementById('btn-modelo-lmc').style.background='var(--surface2)'; }
   document.querySelectorAll('#tela-opts .opt-btn, #vinil-opts .opt-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('step45').classList.remove('active');
-  currentStep=2;
-  document.getElementById('step2').classList.add('active');
+  currentStep=0;
+  document.getElementById('step0').classList.add('active');
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -985,6 +1023,32 @@ function addPieza(copiarDe=null){
       <input type="checkbox" id="pz-capucha-${id}" ${pedido.capucha==='Con Capucha'?' checked':''} style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
       <label for="pz-capucha-${id}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">Con capucha</label>
     </div>
+    <!-- LOGOS -->
+    <div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:6px;">
+      <div style="font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">🎨 Logos adicionales</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Nombre en manga incluido sin cargo. Enviar imagen del logo por WhatsApp o correo.</div>
+      <div style="margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="pz-logo-pecho-${id}" onchange="toggleLogo('pecho',${id})" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
+          <label for="pz-logo-pecho-${id}" style="font-size:13px;color:var(--text);cursor:pointer;flex:1;">Logo Pecho <span style="color:var(--accent);font-size:11px;">(Insignia) +costo adicional</span></label>
+        </div>
+        <input class="field-input" type="text" id="pz-logo-pecho-txt-${id}" placeholder="Nombre del logo ej: IKOA, BeKate..." style="display:none;margin-top:6px;" oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <div style="margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="pz-logo-espalda-${id}" onchange="toggleLogo('espalda',${id})" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
+          <label for="pz-logo-espalda-${id}" style="font-size:13px;color:var(--text);cursor:pointer;flex:1;">Logo Espalda <span style="color:var(--accent);font-size:11px;">+costo adicional</span></label>
+        </div>
+        <input class="field-input" type="text" id="pz-logo-espalda-txt-${id}" placeholder="Nombre del logo ej: IKOA, BeKate..." style="display:none;margin-top:6px;" oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="pz-logo-manga-${id}" onchange="toggleLogo('manga',${id})" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
+          <label for="pz-logo-manga-${id}" style="font-size:13px;color:var(--text);cursor:pointer;flex:1;">Logo Manga <span style="color:var(--accent);font-size:11px;">+costo adicional</span></label>
+        </div>
+        <input class="field-input" type="text" id="pz-logo-manga-txt-${id}" placeholder="Nombre del logo ej: IKOA, BeKate..." style="display:none;margin-top:6px;" oninput="this.value=this.value.toUpperCase()">
+      </div>
+    </div>
     <div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 10px;background:var(--surface2);border-radius:8px;">
       <div style="font-size:12px;color:var(--muted);flex:1;">Repetir esta franela:</div>
       <button onclick="cambiarRepeticion(${id},-1)" style="width:32px;height:32px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
@@ -1070,6 +1134,12 @@ function updateTallas(id,seleccionar=null){
   tallaSelect.innerHTML='<option value="">Seleccionar</option>'+tallas.map(t=>`<option value="${t}"${t===seleccionar?' selected':''}>${t}</option>`).join('');
 }
 
+function toggleLogo(tipo, id){
+  const check = document.getElementById(`pz-logo-${tipo}-${id}`);
+  const input = document.getElementById(`pz-logo-${tipo}-txt-${id}`);
+  if(check && input){ input.style.display = check.checked ? 'block' : 'none'; if(!check.checked) input.value = ''; }
+}
+
 function toggleNombrePrenda(id){
   const check=document.getElementById('pz-sinombre-'+id);
   const input=document.getElementById('pz-nombre-'+id);
@@ -1095,9 +1165,11 @@ function savePiezas(){
     const n=sinNombre?'SIN NOMBRE EN MANGA':(document.getElementById('pz-nombre-'+id)?.value.trim()||'');
     const conCapucha=document.getElementById('pz-capucha-'+id)?.checked||false;
     const rep=parseInt(document.getElementById('rep-count-'+id)?.textContent||'1');
-    // Expandir repeticiones
+    const logoPecho   = document.getElementById('pz-logo-pecho-'+id)?.checked   ? (document.getElementById('pz-logo-pecho-txt-'+id)?.value.trim()||'SI')   : '';
+    const logoEspalda = document.getElementById('pz-logo-espalda-'+id)?.checked ? (document.getElementById('pz-logo-espalda-txt-'+id)?.value.trim()||'SI') : '';
+    const logoManga   = document.getElementById('pz-logo-manga-'+id)?.checked   ? (document.getElementById('pz-logo-manga-txt-'+id)?.value.trim()||'SI')   : '';
     for(let i=0;i<rep;i++){
-      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre,conCapucha});
+      pedido.piezas.push({genero:g, talla:t, nombre:n, sinNombre, conCapucha, logoPecho, logoEspalda, logoManga});
     }
   });
 }
@@ -1154,8 +1226,13 @@ async function calcularPago(){
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
 
     let packBs=0, packUsd=0;
+    const esMangaCorta = pk.manga === 'Manga Corta' || pk.modelo === 'Licra Protect Manga Corta';
 
-    if(franelas===1){
+    if(esMangaCorta){
+      // Manga Corta → precio LICRA06 × cantidad
+      const pp=window._packPrecios&&window._packPrecios['LICRA06'];
+      if(pp){ packBs=(parseFloat(pp.bs)||0)*franelas; packUsd=(parseFloat(pp.usd)||0)*franelas; }
+    } else if(franelas===1){
       // Prenda individual → usar LICRA01
       const pp=window._packPrecios&&window._packPrecios['LICRA01'];
       if(pp){ packBs=parseFloat(pp.bs)||0; packUsd=parseFloat(pp.usd)||0; }
@@ -1277,7 +1354,7 @@ function copiarDato(texto, btnId){
 function buildResumen(){
   const retiraText=pedido.mismoEnvio?`${pedido.nombre} · ${pedido.cedula} · ${pedido.celular}`:`${pedido.eNombre} · ${pedido.eCi} · ${pedido.eCel}`;
   const packsHtml=pedido.packs.map((pk,i)=>{
-    const piezasHtml=pk.piezas.map((p,j)=>`<b>Franela ${j+1}:</b> ${p.genero} Talla ${p.talla} — ${p.nombre}`).join('<br>');
+    const piezasHtml=pk.piezas.map((p,j)=>`<b>Franela ${j+1}:</b> ${p.genero} Talla ${p.talla} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('<br>');
     return `<div class="resumen-label">📦 Pack ${i+1} · ${pk.pack}PACK</div>
       <div class="resumen-block"><b>Modelo:</b> ${pk.modelo} ${pk.manga} ${pk.capucha}<br><b>Tela:</b> ${pk.tela} · <b>Vinil:</b> ${pk.vinil}</div>
       <div class="resumen-label">📏 Franelas (${pk.piezas.length})</div>
@@ -1309,7 +1386,7 @@ function buildMensaje(){
     packsText=`🏖️ *TOALLA*\nCodigo: TOALLA.01\nColor: ${pedido.tela}`;
   } else {
     packsText=pedido.packs.map((pk,i)=>{
-      const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conCapucha?' 🧢':''} — ${p.nombre}`).join('\n');
+      const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conCapucha?' 🧢':''} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('\n');
       const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
       return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: LICRA PROTECT ${pk.manga}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
     }).join('\n\n');
@@ -1345,7 +1422,7 @@ async function guardarEnSheets(){
   let codigoPrincipal='';
   for(let i=0; i<pedido.packs.length; i++){
     const pk=pedido.packs[i];
-    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''} - ${p.nombre}`).join(' | ');
+    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''} - ${p.nombre}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}`).join(' | ');
     try{
       const res=await scriptGETjson({
         action:'addSolicitud',

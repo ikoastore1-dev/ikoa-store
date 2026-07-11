@@ -494,7 +494,7 @@ window.addEventListener('load',function(){
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyIWetn0yZdhsrbQfxBU36SFeHq3E-D20PfPauYNwlWWLli0VHuiniHK6LSgr43QHxIjA/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwm6p1KqCN1l7QKhigr1V4yfIvnam3yJP-WpByIkSGXHotdzRNOe5cgMPZOmL5SVEc9fA/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
@@ -965,6 +965,35 @@ function addPieza(copiarDe=null){
       <input type="checkbox" id="pz-capucha-${id}" ${pedido.capucha==='Con Capucha'?' checked':''} style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
       <label for="pz-capucha-${id}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">Con capucha</label>
     </div>
+    <!-- LOGOS -->
+    <div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:6px;">
+      <div style="font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">🎨 Logos adicionales</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Nombre en manga incluido sin cargo. Enviar imagen del logo por WhatsApp o correo.</div>
+      <!-- Logo Pecho -->
+      <div style="margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="pz-logo-pecho-${id}" onchange="toggleLogo('pecho',${id})" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
+          <label for="pz-logo-pecho-${id}" style="font-size:13px;color:var(--text);cursor:pointer;flex:1;">Logo Pecho <span style="color:var(--accent);font-size:11px;">(Insignia) +costo adicional</span></label>
+        </div>
+        <input class="field-input" type="text" id="pz-logo-pecho-txt-${id}" placeholder="Nombre del logo ej: IKOA, BeKate..." style="display:none;margin-top:6px;" oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <!-- Logo Espalda -->
+      <div style="margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="pz-logo-espalda-${id}" onchange="toggleLogo('espalda',${id})" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
+          <label for="pz-logo-espalda-${id}" style="font-size:13px;color:var(--text);cursor:pointer;flex:1;">Logo Espalda <span style="color:var(--accent);font-size:11px;">+costo adicional</span></label>
+        </div>
+        <input class="field-input" type="text" id="pz-logo-espalda-txt-${id}" placeholder="Nombre del logo ej: IKOA, BeKate..." style="display:none;margin-top:6px;" oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <!-- Logo Manga -->
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="pz-logo-manga-${id}" onchange="toggleLogo('manga',${id})" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
+          <label for="pz-logo-manga-${id}" style="font-size:13px;color:var(--text);cursor:pointer;flex:1;">Logo Manga <span style="color:var(--accent);font-size:11px;">+costo adicional</span></label>
+        </div>
+        <input class="field-input" type="text" id="pz-logo-manga-txt-${id}" placeholder="Nombre del logo ej: IKOA, BeKate..." style="display:none;margin-top:6px;" oninput="this.value=this.value.toUpperCase()">
+      </div>
+    </div>
     <div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 10px;background:var(--surface2);border-radius:8px;">
       <div style="font-size:12px;color:var(--muted);flex:1;">Repetir esta franela:</div>
       <button onclick="cambiarRepeticion(${id},-1)" style="width:32px;height:32px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
@@ -1050,6 +1079,15 @@ function updateTallas(id,seleccionar=null){
   tallaSelect.innerHTML='<option value="">Seleccionar</option>'+tallas.map(t=>`<option value="${t}"${t===seleccionar?' selected':''}>${t}</option>`).join('');
 }
 
+function toggleLogo(tipo, id){
+  const check = document.getElementById(`pz-logo-${tipo}-${id}`);
+  const input = document.getElementById(`pz-logo-${tipo}-txt-${id}`);
+  if(check && input){
+    input.style.display = check.checked ? 'block' : 'none';
+    if(!check.checked) input.value = '';
+  }
+}
+
 function toggleNombrePrenda(id){
   const check=document.getElementById('pz-sinombre-'+id);
   const input=document.getElementById('pz-nombre-'+id);
@@ -1075,15 +1113,20 @@ function savePiezas(){
     const n=sinNombre?'SIN NOMBRE EN MANGA':(document.getElementById('pz-nombre-'+id)?.value.trim()||'');
     const conCapucha=document.getElementById('pz-capucha-'+id)?.checked||false;
     const rep=parseInt(document.getElementById('rep-count-'+id)?.textContent||'1');
+    // Logos
+    const logoPecho = document.getElementById('pz-logo-pecho-'+id)?.checked ? (document.getElementById('pz-logo-pecho-txt-'+id)?.value.trim()||'SI') : '';
+    const logoEspalda = document.getElementById('pz-logo-espalda-'+id)?.checked ? (document.getElementById('pz-logo-espalda-txt-'+id)?.value.trim()||'SI') : '';
+    const logoManga = document.getElementById('pz-logo-manga-'+id)?.checked ? (document.getElementById('pz-logo-manga-txt-'+id)?.value.trim()||'SI') : '';
     // Expandir repeticiones
     for(let i=0;i<rep;i++){
-      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre,conCapucha});
+      pedido.piezas.push({genero:g, talla:t, nombre:n, sinNombre, conCapucha, logoPecho, logoEspalda, logoManga});
     }
   });
 }
 
 // ── PAGO ──────────────────────────────────────────────────────
 let precioComfy={bs:0,usd:0}, precioRecarga={bs:0,usd:0}, precioCapucha={bs:0,usd:0};
+let precioLogoPecho={bs:0,usd:0}, precioLogoEspalda={bs:0,usd:0}, precioLogoManga={bs:0,usd:0};
 let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
 let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
 
@@ -1104,6 +1147,11 @@ async function calcularPago(){
     if(data.ok){
       precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
       precioCapucha={bs:parseFloat(data.capucha_bs)||0, usd:parseFloat(data.capucha_usd)||0};
+      // Precios de logos
+      const pp=data.pack_precios||{};
+      precioLogoPecho  = {bs:parseFloat(pp['P.06']?.bs)||0, usd:parseFloat(pp['P.06']?.usd)||0};
+      precioLogoEspalda= {bs:parseFloat(pp['P.05']?.bs)||0, usd:parseFloat(pp['P.05']?.usd)||0};
+      precioLogoManga  = {bs:parseFloat(pp['P.04']?.bs)||0, usd:parseFloat(pp['P.04']?.usd)||0};
       // tasa BCV
       if(data.tasa_bcv){
         tasaBcvActual=parseFloat(data.tasa_bcv)||0;
@@ -1132,6 +1180,9 @@ async function calcularPago(){
     const franelas=pk.piezas.length||pk.pack||0;
     const recargas=franelas===1?0:pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase().trim())).length;
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
+    const logosPecho  =pk.piezas.filter(p=>p.logoPecho).length;
+    const logosEspalda=pk.piezas.filter(p=>p.logoEspalda).length;
+    const logosManga  =pk.piezas.filter(p=>p.logoManga).length;
 
     let packBs=0, packUsd=0;
     const esMangaCorta = pk.manga === 'Manga Corta' || pk.modelo === 'Full Comfy Protect Manga Corta';
@@ -1157,14 +1208,19 @@ async function calcularPago(){
     const recargaUsd=recargas*precioRecarga.usd;
     const capuchaBs=capuchas*precioCapucha.bs;
     const capuchaUsd=capuchas*precioCapucha.usd;
+    const logosBs = logosPecho*precioLogoPecho.bs + logosEspalda*precioLogoEspalda.bs + logosManga*precioLogoManga.bs;
+    const logosUsd= logosPecho*precioLogoPecho.usd + logosEspalda*precioLogoEspalda.usd + logosManga*precioLogoManga.usd;
 
-    totalBs+=packBs+recargaBs+capuchaBs;
-    totalUsd+=packUsd+recargaUsd+capuchaUsd;
+    totalBs+=packBs+recargaBs+capuchaBs+logosBs;
+    totalUsd+=packUsd+recargaUsd+capuchaUsd+logosUsd;
 
     const label=franelas===1?'1 Prenda':`${franelas} franelas (${descomponerPacks(franelas).map(c=>c+'P').join('+')})`;
     desglose.push(`Pack ${i+1}: ${label}`+
       (recargas>0?` + ${recargas} plus`:'')+
-      (capuchas>0?` + ${capuchas} capucha(s)`:''));
+      (capuchas>0?` + ${capuchas} capucha(s)`:'')+
+      (logosPecho>0?` + ${logosPecho} logo pecho`:'')+
+      (logosEspalda>0?` + ${logosEspalda} logo espalda`:'')+
+      (logosManga>0?` + ${logosManga} logo manga`:''));
   });
 
   pagoTotalBs=Math.round(totalBs*100)/100;
@@ -1261,7 +1317,7 @@ function copiarDato(texto, btnId){
 function buildResumen(){
   const retiraText=pedido.mismoEnvio?`${pedido.nombre} · ${pedido.cedula} · ${pedido.celular}`:`${pedido.eNombre} · ${pedido.eCi} · ${pedido.eCel}`;
   const packsHtml=pedido.packs.map((pk,i)=>{
-    const piezasHtml=pk.piezas.map((p,j)=>`<b>Franela ${j+1}:</b> ${p.genero} Talla ${p.talla} — ${p.nombre}`).join('<br>');
+    const piezasHtml=pk.piezas.map((p,j)=>`<b>Franela ${j+1}:</b> ${p.genero} Talla ${p.talla} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('<br>');
     return `<div class="resumen-label">📦 Pack ${i+1} · ${pk.pack}PACK</div>
       <div class="resumen-block"><b>Modelo:</b> ${pk.modelo} ${pk.manga} ${pk.capucha}<br><b>Tela:</b> ${pk.tela} · <b>Vinil:</b> ${pk.vinil}</div>
       <div class="resumen-label">📏 Franelas (${pk.piezas.length})</div>
@@ -1289,7 +1345,7 @@ function buildResumen(){
 function buildMensaje(){
   const retiraText=pedido.mismoEnvio?'Mismo titular':`${pedido.eNombre} | C.I: ${pedido.eCi} | Cel: ${pedido.eCel}`;
   const packsText=pedido.packs.map((pk,i)=>{
-    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conCapucha?' 🧢':''} — ${p.nombre}`).join('\n');
+    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conCapucha?' 🧢':''} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('\n');
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
     return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: COMFY PROTECT ${pk.manga}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
   }).join('\n\n');
@@ -1304,7 +1360,7 @@ async function guardarEnSheets(){
   let codigoPrincipal='';
   for(let i=0; i<pedido.packs.length; i++){
     const pk=pedido.packs[i];
-    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''} - ${p.nombre}`).join(' | ');
+    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''} - ${p.nombre}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}`).join(' | ');
     try{
       const res=await scriptGETjson({
         action:'addSolicitud',
