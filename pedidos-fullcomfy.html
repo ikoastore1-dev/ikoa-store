@@ -287,7 +287,7 @@ window.addEventListener('load',function(){
   <!-- STEP 4: PIEZAS -->
   <div class="step" id="step4">
     <div class="step-header"><div class="step-num">Paso 5 de 7</div><div class="step-title">Tallas y nombres</div></div>
-    <div class="nota" style="margin-bottom:14px;">📌 Nombre en <b>manga derecha</b>, sin iniciales ni logos.<br>Completa las <b id="pack-total-lbl">—</b> franelas de tu pack.<br>Usa el contador <b>+/−</b> para repetir franelas iguales.</div>
+    <div class="nota" style="margin-bottom:14px;">📌 Nombre en <b>manga derecha</b>, sin iniciales ni logos.<br>Completa las <b id="pack-total-lbl">—</b> <span id='prenda-tipo-lbl'>franelas</span> de tu pack.<br>Usa el contador <b>+/−</b> para repetir franelas iguales.</div>
     <div id="franelas-progreso" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;color:var(--warn);"></div>
     <div class="alerta-min" id="alerta-min"></div>
     <div id="piezas-container"></div>
@@ -898,11 +898,11 @@ function selectPack(btn,n){
   btn.classList.add('selected'); pedido.pack=n;
   document.getElementById('pack-custom').value='';
   document.getElementById('pack-seleccionado').style.display='block';
-  document.getElementById('pack-label').textContent=n+'PACK — '+n+' franelas';
+  const isDressPack = modeloFC && modeloFC.toLowerCase().includes('dress'); document.getElementById('pack-label').textContent=n+'PACK — '+n+(isDressPack?' vestidos':' franelas');
 }
 function setCustomPack(val){
   const n=parseInt(val);
-  if(n>=2){ pedido.pack=n; document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected')); document.getElementById('pack-seleccionado').style.display='block'; document.getElementById('pack-label').textContent=n+'PACK — '+n+' franelas'; }
+  if(n>=2){ pedido.pack=n; document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected')); document.getElementById('pack-seleccionado').style.display='block'; const isDressPack = modeloFC && modeloFC.toLowerCase().includes('dress'); document.getElementById('pack-label').textContent=n+'PACK — '+n+(isDressPack?' vestidos':' franelas'); }
 }
 
 function selectOpt(btn,field,val){
@@ -920,7 +920,11 @@ function setMismoEnvio(val){
 // ── PIEZAS ────────────────────────────────────────────────────
 function inicializarPiezas(){
   if(!pedido.pack||pedido.pack<1){ alert('Selecciona el tamaño del pack primero'); goStep(2); return; }
-  document.getElementById('pack-total-lbl').textContent=pedido.pack+' franelas';
+  const isDress = modeloFC && modeloFC.toLowerCase().includes('dress');
+  const pTipo = isDress ? 'vestidos' : 'franelas';
+  document.getElementById('pack-total-lbl').textContent=pedido.pack;
+  const pTipoLbl = document.getElementById('prenda-tipo-lbl');
+  if(pTipoLbl) pTipoLbl.textContent = pTipo;
   const container=document.getElementById('piezas-container');
   // Limpiar siempre para el pack actual
   container.innerHTML='';
@@ -1235,7 +1239,10 @@ async function calcularPago(){
     totalBs+=packBs+recargaBs+capuchaBs+logosBs;
     totalUsd+=packUsd+recargaUsd+capuchaUsd+logosUsd;
 
-    const label=franelas===1?'1 Prenda':`${franelas} franelas (${descomponerPacks(franelas).map(c=>c+'P').join('+')})`;
+    const isDressCalc = pk.modelo && pk.modelo.toLowerCase().includes('dress');
+    const prendaLabel = isDressCalc ? 'vestido' : 'franela';
+    const prendasLabel = isDressCalc ? 'vestidos' : 'franelas';
+    const label=franelas===1?`1 ${prendaLabel.charAt(0).toUpperCase()+prendaLabel.slice(1)}`:`${franelas} ${prendasLabel} (${descomponerPacks(franelas).map(c=>c+'P').join('+')})`;
     desglose.push(`Pack ${i+1}: ${label}`+
       (recargas>0?` + ${recargas} plus`:'')+
       (capuchas>0?` + ${capuchas} capucha(s)`:'')+
