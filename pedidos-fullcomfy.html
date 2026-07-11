@@ -811,8 +811,8 @@ function agregarOtroPack(){
   document.querySelectorAll('#tela-opts .opt-btn, #vinil-opts .opt-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('step45').classList.remove('active');
-  currentStep=0;
-  document.getElementById('step0').classList.add('active');
+  currentStep=1;
+  document.getElementById('step1').classList.add('active');
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -940,17 +940,19 @@ function addPieza(copiarDe=null){
   const nomCopy=copiarDe?document.getElementById('pz-nombre-'+copiarDe)?.value:'';
   const sinCopy=copiarDe?document.getElementById('pz-sinombre-'+copiarDe)?.checked:false;
   const total=document.getElementById('piezas-container').querySelectorAll('.pieza-card').length+1;
+  const isDress = modeloFC.toLowerCase().includes('dress');
+  const tipoLabel = isDress ? 'Vestido' : 'Franela';
+  const generosHtml = isDress
+    ? `<option value="">Seleccionar</option><option value="Kids"${genCopy==='Kids'?' selected':''}>Kids</option><option value="Dama"${genCopy==='Dama'?' selected':''}>Dama</option>`
+    : `<option value="">Seleccionar</option><option value="Kids"${genCopy==='Kids'?' selected':''}>Kids</option><option value="Dama"${genCopy==='Dama'?' selected':''}>Dama</option><option value="Caballero"${genCopy==='Caballero'?' selected':''}>Caballero</option>`;
   div.innerHTML=`
-    <div class="pieza-num">Franela #${id} ${total>pedido.pack?'<span style="color:var(--warn);font-size:11px;">(extra)</span>':''}</div>
+    <div class="pieza-num">${tipoLabel} #${id} ${total>pedido.pack?'<span style="color:var(--warn);font-size:11px;">(extra)</span>':''}</div>
     ${total>pedido.pack?`<button class="remove-btn" onclick="removePieza(${id})">✕</button>`:''}
     <div class="pieza-grid">
       <div class="field-group">
         <div class="field-label">Género</div>
         <select class="field-input" id="pz-genero-${id}" onchange="updateTallas(${id})">
-          <option value="">Seleccionar</option>
-          <option value="Kids"${genCopy==='Kids'?' selected':''}>Kids</option>
-          <option value="Dama"${genCopy==='Dama'?' selected':''}>Dama</option>
-          <option value="Caballero"${genCopy==='Caballero'?' selected':''}>Caballero</option>
+          ${generosHtml}
         </select>
       </div>
       <div class="field-group">
