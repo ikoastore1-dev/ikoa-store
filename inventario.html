@@ -5216,43 +5216,47 @@ async function confirmarPlanificacion(){
       });
     }catch(e){ console.warn('addPedido error:',e); }
 
-    // Registrar en hoja PRODUCCION
+    // Registrar en hoja PRODUCCION — una fila por cada pack real, con el detalle
+    // de piezas (genero+talla+nombre+logos) tal como lo capturó la app de venta.
+    // (Antes se guardaba un resumen genérico que perdía todo el detalle por talla/nombre.)
     try{
-      await registrarEnProduccion({
-        codigoP:lastCodigoP,
-        codigoC:pendingCola.allCodigosC?pendingCola.allCodigosC.join(','):(pendingCola.codigoCBase||''),
-        cod:codMake,
-        fecha:fechaProd,
-        nombre:pendingCola.nombre||'',
-        correo:pendingCola.correo||'',
-        cedula:pendingCola.cedula||'',
-        celular:pendingCola.celular||'',
-        modelo:allPacks[0]?.modelo||'',
-        manga:allPacks[0]?.manga||'',
-        capucha:allPacks[0]?.capucha||'',
-        pack:allPacks.map(pk=>pk.pack).join(' | '),
-        tela:allPacks.map(pk=>pk.tela).join(' | '),
-        vinil:allPacks.map(pk=>pk.vinil).join(' | '),
-        piezas:descripcionPacks,
-        agencia:pendingCola.agencia||'',
-        retira_nombre:pendingCola.retira||'',
-        retira_ci:pendingCola.retiraCi||'',
-        retira_cel:pendingCola.retiraCel||'',
-        banco:pendingCola.banco||'',
-        cod_pago:pendingCola.codpago||'',
-        moneda:pendingCola.pagoMoneda||'',
-        monto:pendingCola.pagoMonto||'',
-        referencia:pendingCola.codpago||'',
-        usuario:USUARIOS[unlock],
-        fecha_apro:fechaProd,
-        fecha_produccion:fechaProd,
-        usuario_produccion:USUARIOS[unlock],
-        urgente:pendingCola.urgente||'',
-        cashea_flag:pendingCola.cashea||'NO',
-        cashea_pct_aplicado:pendingCola.casheaPct||'',
-        monto_cashea_usd:pendingCola.codCashea||'',
-        fuente:'Cola'
-      });
+      for(const pk of allPacks){
+        await registrarEnProduccion({
+          codigoP:lastCodigoP,
+          codigoC:pendingCola.allCodigosC?pendingCola.allCodigosC.join(','):(pendingCola.codigoCBase||''),
+          cod:codMake,
+          fecha:fechaProd,
+          nombre:pendingCola.nombre||'',
+          correo:pendingCola.correo||'',
+          cedula:pendingCola.cedula||'',
+          celular:pendingCola.celular||'',
+          modelo:pk.modelo||'',
+          manga:pk.manga||'',
+          capucha:pk.capucha||'',
+          pack:pk.pack||'',
+          tela:pk.tela||'',
+          vinil:pk.vinil||'',
+          piezas:pk.piezas||'',
+          agencia:pendingCola.agencia||'',
+          retira_nombre:pendingCola.retira||'',
+          retira_ci:pendingCola.retiraCi||'',
+          retira_cel:pendingCola.retiraCel||'',
+          banco:pendingCola.banco||'',
+          cod_pago:pendingCola.codpago||'',
+          moneda:pendingCola.pagoMoneda||'',
+          monto:pendingCola.pagoMonto||'',
+          referencia:pendingCola.codpago||'',
+          usuario:USUARIOS[unlock],
+          fecha_apro:fechaProd,
+          fecha_produccion:fechaProd,
+          usuario_produccion:USUARIOS[unlock],
+          urgente:pendingCola.urgente||'',
+          cashea_flag:pendingCola.cashea||'NO',
+          cashea_pct_aplicado:pendingCola.casheaPct||'',
+          monto_cashea_usd:pendingCola.codCashea||'',
+          fuente:'Cola'
+        });
+      }
     }catch(e){ console.warn('registrarProduccion error:',e); }
     // Generar SVG de nombres y subir a Dropbox
     try{
@@ -6808,24 +6812,52 @@ function tallerActualizarContador(){
   btn.style.opacity=n===0?'.5':'1';
 }
 
-// Parsea el string "Piezas" generado por las apps de venta.
-// Formato: "Genero Talla[ CON CAPUCHA] - Nombre[ | LogoPecho: X][ | LogoEspalda: Y][ | LogoManga: Z] | Genero Talla - Nombre | ..."
+// Parsea el string "Piezas", que puede venir en 2 formatos distintos:
+//  A) Desde las apps de venta (pedidos.html, etc.):
+//     "Genero Talla[ CON CAPUCHA] - Nombre[ | LogoPecho: X][ | LogoEspalda: Y][ | LogoManga: Z]"
+//  B) Desde Cotizaciones aprobadas (aprobarCotizacion), sin nombre, con conteo:
+//     "Genero Talla xN"   (ej: "Caballero XS x4")
+//  C) Talla suelta sin genero (ej: productos sin distinción, "XS x4")
 function tallerParsearPiezas(piezasStr){
   if(!piezasStr) return [];
   const tokens=piezasStr.split('|').map(t=>t.trim()).filter(Boolean);
   const piezas=[];
+  const GENEROS=['Dama','Caballero','Kids'];
+  const generoRegex=new RegExp('^('+GENEROS.join('|')+')\\b','i');
   tokens.forEach(tok=>{
-    const mAnno=tok.match(/^Logo(Pecho|Espalda|Manga)\s*:\s*(.+)$/i);
+    if(!tok) return;
+    // Continuación de logo (pertenece a la pieza anterior)
+    const mAnno=tok.match(/^Logo\s*(Pecho|Espalda|Manga)\s*:\s*(.+)$/i);
     if(mAnno && piezas.length){
-      piezas[piezas.length-1]['logo'+mAnno[1].charAt(0).toUpperCase()+mAnno[1].slice(1).toLowerCase()]=mAnno[2].trim();
+      const campo='logo'+mAnno[1].charAt(0).toUpperCase()+mAnno[1].slice(1).toLowerCase();
+      piezas[piezas.length-1][campo]=mAnno[2].trim();
       return;
     }
-    const m=tok.match(/^(\S+)\s+(\S+)(\s+CON\s+CAPUCHA)?\s*-\s*(.+)$/i);
-    if(m){
-      piezas.push({genero:m[1].trim(), talla:m[2].trim(), capucha:!!m[3], nombre:m[4].trim()});
-    } else {
-      piezas.push({genero:'', talla:'', capucha:false, nombre:tok, raw:true});
+    // Formato A: "Genero Talla[ CON CAPUCHA] - Nombre"
+    const mA=tok.match(/^(\S+)\s+(\S+)(\s+CON\s+CAPUCHA)?\s*-\s*(.+)$/i);
+    if(mA && generoRegex.test(mA[1])){
+      piezas.push({genero:mA[1].trim(), talla:mA[2].trim(), capucha:!!mA[3], nombre:mA[4].trim()});
+      return;
     }
+    // Formato B: "Genero Talla[ xN]" (de cotizaciones, sin nombre, sin guion)
+    const mB=tok.match(generoRegex);
+    if(mB){
+      let resto=tok.slice(mB[0].length).trim();
+      let n=1;
+      const mCount=resto.match(/\s+x(\d+)\s*$/i);
+      if(mCount){ n=parseInt(mCount[1])||1; resto=resto.slice(0,mCount.index).trim(); }
+      for(let i=0;i<n;i++) piezas.push({genero:mB[1].trim(), talla:resto, capucha:false, nombre:''});
+      return;
+    }
+    // Formato C: "Talla[ xN]" suelta, sin genero
+    const mC=tok.match(/^(\S+)(?:\s+x(\d+))?$/i);
+    if(mC){
+      const n=parseInt(mC[2])||1;
+      for(let i=0;i<n;i++) piezas.push({genero:'', talla:mC[1].trim(), capucha:false, nombre:''});
+      return;
+    }
+    // No reconocido: se conserva en crudo para no perder el dato
+    piezas.push({genero:'', talla:'', capucha:false, nombre:tok, raw:true});
   });
   return piezas;
 }
@@ -6854,7 +6886,9 @@ function tallerConstruirCortadorHTML(codigos){
       const piezas=tallerParsearPiezas(p.piezas);
       // Agrupar por Genero+Talla (ignorando nombre) para el cortador
       const grupos={};
+      let sinFormato=0;
       piezas.forEach(pz=>{
+        if(pz.raw){ sinFormato++; return; }
         const key=(pz.genero||'—')+'||'+(pz.talla||'—')+(pz.capucha?'||CAP':'');
         if(!grupos[key]) grupos[key]={genero:pz.genero||'—', talla:pz.talla||'—', capucha:pz.capucha, unds:0};
         grupos[key].unds++;
@@ -6863,14 +6897,23 @@ function tallerConstruirCortadorHTML(codigos){
         filas+=`<tr>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${cod}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${desc}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${gr.talla.toUpperCase()}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${gr.genero.toUpperCase()}</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${(gr.talla||'—').toUpperCase()}</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${(gr.genero||'—').toUpperCase()}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${gr.unds}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${(p.tela||'—').toUpperCase()}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${gr.capucha?'CON CAPUCHA':''}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;color:#b00;font-weight:700;">${g.urgente?'URGENTE':''}</td>
         </tr>`;
       });
+      if(sinFormato>0){
+        filas+=`<tr>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${cod}</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${desc}</td>
+          <td colspan="4" style="border:1px solid #999;padding:5px 6px;font-size:10.5px;color:#b00;">⚠ ${sinFormato} pieza(s) sin formato reconocido — revisar manualmente: "${(p.piezas||'').toUpperCase()}"</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;"></td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;color:#b00;font-weight:700;">${g.urgente?'URGENTE':''}</td>
+        </tr>`;
+      }
     });
   });
   return `<!DOCTYPE html>
@@ -6912,6 +6955,12 @@ function tallerConstruirEstampadorHTML(codigos){
       const grupos={};
       const logos={pecho:new Set(), espalda:new Set(), manga:new Set()};
       piezas.forEach(pz=>{
+        if(pz.raw){
+          const key='RAW||'+pz.nombre;
+          if(!grupos[key]) grupos[key]={raw:true, texto:pz.nombre, unds:0};
+          grupos[key].unds++;
+          return;
+        }
         const key=(pz.genero||'—')+'||'+(pz.talla||'—')+'||'+(pz.nombre||'')+(pz.capucha?'||CAP':'');
         if(!grupos[key]) grupos[key]={genero:pz.genero||'—', talla:pz.talla||'—', nombre:pz.nombre||'', capucha:pz.capucha, unds:0};
         grupos[key].unds++;
@@ -6920,7 +6969,9 @@ function tallerConstruirEstampadorHTML(codigos){
         if(pz.logoManga) logos.manga.add(pz.logoManga);
       });
       const lineasTalla=Object.values(grupos).map(gr=>
-        `${gr.genero.toUpperCase()} ${gr.talla.toUpperCase()}${gr.capucha?' (CON CAPUCHA)':''} - ${gr.nombre.toUpperCase()} (${gr.unds} UNDS)`
+        gr.raw
+          ? `⚠ SIN FORMATO: ${gr.texto.toUpperCase()} (${gr.unds} UNDS)`
+          : `${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()}${gr.capucha?' (CON CAPUCHA)':''}${gr.nombre?' - '+gr.nombre.toUpperCase():''} (${gr.unds} UNDS)`
       ).join('<br>');
       const logoLineas=[];
       if(logos.pecho.size)   logoLineas.push('PECHO: '+[...logos.pecho].join(', ').toUpperCase());
