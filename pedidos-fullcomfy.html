@@ -155,13 +155,11 @@ window.addEventListener('load',function(){
     <div class="card">
       <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">¿Qué modelo deseas ordenar?</div>
       <div style="display:flex;flex-direction:column;gap:14px;">
-        <button onclick="seleccionarModelo('Comfy Protect','Manga Larga','COMFY01','2PACK.C.01.40OFF')" id="btn-modelo-cp" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
-          <div style="font-size:18px;margin-bottom:4px;">🛡️ Comfy Protect</div>
-          <div style="font-size:13px;font-weight:400;color:var(--muted);">Manga Larga · Packs de 1 a 7 franelas</div>
+        <button onclick="seleccionarModelo('Full Comfy Protect Manga Larga','Manga Larga','COMFY01','2PACK.C.01.40OFF')" id="btn-modelo-cp" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;">🛡️ Full Comfy Protect Manga Larga</div>
         </button>
-        <button onclick="seleccionarModelo('Comfy Manga Corta','Manga Corta','COMFY06','COMFY06')" id="btn-modelo-mc" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
-          <div style="font-size:18px;margin-bottom:4px;">👕 Comfy Manga Corta</div>
-          <div style="font-size:13px;font-weight:400;color:var(--muted);">Manga Corta · 1 prenda</div>
+        <button onclick="seleccionarModelo('Full Comfy Protect Manga Corta','Manga Corta','COMFY06','COMFY06')" id="btn-modelo-mc" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;">👕 Full Comfy Protect Manga Corta</div>
         </button>
       </div>
     </div>
@@ -272,7 +270,7 @@ window.addEventListener('load',function(){
       </div>
     </div>
     <div class="nav-row">
-      <button class="btn-back" onclick="mangaFC==='Manga Corta'?goStep(1):goStep(2)">← Atrás</button>
+      <button class="btn-back" onclick="goStep(2)">← Atrás</button>
       <button class="btn-next" onclick="intentarPaso4()">Siguiente →</button>
     </div>
   </div>
@@ -516,18 +514,18 @@ function seleccionarModelo(modelo, manga, cod, codPack){
   document.getElementById('btn-modelo-mc').style.background = manga==='Manga Corta' ? '#0a2a1a' : 'var(--surface2)';
   document.getElementById('step1').classList.remove('active');
   if(manga === 'Manga Corta'){
-    // Manga Corta → ir al Paso 4 (tela/vinil con pack seleccionable)
-    currentStep = 3;
-    document.getElementById('step3').classList.add('active');
-    const modeloInfoEl = document.getElementById('modelo-info-fc');
-  const mangaInfoEl = document.getElementById('manga-info-fc');
-  if(modeloInfoEl) modeloInfoEl.textContent = modelo.toUpperCase();
-  if(mangaInfoEl) mangaInfoEl.textContent = manga;
+    pedido.pack = 0;
+    currentStep = 2;
+    document.getElementById('step2').classList.add('active');
   } else {
     // Manga Larga → ir al Paso 3 (pack)
     currentStep = 2;
     document.getElementById('step2').classList.add('active');
   }
+  const modeloInfoEl = document.getElementById('modelo-info-fc');
+  const mangaInfoEl = document.getElementById('manga-info-fc');
+  if(modeloInfoEl) modeloInfoEl.textContent = modelo.toUpperCase();
+  if(mangaInfoEl) mangaInfoEl.textContent = manga;
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -717,14 +715,6 @@ function goStep(n){
   if(!validateStep(currentStep))return;
   const curEl=document.getElementById('step'+(currentStep===45?'45':currentStep));
   if(curEl) curEl.classList.remove('active');
-  // Si Manga Corta y se intenta ir al step2 (pack) → saltar a step3
-  if(n===2 && mangaFC==='Manga Corta'){
-    currentStep=3;
-    document.getElementById('step3').classList.add('active');
-    updateProgress();
-    window.scrollTo({top:0,behavior:'smooth'});
-    return;
-  }
   currentStep=n;
   const nEl=document.getElementById('step'+(n===45?'45':n));
   if(nEl) nEl.classList.add('active');
@@ -765,7 +755,6 @@ async function intentarPaso1(){
   // Modal confirmación
   const confirmado=await mostrarModalDatos(pedido.cedula, pedido.celular, pedido.correo);
   if(!confirmado) return; // vuelve al paso 1 sin avanzar
-  // Avanzar al step1 (selección de modelo)
   document.getElementById('step0').classList.remove('active');
   currentStep=1;
   document.getElementById('step1').classList.add('active');
@@ -850,7 +839,10 @@ function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidCel(c){ return c.replace(/\D/g,'').length>=7; }
 
 function validateStep(n){
-  if(n===2){ if(!pedido.pack||pedido.pack<1){ alert('Selecciona la cantidad de franelas'); return false; } return true; }
+  if(n===2){ 
+    if(!pedido.pack||pedido.pack<1){ alert('Selecciona la cantidad de franelas'); return false; } 
+    return true; 
+  }
   if(n===3){
     if(!pedido.modelo){ alert('Selecciona el modelo'); return false; }
     if(!pedido.manga){ alert('Selecciona el tipo de manga'); return false; }
