@@ -151,23 +151,7 @@ window.addEventListener('load',function(){
 
   <!-- STEP 0: SELECCIÓN DE MODELO -->
   <div class="step active" id="step0">
-    <div class="step-header"><div class="step-num">Paso 1 de 7</div><div class="step-title">Selecciona tu modelo</div></div>
-    <div class="card">
-      <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">¿Qué modelo deseas ordenar?</div>
-      <div style="display:flex;flex-direction:column;gap:14px;">
-        <button onclick="seleccionarModeloLicra('Licra Protect Manga Larga','Manga Larga','LICRA01')" id="btn-modelo-ll" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
-          <div style="font-size:18px;">🌊 Licra Protect Manga Larga</div>
-        </button>
-        <button onclick="seleccionarModeloLicra('Licra Protect Manga Corta','Manga Corta','LICRA06')" id="btn-modelo-lmc" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
-          <div style="font-size:18px;">🌊 Licra Protect Manga Corta</div>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- STEP 1: DATOS PERSONALES -->
-  <div class="step" id="step1">
-    <div class="step-header"><div class="step-num">Paso 2 de 7</div><div class="step-title">Tus datos personales</div></div>
+    <div class="step-header"><div class="step-num">Paso 1 de 7</div><div class="step-title">Tus datos personales</div></div>
     <div class="card">
       <div class="field-group">
         <div class="field-label">Nombre y Apellido *</div>
@@ -211,6 +195,22 @@ window.addEventListener('load',function(){
     <div class="nav-row"><button class="btn-next" onclick="intentarPaso1Licra()">Siguiente →</button></div>
   </div>
 
+  <!-- STEP 1: DATOS PERSONALES -->
+  <div class="step" id="step1">
+    <div class="step-header"><div class="step-num">Paso 2 de 7</div><div class="step-title">Selecciona tu modelo</div></div>
+    <div class="card">
+      <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">¿Qué modelo deseas ordenar?</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <button onclick="seleccionarModeloLicra('Licra Protect Manga Larga','Manga Larga','LICRA01')" id="btn-modelo-ll" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;">🌊 Licra Protect Manga Larga</div>
+        </button>
+        <button onclick="seleccionarModeloLicra('Licra Protect Manga Corta','Manga Corta','LICRA06')" id="btn-modelo-lmc" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;">🌊 Licra Protect Manga Corta</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- STEP 2: PRODUCTO Y PACK -->
   <div class="step" id="step2">
     <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title">Selecciona tu producto</div></div>
@@ -252,7 +252,7 @@ window.addEventListener('load',function(){
 
   <!-- STEP 3: MODELO -->
   <div class="step" id="step3">
-    <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title" id="step3-title">Modelo · Color de Tela · Vinil</div></div>
+    <div class="step-header"><div class="step-num">Paso 4 de 7</div><div class="step-title" id="step3-title">Modelo · Color de Tela · Vinil</div></div>
     <div class="card" id="capucha-card">
       <!-- MODELO FIJO - solo informativo -->
       <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center;">
