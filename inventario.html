@@ -4102,7 +4102,7 @@ async function cargarAprobacionesCashea(){
       packs.forEach((pk,idx)=>{
         const vp=i=>String(pk[i]||'').trim();
         html+=`<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);">
-          <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Pack ${idx+1} · ${vp(14)} · <span style="color:var(--muted);font-size:13px;">${vp(0)}</span></div>
+          <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Part ${idx+1} · ${vp(14)} · <span style="color:var(--muted);font-size:13px;">${vp(0)}</span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:8px;">
             <div><span style="color:var(--muted);">Modelo:</span> ${vp(11)||'—'}</div>
             <div><span style="color:var(--muted);">Manga:</span> ${vp(12)}</div>
@@ -4882,7 +4882,7 @@ async function cargarCola(){
       packs.forEach((pk,idx)=>{
         const vp=i=>String(pk[i]||'').trim();
         html+=`<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);">
-          <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Pack ${idx+1} · ${vp(14)} · <span style="color:var(--muted);font-size:13px;">${vp(1)}</span></div>
+          <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Part ${idx+1} · ${vp(14)} · <span style="color:var(--muted);font-size:13px;">${vp(1)}</span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:6px;">
             <div><span style="color:var(--muted);">Tela:</span> ${vp(15)}</div>
             <div><span style="color:var(--muted);">Vinil:</span> ${vp(16)}</div>
@@ -5432,7 +5432,7 @@ async function cargarSolicitudes(filtro){
       packs.forEach((pk,idx)=>{
         const vp=i=>String(pk[i]||'').trim();
         html+=`<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);">
-          <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Pack ${idx+1} · ${vp(14)} · <span style="color:var(--muted);font-size:13px;">${vp(0)}</span></div>
+          <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Part ${idx+1} · ${vp(14)} · <span style="color:var(--muted);font-size:13px;">${vp(0)}</span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:8px;">
             <div><span style="color:var(--muted);">Modelo:</span> ${vp(11)||'—'}</div>
             <div><span style="color:var(--muted);">Manga:</span> ${vp(12)}</div>
