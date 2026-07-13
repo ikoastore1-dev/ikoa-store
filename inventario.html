@@ -1960,7 +1960,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyqXjqyx9WgwPhvRWMpJkB4qzlToSQOI7ptcydoC5GTSWbFYRNTTIaKPQnHu38z7Hlcmg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw0VELNI_2bOBHyszVGt72DgjUmOztJDQqbQXdpE8Lr7Yh8IY_EMEheleS0ADFr2SpltA/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -5282,6 +5282,7 @@ async function confirmarPlanificacion(){
       }
     }catch(e){ console.warn('registrarProduccion error:',e); }
     // Generar SVG de nombres y subir a Dropbox
+    let svgFalloMsg='';
     try{
       const piezasStr = (pendingCola.allPacks||[]).map(pk=>pk.piezas||'').join(' | ');
       const svgRes = await scriptGETjson({
@@ -5290,14 +5291,15 @@ async function confirmarPlanificacion(){
         piezas: piezasStr
       });
       if(svgRes.ok) console.log('SVG generado:', svgRes.archivo);
-      else console.warn('SVG error:', svgRes.error);
-    }catch(e){ console.warn('SVG nombres error:',e); }
+      else { console.warn('SVG error:', svgRes.error); svgFalloMsg=svgRes.error||'Error desconocido'; }
+    }catch(e){ console.warn('SVG nombres error:',e); svgFalloMsg=e.message||'Error de red'; }
     if(response.ok||response.type==='opaque'){
       msgEl.style.background='var(--surface2)';
       msgEl.style.border='1px solid #1a4a2a';
       msgEl.style.color='var(--accent)';
-      msgEl.innerHTML=`✅ Enviado a producción · <b>${lastCodigoP}</b> · COD: ${codMake||'—'} · ${USUARIOS[unlock]}`;
-      setTimeout(()=>{msgEl.style.display='none';cargarCola();},5000);
+      msgEl.innerHTML=`✅ Enviado a producción · <b>${lastCodigoP}</b> · COD: ${codMake||'—'} · ${USUARIOS[unlock]}`+
+        (svgFalloMsg?`<br><span style="color:var(--warn);">⚠️ No se generó el DXF de nombres: ${svgFalloMsg}</span>`:'');
+      setTimeout(()=>{msgEl.style.display='none';cargarCola();},svgFalloMsg?9000:5000);
     } else {
       throw new Error('Error del servidor');
     }
@@ -6113,6 +6115,7 @@ document.getElementById('gestion-form').addEventListener('submit',async function
         });
       }catch(e){ console.warn('registrarProduccion COD error:',e); }
       // Generar SVG de nombres y subir a Dropbox
+      let svgFalloMsgGestion='';
       try{
         const svgRes = await scriptGETjson({
           action:'generarSVGNombres',
@@ -6120,7 +6123,7 @@ document.getElementById('gestion-form').addEventListener('submit',async function
           piezas: formData.get('descripcion')||''
         });
         if(svgRes.ok) console.log('SVG generado:', svgRes.archivo);
-        else console.warn('SVG error:', svgRes.error);
+        else { console.warn('SVG error:', svgRes.error); svgFalloMsgGestion=svgRes.error||''; }
       }catch(e){ console.warn('SVG nombres error:',e); }
     } else if(tipo==='Enviado'){
       const codEnviado=formData.get('codigo')||'';
@@ -6134,7 +6137,7 @@ document.getElementById('gestion-form').addEventListener('submit',async function
       msg.style.border='1px solid #1a4a2a';
       msg.style.color='var(--accent)';
       msg.innerHTML=tipo==='COD'&&codMake
-        ? `✅ Gestión enviada · COD: <b>${codMake}</b> · ${nombreUsuario}`
+        ? `✅ Gestión enviada · COD: <b>${codMake}</b> · ${nombreUsuario}`+(svgFalloMsgGestion?`<br><span style="color:var(--warn);font-size:12px;">⚠️ DXF de nombres no generado (${svgFalloMsgGestion}) — normal si la descripción es texto libre sin formato Talla-Nombre.</span>`:'')
         : `✅ Gestión enviada · ${nombreUsuario}`;
 
       // Notificar al cliente por WhatsApp
