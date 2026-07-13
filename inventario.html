@@ -4528,7 +4528,7 @@ async function guardarRespaldo(){
     const data=await scriptGETjson({
       action:'addRespaldo',
       fecha:getFechaHora(),
-      usuario:USUARIOS[unlock],
+      usuario:USUARIOS_RESPALDO[unlock],
       mensaje:encodeURIComponent(mensaje),
       banco:banco,
       referencia:referencia,
@@ -4542,7 +4542,7 @@ async function guardarRespaldo(){
       msgEl.style.background='var(--surface2)';
       msgEl.style.border='1px solid #1a4a2a';
       msgEl.style.color='var(--accent)';
-      msgEl.innerHTML=`✅ Guardado · <b>${data.codigo}</b> · ${USUARIOS[unlock]}`;
+      msgEl.innerHTML=`✅ Guardado · <b>${data.codigo}</b> · ${USUARIOS_RESPALDO[unlock]}`;
       document.getElementById('rv-mensaje').value='';
       document.getElementById('rv-banco').value='';
       document.getElementById('rv-referencia').value='';
@@ -4645,7 +4645,7 @@ async function confirmarEditarRespaldo(){
       codigo,
       mensaje:encodeURIComponent(mensaje),
       banco, referencia, factura, tasa, moneda, monto,
-      usuario:USUARIOS[unlock],
+      usuario:USUARIOS_RESPALDO[unlock],
       fecha_edit:getFechaHora()
     });
     if(data.ok){ cargarRespaldos(); }
@@ -5193,7 +5193,11 @@ async function confirmarPlanificacion(){
       else throw new Error(res.error||'Error en '+codigoC);
     }
 
-    const descripcionPacks=allPacks.map((pk,i)=>`Pack ${i+1}: ${pk.pack} ${pk.tela}/${pk.vinil}`).join(' | ');
+    const descripcionPacks=allPacks.map((pk,i)=>{
+      const encabezado=`Pack ${i+1}: ${pk.pack||''} ${pk.modelo||''} ${pk.manga||''}${pk.capucha&&pk.capucha!=='Sin Capucha'?' '+pk.capucha:''} - Tela ${pk.tela||''}/Vinil ${pk.vinil||''}`.replace(/\s+/g,' ').trim();
+      const detalle=(pk.piezas||'').trim();
+      return detalle ? `${encabezado} :: ${detalle}` : encabezado;
+    }).join('  ||  ');
     try{
       await scriptGETjson({
         action:'addPedido',
@@ -6743,7 +6747,10 @@ async function cargarTaller(){
   msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
   msg.innerHTML='<span class="spinner">↻</span> Cargando pedidos en producción...';
   try{
-    const data=await scriptGETjson({action:'leerProduccion'});
+    const [data, fuente]=await Promise.all([
+      scriptGETjson({action:'leerProduccion'}),
+      scriptGETjson({action:'leerTallerFuente'}).catch(()=>({ok:false}))
+    ]);
     const rows=data.rows||[];
     tallerGrupos={};
     if(rows.length===0){
@@ -6751,21 +6758,47 @@ async function cargarTaller(){
       msg.innerHTML='✅ No hay pedidos en producción';
       lista.innerHTML=''; return;
     }
+    // Mapa CodigoC → datos reales de COLA.P/R.COLA.P (fuente confiable de Piezas)
+    const mapaFuente={};
+    if(fuente && fuente.ok){
+      [...(fuente.cola||[]), ...(fuente.rcola||[])].forEach(r=>{
+        const cc=String(r[1]||'').trim();
+        if(!cc) return;
+        mapaFuente[cc]={
+          modelo:String(r[11]||'').trim(), manga:String(r[12]||'').trim(),
+          capucha:String(r[13]||'').trim(), pack:String(r[14]||'').trim(),
+          tela:String(r[15]||'').trim(), vinil:String(r[16]||'').trim(),
+          piezas:String(r[17]||'').trim()
+        };
+      });
+    }
     msg.style.display='none';
     rows.forEach(r=>{
       const v=i=>String(r[i]||'').trim();
       const cod=v(2)||v(1)||v(0);
+      const codigoC=v(1);
       if(!tallerGrupos[cod]) tallerGrupos[cod]={
         cod, nombre:v(4), correo:v(5), cedula:v(6), celular:v(7),
         fecha:v(25)||v(3), urgente:v(27), packs:[]
       };
+      // Preferir siempre los datos de COLA.P/R.COLA.P (fuente confiable) sobre
+      // la copia que haya quedado en PRODUCCION, que puede estar desactualizada.
+      const real=mapaFuente[codigoC];
       tallerGrupos[cod].packs.push({
-        modelo:v(8), manga:v(9), capucha:v(10), pack:v(11),
-        tela:v(12), vinil:v(13), piezas:v(14)
+        codigoC,
+        modelo:(real&&real.modelo)||v(8),
+        manga:(real&&real.manga)||v(9),
+        capucha:(real&&real.capucha)||v(10),
+        pack:(real&&real.pack)||v(11),
+        tela:(real&&real.tela)||v(12),
+        vinil:(real&&real.vinil)||v(13),
+        piezas:(real&&real.piezas)||v(14),
+        fuenteConfiable:!!real
       });
     });
     const codigos=Object.keys(tallerGrupos);
-    lista.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${codigos.length} pedido(s) disponibles</div>`;
+    const sinFuente=Object.values(tallerGrupos).reduce((s,g)=>s+g.packs.filter(p=>!p.fuenteConfiable).length,0);
+    lista.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${codigos.length} pedido(s) disponibles${sinFuente?` · <span style="color:var(--warn);">⚠ ${sinFuente} pack(s) sin match en COLA.P/R.COLA.P (usando copia de PRODUCCION)</span>`:''}</div>`;
     codigos.forEach(cod=>{
       const g=tallerGrupos[cod];
       const resumenPacks=g.packs.map(p=>`${p.pack||'—'}× ${p.modelo||''} ${p.manga||''}`.trim()).join(' · ');
@@ -6778,6 +6811,7 @@ async function cargarTaller(){
             <span style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;">${g.nombre}</span>
             <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;">${cod}</span>
             ${g.urgente?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">⚡ ${g.urgente}</span>`:''}
+            ${g.packs.some(p=>!p.fuenteConfiable)?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:10px;color:var(--warn);">⚠ sin match COLA.P</span>`:''}
           </div>
           <div style="font-size:12px;color:var(--muted);">${resumenPacks||'—'}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px;">Cédula: ${g.cedula||'—'} · Fecha: ${g.fecha||'—'}</div>
@@ -6862,8 +6896,30 @@ function tallerParsearPiezas(piezasStr){
   return piezas;
 }
 
+// Reformatea texto "sucio" (pegado sin espacios/separadores, típico de pedidos
+// antiguos editados a mano) insertando saltos de línea antes de palabras clave
+// reconocibles, para que al menos quede legible aunque no se pueda estructurar
+// en columnas Talla/Genero/Unds con certeza.
+function tallerReformatearTexto(raw){
+  if(!raw) return '';
+  let t=' '+String(raw);
+  t=t.replace(/\(/g,'\n(');
+  t=t.split('\n').map(seg=>{
+    if(seg.trim().startsWith('(')) return seg; // no partir dentro de paréntesis
+    let s=seg;
+    s=s.replace(/(\d+\s*PACK)/gi,'\n$1');
+    s=s.replace(/(TELA\s)/gi,'\n$1');
+    s=s.replace(/(VINIL\s)/gi,'\n$1');
+    s=s.replace(/(CABALLERO|DAMA|KIDS|NI[ÑN]O|NI[ÑN]A)/gi,'\n$1');
+    s=s.replace(/(ESPALDA|PECHO)(?=\s*(GRANDE)?\s*:)/gi,'\n$1');
+    return s;
+  }).join('\n');
+  return t.split('\n').map(s=>s.trim()).filter(Boolean).join('<br>');
+}
+
 function tallerDescripcionPack(p){
-  const partes=[(p.pack||'').toString().trim()+'PACK','IKOA',(p.modelo||'').toUpperCase()];
+  let packNum=(p.pack||'').toString().trim().toUpperCase().replace(/PACK/g,'').trim();
+  const partes=[packNum?packNum+'PACK':'', 'IKOA', (p.modelo||'').toUpperCase()];
   if(p.manga) partes.push(p.manga.toUpperCase());
   if(p.capucha && p.capucha!=='Sin Capucha') partes.push(p.capucha.toUpperCase());
   return partes.filter(Boolean).join(' ');
@@ -6906,11 +6962,17 @@ function tallerConstruirCortadorHTML(codigos){
         </tr>`;
       });
       if(sinFormato>0){
+        // Intentar extraer una cantidad numérica del campo pack (ej: "4PACK" -> 4)
+        const mNum=String(p.pack||'').match(/(\d+)/);
+        const undsAprox=mNum?mNum[1]:'';
         filas+=`<tr>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${cod}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${desc}</td>
-          <td colspan="4" style="border:1px solid #999;padding:5px 6px;font-size:10.5px;color:#b00;">⚠ ${sinFormato} pieza(s) sin formato reconocido — revisar manualmente: "${(p.piezas||'').toUpperCase()}"</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;"></td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">—</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">—</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${undsAprox}</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${(p.tela||'—').toUpperCase()}</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;font-style:italic;line-height:1.5;">${tallerReformatearTexto(p.piezas)} <span style="color:#888;font-style:normal;">(sin desglose exacto por talla)</span></td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;color:#b00;font-weight:700;">${g.urgente?'URGENTE':''}</td>
         </tr>`;
       }
@@ -6970,7 +7032,7 @@ function tallerConstruirEstampadorHTML(codigos){
       });
       const lineasTalla=Object.values(grupos).map(gr=>
         gr.raw
-          ? `⚠ SIN FORMATO: ${gr.texto.toUpperCase()} (${gr.unds} UNDS)`
+          ? `${tallerReformatearTexto(gr.texto)} <span style="color:#888;">(texto original del pedido — sin desglose exacto por talla)</span>`
           : `${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()}${gr.capucha?' (CON CAPUCHA)':''}${gr.nombre?' - '+gr.nombre.toUpperCase():''} (${gr.unds} UNDS)`
       ).join('<br>');
       const logoLineas=[];
