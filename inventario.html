@@ -261,6 +261,9 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <button onclick="confirmarModeloLink('giftcard')" style="width:100%;padding:14px;background:#1a0f2b;border:2px solid #cc66ff;border-radius:10px;color:#cc66ff;font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
         🎁 GIFTCARD
       </button>
+      <button onclick="confirmarModeloLink('total')" style="width:100%;padding:14px;background:#0f2b1a;border:2px solid var(--accent);border-radius:10px;color:var(--accent);font-family:'Barlow',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
+        ⭐ TOTAL (todas las líneas)
+      </button>
     </div>
     <button class="modal-cancel" onclick="document.getElementById('modal-modelo-link').classList.add('hidden')">Cancelar</button>
   </div>
@@ -1957,7 +1960,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx73tebnlSrIV6pB7U0W_WOr68CUn7dLgB8HLBVaUIcCCce2v7wg7JcejQkf-npXNsKvA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyqXjqyx9WgwPhvRWMpJkB4qzlToSQOI7ptcydoC5GTSWbFYRNTTIaKPQnHu38z7Hlcmg/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -6478,7 +6481,8 @@ const BASE_URLS={
   fullcomfy:'https://ikoastore1-dev.github.io/ikoa-store/pedidos-fullcomfy.html',
   licra:    'https://ikoastore1-dev.github.io/ikoa-store/pedidos-licra.html',
   coleccion:'https://ikoastore1-dev.github.io/ikoa-store/pedidos-coleccion.html',
-  giftcard: 'https://ikoastore1-dev.github.io/ikoa-store/pedidos-giftcard.html'
+  giftcard: 'https://ikoastore1-dev.github.io/ikoa-store/pedidos-giftcard.html',
+  total:    'https://ikoastore1-dev.github.io/ikoa-store/pedidos-total.html'
 };
 const BASE_URL=BASE_URLS.comfy;
 let currentToken='';
@@ -6504,7 +6508,7 @@ async function confirmarModeloLink(modelo){
       msg.style.display='none';
 
       // Notificar a Johan por WhatsApp
-      const nombresModelo={comfy:'COMFY MEGA PROMO',fullcomfy:'COMFY PROTECT',licra:'LICRA PROTECT',coleccion:'LICRA COLECCION'};
+      const nombresModelo={comfy:'COMFY MEGA PROMO',fullcomfy:'COMFY PROTECT',licra:'LICRA PROTECT',coleccion:'LICRA COLECCION',total:'TOTAL (todas las líneas)'};
       try{
         const waBody=new FormData();
         waBody.append('celular','584149450742');

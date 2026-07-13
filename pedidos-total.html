@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>IKOA — Hacer un Pedido</title>
+<title>IKOA — Pedido Total (Todos los Productos)</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -135,7 +135,7 @@ window.addEventListener('load',function(){
 
 <header>
   <div class="logo"><span class="i">IKOA</span><span class="sep">—</span><span class="b">BEKATE</span></div>
-  <div class="tagline">✨ Formulario de Pedido · 5 días hábiles de entrega</div>
+  <div class="tagline">✨ Pedido Total · Todos los productos · 5 días hábiles de entrega</div>
 </header>
 
 <main>
@@ -149,34 +149,9 @@ window.addEventListener('load',function(){
     <div class="prog-dot" id="pd7"></div>
   </div>
 
-  <!-- STEP 0: SELECCIÓN DE MODELO -->
-  <div class="step" id="step1">
-    <div class="step-header"><div class="step-num">Paso 2 de 7</div><div class="step-title">Selecciona tu modelo</div></div>
-    <div class="card">
-      <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">¿Qué modelo deseas ordenar?</div>
-      <div style="display:flex;flex-direction:column;gap:14px;">
-        <button onclick="seleccionarModelo('Full Comfy Protect Manga Larga','Manga Larga','COMFY01','2PACK.C.01.40OFF')" id="btn-modelo-cp" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
-          <div style="font-size:18px;">🛡️ Full Comfy Protect Manga Larga</div>
-        </button>
-        <button onclick="seleccionarModelo('Full Comfy Protect Manga Corta','Manga Corta','COMFY06','COMFY06')" id="btn-modelo-mc" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
-          <div style="font-size:18px;">👕 Full Comfy Protect Manga Corta</div>
-        </button>
-        <button onclick="seleccionarModelo('Full Comfy Protect Manga Cero','Manga Cero','COMFY07','COMFY07')" id="btn-modelo-mce" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
-          <div style="font-size:18px;">👕 Full Comfy Protect Manga Cero</div>
-        </button>
-        <button onclick="seleccionarModelo('Comfy Dress Manga Larga','Manga Larga Dress','COMFY04','COMFY04')" id="btn-modelo-cdml" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
-          <div style="font-size:18px;">👗 Comfy Dress Manga Larga</div>
-        </button>
-        <button onclick="seleccionarModelo('Comfy Dress Manga Cero','Manga Cero Dress','COMFY03','COMFY03')" id="btn-modelo-cdmc" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
-          <div style="font-size:18px;">👗 Comfy Dress Manga Cero</div>
-        </button>
-      </div>
-    </div>
-  </div>
-
   <!-- STEP 1: DATOS PERSONALES -->
-  <div class="step active" id="step0">
-    <div class="step-header"><div class="step-num">Paso 1 de 7</div><div class="step-title">Tus datos personales</div></div>
+  <div class="step active" id="step1">
+    <div class="step-header"><div class="step-num">Paso 1 de 6</div><div class="step-title">Tus datos personales</div></div>
     <div class="card">
       <div class="field-group">
         <div class="field-label">Nombre y Apellido *</div>
@@ -217,77 +192,141 @@ window.addEventListener('load',function(){
         <div class="err-msg" id="err-celular">Ingresa un número válido</div>
       </div>
     </div>
-    <div class="nav-row"><button class="btn-next" onclick="intentarPaso1()">Siguiente →</button></div>
+    <div class="nav-row"><button class="btn-next" onclick="intentarPaso2()">Siguiente →</button></div>
   </div>
 
   <!-- STEP 2: PACK -->
   <div class="step" id="step2">
-    <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title">¿Cuántas franelas deseas?</div></div>
+    <div class="step-header"><div class="step-num">Paso 2 de 6</div><div class="step-title">Selecciona el producto</div></div>
     <div class="card">
-      <div class="card-title">Selecciona tu pack</div>
-      <div class="card-note">Cada pack incluye franelas del mismo color de tela y vinil.</div>
-      <div class="option-grid cols3" id="pack-grid">
-        <button class="opt-btn" onclick="selectPack(this,1)" id="btn-pack-1">1 PRENDA<span class="sub">prenda individual</span></button>
-        <button class="opt-btn" onclick="selectPack(this,2)">2 PACK<span class="sub">2 franelas</span></button>
-        <button class="opt-btn" onclick="selectPack(this,3)">3 PACK<span class="sub">3 franelas</span></button>
-        <button class="opt-btn" onclick="selectPack(this,4)">4 PACK<span class="sub">4 franelas</span></button>
-        <button class="opt-btn" onclick="selectPack(this,5)">5 PACK<span class="sub">5 franelas</span></button>
-        <button class="opt-btn" onclick="selectPack(this,6)">6 PACK<span class="sub">6 franelas</span></button>
-        <button class="opt-btn" onclick="selectPack(this,7)">7 PACK<span class="sub">7 franelas</span></button>
+      <div class="card-title">Línea</div>
+      <div class="option-grid cols2" id="linea-grid">
+        <button class="opt-btn" onclick="selectLinea(this,'comfy')">COMFY MEGA PROMO<span class="sub">Mínimo 2 unds</span></button>
+        <button class="opt-btn" onclick="selectLinea(this,'fullcomfy')">FULL COMFY PROTECT<span class="sub">Individual o pack</span></button>
+        <button class="opt-btn" onclick="selectLinea(this,'licra')">LICRA PROTECT<span class="sub">Individual o pack</span></button>
+        <button class="opt-btn" onclick="selectLinea(this,'coleccion')">LICRA COLECCIÓN<span class="sub">Camping/Náutica/Alpha/Unicolor</span></button>
+        <button class="opt-btn" onclick="selectLinea(this,'empresarial')">🏢 EMPRESARIAL<span class="sub">Mínimo 6 unds</span></button>
       </div>
-      <div class="field-group" style="margin-bottom:0">
-        <div class="field-label">¿Otra cantidad?</div>
-        <input class="field-input" type="number" id="pack-custom" placeholder="Ej: 8, 10, 12..." min="2" max="50" oninput="setCustomPack(this.value)">
+
+      <!-- MODELO: Comfy / Full Comfy / Licra Protect -->
+      <div id="modelo-wrap" style="display:none;margin-top:12px;">
+        <div class="card-title">Modelo</div>
+        <div class="option-grid cols1" id="modelo-grid"></div>
+      </div>
+
+      <!-- EMPRESARIAL: tipo -->
+      <div id="empresarial-wrap" style="display:none;margin-top:12px;">
+        <div class="card-title">Tipo de Empresarial</div>
+        <div class="option-grid cols1" id="empresarial-grid">
+          <button class="opt-btn" onclick="selectEmpresarial(this,'empresarial')">Comfy Empresarial<span class="sub">Franela · Logo pecho insignia + nombre manga incluido</span></button>
+          <button class="opt-btn" onclick="selectEmpresarial(this,'cortaviento_emp')">Cortaviento Empresarial<span class="sub">Logo pecho insignia + nombre manga incluido</span></button>
+          <button class="opt-btn" onclick="selectEmpresarial(this,'sublimada')">Empresarial Sublimada<span class="sub">Diseño completo por sublimación</span></button>
+          <button class="opt-btn" onclick="selectEmpresarial(this,'cortaviento_sub')">Cortaviento Sublimado<span class="sub">Diseño completo por sublimación</span></button>
+        </div>
+      </div>
+
+      <!-- COLECCIÓN: Serie -->
+      <div id="serie-wrap" style="display:none;margin-top:12px;">
+        <div class="card-title">Serie</div>
+        <div class="option-grid cols2" id="serie-grid">
+          <button class="opt-btn" onclick="selectSerie(this,'Camping')">CAMPING<span class="sub">Outdoor</span></button>
+          <button class="opt-btn" onclick="selectSerie(this,'Nautica')">NÁUTICA<span class="sub">Colección</span></button>
+          <button class="opt-btn" onclick="selectSerie(this,'Alpha')">ALPHA<span class="sub">Colección</span></button>
+          <button class="opt-btn" onclick="selectSerie(this,'Unicolor')">UNICOLOR<span class="sub">Color sólido</span></button>
+          <button class="opt-btn" onclick="selectSerie(this,'Toalla')">🏖️ TOALLA<span class="sub">Playa</span></button>
+          <button class="opt-btn" onclick="selectSerie(this,'ChaquetaReflectiva')">🦺 CHAQUETA REFLECTIVA<span class="sub">Con o sin capucha</span></button>
+        </div>
+      </div>
+      <div id="color-serie-wrap" style="display:none;margin-top:12px;">
+        <div class="card-title">Color de la Serie</div>
+        <div class="option-grid cols3" id="color-serie-grid"></div>
+      </div>
+      <div id="variante-wrap" style="display:none;margin-top:12px;">
+        <div class="card-title">Variante</div>
+        <div class="option-grid cols2" id="variante-grid"></div>
       </div>
     </div>
-    <div id="pack-seleccionado" style="display:none;background:#0f2b1a;border:1px solid var(--accent);border-radius:10px;padding:12px 16px;text-align:center;margin-bottom:12px;">
-      <span style="font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="pack-label">—</span>
+    <div id="producto-seleccionado" style="display:none;background:#0f2b1a;border:1px solid var(--accent);border-radius:10px;padding:12px 16px;text-align:center;margin-bottom:12px;">
+      <span style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--accent);" id="producto-label">—</span>
+      <div style="margin-top:14px;">
+        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">¿Cuántas unidades deseas?</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:14px;">
+          <button type="button" onclick="cambiarCantidadProducto(-1)" style="width:40px;height:40px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface3);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+          <span id="cantidad-producto-label" style="font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:700;color:var(--accent);min-width:40px;text-align:center;">1</span>
+          <button type="button" onclick="cambiarCantidadProducto(1)" style="width:40px;height:40px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface3);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+        </div>
+        <div id="cantidad-min-nota" style="font-size:11px;color:var(--warn);margin-top:6px;"></div>
+      </div>
     </div>
     <div class="nav-row">
       <button class="btn-back" onclick="goStep(1)">← Atrás</button>
-      <button class="btn-next" onclick="goStep(3)">Siguiente →</button>
+      <button class="btn-next" onclick="confirmarCantidadYAvanzar()">Siguiente →</button>
     </div>
   </div>
 
-  <!-- STEP 3: MODELO -->
+  <!-- STEP 3: OPCIONES -->
   <div class="step" id="step3">
-    <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title">Modelo · Color de Tela · Vinil</div></div>
+    <div class="step-header"><div class="step-num">Paso 3 de 6</div><div class="step-title">Capucha · Color de Vinil</div></div>
     <div class="card">
-      <!-- MODELO FIJO - solo informativo -->
+      <!-- Producto seleccionado informativo -->
       <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center;">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Modelo seleccionado</div>
-        <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;color:var(--accent);" id="modelo-info-fc">COMFY PROTECT</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:2px;" id="manga-info-fc">Manga Larga</div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Producto seleccionado</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="step3-producto-label">—</div>
       </div>
-      <!-- CAPUCHA -->
-      <div class="card-title">¿Con o sin capucha?</div>
-      <div class="option-grid cols2">
-        <button class="opt-btn" id="btn-con-capucha" onclick="selectOpt(this,'capucha','Con Capucha')">CON CAPUCHA</button>
-        <button class="opt-btn" id="btn-sin-capucha" onclick="selectOpt(this,'capucha','Sin Capucha')">SIN CAPUCHA</button>
+      <!-- CAPUCHA - solo para Playera, Dress y Cortaviento -->
+      <div id="capucha-wrap">
+        <div class="card-title">¿Con o sin capucha?</div>
+        <div class="option-grid cols2">
+          <button class="opt-btn" id="btn-con-capucha" onclick="selectOpt(this,'capucha','Con Capucha')">CON CAPUCHA</button>
+          <button class="opt-btn" id="btn-sin-capucha" onclick="selectOpt(this,'capucha','Sin Capucha')">SIN CAPUCHA</button>
+        </div>
+      </div>
+      <!-- LARGO - solo para Short -->
+      <div id="largo-wrap" style="display:none;">
+        <div class="card-title">Largo del Short</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Textil Aquatech · Anti-salpicaduras · Secado rápido · Ultra ligero</div>
+        <div class="option-grid cols2">
+          <button class="opt-btn" onclick="selectOpt(this,'largo','Largo Playero')">LARGO PLAYERO</button>
+          <button class="opt-btn" onclick="selectOpt(this,'largo','Largo Sport')">LARGO SPORT</button>
+        </div>
+      </div>
+      <!-- INFO Cortaviento -->
+      <div id="cortaviento-info" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted);margin-top:8px;">
+        🧥 Textil Aquatech · Anti-salpicaduras · Secado rápido · Ultra ligero y fresco
       </div>
     </div>
-    <div class="card">
-      
+    <div class="card" id="tela-card" style="display:none;">
       <div class="card-title">Color de Tela</div>
       <div class="option-grid cols2" id="tela-opts">
         <div style="color:var(--muted);font-size:13px;padding:8px;">⏳ Cargando colores...</div>
       </div>
-      <div class="card-title" style="margin-top:4px;">Color de Vinil</div>
-      <div id="vinil-warn" style="display:none;background:#1a1a10;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--warn);margin-bottom:8px;">⚠️ Este color de vinil puede no contrastar bien con la tela seleccionada.</div>
+    </div>
+    <div class="card" id="tela-libre-card" style="display:none;">
+      <div class="card-title">Color / Diseño del Sublimado</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Describe el color base o envía referencia por WhatsApp/correo</div>
+      <input class="field-input" type="text" id="tela-libre-input" placeholder="Ej: Fondo azul con logo blanco..." style="width:100%;box-sizing:border-box;" oninput="pedido.tela=this.value">
+    </div>
+    <div class="card" id="vinil-card">
+      <div class="card-title">Color de Vinil</div>
+      <div id="vinil-warn" style="display:none;background:#2a1f0a;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--warn);margin-bottom:8px;">⚠️ Este color de vinil puede no contrastar bien con la tela seleccionada.</div>
       <div class="option-grid cols2" id="vinil-opts">
         <div style="color:var(--muted);font-size:13px;padding:8px;">⏳ Cargando colores...</div>
       </div>
     </div>
     <div class="nav-row">
       <button class="btn-back" onclick="goStep(2)">← Atrás</button>
-      <button class="btn-next" onclick="intentarPaso4()">Siguiente →</button>
+      <button class="btn-next" onclick="goStep(4)">Siguiente →</button>
     </div>
   </div>
 
   <!-- STEP 4: PIEZAS -->
   <div class="step" id="step4">
-    <div class="step-header"><div class="step-num">Paso 5 de 7</div><div class="step-title">Tallas y nombres</div></div>
-    <div class="nota" style="margin-bottom:14px;">📌 Nombre en <b>manga derecha</b>, sin iniciales ni logos.<br>Completa las <b id="pack-total-lbl">—</b> <span id='prenda-tipo-lbl'>franelas</span> de tu pack.<br>Usa el contador <b>+/−</b> para repetir franelas iguales.</div>
+    <div class="step-header"><div class="step-num">Paso 4 de 6</div><div class="step-title">Tallas y nombres</div></div>
+    <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;text-align:center;margin-bottom:12px;">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Producto</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="step4-producto-label">—</div>
+    </div>
+    <div class="nota" style="margin-bottom:14px;">📌 Nombre en <b>manga derecha</b>, sin iniciales ni logos.</div>
     <div id="franelas-progreso" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;color:var(--warn);"></div>
     <div class="alerta-min" id="alerta-min"></div>
     <div id="piezas-container"></div>
@@ -299,7 +338,7 @@ window.addEventListener('load',function(){
 
   <!-- STEP 4.5: ¿OTRO PACK? -->
   <div class="step" id="step45">
-    <div class="step-header"><div class="step-num">Paso 5 de 7</div><div class="step-title">¿Deseas agregar otro pack?</div></div>
+    <div class="step-header"><div class="step-num">Paso 4 de 6</div><div class="step-title">¿Deseas agregar otro pack?</div></div>
     <div class="card">
       <div style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Puedes agregar otro pack con diferente modelo, color de tela o vinil. Todos los packs van en el mismo pedido.</div>
       <!-- RESUMEN PACKS AGREGADOS -->
@@ -313,7 +352,7 @@ window.addEventListener('load',function(){
 
   <!-- STEP 5: ENTREGA -->
   <div class="step" id="step5">
-    <div class="step-header"><div class="step-num">Paso 6 de 7</div><div class="step-title">Datos de entrega</div></div>
+    <div class="step-header"><div class="step-num">Paso 5 de 6</div><div class="step-title">Datos de entrega</div></div>
     <div class="card">
       <div class="card-title">Tipo de entrega</div>
       <div class="card-note">📦 Envío cobro en destino por MRW, TEALCA y ZOOM y delivery.</div>
@@ -507,40 +546,8 @@ const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyqXjqyx9WgwPhvRWMpJkB
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
-let modeloFC = 'Comfy Protect';
-let mangaFC = 'Manga Larga';
-let codPrecioFC = 'COMFY01';
-
-function seleccionarModelo(modelo, manga, cod, codPack){
-  modeloFC = modelo;
-  mangaFC = manga;
-  codPrecioFC = cod;
-  pedido.modelo = modelo;
-  pedido.manga = manga;
-  document.getElementById('btn-modelo-cp').style.borderColor = modelo==='Comfy Protect' ? 'var(--accent)' : 'var(--border)';
-  document.getElementById('btn-modelo-mc').style.borderColor = manga==='Manga Corta' ? 'var(--accent)' : 'var(--border)';
-  document.getElementById('btn-modelo-cp').style.background = modelo==='Comfy Protect' ? '#0a2a1a' : 'var(--surface2)';
-  document.getElementById('btn-modelo-mc').style.background = manga==='Manga Corta' ? '#0a2a1a' : 'var(--surface2)';
-  document.getElementById('step1').classList.remove('active');
-  if(manga === 'Manga Corta'){
-    pedido.pack = 0;
-    currentStep = 2;
-    document.getElementById('step2').classList.add('active');
-  } else {
-    // Manga Larga → ir al Paso 3 (pack)
-    currentStep = 2;
-    document.getElementById('step2').classList.add('active');
-  }
-  const modeloInfoEl = document.getElementById('modelo-info-fc');
-  const mangaInfoEl = document.getElementById('manga-info-fc');
-  if(modeloInfoEl) modeloInfoEl.textContent = modelo.toUpperCase();
-  if(mangaInfoEl) mangaInfoEl.textContent = manga;
-  updateProgress();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-let currentStep=0;
-let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:0,modelo:'Comfy Protect',manga:'Manga Larga',capucha:'',tela:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:'',packs:[],pagoMoneda:'',pagoRef:'',pagoMonto:0};
+let currentStep=1;
+let pedido={nombre:'',correo:'',cedula:'',celular:'',pack:1,codigoProducto:'',nombreProducto:'',variante:'',capucha:'',largo:'',vinil:'',piezas:[],agencia:'',tipoEntrega:'',mismoEnvio:true,eNombre:'',eCi:'',eCel:'',packs:[],pagoMoneda:'',pagoRef:'',pagoMonto:0};
 // packs = [{pack, modelo, manga, capucha, tela, vinil, piezas:[]}]
 let piezaCount=0;
 let AGENCIAS_DATA=[];
@@ -604,13 +611,19 @@ async function marcarTokenUsado(){ if(tokenActual) try{ await scriptGETjson({act
 // ── AGENCIAS ──────────────────────────────────────────────────
 async function cargarColoresApp(){
   try{
-    const data=await scriptGETjson({action:'leerColores',hoja:'COLORES.FULLCOMFY'});
+    const data=await scriptGETjson({action:'leerColores',hoja:'COLORES.COLECCION'});
     if(!data.ok) return;
-    const telaOpts=document.getElementById('tela-opts');
     const vinilOpts=document.getElementById('vinil-opts');
-    telaOpts.innerHTML=(data.telas||[]).map(t=>`<button class="opt-btn" onclick="selectColor(this,'tela','${t}')">${t.toUpperCase()}</button>`).join('');
-    vinilOpts.innerHTML=(data.viniles||[]).map(v=>`<button class="opt-btn" onclick="selectColor(this,'vinil','${v}')">${v.toUpperCase()}</button>`).join('');
+    if(vinilOpts) vinilOpts.innerHTML=(data.viniles||[]).map(v=>`<button class="opt-btn" onclick="selectColor(this,'vinil','${v}')">${v.toUpperCase()}</button>`).join('');
   }catch(e){ console.warn('Error cargando colores:',e); }
+  // Cargar colores de Toalla dinámicamente
+  try{
+    const dt=await scriptGETjson({action:'leerColores',hoja:'COLORES.TOALLA'});
+    if(dt.ok && dt.telas && dt.telas.length>0){
+      SERIES_COLECCION.Toalla.colores=dt.telas;
+      dt.telas.forEach(col=>{ SERIES_COLECCION.Toalla.codigos[col]={Toalla:'TOALLA.01'}; });
+    }
+  }catch(e){ console.warn('Error cargando colores Toalla:',e); }
 }
 
 async function cargarAgencias(){
@@ -730,15 +743,11 @@ function goStep(n){
   updateProgress();
   if(n===4) inicializarPiezas();
   if(n===3){
-    pedido.modelo=modeloFC; pedido.manga=mangaFC;
-    const modeloInfoEl = document.getElementById('modelo-info-fc');
-    const mangaInfoEl = document.getElementById('manga-info-fc');
-    if(modeloInfoEl) modeloInfoEl.textContent = modeloFC.toUpperCase();
-    if(mangaInfoEl) mangaInfoEl.textContent = mangaFC;
+    actualizarPaso3();
   }
   if(n===5){
     if(pedido.packs.length===0){
-      pedido.packs.push({pack:pedido.pack,modelo:pedido.modelo,manga:pedido.manga,capucha:pedido.capucha,tela:pedido.tela,vinil:pedido.vinil,piezas:JSON.parse(JSON.stringify(pedido.piezas))});
+      pedido.packs.push({pack:1,codigoProducto:pedido.codigoProducto,modelo:pedido.nombreProducto,serie:selectedSerie,variante:pedido.variante,manga:'',capucha:pedido.capucha,largo:pedido.largo,tela:pedido.tela||'',vinil:pedido.vinil,piezas:JSON.parse(JSON.stringify(pedido.piezas))});
     }
   }
   if(n===6) calcularPago();
@@ -746,8 +755,8 @@ function goStep(n){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// Paso 0 → 1: validar datos personales y avanzar
-async function intentarPaso1(){
+// Paso 1 → 2: con confirmación de datos
+async function intentarPaso2(){
   clearErrs();
   let ok=true;
   if(!document.getElementById('p-nombre').value.trim()){ showErr('err-nombre',true); document.getElementById('p-nombre').classList.add('error'); ok=false; }
@@ -764,9 +773,10 @@ async function intentarPaso1(){
   // Modal confirmación
   const confirmado=await mostrarModalDatos(pedido.cedula, pedido.celular, pedido.correo);
   if(!confirmado) return; // vuelve al paso 1 sin avanzar
-  document.getElementById('step0').classList.remove('active');
-  currentStep=1;
-  document.getElementById('step1').classList.add('active');
+  // Avanzar
+  document.getElementById('step1').classList.remove('active');
+  currentStep=2;
+  document.getElementById('step2').classList.add('active');
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -777,11 +787,16 @@ async function intentarPaso45(){
   // Guardar pack actual en lista de packs
   pedido.packs.push({
     pack: pedido.pack,
-    modelo: pedido.modelo,
+    codigoProducto: pedido.codigoProducto,
+    modelo: pedido.nombreProducto,
+    serie: selectedSerie,
+    variante: pedido.variante,
     manga: pedido.manga,
     capucha: pedido.capucha,
+    largo: pedido.largo,
     tela: pedido.tela,
     vinil: pedido.vinil,
+    empresarialLogos: pedido._empresarialLogos||false,
     piezas: JSON.parse(JSON.stringify(pedido.piezas))
   });
   // Mostrar resumen de packs agregados
@@ -805,14 +820,23 @@ function renderPacksResumen(){
 }
 
 function agregarOtroPack(){
-  pedido.pack=0; pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
-  modeloFC='Comfy Protect'; mangaFC='Manga Larga'; pedido.modelo=modeloFC; pedido.manga=mangaFC;
-  ['btn-modelo-cp','btn-modelo-mc','btn-modelo-mce','btn-modelo-cdml','btn-modelo-cdmc'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.style.borderColor='var(--border)'; el.style.background='var(--surface2)'; } });
+  // Resetear campos de modelo/pack para nuevo pack (capucha se selecciona manualmente)
+  pedido.pack=0; pedido.modelo='Licra Colección'; pedido.manga='Manga Larga';
+  pedido.tela=''; pedido.vinil=''; pedido.piezas=[]; pedido.capucha=''; pedido.largo='';
+  pedido.codigoProducto=''; pedido.nombreProducto=''; pedido.variante='';
+  pedido._minUnidades=1; pedido._hojaColores=null; pedido._modeloTieneCapucha=false; pedido._colorLibreEmp=false; pedido._empresarialLogos=false;
+  selectedSerie=''; selectedColorSerie=''; selectedVariante=''; selectedLinea='';
+  // Limpiar selecciones visuales
   document.querySelectorAll('#tela-opts .opt-btn, #vinil-opts .opt-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('#serie-grid .opt-btn, #color-serie-grid .opt-btn, #variante-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('#linea-grid .opt-btn, #modelo-grid .opt-btn, #empresarial-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  ocultarTodasSeccionesProducto();
+  document.getElementById('color-serie-grid').innerHTML='';
+  document.getElementById('variante-grid').innerHTML='';
   document.getElementById('step45').classList.remove('active');
-  currentStep=1;
-  document.getElementById('step1').classList.add('active');
+  currentStep=2;
+  document.getElementById('step2').classList.add('active');
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -847,16 +871,12 @@ function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidCel(c){ return c.replace(/\D/g,'').length>=7; }
 
 function validateStep(n){
-  if(n===2){ 
-    if(!pedido.pack||pedido.pack<1){ alert('Selecciona la cantidad de franelas'); return false; } 
-    return true; 
-  }
+  if(n===2){ if(!pedido.codigoProducto){ alert('Selecciona un producto'); return false; } return true; }
   if(n===3){
-    if(!pedido.modelo){ alert('Selecciona el modelo'); return false; }
-    if(!pedido.manga){ alert('Selecciona el tipo de manga'); return false; }
-    if(!pedido.capucha){ alert('Selecciona si deseas capucha'); return false; }
-    if(!pedido.tela){ alert('Selecciona el color de tela'); return false; }
-    if(!pedido.vinil){ alert('Selecciona el color del vinil'); return false; }
+    if(!pedido.vinil){ alert('Selecciona el color de vinil'); return false; }
+    const v=pedido.variante;
+    if((v==='Playera'||v==='Dress'||v==='Cortaviento')&&!pedido.capucha){ alert('Selecciona si deseas capucha'); return false; }
+    if(v==='Short'&&!pedido.largo){ alert('Selecciona el largo del short'); return false; }
     return true;
   }
   if(n===4){
@@ -870,8 +890,8 @@ function validateStep(n){
     alerta.style.display='none';
     for(let i=0; i<pedido.piezas.length; i++){
       const p=pedido.piezas[i];
-      if(!p.genero||!p.talla){ alert(`Completa género y talla en la franela ${i+1}`); return false; }
-      if(!p.sinNombre && !p.nombre){ alert(`⚠️ La franela ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
+      if(!p.genero||!p.talla){ alert(`Completa género y talla en el${pedido.variante==='Short'?' short':' la franela'} ${i+1}`); return false; }
+      if(pedido.variante!=='Short' && !p.sinNombre && !p.nombre){ alert(`⚠️ La franela ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
     }
     return true;
   }
@@ -898,11 +918,301 @@ function selectPack(btn,n){
   btn.classList.add('selected'); pedido.pack=n;
   document.getElementById('pack-custom').value='';
   document.getElementById('pack-seleccionado').style.display='block';
-  const isDressPack = modeloFC && modeloFC.toLowerCase().includes('dress'); document.getElementById('pack-label').textContent=n+'PACK — '+n+(isDressPack?' vestidos':' franelas');
+  document.getElementById('pack-label').textContent=n+'PACK — '+n+' franelas';
 }
 function setCustomPack(val){
   const n=parseInt(val);
-  if(n>=2){ pedido.pack=n; document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected')); document.getElementById('pack-seleccionado').style.display='block'; const isDressPack = modeloFC && modeloFC.toLowerCase().includes('dress'); document.getElementById('pack-label').textContent=n+'PACK — '+n+(isDressPack?' vestidos':' franelas'); }
+  if(n>=2){ pedido.pack=n; document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected')); document.getElementById('pack-seleccionado').style.display='block'; document.getElementById('pack-label').textContent=n+'PACK — '+n+' franelas'; }
+}
+
+// ── COLECCION SERIE/VARIANTE SELECTION ───────────────────────
+const SERIES_COLECCION={
+  Camping:{nombre:'Camping (Outdoor)',colores:['Black','Camuflaje','Selva'],
+    codigos:{Black:{Playera:'CampingBlack',Dress:'CampingBlackDress',Cortaviento:'CampingBlackCortaviento',Short:'CampingBlackShort'},
+             Camuflaje:{Playera:'CampingCamo',Dress:'CampingCamoDress',Cortaviento:'CampingCamoCortaviento',Short:'CampingCamoShort'},
+             Selva:{Playera:'CampingSelva',Dress:'CampingSelvaDress',Cortaviento:'CampingSelvaCortaviento',Short:'CampingSelvaShort'}}},
+  Nautica:{nombre:'Náutica',colores:['Pink','Marino','Mint Jack','Black Jack'],
+    codigos:{Pink:{Playera:'NauticaPink',Dress:'NauticaPinkDress',Cortaviento:'NauticaPinkCortaviento',Short:'NauticaPinkShort'},
+             Marino:{Playera:'NauticaMarino',Dress:'NauticaMarinoDress',Cortaviento:'NauticaMarinoCortaviento',Short:'NauticaMarinoShort'},
+             'Mint Jack':{Playera:'NauticaMintJack',Dress:'NauticaMintJackDress',Cortaviento:'NauticaMintJackCortaviento',Short:'NauticaMintJackShort'},
+             'Black Jack':{Playera:'NauticaBlackJack',Dress:'NauticaBlackJackDress',Cortaviento:'NauticaBlackJackCortaviento',Short:'NauticaBlackJackShort'}}},
+  Alpha:{nombre:'Alpha',colores:['Selva','Gris','Marino','Pink'],
+    codigos:{Selva:{Playera:'AlphaSelva',Dress:'AlphaSelvaDress',Cortaviento:'AlphaSelvaCortaviento',Short:'AlphaSelvaShort'},
+             Gris:{Playera:'AlphaGris',Dress:'AlphaGrisDress',Cortaviento:'AlphaGrisCortaviento',Short:'AlphaGrisShort'},
+             Marino:{Playera:'AlphaMarino',Dress:'AlphaMarinoDress',Cortaviento:'AlphaMarinoCortaviento',Short:'AlphaMarinoShort'},
+             Pink:{Playera:'AlphaPink',Dress:'AlphaPinkDress',Cortaviento:'AlphaPinkCortaviento',Short:'AlphaPinkShort'}}},
+  Unicolor:{nombre:'Unicolor',colores:['Blanco','Negro','Azul Rey','Azul Marino','Menta','Gris','Rojo','Rosa Bebé','Verde Militar'],
+    codigos:{
+      Blanco:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      Negro:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      'Azul Rey':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      'Azul Marino':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      Menta:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      Gris:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      Rojo:{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      'Rosa Bebé':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'},
+      'Verde Militar':{Playera:'LICRA01',Dress:'DressSerie',Cortaviento:'CortavientoSerie',Short:'ShortSerie','Cotton Licra':'LICRA07'}
+    }
+  },
+  Toalla:{nombre:'Toalla',colores:[],
+    codigos:{}
+  },
+  ChaquetaReflectiva:{nombre:'Chaqueta Reflectiva',colores:['Gris'],
+    codigos:{Gris:{Chaqueta:'CHAQUETA02'}}
+  }
+};
+let selectedSerie='',selectedColorSerie='',selectedVariante='';
+
+function resetCantidadProducto(){
+  const min=pedido._minUnidades||1;
+  pedido.pack=min;
+  const lbl=document.getElementById('cantidad-producto-label');
+  if(lbl) lbl.textContent=min;
+}
+function cambiarCantidadProducto(delta){
+  const lbl=document.getElementById('cantidad-producto-label');
+  if(!lbl) return;
+  const min=pedido._minUnidades||1;
+  let n=(parseInt(lbl.textContent)||min)+delta;
+  if(n<min) n=min;
+  lbl.textContent=n;
+  pedido.pack=n;
+}
+function confirmarCantidadYAvanzar(){
+  if(!pedido.codigoProducto){ alert('Selecciona un producto primero'); return; }
+  const lbl=document.getElementById('cantidad-producto-label');
+  const min=pedido._minUnidades||1;
+  let n=parseInt(lbl?.textContent)||min;
+  if(n<min){ alert(`Este producto requiere un mínimo de ${min} unidades`); return; }
+  pedido.pack=n;
+  goStep(3);
+}
+
+// ── LÍNEA (Comfy / Full Comfy / Licra Protect / Colección / Empresarial) ──
+let selectedLinea='';
+const MODELOS_LINEA={
+  comfy:[
+    {nombre:'Comfy Mega Promo', codigo:'COMFY11', manga:'Manga Larga', min:2, hojaColores:'COLORES.COMFY'}
+  ],
+  fullcomfy:[
+    {nombre:'Full Comfy Protect Manga Larga', codigo:'COMFY01', manga:'Manga Larga', min:1, hojaColores:'COLORES.FULLCOMFY', capucha:true},
+    {nombre:'Full Comfy Protect Manga Corta', codigo:'COMFY06', manga:'Manga Corta', min:1, hojaColores:'COLORES.FULLCOMFY', capucha:true},
+    {nombre:'Full Comfy Protect Manga Cero', codigo:'COMFY07', manga:'Manga Cero', min:1, hojaColores:'COLORES.FULLCOMFY', capucha:true},
+    {nombre:'Comfy Dress Manga Larga', codigo:'COMFY04', manga:'Manga Larga Dress', min:1, hojaColores:'COLORES.FULLCOMFY', capucha:false},
+    {nombre:'Comfy Dress Manga Cero', codigo:'COMFY03', manga:'Manga Cero Dress', min:1, hojaColores:'COLORES.FULLCOMFY', capucha:false}
+  ],
+  licra:[
+    {nombre:'Licra Protect Manga Larga', codigo:'LICRA01', manga:'Manga Larga', min:1, hojaColores:'COLORES.LICRA', capucha:true},
+    {nombre:'Licra Protect Manga Corta', codigo:'LICRA06', manga:'Manga Corta', min:1, hojaColores:'COLORES.LICRA', capucha:true},
+    {nombre:'Licra Dress Manga Larga', codigo:'LICRA04', manga:'Manga Larga', min:1, hojaColores:'COLORES.LICRA', capucha:false},
+    {nombre:'Licra Dress Manga Cero', codigo:'LICRA03', manga:'Manga Cero', min:1, hojaColores:'COLORES.LICRA', capucha:false}
+  ]
+};
+const EMPRESARIAL_DEF={
+  empresarial:      {nombre:'Comfy Empresarial',        codigo:'COMFY12',   manga:'Manga Larga', capucha:true,  hojaColores:'COLORES.FULLCOMFY', colorLibre:false, logos:true},
+  cortaviento_emp:  {nombre:'Cortaviento Empresarial',   codigo:'COMFY12.C', manga:'Manga Larga', capucha:false, hojaColores:'COLORES.FULLCOMFY', colorLibre:false, logos:true},
+  sublimada:        {nombre:'Empresarial Sublimada',     codigo:'COMFY15',   manga:'Manga Larga', capucha:true,  hojaColores:null, colorLibre:true, logos:false},
+  cortaviento_sub:  {nombre:'Cortaviento Sublimado',     codigo:'COMFY15.C', manga:'Manga Larga', capucha:false, hojaColores:null, colorLibre:true, logos:false}
+};
+
+function ocultarTodasSeccionesProducto(){
+  ['modelo-wrap','empresarial-wrap','serie-wrap','color-serie-wrap','variante-wrap','producto-seleccionado'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='none';
+  });
+  document.getElementById('modelo-grid').innerHTML='';
+  document.getElementById('color-serie-grid').innerHTML='';
+  document.getElementById('variante-grid').innerHTML='';
+  document.querySelectorAll('#serie-grid .opt-btn,#empresarial-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+}
+
+function selectLinea(btn,linea){
+  selectedLinea=linea;
+  document.querySelectorAll('#linea-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  ocultarTodasSeccionesProducto();
+  selectedSerie=''; selectedColorSerie=''; selectedVariante='';
+  pedido.codigoProducto=''; pedido.nombreProducto=''; pedido.variante=''; pedido.tela=''; pedido.vinil=''; pedido.capucha='';
+
+  if(linea==='coleccion'){
+    document.getElementById('serie-wrap').style.display='block';
+    return;
+  }
+  if(linea==='empresarial'){
+    document.getElementById('empresarial-wrap').style.display='block';
+    return;
+  }
+  // comfy / fullcomfy / licra
+  const modelos=MODELOS_LINEA[linea]||[];
+  document.getElementById('modelo-grid').innerHTML=modelos.map((m,i)=>
+    `<button class="opt-btn" onclick="selectModelo(this,'${linea}',${i})">${m.nombre.toUpperCase()}</button>`
+  ).join('');
+  document.getElementById('modelo-wrap').style.display='block';
+}
+
+async function selectModelo(btn,linea,idx){
+  document.querySelectorAll('#modelo-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const m=MODELOS_LINEA[linea][idx];
+  pedido.codigoProducto=m.codigo;
+  pedido.nombreProducto=m.nombre;
+  pedido.variante=linea; // 'comfy' | 'fullcomfy' | 'licra' — usado luego para lógica de precio/capucha/logos
+  pedido.manga=m.manga;
+  pedido.capucha=m.capucha?'':'Sin Capucha';
+  pedido.tela=''; pedido.vinil='';
+  pedido._minUnidades=m.min||1;
+  pedido._hojaColores=m.hojaColores;
+  pedido._modeloTieneCapucha=!!m.capucha;
+  document.getElementById('producto-label').textContent=m.nombre+' · '+m.codigo;
+  document.getElementById('producto-seleccionado').style.display='block';
+  resetCantidadProducto();
+  if(m.min>1){ pedido.pack=m.min; document.getElementById('cantidad-producto-label').textContent=m.min; }
+  const notaMin=document.getElementById('cantidad-min-nota');
+  if(notaMin) notaMin.textContent=m.min>1?`Mínimo ${m.min} unidades para este modelo`:'';
+}
+
+function selectEmpresarial(btn,tipo){
+  document.querySelectorAll('#empresarial-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const e=EMPRESARIAL_DEF[tipo];
+  pedido.codigoProducto=e.codigo;
+  pedido.nombreProducto=e.nombre;
+  pedido.variante='empresarial_'+tipo; // marca especial para pricing/logos
+  pedido.manga=e.manga;
+  pedido.capucha=e.capucha?'':'Sin Capucha';
+  pedido.tela=''; pedido.vinil='';
+  pedido._minUnidades=6;
+  pedido._hojaColores=e.hojaColores;
+  pedido._colorLibreEmp=e.colorLibre;
+  pedido._modeloTieneCapucha=!!e.capucha;
+  pedido._empresarialLogos=!!e.logos;
+  document.getElementById('producto-label').textContent=e.nombre+' · '+e.codigo;
+  document.getElementById('producto-seleccionado').style.display='block';
+  resetCantidadProducto();
+  pedido.pack=6;
+  document.getElementById('cantidad-producto-label').textContent='6';
+  const notaMin=document.getElementById('cantidad-min-nota');
+  if(notaMin) notaMin.textContent='Mínimo 6 unidades para pedidos empresariales';
+}
+
+function selectSerie(btn,serie){
+  selectedSerie=serie; selectedColorSerie=''; selectedVariante='';
+  pedido._minUnidades=1; pedido._hojaColores=null; pedido._modeloTieneCapucha=false; pedido._colorLibreEmp=false; pedido._empresarialLogos=false;
+  document.querySelectorAll('#serie-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const s=SERIES_COLECCION[serie];
+  document.getElementById('color-serie-grid').innerHTML=s.colores.map(col=>`<button class="opt-btn" onclick="selectColorSerie(this,'${col}')">${col.toUpperCase()}</button>`).join('');
+  document.getElementById('color-serie-wrap').style.display='block';
+  document.getElementById('variante-wrap').style.display='none';
+  document.getElementById('producto-seleccionado').style.display='none';
+}
+
+function selectColorSerie(btn,color){
+  selectedColorSerie=color; selectedVariante='';
+  document.querySelectorAll('#color-serie-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const s=SERIES_COLECCION[selectedSerie];
+
+  // Toalla: no tiene variante, selección directa
+  if(selectedSerie==='Toalla'){
+    const codigo='TOALLA.01';
+    const nombre=`Toalla ${color}`;
+    pedido.codigoProducto=codigo; pedido.nombreProducto=nombre; pedido.variante='Toalla';
+    pedido.pack=1; pedido.manga=''; pedido.capucha=''; pedido.tela=color;
+    document.getElementById('producto-label').textContent=nombre+' · '+codigo;
+    document.getElementById('producto-seleccionado').style.display='block'; resetCantidadProducto();
+    document.getElementById('variante-wrap').style.display='none';
+    return;
+  }
+
+  const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short','Cotton Licra']:selectedSerie==='ChaquetaReflectiva'?['Chaqueta']:['Playera','Dress','Cortaviento','Short'];
+  document.getElementById('variante-grid').innerHTML=variantes.map(v=>`<button class="opt-btn" onclick="selectVariante(this,'${v}')">${v.toUpperCase()}</button>`).join('');
+  document.getElementById('variante-wrap').style.display='block';
+  document.getElementById('producto-seleccionado').style.display='none';
+}
+
+function selectVariante(btn,variante){
+  selectedVariante=variante;
+  document.querySelectorAll('#variante-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const s=SERIES_COLECCION[selectedSerie];
+  const codigo=s.codigos[selectedColorSerie][variante];
+  let nombre;
+  if(selectedSerie==='ChaquetaReflectiva') nombre='Chaqueta Reflectiva';
+  else nombre=selectedSerie==='Unicolor'?`${variante} Serie ${selectedColorSerie}`:`${variante} ${s.nombre} ${selectedColorSerie}`;
+  pedido.codigoProducto=codigo; pedido.nombreProducto=nombre; pedido.variante=variante; pedido.pack=1;
+  // Cotton Licra, T-Shirt y Short: sin capucha
+  if(variante==='ChaquetaReflectiva'||variante==='Chaqueta'){
+    pedido.manga='';
+  } else if(variante==='Cotton Licra'||variante==='T-Shirt'||variante==='Short'){
+    pedido.manga='Manga Corta'; pedido.capucha='Sin Capucha';
+  } else {
+    pedido.manga=''; pedido.capucha='';
+  }
+  // Guardar color como tela para todas las series
+  pedido.tela=selectedColorSerie;
+  document.getElementById('producto-label').textContent=nombre+' · '+codigo;
+  document.getElementById('producto-seleccionado').style.display='block'; resetCantidadProducto();
+}
+
+function selectShortSerie(btn,color){
+  document.querySelectorAll('#serie-grid .opt-btn,#color-serie-grid .opt-btn,#variante-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
+  selectedSerie=''; selectedColorSerie=''; selectedVariante='Short';
+  pedido.codigoProducto='ShortSerie'; pedido.nombreProducto=`Short Serie ${color}`; pedido.variante='Short'; pedido.tela=color; pedido.pack=1;
+  document.getElementById('producto-label').textContent=`Short Serie ${color} · ShortSerie`;
+  document.getElementById('producto-seleccionado').style.display='block'; resetCantidadProducto();
+  document.getElementById('color-serie-wrap').style.display='none';
+  document.getElementById('variante-wrap').style.display='none';
+}
+
+async function actualizarPaso3(){
+  const v=pedido.variante;
+  const esComfyFamilia=['comfy','fullcomfy','licra'].includes(v);
+  const esEmpresarial=typeof v==='string'&&v.indexOf('empresarial_')===0;
+  document.getElementById('step3-producto-label').textContent=pedido.nombreProducto||'—';
+  document.querySelectorAll('#capucha-wrap .opt-btn,#largo-wrap .opt-btn').forEach(b=>b.classList.remove('selected'));
+
+  const tieneCapuchaOpcional=pedido._modeloTieneCapucha===true;
+  document.getElementById('capucha-wrap').style.display=
+    (v==='Playera'||v==='Dress'||v==='Cortaviento'||v==='Chaqueta'||v==='ChaquetaReflectiva'||tieneCapuchaOpcional)?'block':'none';
+  document.getElementById('largo-wrap').style.display=v==='Short'?'block':'none';
+  document.getElementById('cortaviento-info').style.display=v==='Cortaviento'?'block':'none';
+  pedido.largo='';
+  if(v==='Short'){ pedido.capucha='Sin Capucha'; }
+  else if((esComfyFamilia||esEmpresarial)&&!tieneCapuchaOpcional){ pedido.capucha='Sin Capucha'; }
+  else { pedido.capucha=''; }
+
+  // Color de Tela / Vinil según la línea
+  const telaCard=document.getElementById('tela-card');
+  const telaLibreCard=document.getElementById('tela-libre-card');
+  const vinilCard=document.getElementById('vinil-card');
+  if(esComfyFamilia||esEmpresarial){
+    if(pedido._colorLibreEmp){
+      // Sublimados: color/diseño en texto libre, sin vinil
+      if(telaCard) telaCard.style.display='none';
+      if(vinilCard) vinilCard.style.display='none';
+      if(telaLibreCard) telaLibreCard.style.display='block';
+      const inp=document.getElementById('tela-libre-input'); if(inp) inp.value=pedido.tela||'';
+      pedido.vinil='';
+    } else if(pedido._hojaColores){
+      if(telaLibreCard) telaLibreCard.style.display='none';
+      if(telaCard) telaCard.style.display='block';
+      if(vinilCard) vinilCard.style.display='block';
+      try{
+        const data=await scriptGETjson({action:'leerColores',hoja:pedido._hojaColores});
+        const telaOpts=document.getElementById('tela-opts');
+        const vinilOpts=document.getElementById('vinil-opts');
+        if(data.ok){
+          if(telaOpts) telaOpts.innerHTML=(data.telas||[]).map(t=>`<button class="opt-btn" onclick="selectColor(this,'tela','${t}')">${t.toUpperCase()}</button>`).join('');
+          if(vinilOpts) vinilOpts.innerHTML=(data.viniles||[]).map(vv=>`<button class="opt-btn" onclick="selectColor(this,'vinil','${vv}')">${vv.toUpperCase()}</button>`).join('');
+        }
+      }catch(e){ console.warn('Error cargando colores linea:',e); }
+    }
+  } else {
+    // Colección: la tela viene del color de serie ya elegido; vinil se carga aparte (cargarColoresApp genérico)
+    if(telaCard) telaCard.style.display='none';
+    if(telaLibreCard) telaLibreCard.style.display='none';
+    if(vinilCard) vinilCard.style.display='block';
+  }
 }
 
 function selectOpt(btn,field,val){
@@ -919,19 +1229,23 @@ function setMismoEnvio(val){
 
 // ── PIEZAS ────────────────────────────────────────────────────
 function inicializarPiezas(){
-  if(!pedido.pack||pedido.pack<1){ alert('Selecciona el tamaño del pack primero'); goStep(2); return; }
-  const isDress = modeloFC && modeloFC.toLowerCase().includes('dress');
-  const pTipo = isDress ? 'vestidos' : 'franelas';
-  document.getElementById('pack-total-lbl').textContent=pedido.pack;
-  const pTipoLbl = document.getElementById('prenda-tipo-lbl');
-  if(pTipoLbl) pTipoLbl.textContent = pTipo;
+  if(!pedido.pack||pedido.pack<1){ alert('Selecciona el producto primero'); goStep(2); return; }
+  const esShort=pedido.variante==='Short';
+  // Show product label in step4
+  const lbl=document.getElementById('step4-producto-label');
+  if(lbl) lbl.textContent=pedido.nombreProducto||'—';
+  const packLbl=document.getElementById('pack-total-lbl');
+  if(packLbl) packLbl.textContent=pedido.pack===1?`1 ${esShort?'short':'prenda'}`:pedido.pack+` ${esShort?'shorts':'franelas'}`;
+  // Update step4 title
+  const step4title=document.querySelector('#step4 .step-title');
+  if(step4title) step4title.textContent=esShort?'Tallas y nombres (Short)':'Tallas y nombres';
   const container=document.getElementById('piezas-container');
-  // Limpiar siempre para el pack actual
   container.innerHTML='';
   piezaCount=0;
   pedido.piezas=[];
   for(let i=0;i<pedido.pack;i++) addPieza();
   actualizarBotonesMult();
+  actualizarContadorFranelas();
 }
 
 function addPieza(copiarDe=null){
@@ -944,19 +1258,28 @@ function addPieza(copiarDe=null){
   const nomCopy=copiarDe?document.getElementById('pz-nombre-'+copiarDe)?.value:'';
   const sinCopy=copiarDe?document.getElementById('pz-sinombre-'+copiarDe)?.checked:false;
   const total=document.getElementById('piezas-container').querySelectorAll('.pieza-card').length+1;
-  const isDress = modeloFC.toLowerCase().includes('dress');
-  const tipoLabel = isDress ? 'Vestido' : 'Franela';
-  const generosHtml = isDress
-    ? `<option value="">Seleccionar</option><option value="Kids"${genCopy==='Kids'?' selected':''}>Kids</option><option value="Dama"${genCopy==='Dama'?' selected':''}>Dama</option>`
-    : `<option value="">Seleccionar</option><option value="Kids"${genCopy==='Kids'?' selected':''}>Kids</option><option value="Dama"${genCopy==='Dama'?' selected':''}>Dama</option><option value="Caballero"${genCopy==='Caballero'?' selected':''}>Caballero</option>`;
+  const esShort=pedido.variante==='Short';
+  const esChaqueta=pedido.variante==='Chaqueta'||pedido.variante==='ChaquetaReflectiva';
+  const seriesConLogo=['Camping','Nautica','Alpha'];
+  const prendasConLogo=['Playera','Dress','Cortaviento'];
+  const esSerieConLogo=seriesConLogo.includes(selectedSerie)&&prendasConLogo.includes(pedido.variante);
+  const esComfyFamilia=['comfy','fullcomfy','licra'].includes(pedido.variante);
+  const esFullComfyOLicra=['fullcomfy','licra'].includes(pedido.variante);
+  const esEmpresarial=typeof pedido.variante==='string'&&pedido.variante.indexOf('empresarial_')===0;
+  const mostrarLogos=esChaqueta||esSerieConLogo||esFullComfyOLicra||(esEmpresarial&&pedido._empresarialLogos);
+  const ocultarCapuchaCheckbox=(esComfyFamilia||esEmpresarial)&&!pedido._modeloTieneCapucha;
+  const labelPrenda=esShort?'Short':esChaqueta?'Chaqueta':'Franela';
   div.innerHTML=`
-    <div class="pieza-num">${tipoLabel} #${id} ${total>pedido.pack?'<span style="color:var(--warn);font-size:11px;">(extra)</span>':''}</div>
+    <div class="pieza-num">${labelPrenda} #${id} ${total>pedido.pack?'<span style="color:var(--warn);font-size:11px;">(extra)</span>':''}</div>
     ${total>pedido.pack?`<button class="remove-btn" onclick="removePieza(${id})">✕</button>`:''}
     <div class="pieza-grid">
       <div class="field-group">
         <div class="field-label">Género</div>
         <select class="field-input" id="pz-genero-${id}" onchange="updateTallas(${id})">
-          ${generosHtml}
+          <option value="">Seleccionar</option>
+          <option value="Kids"${genCopy==='Kids'?' selected':''}>Kids</option>
+          <option value="Dama"${genCopy==='Dama'?' selected':''}>Dama</option>
+          <option value="Caballero"${genCopy==='Caballero'?' selected':''}>Caballero</option>
         </select>
       </div>
       <div class="field-group">
@@ -966,7 +1289,7 @@ function addPieza(copiarDe=null){
         </select>
       </div>
     </div>
-    <div class="field-group" style="margin-bottom:6px">
+    ${!esShort?`<div class="field-group" style="margin-bottom:6px">
       <div class="field-label">Nombre en la prenda</div>
       <div class="field-note">Manga derecha · Sin iniciales ni logos</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;margin-top:4px;">
@@ -974,16 +1297,14 @@ function addPieza(copiarDe=null){
         <label for="pz-sinombre-${id}" style="font-size:13px;color:var(--muted);cursor:pointer;">Sin nombre en manga derecha</label>
       </div>
       <input class="field-input" type="text" id="pz-nombre-${id}" placeholder="Ej: María, Carlos..." value="${nomCopy}" style="${sinCopy?'display:none':''}">
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;margin-bottom:6px;">
+    </div>`:`<input type="hidden" id="pz-sinombre-${id}" value="true"><input type="hidden" id="pz-nombre-${id}" value="">`}
+    ${(!esShort&&!ocultarCapuchaCheckbox)?`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;margin-bottom:6px;">
       <input type="checkbox" id="pz-capucha-${id}" ${pedido.capucha==='Con Capucha'?' checked':''} style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
       <label for="pz-capucha-${id}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">Con capucha</label>
-    </div>
-    <!-- LOGOS -->
-    <div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:6px;">
+    </div>`:''}
+    ${mostrarLogos?`<div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:6px;">
       <div style="font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">🎨 Logos adicionales</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Nombre en manga incluido sin cargo. Enviar imagen del logo por WhatsApp o correo.</div>
-      <!-- Logo Pecho -->
       <div style="margin-bottom:6px;">
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="checkbox" id="pz-logo-pecho-${id}" onchange="toggleLogo('pecho',${id})" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
@@ -991,7 +1312,6 @@ function addPieza(copiarDe=null){
         </div>
         <input class="field-input" type="text" id="pz-logo-pecho-txt-${id}" placeholder="Nombre del logo ej: IKOA, BeKate..." style="display:none;margin-top:6px;" oninput="this.value=this.value.toUpperCase()">
       </div>
-      <!-- Logo Espalda -->
       <div style="margin-bottom:6px;">
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="checkbox" id="pz-logo-espalda-${id}" onchange="toggleLogo('espalda',${id})" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
@@ -999,7 +1319,6 @@ function addPieza(copiarDe=null){
         </div>
         <input class="field-input" type="text" id="pz-logo-espalda-txt-${id}" placeholder="Nombre del logo ej: IKOA, BeKate..." style="display:none;margin-top:6px;" oninput="this.value=this.value.toUpperCase()">
       </div>
-      <!-- Logo Manga -->
       <div>
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="checkbox" id="pz-logo-manga-${id}" onchange="toggleLogo('manga',${id})" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
@@ -1007,9 +1326,9 @@ function addPieza(copiarDe=null){
         </div>
         <input class="field-input" type="text" id="pz-logo-manga-txt-${id}" placeholder="Nombre del logo ej: IKOA, BeKate..." style="display:none;margin-top:6px;" oninput="this.value=this.value.toUpperCase()">
       </div>
-    </div>
+    </div>`:''}
     <div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 10px;background:var(--surface2);border-radius:8px;">
-      <div style="font-size:12px;color:var(--muted);flex:1;">Repetir esta franela:</div>
+      <div style="font-size:12px;color:var(--muted);flex:1;">Repetir este ${labelPrenda.toLowerCase()}:</div>
       <button onclick="cambiarRepeticion(${id},-1)" style="width:32px;height:32px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
       <span id="rep-count-${id}" style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);min-width:28px;text-align:center;">1</span>
       <button onclick="cambiarRepeticion(${id},+1)" style="width:32px;height:32px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
@@ -1093,15 +1412,6 @@ function updateTallas(id,seleccionar=null){
   tallaSelect.innerHTML='<option value="">Seleccionar</option>'+tallas.map(t=>`<option value="${t}"${t===seleccionar?' selected':''}>${t}</option>`).join('');
 }
 
-function toggleLogo(tipo, id){
-  const check = document.getElementById(`pz-logo-${tipo}-${id}`);
-  const input = document.getElementById(`pz-logo-${tipo}-txt-${id}`);
-  if(check && input){
-    input.style.display = check.checked ? 'block' : 'none';
-    if(!check.checked) input.value = '';
-  }
-}
-
 function toggleNombrePrenda(id){
   const check=document.getElementById('pz-sinombre-'+id);
   const input=document.getElementById('pz-nombre-'+id);
@@ -1126,143 +1436,121 @@ function savePiezas(){
     const sinNombre=document.getElementById('pz-sinombre-'+id)?.checked||false;
     const n=sinNombre?'SIN NOMBRE EN MANGA':(document.getElementById('pz-nombre-'+id)?.value.trim()||'');
     const conCapucha=document.getElementById('pz-capucha-'+id)?.checked||false;
+    const logoPecho=document.getElementById('pz-logo-pecho-'+id)?.checked?(document.getElementById('pz-logo-pecho-txt-'+id)?.value.trim()||'SI'):'';
+    const logoEspalda=document.getElementById('pz-logo-espalda-'+id)?.checked?(document.getElementById('pz-logo-espalda-txt-'+id)?.value.trim()||'SI'):'';
+    const logoManga=document.getElementById('pz-logo-manga-'+id)?.checked?(document.getElementById('pz-logo-manga-txt-'+id)?.value.trim()||'SI'):'';
     const rep=parseInt(document.getElementById('rep-count-'+id)?.textContent||'1');
-    // Logos
-    const logoPecho = document.getElementById('pz-logo-pecho-'+id)?.checked ? (document.getElementById('pz-logo-pecho-txt-'+id)?.value.trim()||'SI') : '';
-    const logoEspalda = document.getElementById('pz-logo-espalda-'+id)?.checked ? (document.getElementById('pz-logo-espalda-txt-'+id)?.value.trim()||'SI') : '';
-    const logoManga = document.getElementById('pz-logo-manga-'+id)?.checked ? (document.getElementById('pz-logo-manga-txt-'+id)?.value.trim()||'SI') : '';
     // Expandir repeticiones
     for(let i=0;i<rep;i++){
-      pedido.piezas.push({genero:g, talla:t, nombre:n, sinNombre, conCapucha, logoPecho, logoEspalda, logoManga});
+      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre,conCapucha,logoPecho,logoEspalda,logoManga});
     }
   });
 }
 
+function toggleLogo(tipo, id){
+  const check = document.getElementById(`pz-logo-${tipo}-${id}`);
+  const input = document.getElementById(`pz-logo-${tipo}-txt-${id}`);
+  if(check && input){
+    input.style.display = check.checked ? 'block' : 'none';
+    if(!check.checked) input.value = '';
+  }
+}
+
 // ── PAGO ──────────────────────────────────────────────────────
-let precioComfy={bs:0,usd:0}, precioRecarga={bs:0,usd:0}, precioCapucha={bs:0,usd:0};
+let precioRecarga={bs:0,usd:0}, precioCapucha={bs:0,usd:0};
 let precioLogoPecho={bs:0,usd:0}, precioLogoEspalda={bs:0,usd:0}, precioLogoManga={bs:0,usd:0};
+let precioLogoPechoEmp={bs:0,usd:0}, precioLogoEspaldaEmp={bs:0,usd:0};
 let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
 let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
 
-// Descompone N franelas en combinación óptima de packs 4+3+2
-function descomponerPacks(n){
-  const combos=[];
-  let resto=n;
-  while(resto>=4){ combos.push(4); resto-=4; }
-  if(resto===3) combos.push(3);
-  else if(resto===2) combos.push(2);
-  else if(resto===1){ if(combos.length>0){ combos[combos.length-1]--; combos.push(2); } else combos.push(2); }
-  return combos;
-}
-
 async function calcularPago(){
   try{
-    const data=await scriptGETjson({action:'leerTodosLosPrecios'});
+    const data=await scriptGETjson({action:'leerTodosLosPrecios',codigo:pedido.codigoProducto});
     if(data.ok){
-      precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
-      precioCapucha={bs:parseFloat(data.capucha_bs)||0, usd:parseFloat(data.capucha_usd)||0};
-      // Precios de logos
+      precioRecarga={bs:parseFloat(data.recarga_bs)||0,usd:parseFloat(data.recarga_usd)||0};
+      precioCapucha={bs:parseFloat(data.capucha_bs)||0,usd:parseFloat(data.capucha_usd)||0};
       const pp=data.pack_precios||{};
       precioLogoPecho  = {bs:parseFloat(pp['P.06']?.bs)||0, usd:parseFloat(pp['P.06']?.usd)||0};
       precioLogoEspalda= {bs:parseFloat(pp['P.05']?.bs)||0, usd:parseFloat(pp['P.05']?.usd)||0};
       precioLogoManga  = {bs:parseFloat(pp['P.04']?.bs)||0, usd:parseFloat(pp['P.04']?.usd)||0};
-      // tasa BCV
+      precioLogoPechoEmp  = {bs:parseFloat(pp['COMFY14']?.bs)||0, usd:parseFloat(pp['COMFY14']?.usd)||0};
+      precioLogoEspaldaEmp= {bs:parseFloat(pp['COMFY13']?.bs)||0, usd:parseFloat(pp['COMFY13']?.usd)||0};
       if(data.tasa_bcv){
         tasaBcvActual=parseFloat(data.tasa_bcv)||0;
         document.getElementById('pago-tasa-bcv').textContent='Bs '+tasaBcvActual.toFixed(2);
       }
-      casheaPct=parseFloat(data.cashea&&data.cashea.fullcomfy?data.cashea.fullcomfy.cashea_pct:0)||0;
-      const casheaActivo=data.cashea&&data.cashea.fullcomfy?data.cashea.fullcomfy.cashea_activo===true||data.cashea.fullcomfy.cashea_activo==='true':false;
+      casheaPct=parseFloat(data.cashea&&data.cashea.coleccion?data.cashea.coleccion.cashea_pct:0)||0;
+      const casheaActivo=data.cashea&&data.cashea.coleccion?data.cashea.coleccion.cashea_activo===true||data.cashea.coleccion.cashea_activo==='true':false;
       const btnCashea=document.getElementById('btn-pago-cashea');
       const gridPago=document.getElementById('pago-metodos-grid');
       if(btnCashea) btnCashea.style.display=casheaActivo?'':'none';
       if(gridPago) gridPago.classList.toggle('cols3',casheaActivo);
       if(gridPago) gridPago.classList.toggle('cols2',!casheaActivo);
-      // precios por pack
       window._packPrecios=data.pack_precios||{};
     }
   }catch(e){ console.error('Error leyendo precios:',e); }
-
-  const tallasGrandes=['XL','XXL','3XL','XXXL','2XL',
-    'DAMA XL','DAMA XXL','DAMA 3XL','DAMA XXXL','DAMA 2XL',
-    'CABALLERO XL','CABALLERO XXL','CABALLERO 3XL','CABALLERO XXXL','CABALLERO 2XL'];
 
   let totalBs=0, totalUsd=0;
   let desglose=[];
 
   pedido.packs.forEach((pk,i)=>{
-    const franelas=pk.piezas.length||pk.pack||0;
-    const recargas=franelas===1?0:pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase().trim())).length;
+    const numPiezas=(pk.piezas&&pk.piezas.length)||1;
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
-    const logosPecho  =pk.piezas.filter(p=>p.logoPecho).length;
-    const logosEspalda=pk.piezas.filter(p=>p.logoEspalda).length;
-    const logosManga  =pk.piezas.filter(p=>p.logoManga).length;
-
-    let packBs=0, packUsd=0;
-    const esMangaCorta = pk.manga === 'Manga Corta' || pk.modelo === 'Full Comfy Protect Manga Corta';
-    const esMangaCero  = pk.manga === 'Manga Cero'  || pk.modelo === 'Full Comfy Protect Manga Cero';
-    const esDressML    = pk.modelo === 'Comfy Dress Manga Larga';
-    const esDressMC    = pk.modelo === 'Comfy Dress Manga Cero';
-
-    if(esMangaCorta){
-      const pp=window._packPrecios&&window._packPrecios['COMFY06'];
-      if(pp){ packBs=(parseFloat(pp.bs)||0)*franelas; packUsd=(parseFloat(pp.usd)||0)*franelas; }
-    } else if(esMangaCero){
-      const pp=window._packPrecios&&window._packPrecios['COMFY07'];
-      if(pp){ packBs=(parseFloat(pp.bs)||0)*franelas; packUsd=(parseFloat(pp.usd)||0)*franelas; }
-    } else if(esDressML){
-      const pp=window._packPrecios&&window._packPrecios['COMFY04'];
-      if(pp){ packBs=(parseFloat(pp.bs)||0)*franelas; packUsd=(parseFloat(pp.usd)||0)*franelas; }
-    } else if(esDressMC){
-      const pp=window._packPrecios&&window._packPrecios['COMFY03'];
-      if(pp){ packBs=(parseFloat(pp.bs)||0)*franelas; packUsd=(parseFloat(pp.usd)||0)*franelas; }
-    } else if(franelas===1){
-      // Prenda individual Manga Larga → usar COMFY01
-      const pp=window._packPrecios&&window._packPrecios['COMFY01'];
-      if(pp){ packBs=parseFloat(pp.bs)||0; packUsd=parseFloat(pp.usd)||0; }
-    } else {
-      const combos=descomponerPacks(franelas);
-      combos.forEach(c=>{
-        const key=c+'PACK.C.01.40OFF';
-        const pp=window._packPrecios&&window._packPrecios[key];
-        if(pp){ packBs+=parseFloat(pp.bs)||0; packUsd+=parseFloat(pp.usd)||0; }
-      });
+    const codigoProd=pk.codigoProducto||pedido.codigoProducto;
+    const pp=window._packPrecios&&window._packPrecios[codigoProd];
+    const precioUnitBs=pp?parseFloat(pp.bs)||0:0;
+    const precioUnitUsd=pp?parseFloat(pp.usd)||0:0;
+    let packBs=precioUnitBs*numPiezas;
+    let packUsd=precioUnitUsd*numPiezas;
+    const v=pk.variante||pedido.variante;
+    const serieDePack=pk.serie||selectedSerie;
+    const esChaquetaPago=(v==='Chaqueta'||v==='ChaquetaReflectiva');
+    const esSerieConLogoPago=['Camping','Nautica','Alpha'].includes(serieDePack)&&['Playera','Dress','Cortaviento'].includes(v);
+    const esComfyFamiliaPago=['comfy','fullcomfy','licra'].includes(v);
+    const esFullComfyOLicraPago=['fullcomfy','licra'].includes(v);
+    const esEmpresarialPago=typeof v==='string'&&v.indexOf('empresarial_')===0;
+    // Capucha — aplica costo cuando el modelo la ofrece como opción (Playera/Dress/Full Comfy/Licra/Empresarial con capuchaCod)
+    const capuchaAplicaCosto=(v==='Playera'||v==='Dress'||esComfyFamiliaPago||esEmpresarialPago);
+    const capuchaBs=capuchaAplicaCosto?capuchas*precioCapucha.bs:0;
+    const capuchaUsd=capuchaAplicaCosto?capuchas*precioCapucha.usd:0;
+    // Recarga por talla Plus (XL/2XL/3XL) — Comfy/Full Comfy/Licra/Empresarial
+    let recargaBs=0, recargaUsd=0;
+    if(esComfyFamiliaPago||esEmpresarialPago){
+      const nPlus=pk.piezas.filter(p=>['XL','2XL','3XL'].includes((p.talla||'').toUpperCase())).length;
+      recargaBs=nPlus*precioRecarga.bs;
+      recargaUsd=nPlus*precioRecarga.usd;
     }
-
-    const recargaBs=recargas*precioRecarga.bs;
-    const recargaUsd=recargas*precioRecarga.usd;
-    const capuchaBs=capuchas*precioCapucha.bs;
-    const capuchaUsd=capuchas*precioCapucha.usd;
-    const logosBs = logosPecho*precioLogoPecho.bs + logosEspalda*precioLogoEspalda.bs + logosManga*precioLogoManga.bs;
-    const logosUsd= logosPecho*precioLogoPecho.usd + logosEspalda*precioLogoEspalda.usd + logosManga*precioLogoManga.usd;
-
-    totalBs+=packBs+recargaBs+capuchaBs+logosBs;
-    totalUsd+=packUsd+recargaUsd+capuchaUsd+logosUsd;
-
-    const isDressCalc = pk.modelo && pk.modelo.toLowerCase().includes('dress');
-    const prendaLabel = isDressCalc ? 'vestido' : 'franela';
-    const prendasLabel = isDressCalc ? 'vestidos' : 'franelas';
-    const label=franelas===1?`1 ${prendaLabel.charAt(0).toUpperCase()+prendaLabel.slice(1)}`:`${franelas} ${prendasLabel} (${descomponerPacks(franelas).map(c=>c+'P').join('+')})`;
-    desglose.push(`Pack ${i+1}: ${label}`+
-      (recargas>0?` + ${recargas} plus`:'')+
-      (capuchas>0?` + ${capuchas} capucha(s)`:'')+
-      (logosPecho>0?` + ${logosPecho} logo pecho`:'')+
-      (logosEspalda>0?` + ${logosEspalda} logo espalda`:'')+
-      (logosManga>0?` + ${logosManga} logo manga`:''));
+    // Logos
+    let logosBs=0, logosUsd=0;
+    const logosAplican=esChaquetaPago||esSerieConLogoPago||esFullComfyOLicraPago||(esEmpresarialPago&&pk.empresarialLogos);
+    if(logosAplican){
+      const logosPecho  =pk.piezas.filter(p=>p.logoPecho).length;
+      const logosEspalda=pk.piezas.filter(p=>p.logoEspalda).length;
+      const logosManga  =pk.piezas.filter(p=>p.logoManga).length;
+      if(esEmpresarialPago){
+        // Empresarial usa códigos propios (COMFY13/14), sin recargo de logo manga
+        logosBs = logosPecho*precioLogoPechoEmp.bs + logosEspalda*precioLogoEspaldaEmp.bs;
+        logosUsd= logosPecho*precioLogoPechoEmp.usd + logosEspalda*precioLogoEspaldaEmp.usd;
+      } else {
+        logosBs = logosPecho*precioLogoPecho.bs + logosEspalda*precioLogoEspalda.bs + logosManga*precioLogoManga.bs;
+        logosUsd= logosPecho*precioLogoPecho.usd + logosEspalda*precioLogoEspalda.usd + logosManga*precioLogoManga.usd;
+      }
+    }
+    totalBs+=packBs+capuchaBs+recargaBs+logosBs;
+    totalUsd+=packUsd+capuchaUsd+recargaUsd+logosUsd;
+    desglose.push(`${pk.modelo||codigoProd}${pk.largo?' · '+pk.largo:''}${pk.capucha&&pk.capucha!=='Sin Capucha'?' · Con capucha':''}`);
   });
 
   pagoTotalBs=Math.round(totalBs*100)/100;
   pagoTotalUsd=Math.round(totalUsd*100)/100;
   pagoTotalCasheaBs=Math.round(pagoTotalBs*(1+casheaPct/100)*100)/100;
   pagoTotalCasheaUsd=tasaBcvActual>0?Math.round((pagoTotalCasheaBs/tasaBcvActual)*100)/100:0;
-
   document.getElementById('pago-desglose').innerHTML=desglose.join('<br>');
   document.getElementById('pago-total-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
   document.getElementById('pago-total-usd').textContent='$'+pagoTotalUsd.toFixed(2);
   document.getElementById('pm-monto-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
   document.getElementById('pm-monto-usd').textContent='$'+pagoTotalUsd.toFixed(2);
-  const elCashea=document.getElementById('pm-monto-cashea');
-  if(elCashea) elCashea.textContent='Bs '+pagoTotalCasheaBs.toFixed(2)+' ($'+pagoTotalCasheaUsd.toFixed(2)+')';
+
 }
 
 function seleccionarPago(tipo){
@@ -1345,7 +1633,7 @@ function copiarDato(texto, btnId){
 function buildResumen(){
   const retiraText=pedido.mismoEnvio?`${pedido.nombre} · ${pedido.cedula} · ${pedido.celular}`:`${pedido.eNombre} · ${pedido.eCi} · ${pedido.eCel}`;
   const packsHtml=pedido.packs.map((pk,i)=>{
-    const piezasHtml=pk.piezas.map((p,j)=>`<b>Franela ${j+1}:</b> ${p.genero} Talla ${p.talla} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('<br>');
+    const piezasHtml=pk.piezas.map((p,j)=>`<b>Franela ${j+1}:</b> ${p.genero} Talla ${p.talla} — ${p.nombre}`).join('<br>');
     return `<div class="resumen-label">📦 Pack ${i+1} · ${pk.pack}PACK</div>
       <div class="resumen-block"><b>Modelo:</b> ${pk.modelo} ${pk.manga} ${pk.capucha}<br><b>Tela:</b> ${pk.tela} · <b>Vinil:</b> ${pk.vinil}</div>
       <div class="resumen-label">📏 Franelas (${pk.piezas.length})</div>
@@ -1375,9 +1663,9 @@ function buildMensaje(){
   const packsText=pedido.packs.map((pk,i)=>{
     const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conCapucha?' 🧢':''} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('\n');
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
-    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: COMFY PROTECT ${pk.manga}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
+    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: LICRA COLECCIÓN ${pk.manga}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
   }).join('\n\n');
-  return `🛍️ *PEDIDO IKOA & BEKATE — COMFY PROTECT*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
+  return `🛍️ *PEDIDO IKOA & BEKATE — LICRA COLECCIÓN*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
 }
 
 async function guardarEnSheets(){
@@ -1388,7 +1676,38 @@ async function guardarEnSheets(){
   let codigoPrincipal='';
   for(let i=0; i<pedido.packs.length; i++){
     const pk=pedido.packs[i];
-    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''} - ${p.nombre}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}`).join(' | ');
+    const esShort=pk.variante==='Short'||pedido.variante==='Short';
+    const esCotton=pk.variante==='Cotton Licra'||pedido.variante==='Cotton Licra';
+    const piezasText=pk.piezas.map(p=>{
+      const base=`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''}`;
+      const logosSuffix=`${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}`;
+      if(esShort||esCotton||p.sinNombre||!p.nombre||p.nombre==='SIN NOMBRE EN MANGA') return base+logosSuffix;
+      return `${base} - ${p.nombre}${logosSuffix}`;
+    }).join(' | ');
+    const variante=pk.variante||pedido.variante||'';
+    const sinManga=['T-Shirt'];
+    const modeloParts=[];
+    if(variante==='Toalla'){
+      modeloParts.push('Toalla'); modeloParts.push(pk.tela||pedido.tela||'');
+    } else if(variante==='Chaqueta'||variante==='ChaquetaReflectiva'){
+      modeloParts.push('Chaqueta Reflectiva'); modeloParts.push(pk.capucha||pedido.capucha||'Sin Capucha');
+    } else if(['comfy','fullcomfy','licra'].includes(variante)){
+      modeloParts.push(pk.modelo||''); modeloParts.push(pk.manga||'');
+      modeloParts.push(pk.capucha||'Sin Capucha');
+    } else if(typeof variante==='string'&&variante.indexOf('empresarial_')===0){
+      modeloParts.push(pk.modelo||''); modeloParts.push(pk.manga||'');
+      modeloParts.push(pk.capucha||'Sin Capucha');
+    } else if(variante==='Cotton Licra'){
+      modeloParts.push(pk.serie||selectedSerie||''); modeloParts.push('Cotton Licra'); modeloParts.push('Manga Corta'); modeloParts.push('Sin Capucha');
+    } else if(!sinManga.includes(variante)){
+      modeloParts.push(pk.serie||selectedSerie||''); modeloParts.push(variante);
+      if(pk.largo) modeloParts.push(pk.largo);
+      else if(pk.manga) modeloParts.push(pk.manga);
+      if(variante!=='Short') modeloParts.push(pk.capucha||pedido.capucha||'Sin Capucha');
+    } else {
+      modeloParts.push(pk.serie||selectedSerie||''); modeloParts.push(variante);
+    }
+    const modeloFinal=modeloParts.filter(Boolean).join(' ');
     try{
       const res=await scriptGETjson({
         action:'addSolicitud',
@@ -1397,11 +1716,11 @@ async function guardarEnSheets(){
         correo:pedido.correo,
         cedula:pedido.cedula,
         celular:pedido.celular,
-        modelo:'COMFY PROTECT',
-        manga:pk.manga,
-        capucha:pk.capucha,
-        pack:`${pk.pack}PACK`,
-        tela:pk.tela,
+        modelo:modeloFinal,
+        manga:pk.largo||'',
+        capucha:pk.capucha||'Sin Capucha',
+        pack:pk.codigoProducto||pedido.codigoProducto,
+        tela:pk.tela||pedido.tela||'',
         vinil:pk.vinil,
         piezas:piezasText,
         agencia:pedido.agencia,
