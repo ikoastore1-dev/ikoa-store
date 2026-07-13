@@ -5537,8 +5537,9 @@ function abrirEditarApro(data){
 
 async function eliminarParteApro(codigoParte){
   if(!confirm('¿Eliminar esta parte del pedido? ('+codigoParte+')\n\nEsta acción no se puede deshacer.')) return;
-  const unlock=document.getElementById('ea-unlock').value.trim().toUpperCase();
-  if(!USUARIOS[unlock]){ alert('Ingresa tu código de staff en el campo de abajo (junto a Guardar) antes de eliminar.'); return; }
+  const unlock=(prompt('Ingresa tu código personal para confirmar la eliminación:')||'').trim().toUpperCase();
+  if(!unlock) return;
+  if(!USUARIOS[unlock]){ alert('❌ Código incorrecto'); return; }
   try{
     const data=await scriptGETjson({
       action:'reprobarSolicitud',
