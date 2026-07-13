@@ -5515,7 +5515,10 @@ function abrirEditarApro(data){
   const codigos=data.allCodigos||[data.codigoS];
   container.innerHTML=packsToRender.map((pk,i)=>`
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;">
-      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px;">Pack ${i+1}${codigos[i]?' · '+codigos[i]:''}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:12px;color:var(--accent);font-weight:700;">Part ${i+1}${codigos[i]?' · '+codigos[i]:''}</div>
+        ${(codigos[i] && packsToRender.length>1) ? `<button onclick="eliminarParteApro('${codigos[i]}')" style="padding:4px 10px;background:transparent;border:1px solid var(--danger);border-radius:6px;color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;">🗑 Eliminar esta parte</button>` : ''}
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <div class="field-group"><div class="field-label">Pack</div><input class="field-input" id="ea-pack-${i}" type="text" value="${pk?String(pk[14]||''):data.pack||''}" style="width:100%;"></div>
         <div class="field-group"><div class="field-label">Manga</div><input class="field-input" id="ea-manga-${i}" type="text" value="${pk?String(pk[12]||''):data.manga||''}" style="width:100%;"></div>
@@ -5530,6 +5533,25 @@ function abrirEditarApro(data){
   document.getElementById('ea-error').textContent='';
   document.getElementById('modal-editar-apro').classList.remove('hidden');
   setTimeout(()=>document.getElementById('ea-nombre').focus(),100);
+}
+
+async function eliminarParteApro(codigoParte){
+  if(!confirm('¿Eliminar esta parte del pedido? ('+codigoParte+')\n\nEsta acción no se puede deshacer.')) return;
+  const unlock=document.getElementById('ea-unlock').value.trim().toUpperCase();
+  if(!USUARIOS[unlock]){ alert('Ingresa tu código de staff en el campo de abajo (junto a Guardar) antes de eliminar.'); return; }
+  try{
+    const data=await scriptGETjson({
+      action:'reprobarSolicitud',
+      codigo_s:codigoParte,
+      fecha:getFechaHora(),
+      usuario:USUARIOS[unlock],
+      motivo:'Parte duplicada — eliminada manualmente por '+USUARIOS[unlock]
+    });
+    if(!data.ok){ alert('Error: '+(data.error||'No se pudo eliminar')); return; }
+    document.getElementById('modal-editar-apro').classList.add('hidden');
+    cargarSolicitudes(filtroSolicitudes);
+    alert('✅ Parte eliminada. Recuerda revisar y ajustar el Monto pagado si corresponde.');
+  }catch(e){ alert('Error: '+e.message); }
 }
 
 async function guardarEdicionApro(){
