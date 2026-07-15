@@ -1960,7 +1960,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw0VELNI_2bOBHyszVGt72DgjUmOztJDQqbQXdpE8Lr7Yh8IY_EMEheleS0ADFr2SpltA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyo2EY9MZnFnoIHdQCFMZz2bNELCfnnLM5KH0x5Hg1MYDHb670jzo-jXpVwpMQnqOC3nA/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -2377,16 +2377,13 @@ async function subirFotoStock(event){
     const base64=dataUrl.split(',')[1];
     const filename=currentProduct.codigo+'_'+Date.now()+'.jpg';
     msgEl.innerHTML='<span class="spinner">↻</span> Subiendo foto...';
-    if(WEBHOOK_FOTO){
-      await fetch(WEBHOOK_FOTO, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          codigo: currentProduct.codigo,
-          base64: base64,
-          filename: filename,
-          mimeType: 'image/jpeg'
-        })
+    if(true){
+      await scriptPOSTjson({
+        action: 'uploadFoto',
+        codigo: currentProduct.codigo,
+        base64: base64,
+        filename: filename,
+        mimeType: 'image/jpeg'
       });
     }
     msgEl.style.background='var(--surface2)';
@@ -2641,21 +2638,18 @@ async function ejecutarGenerarEtiqueta(codigo,nombre,precio,tasa){
     });
   }catch(e){console.error('addProducto error:',e);}
 
-  // 2. Subir foto via Make → Dropbox
-  if(fotoBase64 && WEBHOOK_FOTO){
+  // 2. Subir foto directo a Google Drive
+  if(fotoBase64){
     etqMsg.innerHTML='<span class="spinner">↻</span> Subiendo foto...';
     try{
-      await fetch(WEBHOOK_FOTO, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          codigo: codigo,
-          base64: fotoBase64,
-          filename: codigo+'.jpg',
-          mimeType: 'image/jpeg'
-        })
+      await scriptPOSTjson({
+        action: 'uploadFoto',
+        codigo: codigo,
+        base64: fotoBase64,
+        filename: codigo+'.jpg',
+        mimeType: 'image/jpeg'
       });
-      console.log('✅ Foto enviada a Make');
+      console.log('✅ Foto subida a Drive');
     }catch(e){ console.error('Foto error:',e); }
   }
 
@@ -6589,13 +6583,7 @@ async function buscarDocDropbox(){
   document.getElementById('imp-visor-wrap').style.display='none';
 
   try{
-    const res=await fetch(WEBHOOK_IMPRENTA,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({numeros:numeros, modo:impModoActual})
-    });
-    if(!res.ok) throw new Error('Error Make: '+res.status);
-    const data=await res.json();
+    const data=await scriptGETjson({action:'buscarImprenta', numeros:numeros, modo:impModoActual});
     const archivos=data.archivos||[];
     if(archivos.length===0){
       msg.style.background='#2a1010'; msg.style.color='var(--danger)';
@@ -6675,8 +6663,7 @@ function impNavegar(dir){
 
 function imprimirActual(){
   if(!impPDFUrl){ alert('No hay archivo seleccionado'); return; }
-  const url=impPDFUrl.replace('dl=0','dl=1').replace('www.dropbox.com','dl.dropboxusercontent.com');
-  window.open(url,'_blank');
+  window.open(impPDFUrl,'_blank');
 }
 
 // Alias legacy
