@@ -4127,7 +4127,7 @@ async function cargarAprobacionesCashea(){
       });
       // Botón aprobar
       const aproKey='cashea_'+base.replace(/[^a-zA-Z0-9]/g,'_');
-      window[`_casheaData_${aproKey}`]={cod:base, fecha:v(4), nombre:v(7), celular:v(10), pack:v(14), tela:v(15), piezas:v(17), agencia:v(18), monto:v(29), casheaPct:casheaPct, row:r};
+      window[`_casheaData_${aproKey}`]={cod:base, codigos:packs.map(pk=>String(pk[0]||'').trim()).filter(Boolean), fecha:v(4), nombre:v(7), celular:v(10), pack:v(14), tela:v(15), piezas:v(17), agencia:v(18), monto:v(29), casheaPct:casheaPct, row:r};
       html+=`
       <div style="display:flex;gap:8px;margin-top:4px;">
         <button onclick="abrirModalReprobarCashea('${aproKey}')" style="flex:1;padding:12px;background:var(--surface2);border:1.5px solid var(--danger);border-radius:8px;color:var(--danger);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✗ Reprobar</button>
@@ -4227,23 +4227,28 @@ async function confirmarAprobarCashea(){
   if(btnConf){ btnConf.disabled=true; btnConf.textContent='⏳ Procesando...'; }
 
   try{
-    const res=await scriptGETjson({
-      action:'aprobarCashea',
-      codigo_s: data.cod,
-      cod_cashea: cod,
-      pct_inicial: pctInicial,
-      fecha_aprobacion: getFechaHora(),
-      usuario: USUARIOS[auth]||auth,
-      banco: 'CASHEA'
-    });
-    if(res.ok){
-      cerrarModalCashea();
-      const msgEl=document.getElementById('cashea-apro-msg');
-      if(msgEl){ msgEl.style.display='block'; msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)'; msgEl.innerHTML=`✅ Aprobado → ${res.codigoC||''} | FACTURAS.CASHEA registrado`; setTimeout(()=>{ msgEl.style.display='none'; },3000); }
-      cargarAprobacionesCashea();
-    } else {
-      throw new Error(res.error||'Error al aprobar');
+    let codigos=data.codigos||[data.cod];
+    if(!Array.isArray(codigos)) codigos=[codigos];
+    codigos=codigos.filter(c=>c&&String(c).trim());
+    console.log('Aprobando codigos Cashea:', codigos);
+    let lastCodigoC='';
+    for(const codigoParte of codigos){
+      const res=await scriptGETjson({
+        action:'aprobarCashea',
+        codigo_s: codigoParte,
+        cod_cashea: cod,
+        pct_inicial: pctInicial,
+        fecha_aprobacion: getFechaHora(),
+        usuario: USUARIOS[auth]||auth,
+        banco: 'CASHEA'
+      });
+      if(res.ok) lastCodigoC=res.codigoC;
+      else throw new Error(res.error||'Error en '+codigoParte);
     }
+    cerrarModalCashea();
+    const msgEl=document.getElementById('cashea-apro-msg');
+    if(msgEl){ msgEl.style.display='block'; msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)'; msgEl.innerHTML=`✅ Aprobado (${codigos.length} parte${codigos.length>1?'s':''}) → ${lastCodigoC} | FACTURAS.CASHEA registrado`; setTimeout(()=>{ msgEl.style.display='none'; },3000); }
+    cargarAprobacionesCashea();
   }catch(e){
     if(btnConf){ btnConf.disabled=false; btnConf.textContent='✅ Confirmar'; }
     errEl.textContent='✗ '+e.message; errEl.style.display='block';
