@@ -4111,6 +4111,15 @@ async function cargarAprobacionesCashea(){
             </div>
           </div>
           <div style="font-size:10px;color:var(--muted);margin-top:8px;">💱 Tasa BCV: Bs ${tasaBCV.toFixed(2)}</div>
+        </div>
+        <div style="margin-top:8px;margin-bottom:12px;">
+          <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="urgente-apro-${base.replace(/[^a-zA-Z0-9]/g,'_')}" placeholder="EJ: URGENTE LUNES 22.06.26" value="${v(31)||''}"
+              style="flex:1;background:var(--surface3);border:1.5px solid var(--warn);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;text-transform:uppercase;">
+            <button onclick="guardarUrgenteGrupo('apro','${packs.map(pk=>String(pk[0]||'').trim()).join(',')}','urgente-apro-${base.replace(/[^a-zA-Z0-9]/g,'_')}')"
+              style="padding:8px 14px;background:#1a1a10;border:1.5px solid var(--warn);border-radius:8px;color:var(--warn);font-size:13px;font-weight:700;cursor:pointer;">💾</button>
+          </div>
         </div>`;
       packs.forEach((pk,idx)=>{
         const vp=i=>String(pk[i]||'').trim();
