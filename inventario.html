@@ -4965,6 +4965,7 @@ async function cargarCola(){
           nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),
           agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),
           banco:v(22),codpago:v(23),
+          pagoMoneda:v(22)||'',pagoMonto:v(29)||'',
           urgente:v(31)||'',
           cashea:v(32)||'NO',
           casheaPct:v(33)||'',
@@ -5281,7 +5282,7 @@ async function confirmarPlanificacion(){
       for(const pk of allPacks){
         await registrarEnProduccion({
           codigoP:lastCodigoP,
-          codigoC:pendingCola.allCodigosC?pendingCola.allCodigosC.join(','):(pendingCola.codigoCBase||''),
+          codigoC:pk.codigoC||(pendingCola.allCodigosC?pendingCola.allCodigosC.join(','):(pendingCola.codigoCBase||'')),
           cod:codMake,
           fecha:fechaProd,
           nombre:pendingCola.nombre||'',
