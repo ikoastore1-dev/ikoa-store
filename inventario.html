@@ -7170,9 +7170,35 @@ async function generarReportesTaller(){
     const htmlEstampador=tallerConstruirEstampadorHTML(codigos);
     const infoEstampador=await cotGenerarPDFViaAppsScript(htmlEstampador, 'Taller_Estampador_'+Date.now());
 
+    btn.textContent='⏳ Generando DXF de Vinil...';
+    let dxfLinkHtml='';
+    try{
+      const nombresVinil=[];
+      codigos.forEach(cod=>{
+        const g=tallerGrupos[cod];
+        if(!g) return;
+        g.packs.forEach(p=>{
+          const piezas=tallerParsearPiezas(p.piezas);
+          piezas.forEach(pz=>{
+            if(pz.raw){ if(pz.nombre) nombresVinil.push(pz.nombre); return; }
+            if(pz.nombre) nombresVinil.push(pz.nombre);
+          });
+        });
+      });
+      if(nombresVinil.length){
+        const infoDxf=await scriptGETjson({action:'generarDXFCombinado', nombres:nombresVinil, filename:'Taller_Vinil_'+Date.now()}, 30000);
+        if(infoDxf.ok){
+          dxfLinkHtml=`<a href="${infoDxf.drive_url}" target="_blank" style="flex:1;min-width:180px;text-align:center;padding:12px;background:var(--accent);border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-weight:700;text-decoration:none;">🧵 Descargar DXF Vinil (${infoDxf.nombres_count})</a>`;
+        } else {
+          console.warn('DXF combinado error:', infoDxf.error);
+        }
+      }
+    }catch(e){ console.warn('Error generando DXF combinado:', e); }
+
     resLinks.innerHTML=`
       <a href="${infoCortador.pdf_url}" target="_blank" style="flex:1;min-width:180px;text-align:center;padding:12px;background:var(--accent);border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-weight:700;text-decoration:none;">✂️ Descargar Cortador</a>
       <a href="${infoEstampador.pdf_url}" target="_blank" style="flex:1;min-width:180px;text-align:center;padding:12px;background:var(--accent);border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-weight:700;text-decoration:none;">🖨️ Descargar Estampador</a>
+      ${dxfLinkHtml}
     `;
     resWrap.style.display='block';
   }catch(e){
