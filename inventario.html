@@ -5829,7 +5829,7 @@ const WEBHOOK_URL='https://hook.us2.make.com/9vb6zab74fbbqkbv46c2coi8i7e4mnqs';
 const WEBHOOK_FOTO='https://hook.us2.make.com/6eprt8kp7xj3jj8t5ahsypbtz3hohf6c';
 
 function resetGestionBtns(){
-  ['COD','Enviado','Buscar','Imprenta','Cotizaciones'].forEach(t=>{
+  ['COD','Enviado','Buscar','Imprenta','Produccion','Cotizaciones'].forEach(t=>{
     const b=document.getElementById('gbtn-'+t);
     if(b){ b.style.borderColor='var(--border)'; b.style.background='var(--surface2)'; b.style.color='var(--muted)'; }
   });
@@ -6626,9 +6626,14 @@ async function buscarDocDropbox(){
   try{
     const data=await scriptGETjson({action:'buscarImprenta', numeros:numeros, modo:impModoActual});
     const archivos=data.archivos||[];
+    if(!data.ok){
+      msg.style.background='#2a1010'; msg.style.color='var(--danger)';
+      msg.innerHTML=`✗ Error: ${data.error||'desconocido'}`;
+      return;
+    }
     if(archivos.length===0){
       msg.style.background='#2a1010'; msg.style.color='var(--danger)';
-      msg.innerHTML=`✗ Sin archivos encontrados`;
+      msg.innerHTML=`✗ Sin archivos encontrados (buscando: ${numeros.join(', ')})`;
       return;
     }
     msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
