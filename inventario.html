@@ -6624,7 +6624,7 @@ async function buscarDocDropbox(){
   document.getElementById('imp-visor-wrap').style.display='none';
 
   try{
-    const data=await scriptGETjson({action:'buscarImprenta', numeros:numeros, modo:impModoActual});
+    const data=await scriptGETjson({action:'buscarImprenta', numeros:numeros, modo:impModoActual}, 45000);
     const archivos=data.archivos||[];
     if(!data.ok){
       msg.style.background='#2a1010'; msg.style.color='var(--danger)';
