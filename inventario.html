@@ -1960,7 +1960,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </main>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyo2EY9MZnFnoIHdQCFMZz2bNELCfnnLM5KH0x5Hg1MYDHb670jzo-jXpVwpMQnqOC3nA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw39K95bn14-yZcvd8kXuKnyD2BAqLjOg6rFNIBkuZRHQP7z_s1FFOV3P2EOyNtqz9ikw/exec';
 
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
@@ -4151,26 +4151,44 @@ async function cargarAprobacionesCashea(){
 }
 
 let _casheaModalKey=null;
-function abrirModalReprobarCashea(key){
+async function abrirModalReprobarCashea(key){
   const data=window[`_casheaData_${key}`]||{};
   if(!confirm(`¿Reprobar la solicitud Cashea de ${data.nombre||''}?\n\nEl pedido pasará a Reprobadas.`)) return;
   const auth=prompt('Ingresa tu código de usuario:');
   if(!auth) return;
   const authUp=auth.trim().toUpperCase();
   if(!USUARIOS[authUp]){ alert('❌ Código incorrecto'); return; }
-  scriptGETjson({
-    action:'reprobarSolicitud',
-    codigo_s: data.cod,
-    usuario: USUARIOS[authUp]||authUp,
-    fecha: getFechaHora(),
-    motivo: 'Cashea — cliente no completó pago'
-  }).then(res=>{
-    if(res.ok){
-      const msgEl=document.getElementById('cashea-apro-msg');
-      if(msgEl){ msgEl.style.display='block'; msgEl.style.background='#2a0a0a'; msgEl.style.color='var(--danger)'; msgEl.innerHTML=`✗ Solicitud reprobada`; setTimeout(()=>msgEl.style.display='none',3000); }
-      cargarAprobacionesCashea();
-    } else alert('Error: '+(res.error||'desconocido'));
-  }).catch(e=>alert('Error: '+e.message));
+  let codigos=data.codigos||[data.cod];
+  if(!Array.isArray(codigos)) codigos=[codigos];
+  codigos=codigos.filter(c=>c&&String(c).trim());
+
+  const msgEl=document.getElementById('cashea-apro-msg');
+  const setMsg=(bg,color,html)=>{ if(msgEl){ msgEl.style.display='block'; msgEl.style.background=bg; msgEl.style.color=color; msgEl.innerHTML=html; } };
+  setMsg('var(--surface2)','var(--muted)',`<span class="spinner">↻</span> Procesando reprobación (0/${codigos.length})...`);
+
+  try{
+    for(let idx=0; idx<codigos.length; idx++){
+      const codigoParte=codigos[idx];
+      setMsg('var(--surface2)','var(--muted)',`<span class="spinner">↻</span> Procesando reprobación (${idx+1}/${codigos.length})... ${codigoParte}`);
+      const res=await scriptGETjson({
+        action:'reprobarSolicitud',
+        codigo_s: codigoParte,
+        usuario: USUARIOS[authUp]||authUp,
+        fecha: getFechaHora(),
+        motivo: 'Cashea — cliente no completó pago'
+      }, 40000);
+      if(!res.ok) throw new Error(res.error||'Error en '+codigoParte);
+    }
+    setMsg('#2a0a0a','var(--danger)',`✗ Proceso realizado correctamente — solicitud reprobada (${codigos.length} parte${codigos.length>1?'s':''})`);
+    setTimeout(()=>{ if(msgEl) msgEl.style.display='none'; },4000);
+    cargarAprobacionesCashea();
+  }catch(e){
+    const esTimeout=/timeout/i.test(e.message||'');
+    setMsg('#2a1a0a','var(--warn)', esTimeout
+      ? `⚠️ Se agotó el tiempo de espera, pero el proceso puede haber terminado en el servidor. Verificando...`
+      : `✗ Error: ${e.message}`);
+    setTimeout(()=>cargarAprobacionesCashea(), esTimeout?1500:0);
+  }
 }
 
 function abrirModalAprobarCashea(key){
@@ -4232,16 +4250,22 @@ async function confirmarAprobarCashea(){
   errEl.style.display='none';
 
   const data=window[`_casheaData_${_casheaModalKey}`]||{};
-  const btnConf=document.querySelector('#modal-aprobar-cashea button:last-child');
-  if(btnConf){ btnConf.disabled=true; btnConf.textContent='⏳ Procesando...'; }
+  let codigos=data.codigos||[data.cod];
+  if(!Array.isArray(codigos)) codigos=[codigos];
+  codigos=codigos.filter(c=>c&&String(c).trim());
+
+  // Cerrar el modal de inmediato y mostrar un loading visible en la pantalla principal
+  cerrarModalCashea();
+  const msgEl=document.getElementById('cashea-apro-msg');
+  const setMsg=(bg,color,html)=>{ if(msgEl){ msgEl.style.display='block'; msgEl.style.background=bg; msgEl.style.color=color; msgEl.innerHTML=html; } };
+  setMsg('var(--surface2)','var(--muted)',`<span class="spinner">↻</span> Procesando aprobación (0/${codigos.length})...`);
 
   try{
-    let codigos=data.codigos||[data.cod];
-    if(!Array.isArray(codigos)) codigos=[codigos];
-    codigos=codigos.filter(c=>c&&String(c).trim());
     console.log('Aprobando codigos Cashea:', codigos);
     let lastCodigoC='';
-    for(const codigoParte of codigos){
+    for(let idx=0; idx<codigos.length; idx++){
+      const codigoParte=codigos[idx];
+      setMsg('var(--surface2)','var(--muted)',`<span class="spinner">↻</span> Procesando aprobación (${idx+1}/${codigos.length})... ${codigoParte}`);
       const res=await scriptGETjson({
         action:'aprobarCashea',
         codigo_s: codigoParte,
@@ -4250,17 +4274,20 @@ async function confirmarAprobarCashea(){
         fecha_aprobacion: getFechaHora(),
         usuario: USUARIOS[auth]||auth,
         banco: 'CASHEA'
-      });
+      }, 40000);
       if(res.ok) lastCodigoC=res.codigoC;
       else throw new Error(res.error||'Error en '+codigoParte);
     }
-    cerrarModalCashea();
-    const msgEl=document.getElementById('cashea-apro-msg');
-    if(msgEl){ msgEl.style.display='block'; msgEl.style.background='#0a2a0a'; msgEl.style.color='var(--accent)'; msgEl.innerHTML=`✅ Aprobado (${codigos.length} parte${codigos.length>1?'s':''}) → ${lastCodigoC} | FACTURAS.CASHEA registrado`; setTimeout(()=>{ msgEl.style.display='none'; },3000); }
+    setMsg('#0a2a0a','var(--accent)',`✅ Proceso realizado correctamente (${codigos.length} parte${codigos.length>1?'s':''}) → ${lastCodigoC} | FACTURAS.CASHEA registrado`);
+    setTimeout(()=>{ if(msgEl) msgEl.style.display='none'; },4000);
     cargarAprobacionesCashea();
   }catch(e){
-    if(btnConf){ btnConf.disabled=false; btnConf.textContent='✅ Confirmar'; }
-    errEl.textContent='✗ '+e.message; errEl.style.display='block';
+    const esTimeout=/timeout/i.test(e.message||'');
+    setMsg('#2a1a0a','var(--warn)', esTimeout
+      ? `⚠️ Se agotó el tiempo de espera, pero el proceso puede haber terminado en el servidor. Verificando...`
+      : `✗ Error: ${e.message}`);
+    // Recargar la lista de todos modos para confirmar el estado real (el backend puede haber terminado aunque el navegador dejó de esperar)
+    setTimeout(()=>cargarAprobacionesCashea(), esTimeout?1500:0);
   }
 }
 
@@ -6463,7 +6490,7 @@ async function confirmarEnvioSeleccion(){
     msgEl.innerHTML='✗ Error: '+e.message;
   }
 }
-function scriptGETjson(params){
+function scriptGETjson(params, timeoutMs){
   return new Promise((resolve,reject)=>{
     const cb='_cb_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
     const qs=Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v??'')).join('&');
@@ -6473,7 +6500,7 @@ function scriptGETjson(params){
     script.onerror=()=>{ delete window[cb]; try{document.body.removeChild(script);}catch(e){} reject(new Error('Error de red')); };
     script.src=url;
     document.body.appendChild(script);
-    setTimeout(()=>{ if(window[cb]){ delete window[cb]; try{document.body.removeChild(script);}catch(e){} reject(new Error('Timeout')); }},15000);
+    setTimeout(()=>{ if(window[cb]){ delete window[cb]; try{document.body.removeChild(script);}catch(e){} reject(new Error('Timeout')); }},timeoutMs||15000);
   });
 }
 

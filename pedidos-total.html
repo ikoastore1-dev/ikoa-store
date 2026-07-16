@@ -542,7 +542,7 @@ window.addEventListener('load',function(){
 </div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyo2EY9MZnFnoIHdQCFMZz2bNELCfnnLM5KH0x5Hg1MYDHb670jzo-jXpVwpMQnqOC3nA/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbw39K95bn14-yZcvd8kXuKnyD2BAqLjOg6rFNIBkuZRHQP7z_s1FFOV3P2EOyNtqz9ikw/exec';
 const WHATSAPP_NUM='584149450742';
 const SHEET_ID='1LQXnKPyvM_x5-wTs8rlUXGHnPUyaxbKWRqdxuY3hAE0';
 const TOTAL_STEPS=7;
@@ -1479,8 +1479,23 @@ async function calcularPago(){
         tasaBcvActual=parseFloat(data.tasa_bcv)||0;
         document.getElementById('pago-tasa-bcv').textContent='Bs '+tasaBcvActual.toFixed(2);
       }
-      casheaPct=parseFloat(data.cashea&&data.cashea.coleccion?data.cashea.coleccion.cashea_pct:0)||0;
-      const casheaActivo=data.cashea&&data.cashea.coleccion?data.cashea.coleccion.cashea_activo===true||data.cashea.coleccion.cashea_activo==='true':false;
+      // Determinar la línea correcta para Cashea (antes quedaba fijo en "coleccion" sin importar el producto real)
+      const lineaCasheaKeyFor=(variante)=>{
+        if(['comfy','fullcomfy','licra'].includes(variante)) return variante;
+        if(typeof variante==='string' && variante.indexOf('empresarial_')===0) return 'empresarial';
+        return 'coleccion'; // Playera/Dress/Cortaviento/Short/Chaqueta/Toalla/Cotton Licra, etc.
+      };
+      const casheaConfigPorLinea=data.cashea||{};
+      const lineasUsadas=[...new Set((pedido.packs||[]).map(pk=>lineaCasheaKeyFor(pk.variante||pedido.variante)))];
+      const lineaCasheaPrincipal=lineasUsadas[0]||lineaCasheaKeyFor(pedido.variante);
+      // El botón de Cashea aparece si AL MENOS UNA de las líneas del pedido lo tiene activo
+      const casheaActivo=lineasUsadas.some(lin=>{
+        const c=casheaConfigPorLinea[lin];
+        return c&&(c.cashea_activo===true||c.cashea_activo==='true');
+      });
+      casheaPct=parseFloat(casheaConfigPorLinea[lineaCasheaPrincipal]?.cashea_pct)||0; // solo informativo/compatibilidad
+      window._casheaConfigPorLinea=casheaConfigPorLinea;
+      window._lineaCasheaKeyFor=lineaCasheaKeyFor;
       const btnCashea=document.getElementById('btn-pago-cashea');
       const gridPago=document.getElementById('pago-metodos-grid');
       if(btnCashea) btnCashea.style.display=casheaActivo?'':'none';
@@ -1490,7 +1505,7 @@ async function calcularPago(){
     }
   }catch(e){ console.error('Error leyendo precios:',e); }
 
-  let totalBs=0, totalUsd=0;
+  let totalBs=0, totalUsd=0, totalCasheaBs=0;
   let desglose=[];
 
   pedido.packs.forEach((pk,i)=>{
@@ -1536,14 +1551,21 @@ async function calcularPago(){
         logosUsd= logosPecho*precioLogoPecho.usd + logosEspalda*precioLogoEspalda.usd + logosManga*precioLogoManga.usd;
       }
     }
-    totalBs+=packBs+capuchaBs+recargaBs+logosBs;
+    const subtotalPackBs=packBs+capuchaBs+recargaBs+logosBs;
+    totalBs+=subtotalPackBs;
     totalUsd+=packUsd+capuchaUsd+recargaUsd+logosUsd;
+    // Cashea — cada pack usa el % de SU PROPIA línea, no un % único global
+    const lineaDelPack=(window._lineaCasheaKeyFor||(x=>'coleccion'))(v);
+    const cfgDelPack=(window._casheaConfigPorLinea||{})[lineaDelPack];
+    const pctDelPack=parseFloat(cfgDelPack?.cashea_pct)||0;
+    const activoDelPack=cfgDelPack&&(cfgDelPack.cashea_activo===true||cfgDelPack.cashea_activo==='true');
+    totalCasheaBs+=activoDelPack?Math.round(subtotalPackBs*(1+pctDelPack/100)*100)/100:subtotalPackBs;
     desglose.push(`${pk.modelo||codigoProd}${pk.largo?' · '+pk.largo:''}${pk.capucha&&pk.capucha!=='Sin Capucha'?' · Con capucha':''}`);
   });
 
   pagoTotalBs=Math.round(totalBs*100)/100;
   pagoTotalUsd=Math.round(totalUsd*100)/100;
-  pagoTotalCasheaBs=Math.round(pagoTotalBs*(1+casheaPct/100)*100)/100;
+  pagoTotalCasheaBs=Math.round(totalCasheaBs*100)/100;
   pagoTotalCasheaUsd=tasaBcvActual>0?Math.round((pagoTotalCasheaBs/tasaBcvActual)*100)/100:0;
   document.getElementById('pago-desglose').innerHTML=desglose.join('<br>');
   document.getElementById('pago-total-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
