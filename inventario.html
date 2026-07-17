@@ -6882,7 +6882,7 @@ async function cargarTaller(){
       const cod=v(2)||v(1)||v(0);
       const codigoC=v(1);
       if(!tallerGrupos[cod]) tallerGrupos[cod]={
-        cod, nombre:v(4), correo:v(5), cedula:v(6), celular:v(7),
+        cod, nombre:v(4), correo:v(5), cedula:v(6), celular:v(7), agencia:v(15),
         fecha:v(25)||v(3), urgente:v(27), packs:[]
       };
       // Preferir siempre los datos de COLA.P/R.COLA.P (fuente confiable) sobre
@@ -7153,13 +7153,13 @@ function tallerConstruirEstampadorHTML(codigos){
     bloques+=`
       <div style="${idx>0?'page-break-before:always;':''}padding-top:${idx>0?'10px':'0'};">
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
-          <tr><td width="170" valign="top">${COT_LOGO_HTML}</td>
-          <td valign="top" style="padding-left:16px;">
+          <tr><td width="170" valign="middle">${COT_LOGO_HTML}</td>
+          <td valign="middle" align="center" style="text-align:center;">
             <p style="font-size:22px;font-weight:700;margin:0 0 2px 0;">COD - ${cod}</p>
             ${g.urgente?`<p style="font-size:13px;font-weight:700;color:#d10000;margin:0;">⚡ URGENTE : ${g.urgente.toUpperCase()}</p>`:''}
           </td></tr>
         </table>
-        <p style="font-size:11px;font-weight:700;margin:0 0 3px 0;">CLIENTE : ${(g.nombre||'').toUpperCase()} / C.I: ${g.cedula||''} / COD - ${cod}</p>
+        <p style="font-size:11px;font-weight:700;margin:0 0 3px 0;">CLIENTE : ${(g.nombre||'').toUpperCase()} / C.I: ${g.cedula||''} / AGENCIA: ${(g.agencia||'').split('—')[0].trim().toUpperCase()}</p>
         <div style="border-top:1px dashed #999;margin-bottom:6px;"></div>
         ${packsHtml}
       </div>`;
