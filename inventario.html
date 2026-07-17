@@ -7137,7 +7137,7 @@ function tallerConstruirEstampadorHTML(codigos){
       const lineasTalla=Object.values(grupos).map(gr=>
         gr.raw
           ? `${tallerReformatearTexto(gr.texto)} <span style="color:#888;">(texto original del pedido — sin desglose exacto por talla)</span>`
-          : `${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()}${gr.capucha?' (CON CAPUCHA)':''}${gr.nombre?' - '+gr.nombre.toUpperCase():''} (${gr.unds} UNDS)`
+          : `${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()}${gr.capucha?' (CON CAPUCHA)':''}${gr.nombre?' - <span style="font-weight:700;font-size:15px;">'+gr.nombre.toUpperCase()+'</span>':''} (${gr.unds} UNDS)`
       ).join('<br>');
       const logoLineas=[];
       if(logos.pecho.size)   logoLineas.push('PECHO: '+[...logos.pecho].join(', ').toUpperCase());
@@ -7155,12 +7155,11 @@ function tallerConstruirEstampadorHTML(codigos){
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
           <tr><td width="170" valign="top">${COT_LOGO_HTML}</td>
           <td valign="top" style="padding-left:16px;">
-            <p style="font-size:13px;font-weight:700;margin:0 0 1px 0;">IKOA BRAND CORP, C.A.</p>
-            <p style="font-size:11px;font-weight:700;margin:0 0 8px 0;">RIF: J-50503171-6</p>
+            <p style="font-size:22px;font-weight:700;margin:0 0 2px 0;">COD - ${cod}</p>
+            ${g.urgente?`<p style="font-size:13px;font-weight:700;color:#d10000;margin:0;">⚡ URGENTE : ${g.urgente.toUpperCase()}</p>`:''}
           </td></tr>
         </table>
         <p style="font-size:11px;font-weight:700;margin:0 0 3px 0;">CLIENTE : ${(g.nombre||'').toUpperCase()} / C.I: ${g.cedula||''} / COD - ${cod}</p>
-        <p style="font-size:10.5px;margin:0 0 10px 0;">CORREO : ${g.correo||''} / CEL: ${g.celular||''} /</p>
         <div style="border-top:1px dashed #999;margin-bottom:6px;"></div>
         ${packsHtml}
       </div>`;
