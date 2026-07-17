@@ -7174,7 +7174,7 @@ ${bloques}
 }
 
 async function generarReportesTaller(){
-  const codigos=[...tallerSeleccionados];
+  const codigos=[...tallerSeleccionados].sort((a,b)=>(parseInt(a)||0)-(parseInt(b)||0));
   if(!codigos.length) return;
   const btn=document.getElementById('taller-btn-generar');
   const resWrap=document.getElementById('taller-resultado');
