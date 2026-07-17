@@ -364,7 +364,7 @@ window.addEventListener('load',function(){
       </div>
     </div>
     <div class="nav-row">
-      <button class="btn-back" onclick="goStep(4)">← Atrás</button>
+      <button class="btn-back" onclick="volverAEditarPiezas()">← Atrás</button>
       <button class="btn-next" onclick="goStep(6)">Siguiente →</button>
     </div>
   </div>
@@ -918,6 +918,14 @@ async function intentarPaso2(){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
+// Vuelve al Paso 4 para editar el último pack ya guardado.
+// Se quita ese pack de la lista antes de volver, para que al guardar de nuevo
+// (intentarPaso45) no quede duplicado — antes se agregaba uno nuevo sin quitar el viejo.
+function volverAEditarPiezas(){
+  if(pedido.packs.length>0) pedido.packs.pop();
+  goStep(4);
+}
+
 // Paso 4 → 4.5: guardar pack actual y preguntar si agrega otro
 async function intentarPaso45(){
   if(!validateStep(4)) return;
@@ -1240,6 +1248,12 @@ let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
 let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
 
 async function calcularPago(){
+  // Deshabilitar los botones de pago hasta que el precio real termine de cargar,
+  // para que el cliente nunca pueda pagar con un monto viejo o en $0.
+  const botonesPago=['btn-pago-bs','btn-pago-usd','btn-pago-cashea'].map(id=>document.getElementById(id)).filter(Boolean);
+  botonesPago.forEach(b=>{ b.disabled=true; b.style.opacity='0.5'; b.style.cursor='wait'; });
+  const pagoLoadingMsg=document.getElementById('pago-desglose');
+  if(pagoLoadingMsg) pagoLoadingMsg.innerHTML='<span class="spinner">↻</span> Calculando precio actualizado...';
   try{
     const data=await scriptGETjson({action:'leerTodosLosPrecios'});
     if(data.ok){
@@ -1288,6 +1302,8 @@ async function calcularPago(){
   document.getElementById('pm-monto-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
   document.getElementById('pm-monto-usd').textContent='$'+pagoTotalUsd.toFixed(2);
   document.getElementById('pm-monto-cashea').textContent='Bs '+pagoTotalCasheaBs.toFixed(2)+' ($'+pagoTotalCasheaUsd.toFixed(2)+')';
+  // Reactivar los botones de pago ahora que el precio ya está actualizado
+  botonesPago.forEach(b=>{ b.disabled=false; b.style.opacity=''; b.style.cursor=''; });
 }
 
 function seleccionarPago(tipo){

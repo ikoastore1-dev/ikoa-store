@@ -367,7 +367,7 @@ window.addEventListener('load',function(){
       </div>
     </div>
     <div class="nav-row">
-      <button class="btn-back" onclick="goStep(4)">← Atrás</button>
+      <button class="btn-back" onclick="volverAEditarPiezas()">← Atrás</button>
       <button class="btn-next" onclick="goStep(6)">Siguiente →</button>
     </div>
   </div>
@@ -828,6 +828,11 @@ async function intentarPaso1Licra(){
 }
 
 // Paso 4 → 4.5: guardar pack actual y preguntar si agrega otro
+function volverAEditarPiezas(){
+  if(pedido.packs.length>0) pedido.packs.pop();
+  goStep(4);
+}
+
 async function intentarPaso45(){
   if(!validateStep(4)) return;
   // Guardar pack actual en lista de packs
@@ -1213,6 +1218,10 @@ function descomponerPacks(n){
 }
 
 async function calcularPago(){
+  const botonesPago=['btn-pago-bs','btn-pago-usd','btn-pago-cashea'].map(id=>document.getElementById(id)).filter(Boolean);
+  botonesPago.forEach(b=>{ b.disabled=true; b.style.opacity='0.5'; b.style.cursor='wait'; });
+  const pagoLoadingMsg=document.getElementById('pago-desglose');
+  if(pagoLoadingMsg) pagoLoadingMsg.innerHTML='<span class="spinner">↻</span> Calculando precio actualizado...';
   try{
     const data=await scriptGETjson({action:'leerTodosLosPrecios'});
     if(data.ok){
@@ -1304,6 +1313,7 @@ async function calcularPago(){
   document.getElementById('pm-monto-usd').textContent='$'+pagoTotalUsd.toFixed(2);
   const elCashea=document.getElementById('pm-monto-cashea');
   if(elCashea) elCashea.textContent='Bs '+pagoTotalCasheaBs.toFixed(2)+' ($'+pagoTotalCasheaUsd.toFixed(2)+')';
+  botonesPago.forEach(b=>{ b.disabled=false; b.style.opacity=''; b.style.cursor=''; });
 }
 
 function seleccionarPago(tipo){

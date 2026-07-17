@@ -362,7 +362,7 @@ window.addEventListener('load',function(){
       </div>
     </div>
     <div class="nav-row">
-      <button class="btn-back" onclick="goStep(4)">← Atrás</button>
+      <button class="btn-back" onclick="volverAEditarPiezas()">← Atrás</button>
       <button class="btn-next" onclick="goStep(6)">Siguiente →</button>
     </div>
   </div>
@@ -741,6 +741,11 @@ async function intentarPaso2(){
 }
 
 // Paso 4 → 4.5: guardar pack actual y preguntar si agrega otro
+function volverAEditarPiezas(){
+  if(pedido.packs.length>0) pedido.packs.pop();
+  goStep(4);
+}
+
 async function intentarPaso45(){
   if(!validateStep(4)) return;
   // Guardar pack actual en lista de packs
