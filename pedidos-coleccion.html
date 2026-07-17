@@ -1265,6 +1265,10 @@ let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
 let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
 
 async function calcularPago(){
+  const botonesPago=['btn-pago-bs','btn-pago-usd','btn-pago-cashea'].map(id=>document.getElementById(id)).filter(Boolean);
+  botonesPago.forEach(b=>{ b.disabled=true; b.style.opacity='0.5'; b.style.cursor='wait'; });
+  const pagoLoadingMsg=document.getElementById('pago-desglose');
+  if(pagoLoadingMsg) pagoLoadingMsg.innerHTML='<span class="spinner">↻</span> Calculando precio actualizado...';
   try{
     const data=await scriptGETjson({action:'leerTodosLosPrecios',codigo:pedido.codigoProducto});
     if(data.ok){
@@ -1328,7 +1332,9 @@ async function calcularPago(){
   document.getElementById('pago-total-usd').textContent='$'+pagoTotalUsd.toFixed(2);
   document.getElementById('pm-monto-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
   document.getElementById('pm-monto-usd').textContent='$'+pagoTotalUsd.toFixed(2);
-
+  const elCasheaCol=document.getElementById('pm-monto-cashea');
+  if(elCasheaCol) elCasheaCol.textContent='Bs '+pagoTotalCasheaBs.toFixed(2)+' ($'+pagoTotalCasheaUsd.toFixed(2)+')';
+  botonesPago.forEach(b=>{ b.disabled=false; b.style.opacity=''; b.style.cursor=''; });
 }
 
 function seleccionarPago(tipo){
