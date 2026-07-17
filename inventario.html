@@ -5289,17 +5289,12 @@ async function confirmarPlanificacion(){
     // de piezas (genero+talla+nombre+logos) tal como lo capturó la app de venta.
     // (Antes se guardaba un resumen genérico que perdía todo el detalle por talla/nombre.)
     try{
-      let tasaBcvActualCola=0;
-      try{
-        const resTasa=await scriptGETjson({action:'leerPrecios'});
-        tasaBcvActualCola=parseFloat(resTasa.tasa_bcv)||0;
-      }catch(e){ console.warn('No se pudo leer tasa BCV:',e); }
-      for(const pk of allPacks){
+      for(let idx=0; idx<allPacks.length; idx++){
+        const pk=allPacks[idx];
         await registrarEnProduccion({
           codigoP:lastCodigoP,
           codigoC:pk.codigoC||(pendingCola.allCodigosC?pendingCola.allCodigosC.join(','):(pendingCola.codigoCBase||'')),
           cod:codMake,
-          tasa:tasaBcvActualCola,
           fecha:fechaProd,
           nombre:pendingCola.nombre||'',
           correo:pendingCola.correo||'',
@@ -5318,9 +5313,11 @@ async function confirmarPlanificacion(){
           retira_cel:pendingCola.retiraCel||'',
           banco:pendingCola.banco||'',
           cod_pago:pendingCola.codpago||'',
-          moneda:pendingCola.pagoMoneda||'',
-          monto:pendingCola.pagoMonto||'',
-          tasa:TASAS.BCV||'',
+          // El monto/moneda/tasa es del PEDIDO completo, no de cada parte —
+          // solo se registra en la primera fila para no sumarlo varias veces en Ventas.
+          moneda:idx===0?(pendingCola.pagoMoneda||''):'',
+          monto:idx===0?(pendingCola.pagoMonto||''):'',
+          tasa:idx===0?(TASAS.BCV||''):'',
           referencia:pendingCola.codpago||'',
           usuario:USUARIOS[unlock],
           fecha_apro:fechaProd,
