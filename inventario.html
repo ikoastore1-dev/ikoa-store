@@ -1105,6 +1105,23 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <div class="field-label">Pega el mensaje de WhatsApp</div>
           <textarea id="rv-mensaje" rows="8" placeholder="Pega aquí el mensaje completo del cliente..." style="background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;outline:none;width:100%;resize:vertical;line-height:1.6;"></textarea>
         </div>
+        <div class="field-group" style="margin-bottom:14px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;">
+            <input type="checkbox" id="rv-es-cashea" onchange="rvToggleCashea()" style="width:18px;height:18px;cursor:pointer;">
+            <span style="font-size:14px;font-weight:700;color:var(--text);">🛒 Compra por Cashea</span>
+          </label>
+        </div>
+        <div id="rv-cashea-campos" style="display:none;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div class="field-group" style="margin-bottom:0">
+            <div class="field-label">Código Cashea *</div>
+            <input class="field-input" type="text" id="rv-cod-cashea" placeholder="Ej: 189160927">
+          </div>
+          <div class="field-group" style="margin-bottom:0">
+            <div class="field-label">% Inicial *</div>
+            <input class="field-input" type="number" id="rv-pct-inicial" placeholder="Ej: 40" min="0" max="100">
+          </div>
+        </div>
+        <div id="rv-campos-normales" style="display:contents;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
           <div class="field-group" style="margin-bottom:0">
             <div class="field-label">Banco *</div>
@@ -1128,6 +1145,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
             <div class="field-label">N° Referencia *</div>
             <input class="field-input" type="text" id="rv-referencia" placeholder="Número de referencia">
           </div>
+        </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
           <div class="field-group" style="margin-bottom:0">
@@ -4566,10 +4584,18 @@ async function rvSelDestino(val){
   taller.style.background=!esTienda?'#0a2a1e':'var(--surface2)';
 }
 
+function rvToggleCashea(){
+  const esCashea=document.getElementById('rv-es-cashea').checked;
+  document.getElementById('rv-cashea-campos').style.display=esCashea?'grid':'none';
+}
+
 async function guardarRespaldo(){
   const mensaje=document.getElementById('rv-mensaje').value.trim();
+  const esCashea=document.getElementById('rv-es-cashea').checked;
   const banco=document.getElementById('rv-banco').value;
   const referencia=document.getElementById('rv-referencia').value.trim();
+  const codCashea=document.getElementById('rv-cod-cashea').value.trim();
+  const pctInicial=document.getElementById('rv-pct-inicial').value.trim();
   const monto=document.getElementById('rv-monto').value.trim();
   const factura=document.getElementById('rv-factura').value;
   const tasa=document.getElementById('rv-tasa').value.trim();
@@ -4580,6 +4606,10 @@ async function guardarRespaldo(){
   if(!mensaje){ alert('Pega el mensaje de WhatsApp primero'); return; }
   if(!banco){ alert('Selecciona el banco'); return; }
   if(!referencia){ alert('Ingresa el número de referencia'); return; }
+  if(esCashea){
+    if(!codCashea){ alert('Ingresa el código de Cashea'); return; }
+    if(!pctInicial){ alert('Ingresa el porcentaje inicial'); return; }
+  }
   if(!monto){ alert('Ingresa el monto total'); return; }
   if(!USUARIOS_RESPALDO[unlock]){ errEl.style.display='block'; errEl.textContent='❌ Código incorrecto'; document.getElementById('rv-unlock').value=''; return; }
   errEl.style.display='none';
@@ -4599,8 +4629,11 @@ async function guardarRespaldo(){
       monto:monto,
       factura:factura,
       tasa:tasa,
-      moneda:moneda,
-      destino:destino
+      moneda:esCashea?'Cashea':moneda,
+      destino:destino,
+      es_cashea:esCashea?'SI':'NO',
+      cod_cashea:codCashea,
+      pct_inicial:pctInicial
     });
     if(data.ok){
       msgEl.style.background='var(--surface2)';
@@ -4610,6 +4643,10 @@ async function guardarRespaldo(){
       document.getElementById('rv-mensaje').value='';
       document.getElementById('rv-banco').value='';
       document.getElementById('rv-referencia').value='';
+      document.getElementById('rv-cod-cashea').value='';
+      document.getElementById('rv-pct-inicial').value='';
+      document.getElementById('rv-es-cashea').checked=false;
+      rvToggleCashea();
       document.getElementById('rv-monto').value='';
       document.getElementById('rv-tasa').value='';
       document.getElementById('rv-unlock').value='';
@@ -7023,9 +7060,12 @@ function tallerReformatearTexto(raw){
 
 function tallerDescripcionPack(p){
   let packNum=(p.pack||'').toString().trim().toUpperCase().replace(/PACK/g,'').trim();
-  const partes=[packNum?packNum+'PACK':'', 'IKOA', (p.modelo||'').toUpperCase()];
-  if(p.manga) partes.push(p.manga.toUpperCase());
-  if(p.capucha && p.capucha!=='Sin Capucha') partes.push(p.capucha.toUpperCase());
+  const modeloUpper=(p.modelo||'').toUpperCase();
+  const partes=[packNum?packNum+'PACK':'', 'IKOA', modeloUpper];
+  // Solo agregar manga/capucha si el modelo no las trae ya incluidas en su propio texto
+  // (algunas líneas, como Empresarial, guardan el modelo con todo ya descrito, ej. "Comfy Empresarial Manga Larga Sin Capucha")
+  if(p.manga && !modeloUpper.includes(p.manga.toUpperCase())) partes.push(p.manga.toUpperCase());
+  if(p.capucha && p.capucha!=='Sin Capucha' && !modeloUpper.includes(p.capucha.toUpperCase())) partes.push(p.capucha.toUpperCase());
   return partes.filter(Boolean).join(' ');
 }
 
