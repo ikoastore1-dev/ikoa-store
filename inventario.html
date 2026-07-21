@@ -4625,6 +4625,13 @@ async function guardarRespaldo(){
   msgEl.innerHTML='<span class="spinner">↻</span> Guardando...';
   try{
     const destino=document.getElementById('rv-destino').value||'Stock Tienda';
+    const productosDetalle=cotItems.map(item=>{
+      const extras=[];
+      if(item.tela) extras.push('Color: '+item.tela+(item.vinil?' / Vinil: '+item.vinil:''));
+      if(item.colorLibre&&item.app==='toalla') extras.push('Color: '+item.colorLibre);
+      if(item.capucha&&item.capucha!=='Sin Capucha') extras.push(item.capucha);
+      return `${item.nombreApp} (${item.pack||''}) [${item.tallas.join(', ')}]${extras.length?' — '+extras.join(' / '):''} — Bs ${item.subtotalBs.toFixed(2)}`;
+    }).join(' | ');
     const data=await scriptGETjson({
       action:'addRespaldo',
       fecha:getFechaHora(),
@@ -4639,7 +4646,8 @@ async function guardarRespaldo(){
       destino:destino,
       es_cashea:esCashea?'SI':'NO',
       cod_cashea:codCashea,
-      pct_inicial:pctInicial
+      pct_inicial:pctInicial,
+      productos_detalle:encodeURIComponent(productosDetalle)
     });
     if(data.ok){
       msgEl.style.background='var(--surface2)';
@@ -4689,6 +4697,7 @@ async function cargarRespaldos(){
       const moneda=String(r[8]||'').trim();
       const monto=String(r[9]||'').trim();
       const destino=String(r[10]||'Stock Tienda').trim();
+      const productosDetalle=String(r[13]||'').trim();
       const esTienda=destino==='Stock Tienda';
       const card=document.createElement('div');
       card.style.cssText=`background:var(--surface);border:1px solid ${esTienda?'var(--accent)':'var(--warn)'};border-radius:12px;padding:16px;margin-bottom:12px;`;
@@ -4707,6 +4716,7 @@ async function cargarRespaldos(){
           <div><span style="color:var(--muted);">Tasa:</span> <b>${tasa}</b></div>
           <div><span style="color:var(--muted);">Factura:</span> <b>${factura}</b></div>
         </div>
+        ${productosDetalle?`<div style="background:#0a2a1e;border:1px solid var(--accent);border-radius:8px;padding:10px;font-size:11px;color:var(--text);margin-bottom:10px;"><b style="color:var(--accent);">🛍️ Productos:</b> ${productosDetalle.split(' | ').join('<br>')}</div>`:''}
         <div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13px;line-height:1.8;white-space:pre-wrap;margin-bottom:12px;">${mensaje}</div>
         <button onclick="abrirModalProcesar('${codigo}')" style="width:100%;padding:12px;background:var(--warn);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">✓ MARCAR COMO PROCESADO</button>
         <button onclick="abrirModalEditarRespaldo('${codigo}','${encodeURIComponent(mensaje)}','${banco}','${referencia}','${factura}','${tasa}','${moneda}','${monto}')" style="width:100%;padding:10px;background:transparent;border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;">✏️ EDITAR</button>`;
