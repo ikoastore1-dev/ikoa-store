@@ -8826,21 +8826,30 @@ function cotGuardarItem(){
 let rvModalOverlayActivo=false;
 function rvAbrirOverlayModal(){
   rvModalOverlayActivo=true;
+  const tg=document.getElementById('tab-gestion');
   const cw=document.getElementById('cotizaciones-wrap');
   const subNueva=document.getElementById('cot-subtab-nueva');
+  // Nivel 1: tab-gestion (la pestaña "Gestión" completa, oculta mientras estamos en otra pestaña)
+  if(tg){
+    tg.dataset.prevDisplay=tg.style.display||'';
+    tg.style.display='block';
+    Array.from(tg.children).forEach(el=>{
+      if(el.id!=='cotizaciones-wrap'){ el.dataset.prevDisplay=el.style.display||''; el.style.display='none'; }
+    });
+  }
+  // Nivel 2: cotizaciones-wrap, convertido en overlay de pantalla completa
   cw.dataset.prevDisplay=cw.style.display||'';
   cw.style.display='block';
   cw.style.position='fixed'; cw.style.top='0'; cw.style.left='0';
   cw.style.width='100vw'; cw.style.height='100vh'; cw.style.maxWidth='none';
   cw.style.background='var(--bg,#0a0e14)'; cw.style.zIndex='9999';
   cw.style.overflowY='auto'; cw.style.padding='20px'; cw.style.boxSizing='border-box';
-  // Ocultar todo el contenido normal de Cotizaciones (nivel cotizaciones-wrap), menos el contenedor que trae el modal adentro
   Array.from(cw.children).forEach(el=>{
     if(el.id!=='cot-subtab-nueva'){ el.dataset.prevDisplay=el.style.display||''; el.style.display='none'; }
   });
+  // Nivel 3: dentro de cot-subtab-nueva, mostrar solo el modal
   if(subNueva){
     subNueva.style.display='block';
-    // Dentro de ese contenedor, ocultar todo menos el modal en sí
     Array.from(subNueva.children).forEach(el=>{
       if(el.id!=='cot-modal-wrap'){ el.dataset.prevDisplay=el.style.display||''; el.style.display='none'; }
     });
@@ -8849,6 +8858,7 @@ function rvAbrirOverlayModal(){
 function rvCerrarOverlayModal(){
   if(!rvModalOverlayActivo) return;
   rvModalOverlayActivo=false;
+  const tg=document.getElementById('tab-gestion');
   const cw=document.getElementById('cotizaciones-wrap');
   const subNueva=document.getElementById('cot-subtab-nueva');
   cw.style.display=cw.dataset.prevDisplay||'none';
@@ -8861,6 +8871,12 @@ function rvCerrarOverlayModal(){
   if(subNueva){
     Array.from(subNueva.children).forEach(el=>{
       if(el.id!=='cot-modal-wrap'){ el.style.display=el.dataset.prevDisplay||''; }
+    });
+  }
+  if(tg){
+    tg.style.display=tg.dataset.prevDisplay||'none';
+    Array.from(tg.children).forEach(el=>{
+      if(el.id!=='cotizaciones-wrap'){ el.style.display=el.dataset.prevDisplay||''; }
     });
   }
 }
