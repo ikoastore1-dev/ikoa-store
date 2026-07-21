@@ -1147,6 +1147,11 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           </div>
         </div>
         </div>
+        <div class="field-group" style="margin-bottom:14px;">
+          <div class="field-label">Productos de la venta <span style="color:var(--muted);font-weight:400;">(opcional — llena el Monto Total solo)</span></div>
+          <div id="rv-items-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
+          <button type="button" onclick="rvAgregarProducto()" style="width:100%;padding:12px;border:2px dashed var(--accent);border-radius:12px;background:transparent;color:var(--accent);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">+ Agregar producto</button>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
           <div class="field-group" style="margin-bottom:0">
             <div class="field-label">Monto Total *</div>
@@ -4569,6 +4574,7 @@ function switchRespaldo(sub){
   });
   if(sub==='pendientes') cargarRespaldos();
   if(sub==='historial') cargarHistorialRespaldo();
+  if(sub==='nuevo'){ cotItems=[]; cotItemEditIdx=-1; rvRenderItemsYMonto(); }
 }
 
 async function rvSelDestino(val){
@@ -4645,6 +4651,7 @@ async function guardarRespaldo(){
       document.getElementById('rv-referencia').value='';
       document.getElementById('rv-cod-cashea').value='';
       document.getElementById('rv-pct-inicial').value='';
+      cotItems=[]; rvRenderItemsYMonto();
       document.getElementById('rv-es-cashea').checked=false;
       rvToggleCashea();
       document.getElementById('rv-monto').value='';
@@ -8805,6 +8812,38 @@ function cotGuardarItem(){
 }
 
 // ── RENDERIZAR LISTA ─────────────────────────────────────────
+// ── RESPALDO: reutiliza el mismo catálogo/modal de Cotizaciones ──
+function rvAgregarProducto(){
+  cotAgregarItem();
+}
+
+function rvRenderItemsYMonto(){
+  const list=document.getElementById('rv-items-list');
+  if(!list) return;
+  list.innerHTML='';
+  let totalBs=0, totalUsd=0, tasaBCV=0;
+  cotItems.forEach((item,idx)=>{
+    totalUsd+=item.subtotalUSD; totalBs+=item.subtotalBs;
+    if(item.tasaBCV>0) tasaBCV=item.tasaBCV;
+    const div=document.createElement('div');
+    div.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;';
+    div.innerHTML=`
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--accent);">${item.nombreApp}</div>
+        <div style="font-size:11px;color:var(--muted);">${item.pack||''} · ${item.tallas.join(' · ')}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">Bs ${item.subtotalBs.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+        <button onclick="cotEliminarItem(${idx});rvRenderItemsYMonto();" style="margin-top:4px;padding:3px 8px;border:1px solid var(--danger);border-radius:6px;background:transparent;color:var(--danger);font-size:10px;font-weight:700;cursor:pointer;">✕</button>
+      </div>`;
+    list.appendChild(div);
+  });
+  if(cotItems.length>0){
+    document.getElementById('rv-monto').value=totalBs.toFixed(2);
+    if(tasaBCV>0) document.getElementById('rv-tasa').value=tasaBCV.toFixed(2);
+  }
+}
+
 function cotRenderItems(){
   const list=document.getElementById('cot-items-list');
   list.innerHTML='';
@@ -8864,6 +8903,7 @@ function cotRenderItems(){
       </div>`:''}
     `;
   }
+  rvRenderItemsYMonto();
 }
 function cotEliminarItem(idx){cotItems.splice(idx,1);cotRenderItems();}
 
