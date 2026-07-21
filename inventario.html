@@ -7930,6 +7930,7 @@ function cotAgregarItem(){
 }
 function cotCancelarModal(){
   const m=document.getElementById('cot-modal-wrap'); if(m) m.style.display='none';
+  if(rvModalOverlayActivo) rvCerrarOverlayModal();
 }
 
 // ── SELECCIONAR PRODUCTO ─────────────────────────────────────
@@ -8812,8 +8813,36 @@ function cotGuardarItem(){
 }
 
 // ── RENDERIZAR LISTA ─────────────────────────────────────────
+let rvModalOverlayActivo=false;
+function rvAbrirOverlayModal(){
+  rvModalOverlayActivo=true;
+  const cw=document.getElementById('cotizaciones-wrap');
+  cw.dataset.prevDisplay=cw.style.display||'';
+  cw.style.display='block';
+  cw.style.position='fixed'; cw.style.top='0'; cw.style.left='0';
+  cw.style.width='100vw'; cw.style.height='100vh'; cw.style.maxWidth='none';
+  cw.style.background='var(--bg,#0a0e14)'; cw.style.zIndex='9999';
+  cw.style.overflowY='auto'; cw.style.padding='20px'; cw.style.boxSizing='border-box';
+  Array.from(cw.children).forEach(el=>{
+    if(el.id!=='cot-modal-wrap'){ el.dataset.prevDisplay=el.style.display||''; el.style.display='none'; }
+  });
+}
+function rvCerrarOverlayModal(){
+  if(!rvModalOverlayActivo) return;
+  rvModalOverlayActivo=false;
+  const cw=document.getElementById('cotizaciones-wrap');
+  cw.style.display=cw.dataset.prevDisplay||'none';
+  cw.style.position=''; cw.style.top=''; cw.style.left=''; cw.style.width=''; cw.style.height='';
+  cw.style.maxWidth='640px'; cw.style.background=''; cw.style.zIndex=''; cw.style.overflowY='';
+  cw.style.padding=''; cw.style.boxSizing='';
+  Array.from(cw.children).forEach(el=>{
+    if(el.id!=='cot-modal-wrap'){ el.style.display=el.dataset.prevDisplay||''; }
+  });
+}
+
 // ── RESPALDO: reutiliza el mismo catálogo/modal de Cotizaciones ──
 function rvAgregarProducto(){
+  rvAbrirOverlayModal();
   cotAgregarItem();
 }
 
@@ -8842,6 +8871,7 @@ function rvRenderItemsYMonto(){
     document.getElementById('rv-monto').value=totalBs.toFixed(2);
     if(tasaBCV>0) document.getElementById('rv-tasa').value=tasaBCV.toFixed(2);
   }
+  if(rvModalOverlayActivo) rvCerrarOverlayModal();
 }
 
 function cotRenderItems(){
