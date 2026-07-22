@@ -1097,9 +1097,37 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <div class="field-label">Destino del pedido</div>
           <div style="display:flex;gap:8px;margin-top:4px;">
             <button id="rv-dest-tienda" onclick="rvSelDestino('Stock Tienda')" style="flex:1;padding:12px;border:2px solid var(--accent);border-radius:8px;background:#0a2a1e;color:var(--accent);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🏪 Stock Tienda</button>
-            <button id="rv-dest-taller" onclick="rvSelDestino('Envio Taller')" style="flex:1;padding:12px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🏭 Envío Taller</button>
+            <button id="rv-dest-taller" onclick="rvSelDestino('Envío Taller')" style="flex:1;padding:12px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🏭 Envío Taller</button>
           </div>
           <input type="hidden" id="rv-destino" value="Stock Tienda">
+        </div>
+        <div class="field-group" id="rv-nombre-cliente-wrap">
+          <div class="field-label">Nombre del cliente <span style="color:var(--muted);font-weight:400;">(queda en el registro)</span></div>
+          <input class="field-input" type="text" id="rv-nombre-cliente" placeholder="Nombre completo del cliente">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;">
+            <div>
+              <div class="field-label">Cédula</div>
+              <input class="field-input" type="text" id="rv-cedula-cliente" placeholder="V-12345678">
+            </div>
+            <div>
+              <div class="field-label">Celular</div>
+              <input class="field-input" type="text" id="rv-celular-cliente" placeholder="04141234567">
+            </div>
+            <div>
+              <div class="field-label">Correo</div>
+              <input class="field-input" type="text" id="rv-correo-cliente" placeholder="correo@ejemplo.com">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+            <div>
+              <div class="field-label">Agencia de envío / Retiro</div>
+              <input class="field-input" type="text" id="rv-agencia-cliente" placeholder="Ej: MRW Chuao / Retira en tienda">
+            </div>
+            <div>
+              <div class="field-label">Retira (si es distinto al cliente)</div>
+              <input class="field-input" type="text" id="rv-retira-cliente" placeholder="Nombre de quien retira">
+            </div>
+          </div>
         </div>
         <div class="field-group">
           <div class="field-label">Pega el mensaje de WhatsApp</div>
@@ -4588,6 +4616,9 @@ async function rvSelDestino(val){
   taller.style.borderColor=!esTienda?'var(--accent)':'var(--border)';
   taller.style.color=!esTienda?'var(--accent)':'var(--muted)';
   taller.style.background=!esTienda?'#0a2a1e':'var(--surface2)';
+  const nombreWrap=document.getElementById('rv-nombre-cliente-wrap');
+  if(nombreWrap) nombreWrap.style.display='block';
+  rvRenderItemsYMonto();
 }
 
 function rvToggleCashea(){
@@ -4609,6 +4640,13 @@ async function guardarRespaldo(){
   const unlock=document.getElementById('rv-unlock').value.trim().toUpperCase();
   const errEl=document.getElementById('rv-unlock-error');
   const msgEl=document.getElementById('rv-msg');
+  const destino=document.getElementById('rv-destino').value||'Stock Tienda';
+  const nombreCliente=document.getElementById('rv-nombre-cliente')?document.getElementById('rv-nombre-cliente').value.trim():'';
+  const cedulaCliente=document.getElementById('rv-cedula-cliente')?document.getElementById('rv-cedula-cliente').value.trim():'';
+  const celularCliente=document.getElementById('rv-celular-cliente')?document.getElementById('rv-celular-cliente').value.trim():'';
+  const correoCliente=document.getElementById('rv-correo-cliente')?document.getElementById('rv-correo-cliente').value.trim():'';
+  const agenciaCliente=document.getElementById('rv-agencia-cliente')?document.getElementById('rv-agencia-cliente').value.trim():'';
+  const retiraCliente=document.getElementById('rv-retira-cliente')?document.getElementById('rv-retira-cliente').value.trim():'';
   if(!mensaje){ alert('Pega el mensaje de WhatsApp primero'); return; }
   if(!banco){ alert('Selecciona el banco'); return; }
   if(!referencia){ alert('Ingresa el número de referencia'); return; }
@@ -4617,6 +4655,18 @@ async function guardarRespaldo(){
     if(!pctInicial){ alert('Ingresa el porcentaje inicial'); return; }
   }
   if(!monto){ alert('Ingresa el monto total'); return; }
+  if(destino==='Envío Taller'){
+    if(!nombreCliente){ alert('Ingresa el nombre del cliente (necesario para Taller)'); return; }
+    if(!celularCliente){ alert('Ingresa el celular del cliente (necesario para Taller)'); return; }
+    if(!agenciaCliente){ alert('Ingresa la agencia de envío o forma de retiro (necesario para Taller)'); return; }
+    if(!cotItems.length){ alert('Agrega al menos un producto para enviar a Taller'); return; }
+    for(const item of cotItems){
+      if(!item.piezasDetalle || item.piezasDetalle.some(p=>!p.nombre||!p.nombre.trim())){
+        alert('Falta poner el nombre en alguna prenda de "'+item.nombreApp+'". Cada prenda necesita su nombre para Taller.');
+        return;
+      }
+    }
+  }
   if(!USUARIOS_RESPALDO[unlock]){ errEl.style.display='block'; errEl.textContent='❌ Código incorrecto'; document.getElementById('rv-unlock').value=''; return; }
   errEl.style.display='none';
   msgEl.style.display='block';
@@ -4624,7 +4674,6 @@ async function guardarRespaldo(){
   msgEl.style.color='var(--muted)';
   msgEl.innerHTML='<span class="spinner">↻</span> Guardando...';
   try{
-    const destino=document.getElementById('rv-destino').value||'Stock Tienda';
     const productosDetalle=cotItems.map(item=>{
       const extras=[];
       if(item.tela) extras.push('Color: '+item.tela+(item.vinil?' / Vinil: '+item.vinil:''));
@@ -4632,6 +4681,21 @@ async function guardarRespaldo(){
       if(item.capucha&&item.capucha!=='Sin Capucha') extras.push(item.capucha);
       return `${item.nombreApp} (${item.pack||''}) [${item.tallas.join(', ')}]${extras.length?' — '+extras.join(' / '):''} — Bs ${item.subtotalBs.toFixed(2)}`;
     }).join(' | ');
+    // Si va a Taller, armar el formato de "piezas" por pack, igual al que usan los pedidos normales
+    let packsTaller=[];
+    if(destino==='Envío Taller'){
+      packsTaller=cotItems.map(item=>{
+        const piezasStr=item.tallas.map((talla,i)=>{
+          const pz=item.piezasDetalle[i];
+          const capuchaTxt=(item.capucha&&item.capucha!=='Sin Capucha')?' CON CAPUCHA':'';
+          return `${pz.genero} ${talla}${capuchaTxt} - ${pz.nombre.trim().toUpperCase()}`;
+        }).join(' | ');
+        return {
+          modelo:item.nombreApp, manga:item.manga||'', capucha:item.capucha||'',
+          pack:item.pack||'', tela:item.tela||'', vinil:item.vinil||'', piezas:piezasStr
+        };
+      });
+    }
     const data=await scriptGETjson({
       action:'addRespaldo',
       fecha:getFechaHora(),
@@ -4647,7 +4711,14 @@ async function guardarRespaldo(){
       es_cashea:esCashea?'SI':'NO',
       cod_cashea:codCashea,
       pct_inicial:pctInicial,
-      productos_detalle:encodeURIComponent(productosDetalle)
+      productos_detalle:encodeURIComponent(productosDetalle),
+      nombre_cliente:encodeURIComponent(nombreCliente),
+      cedula_cliente:encodeURIComponent(cedulaCliente),
+      celular_cliente:encodeURIComponent(celularCliente),
+      correo_cliente:encodeURIComponent(correoCliente),
+      agencia_cliente:encodeURIComponent(agenciaCliente),
+      retira_cliente:encodeURIComponent(retiraCliente),
+      packs_taller:encodeURIComponent(JSON.stringify(packsTaller))
     });
     if(data.ok){
       msgEl.style.background='var(--surface2)';
@@ -4659,6 +4730,12 @@ async function guardarRespaldo(){
       document.getElementById('rv-referencia').value='';
       document.getElementById('rv-cod-cashea').value='';
       document.getElementById('rv-pct-inicial').value='';
+      if(document.getElementById('rv-nombre-cliente')) document.getElementById('rv-nombre-cliente').value='';
+      if(document.getElementById('rv-cedula-cliente')) document.getElementById('rv-cedula-cliente').value='';
+      if(document.getElementById('rv-celular-cliente')) document.getElementById('rv-celular-cliente').value='';
+      if(document.getElementById('rv-correo-cliente')) document.getElementById('rv-correo-cliente').value='';
+      if(document.getElementById('rv-agencia-cliente')) document.getElementById('rv-agencia-cliente').value='';
+      if(document.getElementById('rv-retira-cliente')) document.getElementById('rv-retira-cliente').value='';
       cotItems=[]; rvRenderItemsYMonto();
       document.getElementById('rv-es-cashea').checked=false;
       rvToggleCashea();
@@ -4894,19 +4971,40 @@ function renderEnviados(rows){
     listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);"><div style="font-size:32px;margin-bottom:10px;">🚀</div><div>No hay pedidos enviados</div></div>`;
     return;
   }
-  listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${rows.length} registro(s)</div>`+
-    rows.map(r=>{
+  // Agrupar por pedido principal C-1 / C-1.2 / C-1-2, igual que en Cola
+  const grupos={};
+  rows.forEach(r=>{
+    const codigoC=String(r[1]||'').trim();
+    const base=codigoC.split('.')[0].split('-').slice(0,2).join('-');
+    if(!grupos[base]) grupos[base]=[];
+    grupos[base].push(r);
+  });
+  Object.values(grupos).forEach(g=>g.sort((a,b)=>{
+    const ca=String(a[1]||''), cb=String(b[1]||'');
+    const aHasSuffix=ca.includes('.')||(ca.match(/-\d+$/)&&ca.match(/-\d+-\d+$/));
+    const bHasSuffix=cb.includes('.')||(cb.match(/-\d+$/)&&cb.match(/-\d+-\d+$/));
+    if(!aHasSuffix&&bHasSuffix) return -1;
+    if(aHasSuffix&&!bHasSuffix) return 1;
+    return ca.localeCompare(cb);
+  }));
+  listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${Object.keys(grupos).length} pedido(s) · ${rows.length} registro(s)</div>`+
+    Object.entries(grupos).map(([base,packs])=>{
+      const r=packs[0];
       const v=i=>String(r[i]||'').trim();
       return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;">${v(7)}</div>
             <div style="font-size:12px;color:var(--muted);">${v(9)} · ${v(8)}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;">
+              <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text);">${base}</span>
+              ${packs.length>1?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">${packs.length} packs</span>`:''}
+            </div>
           </div>
           <span style="background:#0f1a2a;border:1px solid var(--accent2);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--accent2);">EN PRODUCCIÓN</span>
         </div>
         <div style="font-size:12px;color:var(--muted);line-height:1.8;">
-          <div>Código P: <b style="color:var(--text)">${v(2)}</b> · Cola: ${v(1)}</div>
+          <div>Código P: <b style="color:var(--text)">${v(2)}</b> · Cola: ${packs.map(p=>String(p[1]||'').trim()).join(', ')}</div>
           <div>${v(11)} · ${v(14)} · Tela: ${v(15)} / Vinil: ${v(16)}</div>
           <div>Agencia: ${v(18)} · Fecha: ${v(6)}</div>
         </div>
@@ -5426,19 +5524,40 @@ function renderHistorialApro(rows){
   }
   const color=filtroSolicitudes==='Pagado'?'var(--accent)':'var(--danger)';
   const bg=filtroSolicitudes==='Pagado'?'#0f2b1a':'#2a1010';
-  listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${rows.length} registro(s)</div>`+
-    rows.map(r=>{
+  // Agrupar por pedido principal S-99 / S-99.2 / S-99-2, igual que en Pendientes
+  const grupos={};
+  rows.forEach(r=>{
+    const codigo=String(r[0]||'').trim();
+    const base=codigo.split('.')[0].split('-').slice(0,2).join('-');
+    if(!grupos[base]) grupos[base]=[];
+    grupos[base].push(r);
+  });
+  Object.values(grupos).forEach(g=>g.sort((a,b)=>{
+    const ca=String(a[0]||''), cb=String(b[0]||'');
+    const aHasSuffix=ca.includes('.')||(ca.match(/-\d+$/)&&ca.match(/-\d+-\d+$/));
+    const bHasSuffix=cb.includes('.')||(cb.match(/-\d+$/)&&cb.match(/-\d+-\d+$/));
+    if(!aHasSuffix&&bHasSuffix) return -1;
+    if(aHasSuffix&&!bHasSuffix) return 1;
+    return ca.localeCompare(cb);
+  }));
+  listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${Object.keys(grupos).length} pedido(s) · ${rows.length} registro(s)</div>`+
+    Object.entries(grupos).map(([base,packs])=>{
+      const r=packs[0];
       const v=i=>String(r[i]||'').trim();
       return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;">${v(7)}</div>
             <div style="font-size:12px;color:var(--muted);">${v(9)} · ${v(8)}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;">
+              <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text);">${base}</span>
+              ${packs.length>1?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">${packs.length} packs</span>`:''}
+            </div>
           </div>
           <span style="background:${bg};border:1px solid ${color};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:${color};">${filtroSolicitudes==='Pagado'?'APROBADO':'REPROBADO'}</span>
         </div>
         <div style="font-size:12px;color:var(--muted);line-height:1.8;">
-          <div>Código: <b style="color:var(--text)">${v(0)}</b> · ${v(11)} · ${v(14)}</div>
+          <div>Código: <b style="color:var(--text)">${packs.map(p=>String(p[0]||'').trim()).join(', ')}</b> · ${v(11)} · ${v(14)}</div>
           <div>Tela: ${v(15)} · Vinil: ${v(16)}</div>
           <div>Agencia: ${v(18)} · Fecha: ${v(4)}</div>
           ${filtroSolicitudes==='Reprobado'?`<div style="color:var(--danger);">Motivo: ${v(27)}</div>`:''}
@@ -8887,25 +9006,53 @@ function rvAgregarProducto(){
   cotAgregarItem();
 }
 
+function rvActualizarPiezaCampo(idx,piezaIdx,campo,valor){
+  const item=cotItems[idx];
+  if(!item) return;
+  if(!item.piezasDetalle) item.piezasDetalle=item.tallas.map(()=>({genero:'Caballero',nombre:''}));
+  if(!item.piezasDetalle[piezaIdx]) item.piezasDetalle[piezaIdx]={genero:'Caballero',nombre:''};
+  item.piezasDetalle[piezaIdx][campo]=valor;
+}
+
 function rvRenderItemsYMonto(){
   const list=document.getElementById('rv-items-list');
   if(!list) return;
   list.innerHTML='';
   let totalBs=0, totalUsd=0, tasaBCV=0;
+  const esTaller=document.getElementById('rv-destino')&&document.getElementById('rv-destino').value==='Envío Taller';
   cotItems.forEach((item,idx)=>{
     totalUsd+=item.subtotalUSD; totalBs+=item.subtotalBs;
     if(item.tasaBCV>0) tasaBCV=item.tasaBCV;
+    if(esTaller && !item.piezasDetalle) item.piezasDetalle=item.tallas.map(()=>({genero:'Caballero',nombre:''}));
     const div=document.createElement('div');
-    div.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;';
+    div.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;';
+    const piezasHtml=esTaller?`
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+        ${item.tallas.map((talla,pIdx)=>{
+          const pz=item.piezasDetalle[pIdx]||{genero:'Caballero',nombre:''};
+          return `<div style="display:grid;grid-template-columns:60px 1fr 1.5fr;gap:6px;align-items:center;">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-align:center;background:var(--surface2);border-radius:6px;padding:6px 0;">${talla}</div>
+            <select onchange="rvActualizarPiezaCampo(${idx},${pIdx},'genero',this.value)" style="font-size:11px;padding:6px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text);">
+              <option value="Caballero" ${pz.genero==='Caballero'?'selected':''}>Caballero</option>
+              <option value="Dama" ${pz.genero==='Dama'?'selected':''}>Dama</option>
+              <option value="Kids" ${pz.genero==='Kids'?'selected':''}>Kids</option>
+            </select>
+            <input type="text" placeholder="Nombre para bordar/estampar" value="${pz.nombre||''}" oninput="rvActualizarPiezaCampo(${idx},${pIdx},'nombre',this.value)" style="font-size:11px;padding:6px 8px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text);">
+          </div>`;
+        }).join('')}
+      </div>`:'';
     div.innerHTML=`
-      <div>
-        <div style="font-size:13px;font-weight:700;color:var(--accent);">${item.nombreApp}</div>
-        <div style="font-size:11px;color:var(--muted);">${item.pack||''} · ${item.tallas.join(' · ')}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--accent);">${item.nombreApp}</div>
+          <div style="font-size:11px;color:var(--muted);">${item.pack||''} · ${item.tallas.join(' · ')}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);">Bs ${item.subtotalBs.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+          <button onclick="cotEliminarItem(${idx});rvRenderItemsYMonto();" style="margin-top:4px;padding:3px 8px;border:1px solid var(--danger);border-radius:6px;background:transparent;color:var(--danger);font-size:10px;font-weight:700;cursor:pointer;">✕</button>
+        </div>
       </div>
-      <div style="text-align:right;flex-shrink:0;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);">Bs ${item.subtotalBs.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-        <button onclick="cotEliminarItem(${idx});rvRenderItemsYMonto();" style="margin-top:4px;padding:3px 8px;border:1px solid var(--danger);border-radius:6px;background:transparent;color:var(--danger);font-size:10px;font-weight:700;cursor:pointer;">✕</button>
-      </div>`;
+      ${piezasHtml}`;
     list.appendChild(div);
   });
   if(cotItems.length>0){
