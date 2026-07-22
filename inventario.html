@@ -7974,6 +7974,29 @@ let cotItems=[], cotItemEditIdx=-1;
 let cotModoEdicion=null; // null = creando nueva | {codigo, fecha, usuario, total_pagar_bs, ...} = editando una existente
 let cotmApp='', cotmPack='', cotmCapucha='Sin Capucha';
 let cotmPrecios={}, cotmTasaBCV=0, cotmTallaCount=0;
+let cotmEsDress=false, cotmMangaDress='Manga Larga';
+
+function cotmSelTipoPrenda(esDress){
+  cotmEsDress=esDress;
+  const btnF=document.getElementById('cotm-tipo-franela'), btnD=document.getElementById('cotm-tipo-dress');
+  const activo=(b)=>{b.style.borderColor='var(--accent)';b.style.color='var(--accent)';b.style.background='#0a2a1e';};
+  const inactivo=(b)=>{b.style.borderColor='var(--border)';b.style.color='var(--muted)';b.style.background='var(--surface2)';};
+  if(esDress){ activo(btnD); inactivo(btnF); } else { activo(btnF); inactivo(btnD); }
+  const mangaWrap=document.getElementById('cotm-manga-dress-wrap');
+  if(mangaWrap) mangaWrap.style.display=esDress?'block':'none';
+  // Dress no maneja packs de varias unidades por precio — cada unidad se cobra individual, ni recarga por talla plus
+  const packsDiv=document.getElementById('cotm-packs');
+  const cantWrap=document.getElementById('cotm-cantidad-wrap');
+  if(esDress && cantWrap){ cantWrap.style.display='block'; if(packsDiv) packsDiv.style.display='none'; }
+}
+
+function cotmSelMangaDress(manga){
+  cotmMangaDress=manga;
+  const btnL=document.getElementById('cotm-manga-larga'), btnC=document.getElementById('cotm-manga-cero');
+  const activo=(b)=>{b.style.borderColor='var(--accent)';b.style.color='var(--accent)';b.style.background='#0a2a1e';};
+  const inactivo=(b)=>{b.style.borderColor='var(--border)';b.style.color='var(--muted)';b.style.background='var(--surface2)';};
+  if(manga==='Manga Larga'){ activo(btnL); inactivo(btnC); } else { activo(btnC); inactivo(btnL); }
+}
 let cotmSerie='', cotmPrenda='', cotmCapuchaCol='Sin Capucha';
 
 // ── HELPERS ──────────────────────────────────────────────────
@@ -8410,6 +8433,35 @@ async function cotModalSelectApp(app){
       packsDiv.appendChild(b);
     });
   }
+  // Tipo de prenda: Franela normal o Dress (solo Full Comfy y Licra Protect la ofrecen)
+  cotmEsDress=false;
+  let tipoPrendaSec=document.getElementById('cotm-tipo-prenda-section');
+  if(app==='fullcomfy'||app==='licra'){
+    if(!tipoPrendaSec){
+      tipoPrendaSec=document.createElement('div');
+      tipoPrendaSec.id='cotm-tipo-prenda-section';
+      tipoPrendaSec.style.cssText='margin-bottom:12px;';
+      const capSecRef=document.getElementById('cotm-capucha-section');
+      capSecRef.parentNode.insertBefore(tipoPrendaSec, capSecRef);
+    }
+    tipoPrendaSec.style.display='block';
+    tipoPrendaSec.innerHTML=`
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Tipo de prenda</div>
+      <div style="display:flex;gap:8px;">
+        <button type="button" id="cotm-tipo-franela" onclick="cotmSelTipoPrenda(false)" style="flex:1;padding:9px;border:2px solid var(--accent);border-radius:8px;background:#0a2a1e;color:var(--accent);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Franela</button>
+        <button type="button" id="cotm-tipo-dress" onclick="cotmSelTipoPrenda(true)" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Dress</button>
+      </div>
+      <div id="cotm-manga-dress-wrap" style="display:none;margin-top:10px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Manga</div>
+        <div style="display:flex;gap:8px;">
+          <button type="button" id="cotm-manga-larga" onclick="cotmSelMangaDress('Manga Larga')" style="flex:1;padding:9px;border:2px solid var(--accent);border-radius:8px;background:#0a2a1e;color:var(--accent);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Manga Larga</button>
+          <button type="button" id="cotm-manga-cero" onclick="cotmSelMangaDress('Manga Cero')" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Manga Cero</button>
+        </div>
+      </div>`;
+    cotmMangaDress='Manga Larga';
+  } else if(tipoPrendaSec){
+    tipoPrendaSec.style.display='none';
+  }
   // Capucha
   const capSec=document.getElementById('cotm-capucha-section');
   capSec.style.display=def.capuchaCod?'block':'none';
@@ -8702,7 +8754,7 @@ function cotGuardarItem(){
       app:'coleccion', nombreApp:`${cotmSerie} — ${cotmPrenda}`,
       codigo:cod,
       pack:`${tallas.length} ud${tallas.length>1?'s':''}`,
-      manga:'Manga Larga', capucha:cotmCapuchaCol,
+      manga:cotmPrenda==='Short'?'':'Manga Larga', capucha:cotmCapuchaCol,
       tela:'', vinil:'', tallas, nPlus:0,
       precioUnitUSD, precioUnitBS, recargaTotal:0, recargaTotalBs:0,
       capuchaTotal:capUSD*tallas.length, capuchaTotalBs:capBS*tallas.length,
@@ -8888,6 +8940,35 @@ function cotGuardarItem(){
   }
 
   // ── COMFY / FULLCOMFY / LICRA ────────────────────────────
+  if(cotmEsDress && (cotmApp==='fullcomfy'||cotmApp==='licra')){
+    // Dress: precio por unidad (sin pack), según línea + manga
+    const skuDress = cotmApp==='licra'
+      ? (cotmMangaDress==='Manga Larga'?'LICRA04':'LICRA03')
+      : (cotmMangaDress==='Manga Larga'?'COMFY04':'COMFY03');
+    const undsRealDress=tallas.length;
+    const precioUnitUSD=cotPrecioUSD(pp,skuDress)||0;
+    const precioUnitBS=cotPrecioBS(pp,skuDress)||0;
+    const subtotalUSD=precioUnitUSD*undsRealDress;
+    const subtotalBs=precioUnitBS*undsRealDress;
+    const tela=document.getElementById('cotm-tela')?.value||'';
+    const vinil=document.getElementById('cotm-vinil')?.value||'';
+    const nombreLinea=cotmApp==='licra'?'Licra Dress':'Comfy Dress';
+    cotItems.push({
+      app:cotmApp, nombreApp:`${nombreLinea} ${cotmMangaDress}`,
+      codigo:skuDress,
+      pack:`${undsRealDress} ud${undsRealDress>1?'s':''}`,
+      manga:cotmMangaDress, capucha:'Sin Capucha',
+      tela, vinil, tallas, nPlus:0,
+      precioUnitUSD, precioUnitBS, recargaTotal:0, recargaTotalBs:0,
+      capuchaTotal:0, capuchaTotalBs:0,
+      logoEspalda:0, logoPecho:0, logoEspaldaBs:0, logoPechoBs:0,
+      logoManga:0, logoMangaBs:0, nLogoEsp:0, nLogoPec:0, nLogoMan:0,
+      estampado:'', colorLibre:'',
+      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV
+    });
+    document.getElementById('cot-modal-wrap').style.display='none';
+    cotRenderItems(); return;
+  }
   const packN=parseInt(cotmPack)||tallas.length; // para lookup de precio según pack seleccionado
   const undsReal=tallas.length; // unidades reales según tallas expandidas
   const {totalUSD:packTotalUSD, precioUnitUSD, totalBS:packTotalBS, precioUnitBS}=cotCalcPack(cotmApp,packN,pp,cotmPrecios);

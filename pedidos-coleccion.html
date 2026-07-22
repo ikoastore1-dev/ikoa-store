@@ -1500,7 +1500,7 @@ async function guardarEnSheets(){
         cedula:pedido.cedula,
         celular:pedido.celular,
         modelo:modeloFinal,
-        manga:pk.manga||pk.largo||'',
+        manga:pk.largo?'':(pk.manga||''),
         capucha:pk.capucha||'Sin Capucha',
         pack:pk.codigoProducto||pedido.codigoProducto,
         tela:pk.tela||pedido.tela||'',
