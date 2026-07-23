@@ -4694,7 +4694,7 @@ async function guardarRespaldo(){
             pz.logoEspalda?('LOGO ESPALDA'+(pz.logoEspaldaTxt?': '+pz.logoEspaldaTxt.toUpperCase():'')):'',
             pz.logoManga?('LOGO MANGA'+(pz.logoMangaTxt?': '+pz.logoMangaTxt.toUpperCase():'')):''
           ].filter(Boolean).join(' + ');
-          return `${pz.genero} ${talla}${capuchaTxt} - ${nombreTxt}${logosTxt?' | '+logosTxt:''}`;
+          return `${talla}${capuchaTxt} - ${nombreTxt}${logosTxt?' | '+logosTxt:''}`;
         }).join(' | ');
         return {
           modelo:item.nombreApp, manga:item.manga||'', capucha:item.capucha||'',
@@ -8544,10 +8544,12 @@ async function cotModalSelectApp(app){
   // Mostrar botón +Talla siempre — cotmTallaChange controla si está habilitado o no
   document.getElementById('cotm-add-talla-btn').style.display='block';
   document.getElementById('cotm-guardar-btn').style.display='block';
-  // En modo Taller cada fila de talla es una sola prenda — el selector de cantidad general no aplica
+  // En modo Taller cada fila de talla es una sola prenda — el selector de cantidad general y los contadores de logo agregados no aplican
   if(cotmModoTaller){
     const cantWrapFinal=document.getElementById('cotm-cantidad-wrap');
     if(cantWrapFinal) cantWrapFinal.style.display='none';
+    const logosWrapFinal=document.getElementById('cotm-logos-wrap');
+    if(logosWrapFinal) logosWrapFinal.style.display='none';
   }
 }
 
@@ -8711,11 +8713,6 @@ function cotmAddTalla(opts){
           style="padding:7px 9px;border:1px solid var(--danger);border-radius:8px;background:transparent;color:var(--danger);font-size:13px;cursor:pointer;">✕</button>
       </div>
       <input type="hidden" class="cotm-talla-cant" value="1">
-      <select class="field-input cotm-talla-genero" style="font-size:12px;padding:6px;width:100%;margin-bottom:6px;">
-        <option value="Caballero">Caballero</option>
-        <option value="Dama">Dama</option>
-        <option value="Kids">Kids</option>
-      </select>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
         <input type="checkbox" class="cotm-talla-sinombre" id="cotm-tr-sinombre-${id}" onchange="document.getElementById('cotm-tr-nombre-${id}').style.display=this.checked?'none':'block';" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
         <label for="cotm-tr-sinombre-${id}" style="font-size:11px;color:var(--muted);cursor:pointer;">Sin nombre en manga derecha</label>
@@ -8836,7 +8833,7 @@ function cotGuardarItem(){
     if(sel&&sel.value){
       for(let i=0;i<cant;i++) tallas.push(sel.value);
       if(cotmModoTaller){
-        const genero=row.querySelector('.cotm-talla-genero')?.value||'Caballero';
+        const generoDerivado=(sel.value.split(' ')[0])||'Caballero';
         const sinNombre=row.querySelector('.cotm-talla-sinombre')?.checked||false;
         const nombre=sinNombre?'':(row.querySelector('.cotm-talla-nombre')?.value.trim()||'');
         const logoPecho=row.querySelector('.cotm-talla-logo-pecho')?.checked||false;
@@ -8845,7 +8842,7 @@ function cotGuardarItem(){
         const logoEspaldaTxt=row.querySelector('.cotm-talla-logo-espalda-txt')?.value.trim()||'';
         const logoManga=row.querySelector('.cotm-talla-logo-manga')?.checked||false;
         const logoMangaTxt=row.querySelector('.cotm-talla-logo-manga-txt')?.value.trim()||'';
-        for(let i=0;i<cant;i++) piezasDetalleModal.push({genero,nombre,sinNombre,logoPecho,logoPechoTxt,logoEspalda,logoEspaldaTxt,logoManga,logoMangaTxt});
+        for(let i=0;i<cant;i++) piezasDetalleModal.push({genero:generoDerivado,nombre,sinNombre,logoPecho,logoPechoTxt,logoEspalda,logoEspaldaTxt,logoManga,logoMangaTxt});
       }
     }
   }
@@ -9267,9 +9264,8 @@ function rvRenderItemsYMonto(){
             pz.logoEspalda?('Espalda'+(pz.logoEspaldaTxt?': '+pz.logoEspaldaTxt:'')):'',
             pz.logoManga?('Manga'+(pz.logoMangaTxt?': '+pz.logoMangaTxt:'')):''
           ].filter(Boolean).join(', ');
-          return `<div style="display:grid;grid-template-columns:60px 1fr 1.5fr;gap:6px;align-items:center;">
+          return `<div style="display:grid;grid-template-columns:80px 1fr;gap:6px;align-items:center;">
             <div style="font-size:11px;font-weight:700;color:var(--muted);text-align:center;background:var(--surface2);border-radius:6px;padding:6px 0;">${talla}</div>
-            <div style="font-size:11px;color:var(--text);">${pz.genero}</div>
             <div style="font-size:11px;color:var(--text);">${pz.sinNombre?'<span style="color:var(--muted);">Sin nombre</span>':pz.nombre}${logosTxt?' · <span style="color:var(--accent);">Logo: '+logosTxt+'</span>':''}</div>
           </div>`;
         }).join('')}
