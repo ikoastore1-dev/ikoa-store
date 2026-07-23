@@ -8650,10 +8650,12 @@ async function cotModalSelectApp(app){
   // Mostrar botón +Talla siempre — cotmTallaChange controla si está habilitado o no
   document.getElementById('cotm-add-talla-btn').style.display='block';
   document.getElementById('cotm-guardar-btn').style.display='block';
-  // En modo Taller cada fila de talla es una sola prenda — el selector de cantidad general y los contadores de logo agregados no aplican
+  // El selector de cantidad principal NUNCA se oculta — solo el bloque de logos agregados
+  // (que sí es redundante en modo Taller, porque cada fila ya tiene sus propios logos)
+  document.getElementById('cotm-cantidad-wrap').style.display='block';
+  const cantInputPrincipal=document.getElementById('cotm-cantidad');
+  cantInputPrincipal.oninput=()=>cotmTallaChange(cantInputPrincipal);
   if(cotmModoTaller){
-    const cantWrapFinal=document.getElementById('cotm-cantidad-wrap');
-    if(cantWrapFinal) cantWrapFinal.style.display='none';
     const logosWrapFinal=document.getElementById('cotm-logos-wrap');
     if(logosWrapFinal) logosWrapFinal.style.display='none';
   }
@@ -8778,8 +8780,9 @@ function cotmTrCambiarRep(id, delta){
   const row=document.getElementById('cotm-tr-'+id);
   const sel=row?.querySelector('.cotm-talla-sel');
   const maxVal=parseInt(document.getElementById('cotm-cantidad')?.value)||0;
-  if(delta>0 && maxVal>0 && sel?.value){
-    // No dejar pasar del total del pack
+  if(delta>0 && maxVal>0){
+    // No dejar pasar del total del pack, sin importar si ya hay talla seleccionada en ESTA fila o no
+    // (las demás filas solo cuentan si ya tienen una talla elegida)
     const rows=Array.from(document.querySelectorAll('#cotm-tallas [id^="cotm-tr-"]'));
     const otherSum=rows.reduce((s,r)=>{
       if(r.id==='cotm-tr-'+id) return s;
