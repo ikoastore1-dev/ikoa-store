@@ -4663,7 +4663,7 @@ async function guardarRespaldo(){
   const correoCliente=document.getElementById('rv-correo-cliente')?document.getElementById('rv-correo-cliente').value.trim():'';
   const agenciaCliente=document.getElementById('rv-agencia-cliente')?document.getElementById('rv-agencia-cliente').value.trim():'';
   const retiraCliente=document.getElementById('rv-retira-cliente')?document.getElementById('rv-retira-cliente').value.trim():'';
-  if(!mensaje){ alert('Pega el mensaje de WhatsApp primero'); return; }
+  if(!mensaje && !cotItems.length){ alert('Pega el mensaje de WhatsApp, o agrega los productos por el catálogo (+ Agregar producto)'); return; }
   if(!banco){ alert('Selecciona el banco'); return; }
   if(!referencia){ alert('Ingresa el número de referencia'); return; }
   if(esCashea){
@@ -8125,15 +8125,22 @@ async function cotModalSelectApp(app){
   cotmTallaCount=0; cotmSerie=''; cotmPrenda='';
   const def=COT_DEF[app]; if(!def) return;
 
+  // Ocultar la sección "Tipo de prenda" (Franela/Dress) por defecto SIEMPRE al principio,
+  // antes de cualquier rama con "return" temprano — evita que quede pegada de una selección
+  // anterior (ej. Full Comfy) al pasar a un producto que no la usa (ej. Cortaviento Uni.)
+  cotmEsDress=false;
+
   document.querySelectorAll('.cot-modal-app-btn').forEach(b=>{
     b.style.borderColor='var(--border)';b.style.color='var(--muted)';b.style.background='var(--surface2)';
   });
   const btn=document.getElementById('cotmbtn-'+app);
   if(btn){btn.style.borderColor='var(--accent)';btn.style.color='var(--accent)';btn.style.background='#0a2a1e';}
 
-  // Ocultar todo primero
+  // Ocultar todo primero — incluye cotm-tipo-prenda-section para que nunca quede pegada
+  // de una selección anterior (ej. Full Comfy) al pasar a un producto que no la usa.
   ['cotm-pack-section','cotm-capucha-section','cotm-colores-section','cotm-tallas-section',
-   'cotm-manga-section','cotm-color-libre-wrap','cotm-estampado-wrap','cotm-logos-wrap'].forEach(id=>{
+   'cotm-manga-section','cotm-color-libre-wrap','cotm-estampado-wrap','cotm-logos-wrap',
+   'cotm-tipo-prenda-section'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.style.display='none';
   });
   const colSec=document.getElementById('cotm-coleccion-section');
@@ -8468,7 +8475,6 @@ async function cotModalSelectApp(app){
     });
   }
   // Tipo de prenda: Franela normal o Dress (solo Full Comfy y Licra Protect la ofrecen)
-  cotmEsDress=false;
   let tipoPrendaSec=document.getElementById('cotm-tipo-prenda-section');
   if(app==='fullcomfy'||app==='licra'){
     if(!tipoPrendaSec){
@@ -8503,8 +8509,6 @@ async function cotModalSelectApp(app){
     cotmMangaFranela='Manga Larga';
     cotmSelMangaFranela('Manga Larga');
     cotmMangaDress='Manga Larga';
-  } else if(tipoPrendaSec){
-    tipoPrendaSec.style.display='none';
   }
   // Capucha
   const capSec=document.getElementById('cotm-capucha-section');
