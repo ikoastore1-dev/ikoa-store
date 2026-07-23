@@ -8627,7 +8627,7 @@ async function cotModalSelectApp(app){
     (data.viniles||[]).forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;selV.appendChild(o);});
   }
   // Precios
-  const acciones={comfy:'leerPrecios',fullcomfy:'leerPreciosFullComfy',licra:'leerPreciosLicra'};
+  const acciones={comfy:'leerTodosLosPrecios',fullcomfy:'leerTodosLosPrecios',licra:'leerTodosLosPrecios'};
   const pdata=await scriptGETjson({action:acciones[app]});
   if(pdata.ok){cotmPrecios=pdata; cotmTasaBCV=pdata.tasa_bcv||0;}
   // Tallas — 1 sola fila con cantidad inicial
