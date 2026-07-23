@@ -8666,8 +8666,25 @@ function cotmSelCapucha(c){
 function cotmTrCambiarRep(id, delta){
   const el=document.getElementById('cotm-tr-rep-'+id);
   if(!el) return;
+  const row=document.getElementById('cotm-tr-'+id);
+  const sel=row?.querySelector('.cotm-talla-sel');
+  const maxVal=parseInt(document.getElementById('cotm-cantidad')?.value)||0;
+  if(delta>0 && maxVal>0 && sel?.value){
+    // No dejar pasar del total del pack
+    const rows=Array.from(document.querySelectorAll('#cotm-tallas [id^="cotm-tr-"]'));
+    const otherSum=rows.reduce((s,r)=>{
+      if(r.id==='cotm-tr-'+id) return s;
+      const s2=r.querySelector('.cotm-talla-sel');
+      if(!s2||!s2.value) return s;
+      const rId=r.id.replace('cotm-tr-','');
+      return s+(parseInt(document.getElementById('cotm-tr-rep-'+rId)?.textContent)||1);
+    },0);
+    const actual=parseInt(el.textContent)||1;
+    if(otherSum+actual+delta>maxVal) return; // ya está en el máximo permitido
+  }
   const nuevo=Math.max(1, (parseInt(el.textContent)||1)+delta);
   el.textContent=nuevo;
+  cotmTallaChange(null);
 }
 
 function cotmAddTalla(opts){
@@ -8761,8 +8778,20 @@ function cotmTallaChange(changedInput){
   }
 
   // Calcular suma total
-  const cants=Array.from(document.querySelectorAll('.cotm-talla-cant'));
-  const total=cants.reduce((s,i)=>s+(parseInt(i.value)||0),0);
+  let total;
+  if(cotmModoTaller){
+    const rows=Array.from(document.querySelectorAll('#cotm-tallas [id^="cotm-tr-"]'));
+    total=rows.reduce((s,row)=>{
+      const sel=row.querySelector('.cotm-talla-sel');
+      if(!sel||!sel.value) return s;
+      const rowId=row.id.replace('cotm-tr-','');
+      const rep=parseInt(document.getElementById('cotm-tr-rep-'+rowId)?.textContent)||1;
+      return s+rep;
+    },0);
+  } else {
+    const cants=Array.from(document.querySelectorAll('.cotm-talla-cant'));
+    total=cants.reduce((s,i)=>s+(parseInt(i.value)||0),0);
+  }
 
   // Mostrar total
   let totEl=document.getElementById('cotm-tallas-total');
