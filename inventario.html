@@ -1514,7 +1514,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div id="cot-items-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;"></div>
 
     <!-- BOTÓN AGREGAR ITEM -->
-    <button onclick="cotAgregarItem()" style="width:100%;padding:12px;border:2px dashed var(--accent);border-radius:12px;background:transparent;color:var(--accent);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px;">+ Agregar producto</button>
+    <button onclick="cotmModoTaller=false;cotAgregarItem()" style="width:100%;padding:12px;border:2px dashed var(--accent);border-radius:12px;background:transparent;color:var(--accent);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px;">+ Agregar producto</button>
 
     <!-- MODAL CONFIGURAR ITEM -->
     <div id="cot-modal-wrap" style="display:none;background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
@@ -4661,7 +4661,7 @@ async function guardarRespaldo(){
     if(!agenciaCliente){ alert('Ingresa la agencia de envío o forma de retiro (necesario para Taller)'); return; }
     if(!cotItems.length){ alert('Agrega al menos un producto para enviar a Taller'); return; }
     for(const item of cotItems){
-      if(!item.piezasDetalle || item.piezasDetalle.some(p=>!p.nombre||!p.nombre.trim())){
+      if(!item.piezasDetalle || item.piezasDetalle.some(p=>!p.sinNombre && (!p.nombre||!p.nombre.trim()))){
         alert('Falta poner el nombre en alguna prenda de "'+item.nombreApp+'". Cada prenda necesita su nombre para Taller.');
         return;
       }
@@ -4688,7 +4688,9 @@ async function guardarRespaldo(){
         const piezasStr=item.tallas.map((talla,i)=>{
           const pz=item.piezasDetalle[i];
           const capuchaTxt=(item.capucha&&item.capucha!=='Sin Capucha')?' CON CAPUCHA':'';
-          return `${pz.genero} ${talla}${capuchaTxt} - ${pz.nombre.trim().toUpperCase()}`;
+          const nombreTxt=pz.sinNombre?'SIN NOMBRE EN MANGA':pz.nombre.trim().toUpperCase();
+          const logosTxt=[pz.logoPecho?'LOGO PECHO':'',pz.logoEspalda?'LOGO ESPALDA':'',pz.logoManga?'LOGO MANGA':''].filter(Boolean).join(' + ');
+          return `${pz.genero} ${talla}${capuchaTxt} - ${nombreTxt}${logosTxt?' | '+logosTxt:''}`;
         }).join(' | ');
         return {
           modelo:item.nombreApp, manga:item.manga||'', capucha:item.capucha||'',
@@ -8664,18 +8666,54 @@ function cotmAddTalla(opts){
   const restante=maxVal>0?Math.max(1,maxVal-usados):1;
   const div=document.createElement('div');
   div.id='cotm-tr-'+id;
-  div.style.cssText='display:grid;grid-template-columns:1fr 80px auto;gap:6px;align-items:center;margin-bottom:4px;';
-  div.innerHTML=`
-    <select class="field-input cotm-talla-sel" style="width:100%;" onchange="cotmTallaChange()">
-      <option value="">Seleccionar talla...</option>
-      ${tallasOpts.map(t=>`<option value="${t}">${t}</option>`).join('')}
-    </select>
-    <input type="number" class="cotm-talla-cant field-input" min="1" value="${restante}"
-      style="width:100%;text-align:center;padding:6px;font-weight:700;color:var(--accent);"
-      oninput="cotmTallaChange(this)">
-    <button onclick="document.getElementById('cotm-tr-${id}').remove();cotmTallaChange(null);"
-      style="padding:7px 9px;border:1px solid var(--danger);border-radius:8px;background:transparent;color:var(--danger);font-size:13px;cursor:pointer;">✕</button>
-  `;
+  if(cotmModoTaller){
+    div.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:6px;';
+    div.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;margin-bottom:6px;">
+        <select class="field-input cotm-talla-sel" style="width:100%;" onchange="cotmTallaChange()">
+          <option value="">Seleccionar talla...</option>
+          ${tallasOpts.map(t=>`<option value="${t}">${t}</option>`).join('')}
+        </select>
+        <button onclick="document.getElementById('cotm-tr-${id}').remove();cotmTallaChange(null);"
+          style="padding:7px 9px;border:1px solid var(--danger);border-radius:8px;background:transparent;color:var(--danger);font-size:13px;cursor:pointer;">✕</button>
+      </div>
+      <input type="hidden" class="cotm-talla-cant" value="1">
+      <select class="field-input cotm-talla-genero" style="font-size:12px;padding:6px;width:100%;margin-bottom:6px;">
+        <option value="Caballero">Caballero</option>
+        <option value="Dama">Dama</option>
+        <option value="Kids">Kids</option>
+      </select>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <input type="checkbox" class="cotm-talla-sinombre" id="cotm-tr-sinombre-${id}" onchange="document.getElementById('cotm-tr-nombre-${id}').style.display=this.checked?'none':'block';" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
+        <label for="cotm-tr-sinombre-${id}" style="font-size:11px;color:var(--muted);cursor:pointer;">Sin nombre en manga derecha</label>
+      </div>
+      <input class="field-input cotm-talla-nombre" id="cotm-tr-nombre-${id}" type="text" placeholder="Nombre para bordar/estampar" style="font-size:12px;padding:6px 8px;width:100%;margin-bottom:8px;">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Logos (con costo adicional)</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text);cursor:pointer;">
+          <input type="checkbox" class="cotm-talla-logo-pecho" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent);"> Logo Pecho
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text);cursor:pointer;">
+          <input type="checkbox" class="cotm-talla-logo-espalda" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent);"> Logo Espalda
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text);cursor:pointer;">
+          <input type="checkbox" class="cotm-talla-logo-manga" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent);"> Logo Manga
+        </label>
+      </div>`;
+  } else {
+    div.style.cssText='display:grid;grid-template-columns:1fr 80px auto;gap:6px;align-items:center;margin-bottom:4px;';
+    div.innerHTML=`
+      <select class="field-input cotm-talla-sel" style="width:100%;" onchange="cotmTallaChange()">
+        <option value="">Seleccionar talla...</option>
+        ${tallasOpts.map(t=>`<option value="${t}">${t}</option>`).join('')}
+      </select>
+      <input type="number" class="cotm-talla-cant field-input" min="1" value="${restante}"
+        style="width:100%;text-align:center;padding:6px;font-weight:700;color:var(--accent);"
+        oninput="cotmTallaChange(this)">
+      <button onclick="document.getElementById('cotm-tr-${id}').remove();cotmTallaChange(null);"
+        style="padding:7px 9px;border:1px solid var(--danger);border-radius:8px;background:transparent;color:var(--danger);font-size:13px;cursor:pointer;">✕</button>
+    `;
+  }
   document.getElementById('cotm-tallas').appendChild(div);
   cotmTallaChange(null);
 }
@@ -8734,12 +8772,28 @@ function cotGuardarItem(){
   // Expandir tallas según contador de cada fila
   const tallasRows=Array.from(document.querySelectorAll('#cotm-tallas [id^="cotm-tr-"]'));
   const tallas=[];
+  const piezasDetalleModal=[];
   for(const row of tallasRows){
     const sel=row.querySelector('.cotm-talla-sel');
     const cant=parseInt(row.querySelector('.cotm-talla-cant')?.value)||1;
-    if(sel&&sel.value) for(let i=0;i<cant;i++) tallas.push(sel.value);
+    if(sel&&sel.value){
+      for(let i=0;i<cant;i++) tallas.push(sel.value);
+      if(cotmModoTaller){
+        const genero=row.querySelector('.cotm-talla-genero')?.value||'Caballero';
+        const sinNombre=row.querySelector('.cotm-talla-sinombre')?.checked||false;
+        const nombre=sinNombre?'':(row.querySelector('.cotm-talla-nombre')?.value.trim()||'');
+        const logoPecho=row.querySelector('.cotm-talla-logo-pecho')?.checked||false;
+        const logoEspalda=row.querySelector('.cotm-talla-logo-espalda')?.checked||false;
+        const logoManga=row.querySelector('.cotm-talla-logo-manga')?.checked||false;
+        piezasDetalleModal.push({genero,nombre,sinNombre,logoPecho,logoEspalda,logoManga});
+      }
+    }
   }
   if(!tallas.length){alert('Agrega al menos una talla');return;}
+  if(cotmModoTaller && piezasDetalleModal.some(p=>!p.sinNombre && !p.nombre)){
+    alert('Falta el nombre en alguna prenda. Escribe el nombre, o marca "Sin nombre en manga derecha".');
+    return;
+  }
   const pp=cotmPrecios.pack_precios||{};
 
   // ── COLECCIÓN ────────────────────────────────────────────
@@ -8784,7 +8838,7 @@ function cotGuardarItem(){
       logoManga:logoManTotal, logoMangaBs:logoManTotalBs,
       nLogoEsp, nLogoPec, nLogoMan,
       estampado:'', colorLibre:'',
-      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV
+      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
     });
     document.getElementById('cot-modal-wrap').style.display='none';
     cotRenderItems(); return;
@@ -8807,7 +8861,7 @@ function cotGuardarItem(){
       capuchaTotal:0, capuchaTotalBs:0,
       logoEspalda:0, logoPecho:0, logoEspaldaBs:0, logoPechoBs:0,
       estampado:'', colorLibre,
-      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV
+      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
     });
     document.getElementById('cot-modal-wrap').style.display='none';
     cotRenderItems(); return;
@@ -8850,7 +8904,7 @@ function cotGuardarItem(){
       logoManga:logoManTotal, logoMangaBs:logoManTotalBs,
       nLogoEsp, nLogoPec, nLogoMan,
       estampado:'', colorLibre:'',
-      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV
+      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
     });
     document.getElementById('cot-modal-wrap').style.display='none';
     cotRenderItems(); return;
@@ -8882,7 +8936,7 @@ function cotGuardarItem(){
       precioUnitUSD, precioUnitBS, recargaTotal, recargaTotalBs, capuchaTotal, capuchaTotalBs,
       logoEspalda:0, logoPecho:0, logoEspaldaBs:0, logoPechoBs:0,
       estampado, colorLibre:'',
-      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV
+      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
     });
     document.getElementById('cot-modal-wrap').style.display='none';
     cotRenderItems(); return;
@@ -8931,7 +8985,7 @@ function cotGuardarItem(){
       logoPecho:logoPecTotal, logoPechoBs:logoPecTotalBs,
       logoManga:logoManTotal, logoMangaBs:logoManTotalBs,
       nLogoEsp, nLogoPec, nLogoMan, estampado:'', colorLibre:'',
-      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV
+      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
     });
     document.getElementById('cot-modal-wrap').style.display='none';
     cotRenderItems(); return;
@@ -8954,7 +9008,7 @@ function cotGuardarItem(){
       capuchaTotal:0, capuchaTotalBs:0,
       logoEspalda:0, logoPecho:0, logoEspaldaBs:0, logoPechoBs:0,
       estampado:'', colorLibre:'',
-      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV
+      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
     });
     document.getElementById('cot-modal-wrap').style.display='none';
     cotRenderItems(); return;
@@ -8985,7 +9039,7 @@ function cotGuardarItem(){
       logoEspalda:0, logoPecho:0, logoEspaldaBs:0, logoPechoBs:0,
       logoManga:0, logoMangaBs:0, nLogoEsp:0, nLogoPec:0, nLogoMan:0,
       estampado:'', colorLibre:'',
-      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV
+      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
     });
     document.getElementById('cot-modal-wrap').style.display='none';
     cotRenderItems(); return;
@@ -9018,9 +9072,9 @@ function cotGuardarItem(){
   const capuchaTotalBs=capBS*undsReal;
   // Logos — Full Comfy, Licra Protect y Comfy Mega Promo
   const esCFLconLogos=(cotmApp==='fullcomfy'||cotmApp==='licra'||cotmApp==='comfy');
-  const nLogoEsp=esCFLconLogos?(parseInt(document.getElementById('cotm-logo-espalda')?.value)||0):0;
-  const nLogoPec=esCFLconLogos?(parseInt(document.getElementById('cotm-logo-pecho')?.value)||0):0;
-  const nLogoMan=esCFLconLogos?(parseInt(document.getElementById('cotm-logo-manga')?.value)||0):0;
+  const nLogoEsp=cotmModoTaller?piezasDetalleModal.filter(p=>p.logoEspalda).length:(esCFLconLogos?(parseInt(document.getElementById('cotm-logo-espalda')?.value)||0):0);
+  const nLogoPec=cotmModoTaller?piezasDetalleModal.filter(p=>p.logoPecho).length:(esCFLconLogos?(parseInt(document.getElementById('cotm-logo-pecho')?.value)||0):0);
+  const nLogoMan=cotmModoTaller?piezasDetalleModal.filter(p=>p.logoManga).length:(esCFLconLogos?(parseInt(document.getElementById('cotm-logo-manga')?.value)||0):0);
   const logoEspUSD=nLogoEsp>0?(cotPrecioUSD(pp,'P.05')||0):0;
   const logoEspBS =nLogoEsp>0?(cotPrecioBS(pp,'P.05')||0):0;
   const logoPecUSD=nLogoPec>0?(cotPrecioUSD(pp,'P.06')||0):0;
@@ -9050,7 +9104,7 @@ function cotGuardarItem(){
     logoManga:logoManTotal, logoMangaBs:logoManTotalBs,
     nLogoEsp, nLogoPec, nLogoMan,
     estampado:'', colorLibre:'',
-    subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV
+    subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
   });
   document.getElementById('cot-modal-wrap').style.display='none';
   cotRenderItems();
@@ -9116,7 +9170,10 @@ function rvCerrarOverlayModal(){
 }
 
 // ── RESPALDO: reutiliza el mismo catálogo/modal de Cotizaciones ──
+let cotmModoTaller=false;
 function rvAgregarProducto(){
+  const destinoActual=document.getElementById('rv-destino')?document.getElementById('rv-destino').value:'';
+  cotmModoTaller=(destinoActual==='Envío Taller');
   rvAbrirOverlayModal();
   cotAgregarItem();
 }
@@ -9145,14 +9202,11 @@ function rvRenderItemsYMonto(){
       <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
         ${item.tallas.map((talla,pIdx)=>{
           const pz=item.piezasDetalle[pIdx]||{genero:'Caballero',nombre:''};
+          const logosTxt=[pz.logoPecho?'Pecho':'',pz.logoEspalda?'Espalda':'',pz.logoManga?'Manga':''].filter(Boolean).join(', ');
           return `<div style="display:grid;grid-template-columns:60px 1fr 1.5fr;gap:6px;align-items:center;">
             <div style="font-size:11px;font-weight:700;color:var(--muted);text-align:center;background:var(--surface2);border-radius:6px;padding:6px 0;">${talla}</div>
-            <select onchange="rvActualizarPiezaCampo(${idx},${pIdx},'genero',this.value)" style="font-size:11px;padding:6px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text);">
-              <option value="Caballero" ${pz.genero==='Caballero'?'selected':''}>Caballero</option>
-              <option value="Dama" ${pz.genero==='Dama'?'selected':''}>Dama</option>
-              <option value="Kids" ${pz.genero==='Kids'?'selected':''}>Kids</option>
-            </select>
-            <input type="text" placeholder="Nombre para bordar/estampar" value="${pz.nombre||''}" oninput="rvActualizarPiezaCampo(${idx},${pIdx},'nombre',this.value)" style="font-size:11px;padding:6px 8px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text);">
+            <div style="font-size:11px;color:var(--text);">${pz.genero}</div>
+            <div style="font-size:11px;color:var(--text);">${pz.sinNombre?'<span style="color:var(--muted);">Sin nombre</span>':pz.nombre}${logosTxt?' · <span style="color:var(--accent);">Logo: '+logosTxt+'</span>':''}</div>
           </div>`;
         }).join('')}
       </div>`:'';
