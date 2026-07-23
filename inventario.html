@@ -4675,12 +4675,12 @@ async function guardarRespaldo(){
     if(!nombreCliente){ alert('Ingresa el nombre del cliente (necesario para Taller)'); return; }
     if(!celularCliente){ alert('Ingresa el celular del cliente (necesario para Taller)'); return; }
     if(!agenciaCliente){ alert('Ingresa la agencia de envío o forma de retiro (necesario para Taller)'); return; }
-    if(!cotItems.length){ alert('Agrega al menos un producto para enviar a Taller'); return; }
-    for(const item of cotItems){
-      if(!item.piezasDetalle || item.piezasDetalle.some(p=>!p.sinNombre && (!p.nombre||!p.nombre.trim()))){
-        alert('Falta poner el nombre en alguna prenda de "'+item.nombreApp+'". Cada prenda necesita su nombre para Taller.');
-        return;
-      }
+  }
+  // La toma de datos por prenda es siempre igual, sin importar el destino
+  for(const item of cotItems){
+    if(!item.piezasDetalle || item.piezasDetalle.some(p=>!p.sinNombre && (!p.nombre||!p.nombre.trim()))){
+      alert('Falta poner el nombre en alguna prenda de "'+item.nombreApp+'". Marca "Sin nombre" si no aplica.');
+      return;
     }
   }
   if(!USUARIOS_RESPALDO[unlock]){ errEl.style.display='block'; errEl.textContent='❌ Código incorrecto'; document.getElementById('rv-unlock').value=''; return; }
@@ -4697,27 +4697,25 @@ async function guardarRespaldo(){
       if(item.capucha&&item.capucha!=='Sin Capucha') extras.push(item.capucha);
       return `${item.nombreApp} (${item.pack||''}) [${item.tallas.join(', ')}]${extras.length?' — '+extras.join(' / '):''} — Bs ${item.subtotalBs.toFixed(2)}`;
     }).join(' | ');
-    // Si va a Taller, armar el formato de "piezas" por pack, igual al que usan los pedidos normales
-    let packsTaller=[];
-    if(destino==='Envío Taller'){
-      packsTaller=cotItems.map(item=>{
-        const piezasStr=item.tallas.map((talla,i)=>{
-          const pz=item.piezasDetalle[i];
-          const capuchaTxt=(item.capucha&&item.capucha!=='Sin Capucha')?' CON CAPUCHA':'';
-          const nombreTxt=pz.sinNombre?'SIN NOMBRE EN MANGA':pz.nombre.trim().toUpperCase();
-          const logosTxt=[
-            pz.logoPecho?('LOGO PECHO'+(pz.logoPechoTxt?': '+pz.logoPechoTxt.toUpperCase():'')):'',
-            pz.logoEspalda?('LOGO ESPALDA'+(pz.logoEspaldaTxt?': '+pz.logoEspaldaTxt.toUpperCase():'')):'',
-            pz.logoManga?('LOGO MANGA'+(pz.logoMangaTxt?': '+pz.logoMangaTxt.toUpperCase():'')):''
-          ].filter(Boolean).join(' + ');
-          return `${talla}${capuchaTxt} - ${nombreTxt}${logosTxt?' | '+logosTxt:''}`;
-        }).join(' | ');
-        return {
-          modelo:item.nombreApp, manga:item.manga||'', capucha:item.capucha||'',
-          pack:item.pack||'', tela:item.tela||'', vinil:item.vinil||'', piezas:piezasStr
-        };
-      });
-    }
+    // El detalle de piezas (nombre, logos) se captura siempre igual, sin importar el destino —
+    // el backend decide a qué flujo va según el destino al momento de procesar.
+    let packsTaller=cotItems.map(item=>{
+      const piezasStr=item.tallas.map((talla,i)=>{
+        const pz=item.piezasDetalle[i];
+        const capuchaTxt=(item.capucha&&item.capucha!=='Sin Capucha')?' CON CAPUCHA':'';
+        const nombreTxt=pz.sinNombre?'SIN NOMBRE EN MANGA':pz.nombre.trim().toUpperCase();
+        const logosTxt=[
+          pz.logoPecho?('LOGO PECHO'+(pz.logoPechoTxt?': '+pz.logoPechoTxt.toUpperCase():'')):'',
+          pz.logoEspalda?('LOGO ESPALDA'+(pz.logoEspaldaTxt?': '+pz.logoEspaldaTxt.toUpperCase():'')):'',
+          pz.logoManga?('LOGO MANGA'+(pz.logoMangaTxt?': '+pz.logoMangaTxt.toUpperCase():'')):''
+        ].filter(Boolean).join(' + ');
+        return `${talla}${capuchaTxt} - ${nombreTxt}${logosTxt?' | '+logosTxt:''}`;
+      }).join(' | ');
+      return {
+        modelo:item.nombreApp, manga:item.manga||'', capucha:item.capucha||'',
+        pack:item.pack||'', tela:item.tela||'', vinil:item.vinil||'', piezas:piezasStr
+      };
+    });
     const data=await scriptGETjson({
       action:'addRespaldo',
       fecha:getFechaHora(),
@@ -9315,8 +9313,10 @@ function rvCerrarOverlayModal(){
 // ── RESPALDO: reutiliza el mismo catálogo/modal de Cotizaciones ──
 let cotmModoTaller=false;
 function rvAgregarProducto(){
-  const destinoActual=document.getElementById('rv-destino')?document.getElementById('rv-destino').value:'';
-  cotmModoTaller=(destinoActual==='Envío Taller');
+  // La toma de datos por prenda (nombre, logos, contador) es siempre igual en Respaldo,
+  // sin importar el destino — la diferencia entre Stock Tienda y Envío Taller se decide
+  // solo al momento de procesar/aprobar el respaldo, no aquí.
+  cotmModoTaller=true;
   rvAbrirOverlayModal();
   cotAgregarItem();
 }
