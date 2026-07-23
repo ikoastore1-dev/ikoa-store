@@ -4621,9 +4621,25 @@ async function rvSelDestino(val){
   rvRenderItemsYMonto();
 }
 
-function rvToggleCashea(){
+let rvCasheaConfig=null;
+function rvLineaCasheaKeyFor(app){
+  if(app==='comfy') return 'comfy';
+  if(app==='fullcomfy') return 'fullcomfy';
+  if(app==='licra') return 'licra';
+  if(app==='empresarial'||app==='cortaviento_emp'||app==='sublimada'||app==='cortaviento_sub') return 'empresarial';
+  return 'coleccion'; // coleccion, toalla, chaqueta_reflectiva, unitarios, etc.
+}
+
+async function rvToggleCashea(){
   const esCashea=document.getElementById('rv-es-cashea').checked;
   document.getElementById('rv-cashea-campos').style.display=esCashea?'grid':'none';
+  if(esCashea && !rvCasheaConfig){
+    try{
+      const data=await scriptGETjson({action:'leerConfigCashea'});
+      if(data.ok) rvCasheaConfig=data.config;
+    }catch(e){ console.warn('No se pudo leer config Cashea:', e); }
+  }
+  rvRenderItemsYMonto();
 }
 
 async function guardarRespaldo(){
@@ -8686,6 +8702,11 @@ function cotmTrCambiarRep(id, delta){
   }
   const nuevo=Math.max(1, (parseInt(el.textContent)||1)+delta);
   el.textContent=nuevo;
+  // Si esta fila sola ya alcanzó el total del pack, eliminar las demás filas para no exceder el máximo
+  if(maxVal>0 && nuevo>=maxVal){
+    const rows=Array.from(document.querySelectorAll('#cotm-tallas [id^="cotm-tr-"]'));
+    rows.forEach(r=>{ if(r.id!=='cotm-tr-'+id) r.remove(); });
+  }
   cotmTallaChange(null);
 }
 
@@ -9249,10 +9270,23 @@ function rvRenderItemsYMonto(){
   list.innerHTML='';
   let totalBs=0, totalUsd=0, tasaBCV=0;
   const esTaller=document.getElementById('rv-destino')&&document.getElementById('rv-destino').value==='Envío Taller';
+  const esCasheaActivo=document.getElementById('rv-es-cashea')&&document.getElementById('rv-es-cashea').checked;
   cotItems.forEach((item,idx)=>{
-    totalUsd+=item.subtotalUSD; totalBs+=item.subtotalBs;
     if(item.tasaBCV>0) tasaBCV=item.tasaBCV;
     if(esTaller && !item.piezasDetalle) item.piezasDetalle=item.tallas.map(()=>({genero:'Caballero',nombre:''}));
+    // Precio con o sin Cashea, según la línea propia de CADA producto (igual que en las otras apps)
+    let subtotalMostrar=item.subtotalBs, subtotalUsdMostrar=item.subtotalUSD, casheaPctItem=0, casheaActivoItem=false;
+    if(esCasheaActivo && rvCasheaConfig){
+      const lineaKey=rvLineaCasheaKeyFor(item.app);
+      const cfg=rvCasheaConfig[lineaKey];
+      if(cfg && cfg.cashea_activo){
+        casheaPctItem=parseFloat(cfg.cashea_pct)||0;
+        casheaActivoItem=true;
+        subtotalMostrar=Math.round(item.subtotalBs*(1+casheaPctItem/100)*100)/100;
+        subtotalUsdMostrar=tasaBCV>0?Math.round((subtotalMostrar/tasaBCV)*100)/100:item.subtotalUSD;
+      }
+    }
+    totalUsd+=subtotalUsdMostrar; totalBs+=subtotalMostrar;
     const div=document.createElement('div');
     div.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;';
     const piezasHtml=esTaller?`
@@ -9275,9 +9309,11 @@ function rvRenderItemsYMonto(){
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--accent);">${item.nombreApp}</div>
           <div style="font-size:11px;color:var(--muted);">${item.pack||''} · ${item.tallas.join(' · ')}</div>
+          ${casheaActivoItem?`<div style="font-size:10px;color:var(--warn);">🛒 Cashea +${casheaPctItem}%</div>`:(esCasheaActivo?`<div style="font-size:10px;color:var(--muted);">Sin Cashea disponible para esta línea</div>`:'')}
         </div>
         <div style="text-align:right;flex-shrink:0;">
-          <div style="font-size:13px;font-weight:700;color:var(--text);">Bs ${item.subtotalBs.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+          <div style="font-size:13px;font-weight:700;color:${casheaActivoItem?'var(--warn)':'var(--text)'};">Bs ${subtotalMostrar.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+          ${casheaActivoItem?`<div style="font-size:10px;color:var(--muted);text-decoration:line-through;">Bs ${item.subtotalBs.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>`:''}
           <button onclick="cotEliminarItem(${idx});rvRenderItemsYMonto();" style="margin-top:4px;padding:3px 8px;border:1px solid var(--danger);border-radius:6px;background:transparent;color:var(--danger);font-size:10px;font-weight:700;cursor:pointer;">✕</button>
         </div>
       </div>
