@@ -6542,6 +6542,22 @@ async function buscarPedidoCOD(){
       const autoDir=DIRECCIONES_AUTO[agUpper]||'';
       if(autoDir) pedidoEncontrado.direccion=autoDir;
     }
+    // Buscar el detalle del producto (modelo, tela, piezas) cruzando con COLA.P, igual que Taller
+    let productosHtml='';
+    try{
+      const dataProd=await scriptGETjson({action:'buscarProductosPorCOD', cod:cod});
+      if(dataProd.ok && dataProd.packs && dataProd.packs.length){
+        productosHtml=dataProd.packs.map(pk=>{
+          const piezasFmt=(pk.piezas||'').split('|').map(s=>s.trim()).filter(Boolean).join('<br>');
+          return `<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid var(--accent);">
+            <div style="color:var(--accent);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">📦 ${pk.modelo||'Producto'} ${pk.urgente?`<span style="color:var(--warn);">⚡ ${pk.urgente}</span>`:''}</div>
+            <div style="font-size:12px;color:var(--text);margin-bottom:6px;">${pk.pack||''} ${pk.manga?'· '+pk.manga:''} ${pk.capucha&&pk.capucha!=='Sin Capucha'?'· '+pk.capucha:''}</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Tela: <b style="color:var(--text);">${pk.tela||'—'}</b> · Vinil: <b style="color:var(--text);">${pk.vinil||'—'}</b></div>
+            ${piezasFmt?`<div style="font-size:12px;color:var(--text);background:var(--surface);border-radius:6px;padding:8px;">${piezasFmt}</div>`:''}
+          </div>`;
+        }).join('');
+      }
+    }catch(e){ console.warn('No se pudo cargar el detalle de producto:', e); }
     // Mostrar datos
     const esMismo=data.esMismo;
     const agenciasEnvio=['MRW','TEALCA','ZOOM'];
@@ -6557,6 +6573,7 @@ async function buscarPedidoCOD(){
         <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">COD del pedido</div>
         <div style="font-family:'Barlow',sans-serif;font-size:22px;font-weight:700;color:var(--text);">${data.cod}</div>
       </div>
+      ${productosHtml}
       <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:8px;">
         <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">${esMismo?'👤 Cliente / Quien retira':'👤 Cliente (titular)'}</div>
         <b>${data.nombre}</b><br>
@@ -8153,18 +8170,13 @@ async function cotModalSelectApp(app){
     document.getElementById('cotm-pack-section').style.display='block';
     document.getElementById('cotm-packs').innerHTML='';
     document.getElementById('cotm-packs').style.display='none';
+    document.getElementById('cotm-cantidad-wrap').style.display='block';
+    const cantLblCol=document.getElementById('cotm-cantidad-label');
+    if(cantLblCol) cantLblCol.textContent='prendas';
     const inpCol=document.getElementById('cotm-cantidad');
-    if(cotmModoTaller){
-      // En modo Taller, cada fila de talla lleva su propio contador de "Repetir" —
-      // no usamos el límite general de cantidad de Colección (que asumía 1 fila fija).
-      document.getElementById('cotm-cantidad-wrap').style.display='none';
-      inpCol.value=0; inpCol.min=0; cotmPack='';
-    } else {
-      document.getElementById('cotm-cantidad-wrap').style.display='block';
-      const cantLblCol=document.getElementById('cotm-cantidad-label');
-      if(cantLblCol) cantLblCol.textContent='prendas';
-      inpCol.min=1; inpCol.value=1; cotmPack='1';
-    }
+    inpCol.min=1; inpCol.value=1; inpCol.disabled=false;
+    inpCol.oninput=()=>cotmTallaChange(null);
+    cotmPack='';
 
     // 2. SERIE / COLOR y PRENDA — va PRIMERO, antes del selector principal de cantidad
     let cs=document.getElementById('cotm-coleccion-section');
@@ -8243,19 +8255,16 @@ async function cotModalSelectApp(app){
     document.getElementById('cotm-color-libre-wrap').style.display='block';
     document.getElementById('cotm-color-libre').placeholder='Ej: Azul marino, Rojo, etc...';
     document.getElementById('cotm-color-libre').value='';
-    // Mostrar selector de cantidad (en modo Taller, el contador "Repetir" de la fila lo reemplaza)
+    // Mostrar selector de cantidad
     document.getElementById('cotm-pack-section').style.display='block';
     document.getElementById('cotm-packs').innerHTML='';
+    document.getElementById('cotm-cantidad-wrap').style.display='block';
+    const cantLblToalla=document.getElementById('cotm-cantidad-label');
+    if(cantLblToalla) cantLblToalla.textContent='toallas';
     const inpToalla=document.getElementById('cotm-cantidad');
-    if(cotmModoTaller){
-      document.getElementById('cotm-cantidad-wrap').style.display='none';
-      inpToalla.value=0; inpToalla.min=0; cotmPack='';
-    } else {
-      document.getElementById('cotm-cantidad-wrap').style.display='block';
-      const cantLblToalla=document.getElementById('cotm-cantidad-label');
-      if(cantLblToalla) cantLblToalla.textContent='toallas';
-      inpToalla.min=1; inpToalla.value=1; cotmPack='1';
-    }
+    inpToalla.min=1; inpToalla.value=1; inpToalla.disabled=false;
+    inpToalla.oninput=()=>cotmTallaChange(null);
+    cotmPack='';
     // Talla única
     document.getElementById('cotm-tallas-section').style.display='block';
     const elTotToalla=document.getElementById('cotm-tallas-total'); if(elTotToalla) elTotToalla.remove();
@@ -8302,16 +8311,13 @@ async function cotModalSelectApp(app){
     // Cantidad
     document.getElementById('cotm-pack-section').style.display='block';
     document.getElementById('cotm-packs').innerHTML='';
+    document.getElementById('cotm-cantidad-wrap').style.display='block';
+    const cantLblChaq=document.getElementById('cotm-cantidad-label');
+    if(cantLblChaq) cantLblChaq.textContent='chaquetas';
     const inpChaq=document.getElementById('cotm-cantidad');
-    if(cotmModoTaller){
-      document.getElementById('cotm-cantidad-wrap').style.display='none';
-      inpChaq.value=0; inpChaq.min=0; cotmPack='';
-    } else {
-      document.getElementById('cotm-cantidad-wrap').style.display='block';
-      const cantLblChaq=document.getElementById('cotm-cantidad-label');
-      if(cantLblChaq) cantLblChaq.textContent='chaquetas';
-      inpChaq.min=1; inpChaq.value=1; cotmPack='1';
-    }
+    inpChaq.min=1; inpChaq.value=1; inpChaq.disabled=false;
+    inpChaq.oninput=()=>cotmTallaChange(null);
+    cotmPack='';
     // Tallas — todas (Dama/Caballero/Kids)
     document.getElementById('cotm-tallas-section').style.display='block';
     const elTotChaq=document.getElementById('cotm-tallas-total'); if(elTotChaq) elTotChaq.remove();
@@ -8351,20 +8357,17 @@ async function cotModalSelectApp(app){
       ['cotmc-sin','cotmc-con'].forEach(id=>{const el=document.getElementById(id);if(el){el.style.borderColor='var(--border)';el.style.color='var(--muted)';}});
       const sd=document.getElementById('cotmc-sin');if(sd){sd.style.borderColor='var(--accent)';sd.style.color='var(--accent)';}
     }
-    // Selector de cantidad (mínimo 6, salvo en modo Taller donde cada fila lleva su propio contador)
+    // Selector de cantidad (mínimo 6)
     document.getElementById('cotm-pack-section').style.display='block';
     document.getElementById('cotm-packs').innerHTML='';
     document.getElementById('cotm-packs').style.display='none';
+    document.getElementById('cotm-cantidad-wrap').style.display='block';
+    const cantLblSub=document.getElementById('cotm-cantidad-label');
+    if(cantLblSub) cantLblSub.textContent='franelas (mínimo 6)';
     const inpSub=document.getElementById('cotm-cantidad');
-    if(cotmModoTaller){
-      document.getElementById('cotm-cantidad-wrap').style.display='none';
-      inpSub.value=0; inpSub.min=0; cotmPack='';
-    } else {
-      document.getElementById('cotm-cantidad-wrap').style.display='block';
-      const cantLblSub=document.getElementById('cotm-cantidad-label');
-      if(cantLblSub) cantLblSub.textContent='franelas';
-      inpSub.min=6; inpSub.value=6; cotmPack='6';
-    }
+    inpSub.min=6; inpSub.value=6; inpSub.disabled=false;
+    inpSub.oninput=()=>cotmTallaChange(null);
+    cotmPack='';
     // Tallas — 1 fila con cantidad 6
     document.getElementById('cotm-tallas-section').style.display='block';
     const elTot2=document.getElementById('cotm-tallas-total'); if(elTot2) elTot2.remove();
@@ -8416,17 +8419,17 @@ async function cotModalSelectApp(app){
       const espLblEmp=document.getElementById('cotm-logo-espalda-label'); if(espLblEmp) espLblEmp.textContent='Uds con Logo Espalda (COMFY13)';
       const pecLblEmp=document.getElementById('cotm-logo-pecho-label'); if(pecLblEmp) pecLblEmp.textContent='Uds con Logo Pecho+ (COMFY14)';
     }
-    // Cantidad (mínimo 6, salvo en modo Taller donde cada fila lleva su propio contador)
+    // Cantidad — funciona igual que el "Total" de Full Comfy: parte en el mínimo (6),
+    // pero el usuario puede subirlo si necesita más unidades.
     document.getElementById('cotm-pack-section').style.display='block';
     document.getElementById('cotm-packs').style.display='none';
+    document.getElementById('cotm-cantidad-wrap').style.display='block';
+    const cantLblEmp=document.getElementById('cotm-cantidad-label');
+    if(cantLblEmp) cantLblEmp.textContent='unidades (mínimo 6)';
     const inpEmp=document.getElementById('cotm-cantidad');
-    if(cotmModoTaller){
-      document.getElementById('cotm-cantidad-wrap').style.display='none';
-      inpEmp.value=0; inpEmp.min=0; cotmPack='';
-    } else {
-      document.getElementById('cotm-cantidad-wrap').style.display='block';
-      inpEmp.value=6; inpEmp.min=6; cotmPack='6';
-    }
+    inpEmp.min=6; inpEmp.value=6; inpEmp.disabled=false;
+    inpEmp.oninput=()=>cotmTallaChange(null);
+    cotmPack='';
     // Tallas — 1 fila con cantidad 6 (usuario puede dividir con +Talla)
     document.getElementById('cotm-tallas-section').style.display='block';
     document.getElementById('cotm-tallas').innerHTML=''; cotmTallaCount=0;
