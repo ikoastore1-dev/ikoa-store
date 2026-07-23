@@ -4689,7 +4689,11 @@ async function guardarRespaldo(){
           const pz=item.piezasDetalle[i];
           const capuchaTxt=(item.capucha&&item.capucha!=='Sin Capucha')?' CON CAPUCHA':'';
           const nombreTxt=pz.sinNombre?'SIN NOMBRE EN MANGA':pz.nombre.trim().toUpperCase();
-          const logosTxt=[pz.logoPecho?'LOGO PECHO':'',pz.logoEspalda?'LOGO ESPALDA':'',pz.logoManga?'LOGO MANGA':''].filter(Boolean).join(' + ');
+          const logosTxt=[
+            pz.logoPecho?('LOGO PECHO'+(pz.logoPechoTxt?': '+pz.logoPechoTxt.toUpperCase():'')):'',
+            pz.logoEspalda?('LOGO ESPALDA'+(pz.logoEspaldaTxt?': '+pz.logoEspaldaTxt.toUpperCase():'')):'',
+            pz.logoManga?('LOGO MANGA'+(pz.logoMangaTxt?': '+pz.logoMangaTxt.toUpperCase():'')):''
+          ].filter(Boolean).join(' + ');
           return `${pz.genero} ${talla}${capuchaTxt} - ${nombreTxt}${logosTxt?' | '+logosTxt:''}`;
         }).join(' | ');
         return {
@@ -8540,6 +8544,11 @@ async function cotModalSelectApp(app){
   // Mostrar botón +Talla siempre — cotmTallaChange controla si está habilitado o no
   document.getElementById('cotm-add-talla-btn').style.display='block';
   document.getElementById('cotm-guardar-btn').style.display='block';
+  // En modo Taller cada fila de talla es una sola prenda — el selector de cantidad general no aplica
+  if(cotmModoTaller){
+    const cantWrapFinal=document.getElementById('cotm-cantidad-wrap');
+    if(cantWrapFinal) cantWrapFinal.style.display='none';
+  }
 }
 
 // ── COLECCIÓN helpers ────────────────────────────────────────
@@ -8654,6 +8663,13 @@ function cotmSelCapucha(c){
   const id=c==='Sin Capucha'?'cotmc-sin':'cotmc-con';
   const el=document.getElementById(id);if(el){el.style.borderColor='var(--accent)';el.style.color='var(--accent)';}
 }
+function cotmTrCambiarRep(id, delta){
+  const el=document.getElementById('cotm-tr-rep-'+id);
+  if(!el) return;
+  const nuevo=Math.max(1, (parseInt(el.textContent)||1)+delta);
+  el.textContent=nuevo;
+}
+
 function cotmAddTalla(opts){
   const tallasOpts=opts||COT_TALLAS_TODAS;
   cotmTallaCount++;
@@ -8691,14 +8707,23 @@ function cotmAddTalla(opts){
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Logos (con costo adicional)</div>
       <div style="display:flex;flex-direction:column;gap:4px;">
         <label style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text);cursor:pointer;">
-          <input type="checkbox" class="cotm-talla-logo-pecho" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent);"> Logo Pecho
+          <input type="checkbox" class="cotm-talla-logo-pecho" onchange="document.getElementById('cotm-tr-logopecho-txt-${id}').style.display=this.checked?'block':'none';" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent);"> Logo Pecho
         </label>
+        <input type="text" id="cotm-tr-logopecho-txt-${id}" class="field-input cotm-talla-logo-pecho-txt" placeholder="Texto/referencia del logo (opcional)" style="display:none;font-size:11px;padding:6px 8px;">
         <label style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text);cursor:pointer;">
-          <input type="checkbox" class="cotm-talla-logo-espalda" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent);"> Logo Espalda
+          <input type="checkbox" class="cotm-talla-logo-espalda" onchange="document.getElementById('cotm-tr-logoespalda-txt-${id}').style.display=this.checked?'block':'none';" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent);"> Logo Espalda
         </label>
+        <input type="text" id="cotm-tr-logoespalda-txt-${id}" class="field-input cotm-talla-logo-espalda-txt" placeholder="Texto/referencia del logo (opcional)" style="display:none;font-size:11px;padding:6px 8px;">
         <label style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text);cursor:pointer;">
-          <input type="checkbox" class="cotm-talla-logo-manga" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent);"> Logo Manga
+          <input type="checkbox" class="cotm-talla-logo-manga" onchange="document.getElementById('cotm-tr-logomanga-txt-${id}').style.display=this.checked?'block':'none';" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent);"> Logo Manga
         </label>
+        <input type="text" id="cotm-tr-logomanga-txt-${id}" class="field-input cotm-talla-logo-manga-txt" placeholder="Texto/referencia del logo (opcional)" style="display:none;font-size:11px;padding:6px 8px;">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px;background:var(--surface3);border-radius:8px;">
+        <div style="font-size:11px;color:var(--muted);flex:1;">Repetir esta franela:</div>
+        <button type="button" onclick="cotmTrCambiarRep(${id},-1)" style="width:28px;height:28px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;">−</button>
+        <span id="cotm-tr-rep-${id}" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--accent);min-width:24px;text-align:center;">1</span>
+        <button type="button" onclick="cotmTrCambiarRep(${id},1)" style="width:28px;height:28px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;">+</button>
       </div>`;
   } else {
     div.style.cssText='display:grid;grid-template-columns:1fr 80px auto;gap:6px;align-items:center;margin-bottom:4px;';
@@ -8775,7 +8800,10 @@ function cotGuardarItem(){
   const piezasDetalleModal=[];
   for(const row of tallasRows){
     const sel=row.querySelector('.cotm-talla-sel');
-    const cant=parseInt(row.querySelector('.cotm-talla-cant')?.value)||1;
+    const rowId=row.id.replace('cotm-tr-','');
+    const cant=cotmModoTaller
+      ? (parseInt(document.getElementById('cotm-tr-rep-'+rowId)?.textContent)||1)
+      : (parseInt(row.querySelector('.cotm-talla-cant')?.value)||1);
     if(sel&&sel.value){
       for(let i=0;i<cant;i++) tallas.push(sel.value);
       if(cotmModoTaller){
@@ -8783,9 +8811,12 @@ function cotGuardarItem(){
         const sinNombre=row.querySelector('.cotm-talla-sinombre')?.checked||false;
         const nombre=sinNombre?'':(row.querySelector('.cotm-talla-nombre')?.value.trim()||'');
         const logoPecho=row.querySelector('.cotm-talla-logo-pecho')?.checked||false;
+        const logoPechoTxt=row.querySelector('.cotm-talla-logo-pecho-txt')?.value.trim()||'';
         const logoEspalda=row.querySelector('.cotm-talla-logo-espalda')?.checked||false;
+        const logoEspaldaTxt=row.querySelector('.cotm-talla-logo-espalda-txt')?.value.trim()||'';
         const logoManga=row.querySelector('.cotm-talla-logo-manga')?.checked||false;
-        piezasDetalleModal.push({genero,nombre,sinNombre,logoPecho,logoEspalda,logoManga});
+        const logoMangaTxt=row.querySelector('.cotm-talla-logo-manga-txt')?.value.trim()||'';
+        for(let i=0;i<cant;i++) piezasDetalleModal.push({genero,nombre,sinNombre,logoPecho,logoPechoTxt,logoEspalda,logoEspaldaTxt,logoManga,logoMangaTxt});
       }
     }
   }
@@ -9202,7 +9233,11 @@ function rvRenderItemsYMonto(){
       <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
         ${item.tallas.map((talla,pIdx)=>{
           const pz=item.piezasDetalle[pIdx]||{genero:'Caballero',nombre:''};
-          const logosTxt=[pz.logoPecho?'Pecho':'',pz.logoEspalda?'Espalda':'',pz.logoManga?'Manga':''].filter(Boolean).join(', ');
+          const logosTxt=[
+            pz.logoPecho?('Pecho'+(pz.logoPechoTxt?': '+pz.logoPechoTxt:'')):'',
+            pz.logoEspalda?('Espalda'+(pz.logoEspaldaTxt?': '+pz.logoEspaldaTxt:'')):'',
+            pz.logoManga?('Manga'+(pz.logoMangaTxt?': '+pz.logoMangaTxt:'')):''
+          ].filter(Boolean).join(', ');
           return `<div style="display:grid;grid-template-columns:60px 1fr 1.5fr;gap:6px;align-items:center;">
             <div style="font-size:11px;font-weight:700;color:var(--muted);text-align:center;background:var(--surface2);border-radius:6px;padding:6px 0;">${talla}</div>
             <div style="font-size:11px;color:var(--text);">${pz.genero}</div>
