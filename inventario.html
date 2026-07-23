@@ -6542,20 +6542,55 @@ async function buscarPedidoCOD(){
       const autoDir=DIRECCIONES_AUTO[agUpper]||'';
       if(autoDir) pedidoEncontrado.direccion=autoDir;
     }
-    // Buscar el detalle del producto (modelo, tela, piezas) cruzando con COLA.P, igual que Taller
+    // Buscar el detalle del producto (modelo, tela, piezas, pago) cruzando con COLA.P,
+    // y armar la tarjeta con el MISMO diseño visual que usa Cola.
     let productosHtml='';
     try{
       const dataProd=await scriptGETjson({action:'buscarProductosPorCOD', cod:cod});
       if(dataProd.ok && dataProd.packs && dataProd.packs.length){
-        productosHtml=dataProd.packs.map(pk=>{
-          const piezasFmt=(pk.piezas||'').split('|').map(s=>s.trim()).filter(Boolean).join('<br>');
-          return `<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid var(--accent);">
-            <div style="color:var(--accent);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">📦 ${pk.modelo||'Producto'} ${pk.urgente?`<span style="color:var(--warn);">⚡ ${pk.urgente}</span>`:''}</div>
-            <div style="font-size:12px;color:var(--text);margin-bottom:6px;">${pk.pack||''} ${pk.manga?'· '+pk.manga:''} ${pk.capucha&&pk.capucha!=='Sin Capucha'?'· '+pk.capucha:''}</div>
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Tela: <b style="color:var(--text);">${pk.tela||'—'}</b> · Vinil: <b style="color:var(--text);">${pk.vinil||'—'}</b></div>
-            ${piezasFmt?`<div style="font-size:12px;color:var(--text);background:var(--surface);border-radius:6px;padding:8px;">${piezasFmt}</div>`:''}
-          </div>`;
-        }).join('');
+        const packs=dataProd.packs;
+        const p0=packs[0];
+        const esCasheaPedido=p0.cashea==='SI';
+        productosHtml=`
+        <div style="background:var(--surface);border:1px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div>
+              <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;">${data.nombre}</div>
+              <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
+                <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text);">${p0.codigoC||data.cod}</span>
+                ${packs.length>1?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">${packs.length} packs</span>`:''}
+                ${p0.urgente?`<span style="background:#2a1a0a;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">⚡ ${p0.urgente}</span>`:''}
+              </div>
+            </div>
+          </div>
+          ${esCasheaPedido?`<div style="background:#0f2b1a;border:1px solid var(--accent);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px;display:inline-block;">🛒 CASHEA${p0.casheaPct?' · '+p0.casheaPct+'%':''}</div>`:''}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:10px;">
+            <div><span style="color:var(--muted);">Correo:</span> ${p0.correo||'—'}</div>
+            <div><span style="color:var(--muted);">Cédula:</span> ${p0.cedula||'—'}</div>
+            <div><span style="color:var(--muted);">Celular:</span> ${p0.celular||'—'}</div>
+            <div><span style="color:var(--muted);">Agencia:</span> ${p0.agencia||'—'}</div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid #1a4a2a;border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+            <div style="grid-column:1/-1;font-size:11px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">💳 Pago</div>
+            <div><span style="color:var(--muted);">Moneda:</span> <b>${p0.moneda||'—'}</b></div>
+            <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent);">${p0.moneda==='Bs'?'Bs':'$'}${p0.monto||'—'}</b></div>
+            <div style="grid-column:1/-1;"><span style="color:var(--muted);">Ref:</span> <b style="color:var(--warn);">${p0.referencia||'—'}</b></div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
+            <span style="color:var(--muted);">Retira:</span> ${p0.retiraNombre||data.nombre}${p0.retiraCi?` · C.I: ${p0.retiraCi}`:''}${p0.retiraCel?` · Cel: ${p0.retiraCel}`:''}
+          </div>
+          ${packs.map((pk,idx)=>{
+            const piezasFmt=(pk.piezas||'').split('|').map(s=>s.trim()).filter(Boolean).join('<br>');
+            return `<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);">
+              <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Part ${idx+1} · ${pk.pack||''} · <span style="color:var(--muted);font-size:13px;">${pk.codigoC||''}</span></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:6px;">
+                <div><span style="color:var(--muted);">Tela:</span> ${pk.tela||'—'}</div>
+                <div><span style="color:var(--muted);">Vinil:</span> ${pk.vinil||'—'}</div>
+              </div>
+              ${piezasFmt?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${pk.modelo||''} ${pk.manga||''}<br>${piezasFmt}</div>`:''}
+            </div>`;
+          }).join('')}
+        </div>`;
       }
     }catch(e){ console.warn('No se pudo cargar el detalle de producto:', e); }
     // Mostrar datos
