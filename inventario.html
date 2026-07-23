@@ -8109,6 +8109,7 @@ function cotAgregarItem(){
   const ms=document.getElementById('cotm-manga-section'); if(ms) ms.style.display='none';
   const g=document.getElementById('cotm-guardar-btn'); if(g) g.style.display='none';
   const t=document.getElementById('cotm-tallas'); if(t) t.innerHTML='';
+  const totOrfano=document.getElementById('cotm-tallas-total'); if(totOrfano) totOrfano.remove();
   const tt=document.getElementById('cotm-modal-title'); if(tt) tt.textContent='Configurar Producto';
   const modal=document.getElementById('cot-modal-wrap');
   if(modal){modal.style.display='block'; setTimeout(()=>modal.scrollIntoView({behavior:'smooth',block:'start'}),50);}
@@ -8702,11 +8703,6 @@ function cotmTrCambiarRep(id, delta){
   }
   const nuevo=Math.max(1, (parseInt(el.textContent)||1)+delta);
   el.textContent=nuevo;
-  // Si esta fila sola ya alcanzó el total del pack, eliminar las demás filas para no exceder el máximo
-  if(maxVal>0 && nuevo>=maxVal){
-    const rows=Array.from(document.querySelectorAll('#cotm-tallas [id^="cotm-tr-"]'));
-    rows.forEach(r=>{ if(r.id!=='cotm-tr-'+id) r.remove(); });
-  }
   cotmTallaChange(null);
 }
 
