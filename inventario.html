@@ -8781,13 +8781,10 @@ function cotmTrCambiarRep(id, delta){
   const sel=row?.querySelector('.cotm-talla-sel');
   const maxVal=parseInt(document.getElementById('cotm-cantidad')?.value)||0;
   if(delta>0 && maxVal>0){
-    // No dejar pasar del total del pack, sin importar si ya hay talla seleccionada en ESTA fila o no
-    // (las demás filas solo cuentan si ya tienen una talla elegida)
+    // No dejar pasar del total del pack — cuenta todas las filas, tengan talla elegida o no
     const rows=Array.from(document.querySelectorAll('#cotm-tallas [id^="cotm-tr-"]'));
     const otherSum=rows.reduce((s,r)=>{
       if(r.id==='cotm-tr-'+id) return s;
-      const s2=r.querySelector('.cotm-talla-sel');
-      if(!s2||!s2.value) return s;
       const rId=r.id.replace('cotm-tr-','');
       return s+(parseInt(document.getElementById('cotm-tr-rep-'+rId)?.textContent)||1);
     },0);
@@ -8905,8 +8902,6 @@ function cotmTallaChange(changedInput){
   if(cotmModoTaller){
     const rows=Array.from(document.querySelectorAll('#cotm-tallas [id^="cotm-tr-"]'));
     total=rows.reduce((s,row)=>{
-      const sel=row.querySelector('.cotm-talla-sel');
-      if(!sel||!sel.value) return s;
       const rowId=row.id.replace('cotm-tr-','');
       const rep=parseInt(document.getElementById('cotm-tr-rep-'+rowId)?.textContent)||1;
       return s+rep;
@@ -8938,6 +8933,17 @@ function cotmTallaChange(changedInput){
       addBtnEl.disabled=bloqueado;
       addBtnEl.style.opacity=bloqueado?'0.4':'1';
       addBtnEl.style.cursor=bloqueado?'not-allowed':'pointer';
+    }
+  }
+
+  // Bloquear "Guardar" mientras el total no complete el máximo (modo Taller)
+  if(cotmModoTaller && maxVal>0){
+    const guardarBtnEl=document.getElementById('cotm-guardar-btn')?.querySelector('button');
+    if(guardarBtnEl){
+      const incompleto = total<maxVal;
+      guardarBtnEl.disabled=incompleto;
+      guardarBtnEl.style.opacity=incompleto?'0.4':'1';
+      guardarBtnEl.style.cursor=incompleto?'not-allowed':'pointer';
     }
   }
 }
