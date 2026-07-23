@@ -8866,10 +8866,26 @@ function cotmAddTalla(opts){
 
 function cotmTallaChange(changedInput){
   const inpPrincipal=document.getElementById('cotm-cantidad');
-  const maxVal=parseInt(inpPrincipal?.value)||0;
+  let maxVal=parseInt(inpPrincipal?.value)||0;
+
+  // Si el que cambió es el contador PRINCIPAL (modo Taller), no dejar bajarlo
+  // por debajo de lo que ya suman las filas — evita que una fila quede por encima del total.
+  if(cotmModoTaller && changedInput===inpPrincipal){
+    const rows=Array.from(document.querySelectorAll('#cotm-tallas [id^="cotm-tr-"]'));
+    const sumaFilas=rows.reduce((s,row)=>{
+      const sel=row.querySelector('.cotm-talla-sel');
+      if(!sel||!sel.value) return s;
+      const rowId=row.id.replace('cotm-tr-','');
+      return s+(parseInt(document.getElementById('cotm-tr-rep-'+rowId)?.textContent)||1);
+    },0);
+    if(maxVal>0 && maxVal<sumaFilas){
+      maxVal=sumaFilas;
+      inpPrincipal.value=sumaFilas;
+    }
+  }
 
   // Si se está editando un input de cantidad, no dejar pasar del máximo
-  if(changedInput && maxVal>0){
+  if(changedInput && changedInput!==inpPrincipal && maxVal>0){
     const cants=Array.from(document.querySelectorAll('.cotm-talla-cant'));
     // Suma de todos excepto el que se está editando
     const otherSum=cants.reduce((s,i)=>i===changedInput?s:s+(parseInt(i.value)||0),0);
