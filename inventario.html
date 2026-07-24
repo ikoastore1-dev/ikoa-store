@@ -8869,8 +8869,13 @@ function cotmTallaChange(changedInput){
   let maxVal=parseInt(inpPrincipal?.value)||0;
 
   // Si el que cambió es el contador PRINCIPAL (modo Taller), no dejar bajarlo
-  // por debajo de lo que ya suman las filas — evita que una fila quede por encima del total.
+  // por debajo del mínimo del producto, ni por debajo de lo que ya suman las filas.
   if(cotmModoTaller && changedInput===inpPrincipal){
+    const minReq=parseInt(inpPrincipal.min)||1;
+    if(maxVal>0 && maxVal<minReq){
+      maxVal=minReq;
+      inpPrincipal.value=minReq;
+    }
     const rows=Array.from(document.querySelectorAll("#cotm-tallas [id^=\"cotm-tr-\"]")).filter(el=>/^cotm-tr-\d+$/.test(el.id));
     const sumaFilas=rows.reduce((s,row)=>{
       const sel=row.querySelector('.cotm-talla-sel');
