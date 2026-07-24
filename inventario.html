@@ -1121,7 +1121,18 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
             <div>
               <div class="field-label">Agencia de envío / Retiro</div>
-              <input class="field-input" type="text" id="rv-agencia-cliente" placeholder="Ej: MRW Chuao / Retira en tienda">
+              <select class="field-input" id="rv-agencia-cliente" onchange="rvToggleAgenciaOtro()">
+                <option value="">Seleccionar agencia</option>
+                <option value="MRW">MRW</option>
+                <option value="ZOOM">ZOOM</option>
+                <option value="TEALCA">TEALCA</option>
+                <option value="TIENDA MCY">TIENDA MCY</option>
+                <option value="SHOWROOM CARACAS">SHOWROOM CARACAS</option>
+                <option value="DELIVERY CARACAS">DELIVERY CARACAS</option>
+                <option value="DELIVERY MARACAY">DELIVERY MARACAY</option>
+                <option value="Otro">Otro</option>
+              </select>
+              <input class="field-input" type="text" id="rv-agencia-otro" placeholder="Escribe la agencia..." style="display:none;margin-top:8px;">
             </div>
             <div>
               <div class="field-label">Retira (si es distinto al cliente)</div>
@@ -1182,8 +1193,9 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
           <div class="field-group" style="margin-bottom:0">
-            <div class="field-label">Monto Total *</div>
-            <input class="field-input" type="number" id="rv-monto" placeholder="0.00" step="0.01">
+            <div class="field-label" id="rv-monto-label">Monto Total (Bs) *</div>
+            <input class="field-input" type="number" id="rv-monto" placeholder="0.00" step="0.01" onblur="rvConvertirDivisaAMonto()">
+            <div id="rv-monto-hint" style="font-size:10px;color:var(--muted);margin-top:2px;display:none;"></div>
           </div>
           <div class="field-group" style="margin-bottom:0">
             <div class="field-label">Factura</div>
@@ -1198,7 +1210,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           </div>
           <div class="field-group" style="margin-bottom:0">
             <div class="field-label">Moneda</div>
-            <select class="field-input" id="rv-moneda">
+            <select class="field-input" id="rv-moneda" onchange="rvActualizarLabelMonto()">
               <option value="Bs">Bs</option>
               <option value="Divisa">Divisa</option>
             </select>
@@ -4605,6 +4617,41 @@ function switchRespaldo(sub){
   if(sub==='nuevo'){ cotItems=[]; cotItemEditIdx=-1; rvRenderItemsYMonto(); }
 }
 
+function rvActualizarLabelMonto(){
+  const moneda=document.getElementById('rv-moneda').value;
+  const lbl=document.getElementById('rv-monto-label');
+  const hint=document.getElementById('rv-monto-hint');
+  if(moneda==='Divisa'){
+    lbl.textContent='Monto Total (escribe en $) *';
+    hint.style.display='block';
+    hint.textContent='Al salir del campo, se convierte solo a Bs usando la tasa actual.';
+  } else {
+    lbl.textContent='Monto Total (Bs) *';
+    hint.style.display='none';
+  }
+}
+
+function rvConvertirDivisaAMonto(){
+  const moneda=document.getElementById('rv-moneda').value;
+  if(moneda!=='Divisa') return;
+  const inpMonto=document.getElementById('rv-monto');
+  const usd=parseFloat(inpMonto.value)||0;
+  if(usd<=0) return;
+  const tasa=parseFloat(document.getElementById('rv-tasa').value)||0;
+  if(tasa<=0){ alert('Falta la Tasa BCV para poder convertir el monto en dólares a Bs.'); return; }
+  const bs=Math.round(usd*tasa*100)/100;
+  inpMonto.value=bs.toFixed(2);
+  const hint=document.getElementById('rv-monto-hint');
+  hint.style.display='block';
+  hint.textContent=`Convertido: $${usd.toFixed(2)} × ${tasa.toFixed(2)} = Bs ${bs.toFixed(2)}`;
+}
+
+function rvToggleAgenciaOtro(){
+  const sel=document.getElementById('rv-agencia-cliente');
+  const otroWrap=document.getElementById('rv-agencia-otro');
+  if(otroWrap) otroWrap.style.display=(sel.value==='Otro')?'block':'none';
+}
+
 async function rvSelDestino(val){
   document.getElementById('rv-destino').value=val;
   const tienda=document.getElementById('rv-dest-tienda');
@@ -4661,7 +4708,8 @@ async function guardarRespaldo(){
   const cedulaCliente=document.getElementById('rv-cedula-cliente')?document.getElementById('rv-cedula-cliente').value.trim():'';
   const celularCliente=document.getElementById('rv-celular-cliente')?document.getElementById('rv-celular-cliente').value.trim():'';
   const correoCliente=document.getElementById('rv-correo-cliente')?document.getElementById('rv-correo-cliente').value.trim():'';
-  const agenciaCliente=document.getElementById('rv-agencia-cliente')?document.getElementById('rv-agencia-cliente').value.trim():'';
+  const agenciaSel=document.getElementById('rv-agencia-cliente')?document.getElementById('rv-agencia-cliente').value:'';
+  const agenciaCliente=agenciaSel==='Otro'?(document.getElementById('rv-agencia-otro')?.value.trim()||''):agenciaSel;
   const retiraCliente=document.getElementById('rv-retira-cliente')?document.getElementById('rv-retira-cliente').value.trim():'';
   if(!mensaje && !cotItems.length){ alert('Pega el mensaje de WhatsApp, o agrega los productos por el catálogo (+ Agregar producto)'); return; }
   if(!banco){ alert('Selecciona el banco'); return; }
@@ -4755,6 +4803,7 @@ async function guardarRespaldo(){
       if(document.getElementById('rv-celular-cliente')) document.getElementById('rv-celular-cliente').value='';
       if(document.getElementById('rv-correo-cliente')) document.getElementById('rv-correo-cliente').value='';
       if(document.getElementById('rv-agencia-cliente')) document.getElementById('rv-agencia-cliente').value='';
+      if(document.getElementById('rv-agencia-otro')){ document.getElementById('rv-agencia-otro').value=''; document.getElementById('rv-agencia-otro').style.display='none'; }
       if(document.getElementById('rv-retira-cliente')) document.getElementById('rv-retira-cliente').value='';
       cotItems=[]; rvRenderItemsYMonto();
       document.getElementById('rv-es-cashea').checked=false;
