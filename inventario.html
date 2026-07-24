@@ -8782,7 +8782,7 @@ function cotmTrCambiarRep(id, delta){
   const maxVal=parseInt(document.getElementById('cotm-cantidad')?.value)||0;
   if(delta>0 && maxVal>0){
     // No dejar pasar del total del pack — cuenta todas las filas, tengan talla elegida o no
-    const rows=Array.from(document.querySelectorAll('#cotm-tallas [id^="cotm-tr-"]'));
+    const rows=Array.from(document.querySelectorAll("#cotm-tallas [id^=\"cotm-tr-\"]")).filter(el=>/^cotm-tr-\d+$/.test(el.id));
     const otherSum=rows.reduce((s,r)=>{
       if(r.id==='cotm-tr-'+id) return s;
       const rId=r.id.replace('cotm-tr-','');
@@ -8871,7 +8871,7 @@ function cotmTallaChange(changedInput){
   // Si el que cambió es el contador PRINCIPAL (modo Taller), no dejar bajarlo
   // por debajo de lo que ya suman las filas — evita que una fila quede por encima del total.
   if(cotmModoTaller && changedInput===inpPrincipal){
-    const rows=Array.from(document.querySelectorAll('#cotm-tallas [id^="cotm-tr-"]'));
+    const rows=Array.from(document.querySelectorAll("#cotm-tallas [id^=\"cotm-tr-\"]")).filter(el=>/^cotm-tr-\d+$/.test(el.id));
     const sumaFilas=rows.reduce((s,row)=>{
       const sel=row.querySelector('.cotm-talla-sel');
       if(!sel||!sel.value) return s;
@@ -8900,7 +8900,7 @@ function cotmTallaChange(changedInput){
   // Calcular suma total
   let total;
   if(cotmModoTaller){
-    const rows=Array.from(document.querySelectorAll('#cotm-tallas [id^="cotm-tr-"]'));
+    const rows=Array.from(document.querySelectorAll("#cotm-tallas [id^=\"cotm-tr-\"]")).filter(el=>/^cotm-tr-\d+$/.test(el.id));
     total=rows.reduce((s,row)=>{
       const rowId=row.id.replace('cotm-tr-','');
       const rep=parseInt(document.getElementById('cotm-tr-rep-'+rowId)?.textContent)||1;
@@ -8953,7 +8953,7 @@ function cotGuardarItem(){
   if(!cotmApp) return;
   const def=COT_DEF[cotmApp];
   // Expandir tallas según contador de cada fila
-  const tallasRows=Array.from(document.querySelectorAll('#cotm-tallas [id^="cotm-tr-"]'));
+  const tallasRows=Array.from(document.querySelectorAll("#cotm-tallas [id^=\"cotm-tr-\"]")).filter(el=>/^cotm-tr-\d+$/.test(el.id));
   const tallas=[];
   const piezasDetalleModal=[];
   for(const row of tallasRows){
