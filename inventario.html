@@ -8984,6 +8984,15 @@ function cotGuardarItem(){
     }
   }
   if(!tallas.length){alert('Agrega al menos una talla');return;}
+  // Validación dura del total requerido — no depender solo de que el botón esté deshabilitado
+  if(cotmModoTaller){
+    const inpPrincipalGuardar=document.getElementById('cotm-cantidad');
+    const maxValGuardar=parseInt(inpPrincipalGuardar?.value)||0;
+    if(maxValGuardar>0 && tallas.length<maxValGuardar){
+      alert(`Te faltan unidades: llevas ${tallas.length} de ${maxValGuardar} requeridas. Completa el total antes de guardar.`);
+      return;
+    }
+  }
   if(cotmModoTaller && piezasDetalleModal.some(p=>!p.sinNombre && !p.nombre)){
     alert('Falta el nombre en alguna prenda. Escribe el nombre, o marca "Sin nombre en manga derecha".');
     return;
