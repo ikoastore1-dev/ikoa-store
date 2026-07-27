@@ -8231,7 +8231,7 @@ function cotAgregarItem(){
     b.style.borderColor='var(--border)';b.style.color='var(--muted)';b.style.background='var(--surface2)';
   });
   ['cotm-pack-section','cotm-capucha-section','cotm-colores-section','cotm-tallas-section',
-   'cotm-coleccion-section','cotm-color-libre-wrap','cotm-estampado-wrap','cotm-logos-wrap'].forEach(id=>{
+   'cotm-coleccion-section','cotm-color-libre-wrap','cotm-estampado-wrap','cotm-logos-wrap','cotm-vinil-wrap'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.style.display='none';
   });
   const ms=document.getElementById('cotm-manga-section'); if(ms) ms.style.display='none';
@@ -8268,7 +8268,7 @@ async function cotModalSelectApp(app){
   // de una selección anterior (ej. Full Comfy) al pasar a un producto que no la usa.
   ['cotm-pack-section','cotm-capucha-section','cotm-colores-section','cotm-tallas-section',
    'cotm-manga-section','cotm-color-libre-wrap','cotm-estampado-wrap','cotm-logos-wrap',
-   'cotm-tipo-prenda-section'].forEach(id=>{
+   'cotm-tipo-prenda-section','cotm-vinil-wrap'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.style.display='none';
   });
   const colSec=document.getElementById('cotm-coleccion-section');
@@ -8278,6 +8278,15 @@ async function cotModalSelectApp(app){
   if(app==='coleccion'){
     const pdata=await scriptGETjson({action:'leerPreciosColeccion'});
     if(pdata.ok){cotmPrecios=pdata; cotmTasaBCV=pdata.tasa_bcv||0;}
+
+    // Vinil — la tela/color va incluida en la Serie, pero el Vinil (color del nombre/logo) es aparte
+    document.getElementById('cotm-vinil-wrap').style.display='block';
+    const dataVinilCol=await scriptGETjson({action:'leerColores', hoja:'COLORES.COLECCION'});
+    const selVinilCol=document.getElementById('cotm-vinil');
+    selVinilCol.innerHTML='<option value="">Seleccionar...</option>';
+    if(dataVinilCol.ok){
+      (dataVinilCol.viniles||[]).forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;selVinilCol.appendChild(o);});
+    }
 
     // 1. CANTIDAD PRINCIPAL
     document.getElementById('cotm-pack-section').style.display='block';
@@ -9110,7 +9119,7 @@ function cotGuardarItem(){
       codigo:cod,
       pack:`${tallas.length} ud${tallas.length>1?'s':''}`,
       manga:cotmPrenda==='Short'?'':'Manga Larga', capucha:cotmCapuchaCol,
-      tela:'', vinil:'', tallas, nPlus:0,
+      tela:'', vinil:document.getElementById('cotm-vinil')?.value||'', tallas, nPlus:0,
       precioUnitUSD, precioUnitBS, recargaTotal:0, recargaTotalBs:0,
       capuchaTotal:capUSD*tallas.length, capuchaTotalBs:capBS*tallas.length,
       logoEspalda:logoEspTotal, logoEspaldaBs:logoEspTotalBs,
