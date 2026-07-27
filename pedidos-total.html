@@ -1146,7 +1146,9 @@ function selectVariante(btn,variante){
   const codigo=s.codigos[selectedColorSerie][variante];
   let nombre;
   if(selectedSerie==='ChaquetaReflectiva') nombre='Chaqueta Reflectiva';
-  else nombre=selectedSerie==='Unicolor'?`${variante} Serie ${selectedColorSerie}`:`${variante} ${s.nombre} ${selectedColorSerie}`;
+  else if(selectedSerie==='Unicolor') nombre=`${variante} Serie ${selectedColorSerie}`;
+  else if(s.nombre===selectedColorSerie) nombre=`${variante} ${s.nombre}`; // series de un solo color/estampado (ej. Tiburón Ballena) — no repetir
+  else nombre=`${variante} ${s.nombre} ${selectedColorSerie}`;
   pedido.codigoProducto=codigo; pedido.nombreProducto=nombre; pedido.variante=variante; pedido.pack=1;
   // Cotton Licra, T-Shirt y Short: sin capucha
   if(variante==='ChaquetaReflectiva'||variante==='Chaqueta'){
