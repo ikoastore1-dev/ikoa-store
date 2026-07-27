@@ -1105,11 +1105,12 @@ function addPieza(copiarDe=null){
   const total=document.getElementById('piezas-container').querySelectorAll('.pieza-card').length+1;
   const esShort=pedido.variante==='Short';
   const esChaqueta=pedido.variante==='Chaqueta'||pedido.variante==='ChaquetaReflectiva';
+  const esTrajeBano=pedido.variante==='Traje de Baño';
   const seriesConLogo=['Camping','Nautica','Alpha'];
   const prendasConLogo=['Playera','Dress','Cortaviento'];
   const esSerieConLogo=seriesConLogo.includes(selectedSerie)&&prendasConLogo.includes(pedido.variante);
   const mostrarLogos=esChaqueta||esSerieConLogo;
-  const labelPrenda=esShort?'Short':esChaqueta?'Chaqueta':'Franela';
+  const labelPrenda=esShort?'Short':esChaqueta?'Chaqueta':esTrajeBano?'Traje de baño':'Franela';
   div.innerHTML=`
     <div class="pieza-num">${labelPrenda} #${id} ${total>pedido.pack?'<span style="color:var(--warn);font-size:11px;">(extra)</span>':''}</div>
     ${total>pedido.pack?`<button class="remove-btn" onclick="removePieza(${id})">✕</button>`:''}
@@ -1120,7 +1121,7 @@ function addPieza(copiarDe=null){
           <option value="">Seleccionar</option>
           <option value="Kids"${genCopy==='Kids'?' selected':''}>Kids</option>
           <option value="Dama"${genCopy==='Dama'?' selected':''}>Dama</option>
-          <option value="Caballero"${genCopy==='Caballero'?' selected':''}>Caballero</option>
+          ${esTrajeBano?'':`<option value="Caballero"${genCopy==='Caballero'?' selected':''}>Caballero</option>`}
         </select>
       </div>
       <div class="field-group">
@@ -1249,7 +1250,12 @@ function actualizarContadorFranelas(){
 function updateTallas(id,seleccionar=null){
   const genero=document.getElementById('pz-genero-'+id).value;
   const tallaSelect=document.getElementById('pz-talla-'+id);
-  const tallas=genero==='Kids'?TALLAS_KIDS:TALLAS_ADULTO;
+  let tallas;
+  if(pedido.variante==='Traje de Baño'){
+    tallas=genero==='Kids'?['2','4','6','8','10','12','14']:['S','M','L','XL'];
+  } else {
+    tallas=genero==='Kids'?TALLAS_KIDS:TALLAS_ADULTO;
+  }
   tallaSelect.innerHTML='<option value="">Seleccionar</option>'+tallas.map(t=>`<option value="${t}"${t===seleccionar?' selected':''}>${t}</option>`).join('');
 }
 
