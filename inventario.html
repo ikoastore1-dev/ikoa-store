@@ -4683,6 +4683,38 @@ async function rvToggleCashea(){
   rvRenderItemsYMonto();
 }
 
+async function rvEsperarYAbrirImprenta(codigoC, msgEl){
+  const maxIntentos=12; // ~1 minuto (cada 5s)
+  let intento=0;
+  const original=msgEl.innerHTML;
+  const intervalo=setInterval(async ()=>{
+    intento++;
+    msgEl.innerHTML=`${original}<br><span style="font-size:12px;color:var(--muted);"><span class="spinner">↻</span> Buscando archivo para imprimir... (${intento}/${maxIntentos})</span>`;
+    try{
+      const res=await scriptGETjson({action:'buscarCodigoCODporCodigoC', codigoC});
+      if(res.ok && res.encontrado && res.cod){
+        clearInterval(intervalo);
+        msgEl.innerHTML=`${original}<br><span style="font-size:12px;color:var(--accent);">✅ Archivo encontrado (COD ${res.cod}) — abriendo para imprimir...</span>`;
+        // Buscar el archivo real en COD RECORD y mostrarlo listo para imprimir
+        const dataImp=await scriptGETjson({action:'buscarImprenta', numeros:[res.cod], modo:'especifico'}, 45000);
+        if(dataImp.ok && dataImp.archivos && dataImp.archivos.length){
+          switchTab('gestion');
+          setTipoGestion('Imprenta');
+          window._impArchivos=dataImp.archivos;
+          impAbrirUno(0);
+        } else {
+          msgEl.innerHTML=`${original}<br><span style="font-size:12px;color:var(--warn);">⚠️ Se generó el COD ${res.cod} pero el archivo aún no aparece en COD RECORD — búscalo manualmente en Imprenta.</span>`;
+        }
+        return;
+      }
+    }catch(e){ console.warn('Error buscando archivo de Imprenta:', e); }
+    if(intento>=maxIntentos){
+      clearInterval(intervalo);
+      msgEl.innerHTML=`${original}<br><span style="font-size:12px;color:var(--warn);">⚠️ El archivo para imprimir todavía no está listo — búscalo manualmente en Imprenta más tarde.</span>`;
+    }
+  }, 5000);
+}
+
 async function guardarRespaldo(){
   const mensaje=document.getElementById('rv-mensaje').value.trim();
   const esCashea=document.getElementById('rv-es-cashea').checked;
@@ -6051,6 +6083,10 @@ async function confirmarAprobacion(){
     msgEl.style.border='1px solid #1a4a2a';
     msgEl.style.color='var(--accent)';
     msgEl.innerHTML=`✅ Pago aprobado · <b>${lastCodigoC||''}</b> en cola · ${USUARIOS[unlock]} · ${fechaApro}`;
+
+    // Buscar automáticamente el archivo de Imprenta que Make.com genera para este pedido,
+    // y mostrarlo listo para imprimir apenas esté disponible.
+    if(lastCodigoC) rvEsperarYAbrirImprenta(lastCodigoC, msgEl);
 
     // Notificar al cliente por WhatsApp
     try{
