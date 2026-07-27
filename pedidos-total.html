@@ -896,7 +896,7 @@ function validateStep(n){
     for(let i=0; i<pedido.piezas.length; i++){
       const p=pedido.piezas[i];
       if(!p.genero||!p.talla){ alert(`Completa género y talla en el${pedido.variante==='Short'?' short':' la franela'} ${i+1}`); return false; }
-      if(pedido.variante!=='Short' && !p.sinNombre && !p.nombre){ alert(`⚠️ La franela ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
+      if(pedido.variante!=='Short' && pedido.manga!=='Manga Cero' && pedido.manga!=='Manga Corta' && !p.sinNombre && !p.nombre){ alert(`⚠️ La franela ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
     }
     return true;
   }
@@ -1264,6 +1264,7 @@ function addPieza(copiarDe=null){
   const sinCopy=copiarDe?document.getElementById('pz-sinombre-'+copiarDe)?.checked:false;
   const total=document.getElementById('piezas-container').querySelectorAll('.pieza-card').length+1;
   const esShort=pedido.variante==='Short';
+  const esMangaCero=pedido.manga==='Manga Cero'||pedido.manga==='Manga Corta';
   const esChaqueta=pedido.variante==='Chaqueta'||pedido.variante==='ChaquetaReflectiva';
   const seriesConLogo=['Camping','Nautica','Alpha'];
   const prendasConLogo=['Playera','Dress','Cortaviento'];
@@ -1294,7 +1295,7 @@ function addPieza(copiarDe=null){
         </select>
       </div>
     </div>
-    ${!esShort?`<div class="field-group" style="margin-bottom:6px">
+    ${(!esShort&&!esMangaCero)?`<div class="field-group" style="margin-bottom:6px">
       <div class="field-label">Nombre en la prenda</div>
       <div class="field-note">Manga derecha · Sin iniciales ni logos</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;margin-top:4px;">
@@ -1723,7 +1724,7 @@ async function guardarEnSheets(){
     if(variante==='Toalla'){
       modeloParts.push('Toalla'); modeloParts.push(pk.tela||pedido.tela||'');
     } else if(variante==='Chaqueta'||variante==='ChaquetaReflectiva'){
-      modeloParts.push('Chaqueta Reflectiva'); modeloParts.push(pk.capucha||pedido.capucha||'Sin Capucha');
+      modeloParts.push('Chaqueta Reflectiva'); // la capucha va indicada en cada prenda individualmente, no aquí
     } else if(['comfy','fullcomfy','licra'].includes(variante)){
       modeloParts.push(pk.modelo||''); modeloParts.push(pk.manga||'');
       modeloParts.push(pk.capucha||'Sin Capucha');
