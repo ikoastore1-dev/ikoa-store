@@ -3035,22 +3035,19 @@ function renderVentas(){
   const diasKeys = Object.keys(diasMap).sort().slice(-14);
   const maxDia = Math.max(...diasKeys.map(k=>diasMap[k]),1);
   const chartDias = document.getElementById('chart-dias');
-  if(chartDias) chartDias.innerHTML = diasKeys.map(k=>`
-    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:28px;">
+  if(chartDias) chartDias.innerHTML = diasKeys.map(k=>{
+    const partes=k.split('-'); // YYYY-MM-DD
+    const diaLabel=partes.length===3?`${partes[2]}/${partes[1]}`:k;
+    const alturaBarra=Math.max(4,Math.round(diasMap[k]/maxDia*100));
+    return `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:32px;">
       <div style="font-size:10px;color:var(--muted);">${diasMap[k]}</div>
-      <div style="width:20px;background:var(--accent);border-radius:3px 3px 0 0;" title="${k}: ${diasMap[k]}"
-        style="height:${Math.round(diasMap[k]/maxDia*120)}px;width:20px;background:var(--accent);border-radius:3px 3px 0 0;min-height:4px;">
+      <div style="height:100px;display:flex;align-items:flex-end;">
+        <div style="height:${alturaBarra}px;width:20px;background:var(--accent);border-radius:3px 3px 0 0;" title="${k}: ${diasMap[k]}"></div>
       </div>
-      <div style="font-size:9px;color:var(--muted);transform:rotate(-45deg);white-space:nowrap;">${k.slice(5)}</div>
-    </div>`).join('') || '<div style="color:var(--muted);font-size:12px;padding:20px;">Sin datos</div>';
-
-  // Corregir altura de barras
-  if(chartDias){
-    chartDias.querySelectorAll('[title]').forEach(el=>{
-      const k = el.title.split(':')[0].trim();
-      el.style.height = Math.max(4, Math.round(diasMap[k]/maxDia*120))+'px';
-    });
-  }
+      <div style="font-size:10px;color:var(--muted);white-space:nowrap;">${diaLabel}</div>
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:12px;padding:20px;">Sin datos</div>';
 
   // Gráfico por fuente
   const fuenteMap={};
