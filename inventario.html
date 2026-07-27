@@ -1550,6 +1550,9 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <button onclick="cotModalSelectApp('licra_suplex')" id="cotmbtn-licra_suplex" class="cot-modal-app-btn" style="padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;">Licra Suplex</button>
           <button onclick="cotModalSelectApp('short_uni')" id="cotmbtn-short_uni" class="cot-modal-app-btn" style="padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;">Short Unicolor</button>
           <button onclick="cotModalSelectApp('cortaviento_uni')" id="cotmbtn-cortaviento_uni" class="cot-modal-app-btn" style="padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;">Cortaviento Uni.</button>
+          <button onclick="cotModalSelectApp('unicolor_bikini')" id="cotmbtn-unicolor_bikini" class="cot-modal-app-btn" style="padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;">Bikini Unicolor</button>
+          <button onclick="cotModalSelectApp('unicolor_enterizo')" id="cotmbtn-unicolor_enterizo" class="cot-modal-app-btn" style="padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;">Enterizo Unicolor</button>
+          <button onclick="cotModalSelectApp('unicolor_bikini_mlarga')" id="cotmbtn-unicolor_bikini_mlarga" class="cot-modal-app-btn" style="padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;">Bikini M.Larga Unicolor</button>
           <button onclick="cotModalSelectApp('toalla')" id="cotmbtn-toalla" class="cot-modal-app-btn" style="padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;">Toalla Microfibra</button>
           <button onclick="cotModalSelectApp('chaqueta_reflectiva')" id="cotmbtn-chaqueta_reflectiva" class="cot-modal-app-btn" style="padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;">Chaqueta Reflectiva</button>
         </div>
@@ -8080,6 +8083,30 @@ const COT_DEF = {
     tallas:'todas', minUnidades:1
   },
 
+  unicolor_bikini: {
+    nombre:'Bikini Unicolor', tipo:'unitario',
+    manga:'', capuchaCod:null,
+    precioUnitCod:'UnicolorBikini', plusCod:null, plusTallas:[],
+    hojaColores:'COLORES.COLECCION.UNICOLOR', colorLibre:false,
+    tallas:'bikini', minUnidades:1
+  },
+
+  unicolor_enterizo: {
+    nombre:'Enterizo Unicolor', tipo:'unitario',
+    manga:'', capuchaCod:null,
+    precioUnitCod:'UnicolorEnterizo', plusCod:null, plusTallas:[],
+    hojaColores:'COLORES.COLECCION.UNICOLOR', colorLibre:false,
+    tallas:'bikini', minUnidades:1
+  },
+
+  unicolor_bikini_mlarga: {
+    nombre:'Bikini Manga Larga Unicolor', tipo:'unitario',
+    manga:'', capuchaCod:null,
+    precioUnitCod:'UnicolorBikiniMLarga', plusCod:null, plusTallas:[],
+    hojaColores:'COLORES.COLECCION.UNICOLOR', colorLibre:false,
+    tallas:'bikini', minUnidades:1
+  },
+
   toalla: {
     nombre:'Toalla Microfibra', tipo:'toalla',
     manga:'', capuchaCod:null,
@@ -8103,7 +8130,10 @@ const COT_HOJAS = {
   cortaviento_emp:'COLORES.FULLCOMFY',
   licra_suplex:'COLORES.COLECCION.UNICOLOR',
   short_uni:'COLORES.LICRA',
-  cortaviento_uni:'COLORES.LICRA'
+  cortaviento_uni:'COLORES.LICRA',
+  unicolor_bikini:'COLORES.COLECCION.UNICOLOR',
+  unicolor_enterizo:'COLORES.COLECCION.UNICOLOR',
+  unicolor_bikini_mlarga:'COLORES.COLECCION.UNICOLOR'
 };
 
 const COT_TALLAS_TODAS = [
@@ -8567,7 +8597,7 @@ async function cotModalSelectApp(app){
   }
 
   // ── UNITARIOS (licra_suplex, short_uni, cortaviento_uni) ──
-  if(['licra_suplex','short_uni','cortaviento_uni'].includes(app)){
+  if(['licra_suplex','short_uni','cortaviento_uni','unicolor_bikini','unicolor_enterizo','unicolor_bikini_mlarga'].includes(app)){
     const pdata=await scriptGETjson({action:'leerPreciosColeccion'});
     if(pdata.ok){cotmPrecios=pdata; cotmTasaBCV=pdata.tasa_bcv||0;}
     // Colores — short_uni y cortaviento_uni usan tela de LICRA y vinil de FULLCOMFY (igual que empresarial)
@@ -9300,7 +9330,7 @@ function cotGuardarItem(){
   }
 
   // ── UNITARIOS (licra_suplex, short_uni, cortaviento_uni) ──
-  if(['licra_suplex','short_uni','cortaviento_uni'].includes(cotmApp)){
+  if(['licra_suplex','short_uni','cortaviento_uni','unicolor_bikini','unicolor_enterizo','unicolor_bikini_mlarga'].includes(cotmApp)){
     const tela=document.getElementById('cotm-tela')?.value||'';
     const precioUnitUSD=cotPrecioUSD(pp,def.precioUnitCod);
     const precioUnitBS=cotPrecioBS(pp,def.precioUnitCod);

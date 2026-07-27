@@ -1132,7 +1132,7 @@ function selectColorSerie(btn,color){
     return;
   }
 
-  const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short','Cotton Licra']:selectedSerie==='ChaquetaReflectiva'?['Chaqueta']:['Playera','Dress','Cortaviento','Short','Traje de Baño'];
+  const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short','Cotton Licra','Traje de Baño']:selectedSerie==='ChaquetaReflectiva'?['Chaqueta']:['Playera','Dress','Cortaviento','Short','Traje de Baño'];
   document.getElementById('variante-grid').innerHTML=variantes.map(v=>`<button class="opt-btn" onclick="selectVariante(this,'${v}')">${v.toUpperCase()}</button>`).join('');
   document.getElementById('variante-wrap').style.display='block';
   document.getElementById('producto-seleccionado').style.display='none';
@@ -1143,9 +1143,10 @@ function selectVariante(btn,variante){
   document.querySelectorAll('#variante-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
 
-  // Traje de Baño tiene 3 sub-opciones con su propio código, basado en el código base de la serie+color
+  // Traje de Baño tiene 3 sub-opciones. En Unicolor el precio es fijo (no depende del color);
+  // en las demás series se arma con el código base de la serie+color.
   if(variante==='Traje de Baño'){
-    const baseCod=SERIES_COLECCION[selectedSerie].codigos[selectedColorSerie]['Playera'];
+    const baseCod=selectedSerie==='Unicolor'?'Unicolor':SERIES_COLECCION[selectedSerie].codigos[selectedColorSerie]['Playera'];
     document.getElementById('variante-grid').innerHTML=`
       <button class="opt-btn" onclick="selectTrajeBano(this,'Bikini','${baseCod}Bikini')">BIKINI</button>
       <button class="opt-btn" onclick="selectTrajeBano(this,'Enterizo','${baseCod}Enterizo')">ENTERIZO</button>
@@ -1181,7 +1182,10 @@ function selectTrajeBano(btn,tipo,codigo){
   document.querySelectorAll('#variante-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   const s=SERIES_COLECCION[selectedSerie];
-  const nombre=s.nombre===selectedColorSerie?`${tipo} ${s.nombre}`:`${tipo} ${s.nombre} ${selectedColorSerie}`;
+  let nombre;
+  if(selectedSerie==='Unicolor') nombre=`${tipo} Serie ${selectedColorSerie}`;
+  else if(s.nombre===selectedColorSerie) nombre=`${tipo} ${s.nombre}`;
+  else nombre=`${tipo} ${s.nombre} ${selectedColorSerie}`;
   pedido.codigoProducto=codigo; pedido.nombreProducto=nombre; pedido.variante='Traje de Baño'; pedido.pack=1;
   pedido.manga=''; pedido.capucha='Sin Capucha'; // trajes de baño no llevan capucha
   pedido.tela=selectedColorSerie;
