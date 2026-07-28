@@ -2943,6 +2943,32 @@ async function cargarVentas(){
   }
 }
 
+const MESES_ES_ABR = {ene:0,feb:1,mar:2,abr:3,may:4,jun:5,jul:6,ago:7,sep:8,oct:9,nov:10,dic:11};
+function parsearFechaVenta(fs){
+  fs = String(fs||'').trim();
+  if(!fs) return null;
+  // Formato "Vie 10 Jul 2026 8:13 AM" (locale es-VE con día de la semana en español)
+  const m = fs.match(/^\S+\s+(\d{1,2})\s+([A-Za-zñÑ]{3})\s+(\d{4})(?:\s+(\d{1,2}):(\d{2})\s*(AM|PM)?)?/i);
+  if(m){
+    const dia=parseInt(m[1]), mesAbr=m[2].toLowerCase().slice(0,3), anio=parseInt(m[3]);
+    const mes=MESES_ES_ABR[mesAbr];
+    if(mes!==undefined){
+      let hora=m[4]?parseInt(m[4]):0; const min=m[5]?parseInt(m[5]):0; const ampm=m[6]?m[6].toUpperCase():null;
+      if(ampm==='PM'&&hora<12) hora+=12;
+      if(ampm==='AM'&&hora===12) hora=0;
+      return new Date(anio,mes,dia,hora,min);
+    }
+  }
+  // Formato DD/MM/YYYY
+  if(fs.includes('/')){
+    const p = fs.split(' ')[0].split('/');
+    if(p.length===3) return new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));
+  }
+  // Fallback: dejar que Date lo intente (ISO, etc.)
+  const d = new Date(fs);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function filtrarVentas(){
   const ahora = new Date();
   const fuente = document.getElementById('venta-fuente')?.value||'';
@@ -2950,16 +2976,7 @@ function filtrarVentas(){
     // Filtro fuente
     if(fuente && String(r.fuente||'') !== fuente) return false;
     // Filtro período
-    let fecha = null;
-    try{
-      const fs = String(r.fecha||'');
-      if(fs.includes('/')){
-        const p = fs.split('/');
-        fecha = new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));
-      } else {
-        fecha = new Date(fs);
-      }
-    }catch(e){}
+    const fecha = parsearFechaVenta(r.fecha);
     if(!fecha || isNaN(fecha.getTime())) return true;
     if(_ventasPeriodo==='semana'){
       const ini = new Date(ahora); ini.setDate(ahora.getDate()-ahora.getDay());
@@ -3013,8 +3030,7 @@ function renderVentas(){
 
   // KPIs Gastos
   const gastosFiltrados = _gastosData.filter(g=>{
-    let fecha=null;
-    try{ const p=String(g.fecha||'').split('/'); fecha=p.length===3?new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])):new Date(g.fecha); }catch(e){}
+    const fecha=parsearFechaVenta(g.fecha);
     if(!fecha||isNaN(fecha.getTime())) return true;
     const ahora=new Date();
     if(_ventasPeriodo==='semana'){ const ini=new Date(ahora); ini.setDate(ahora.getDate()-ahora.getDay()); ini.setHours(0,0,0,0); return fecha>=ini; }
@@ -3032,7 +3048,9 @@ function renderVentas(){
   // Gráfico por días
   const diasMap={};
   rows.forEach(r=>{
-    const fs = String(r.fecha||'').split(' ')[0].split('T')[0];
+    const fd = parsearFechaVenta(r.fecha);
+    if(!fd) return;
+    const fs = `${fd.getFullYear()}-${String(fd.getMonth()+1).padStart(2,'0')}-${String(fd.getDate()).padStart(2,'0')}`;
     diasMap[fs]=(diasMap[fs]||0)+1;
   });
   const diasKeys = Object.keys(diasMap).sort().slice(-14);
@@ -3088,7 +3106,7 @@ function renderVentas(){
   if(tbody) tbody.innerHTML = rows.length ? rows.slice().reverse().map(r=>`
     <tr style="border-bottom:1px solid var(--border);">
       <td style="padding:7px 8px;color:var(--accent);font-weight:700;">${r.codigoC||r.codigo||'—'}</td>
-      <td style="padding:7px 8px;color:var(--muted);">${String(r.fecha||'').split(' ')[0]}</td>
+      <td style="padding:7px 8px;color:var(--muted);">${(()=>{const fd=parsearFechaVenta(r.fecha);return fd?`${String(fd.getDate()).padStart(2,'0')}/${String(fd.getMonth()+1).padStart(2,'0')}/${fd.getFullYear()}`:(r.fecha||'—');})()}</td>
       <td style="padding:7px 8px;">${r.nombre||'—'}</td>
       <td style="padding:7px 8px;color:var(--muted);">${r.modelo||r.pack||'—'}</td>
       <td style="padding:7px 8px;text-align:right;font-weight:700;">${String(r.moneda||'').trim()==='Divisa'?'$':'Bs'} ${parseFloat(r.monto||0).toLocaleString('es-VE',{maximumFractionDigits:2})}</td>
