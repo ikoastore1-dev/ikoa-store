@@ -8451,9 +8451,24 @@ async function cotModalSelectApp(app){
   if(app==='toalla'){
     const pdata=await scriptGETjson({action:'leerPreciosColeccion'});
     if(pdata.ok){cotmPrecios=pdata; cotmTasaBCV=pdata.tasa_bcv||0;}
+    // Color — botones fijos (igual que en las apps de pedidos), no texto libre
     document.getElementById('cotm-color-libre-wrap').style.display='block';
-    document.getElementById('cotm-color-libre').placeholder='Ej: Azul marino, Rojo, etc...';
-    document.getElementById('cotm-color-libre').value='';
+    const colorLibreInput=document.getElementById('cotm-color-libre');
+    colorLibreInput.style.display='none'; // se llena sola al elegir un botón, no se escribe a mano
+    colorLibreInput.value='';
+    let colorBtnsWrap=document.getElementById('cotm-toalla-color-btns');
+    if(!colorBtnsWrap){
+      colorBtnsWrap=document.createElement('div');
+      colorBtnsWrap.id='cotm-toalla-color-btns';
+      colorBtnsWrap.style.cssText='display:flex;gap:8px;flex-wrap:wrap;';
+      colorLibreInput.parentNode.appendChild(colorBtnsWrap);
+    }
+    colorBtnsWrap.innerHTML='<div style="color:var(--muted);font-size:12px;">Cargando colores...</div>';
+    const dataColToalla=await scriptGETjson({action:'leerColores', hoja:'COLORES.TOALLA'});
+    const telasToalla=(dataColToalla.ok?dataColToalla.telas:null)||[];
+    colorBtnsWrap.innerHTML=telasToalla.map(c=>`
+      <button type="button" onclick="cotmSelColorToalla(this,'${c.replace(/'/g,"\\'")}')" style="padding:9px 14px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">${c}</button>
+    `).join('')||'<div style="color:var(--warn);font-size:12px;">No hay colores configurados en COLORES.TOALLA</div>';
     // Mostrar selector de cantidad
     document.getElementById('cotm-pack-section').style.display='block';
     document.getElementById('cotm-packs').innerHTML='';
@@ -8931,6 +8946,14 @@ function cotmCantChange(){
     if(cantInput){ cantInput.value=v; cotmTallaChange(null); }
   }
 }
+function cotmSelColorToalla(btn,color){
+  document.getElementById('cotm-color-libre').value=color;
+  document.querySelectorAll('#cotm-toalla-color-btns button').forEach(b=>{
+    b.style.borderColor='var(--border)'; b.style.color='var(--muted)'; b.style.background='var(--surface2)';
+  });
+  btn.style.borderColor='var(--accent)'; btn.style.color='var(--accent)'; btn.style.background='#0a2a1e';
+}
+
 function cotmSelCapucha(c){
   cotmCapucha=c;
   ['cotmc-sin','cotmc-con'].forEach(id=>{const el=document.getElementById(id);if(el){el.style.borderColor='var(--border)';el.style.color='var(--muted)';}});
@@ -9213,6 +9236,7 @@ function cotGuardarItem(){
   // ── TOALLA ───────────────────────────────────────────────
   if(cotmApp==='toalla'){
     const colorLibre=document.getElementById('cotm-color-libre')?.value.trim()||'';
+    if(!colorLibre){ alert('Selecciona el color/estampado de la toalla'); return; }
     const precioUnitUSD=cotPrecioUSD(pp,'TOALLA.01');
     const precioUnitBS=cotPrecioBS(pp,'TOALLA.01');
     const subtotalUSD=precioUnitUSD*tallas.length;
