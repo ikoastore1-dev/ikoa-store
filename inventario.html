@@ -4683,6 +4683,34 @@ async function rvToggleCashea(){
   rvRenderItemsYMonto();
 }
 
+async function rvEsperarYAbrirImprentaPorCOD(cod, msgEl){
+  const maxIntentos=12; // ~1 minuto (cada 5s)
+  let intento=0;
+  const original=msgEl.innerHTML;
+  const intervalo=setInterval(async ()=>{
+    intento++;
+    msgEl.innerHTML=`${original}<br><span style="font-size:12px;color:var(--muted);"><span class="spinner">↻</span> Buscando archivo para imprimir... (${intento}/${maxIntentos})</span>`;
+    try{
+      const dataImp=await scriptGETjson({action:'buscarImprenta', numeros:[cod], modo:'especifico'}, 45000);
+      if(dataImp.ok && dataImp.archivos && dataImp.archivos.length){
+        clearInterval(intervalo);
+        msgEl.innerHTML=`${original}<br><span style="font-size:12px;color:var(--accent);">✅ Archivo encontrado — abriendo para imprimir...</span>`;
+        switchTab('gestion');
+        setTipoGestion('Imprenta');
+        window._impArchivos=dataImp.archivos;
+        impAbrirUno(0);
+        setTimeout(()=>{cargarCola();},1500);
+        return;
+      }
+    }catch(e){ console.warn('Error buscando archivo de Imprenta:', e); }
+    if(intento>=maxIntentos){
+      clearInterval(intervalo);
+      msgEl.innerHTML=`${original}<br><span style="font-size:12px;color:var(--warn);">⚠️ El archivo para imprimir todavía no está listo — búscalo manualmente en Imprenta más tarde.</span>`;
+      setTimeout(()=>{msgEl.style.display='none';cargarCola();},4000);
+    }
+  }, 5000);
+}
+
 async function rvEsperarYAbrirImprenta(codigoC, msgEl){
   const maxIntentos=12; // ~1 minuto (cada 5s)
   let intento=0;
@@ -5596,7 +5624,10 @@ async function confirmarPlanificacion(){
       msgEl.style.color='var(--accent)';
       msgEl.innerHTML=`✅ Enviado a producción · <b>${lastCodigoP}</b> · COD: ${codMake||'—'} · ${USUARIOS[unlock]}`+
         (svgFalloMsg?`<br><span style="color:var(--warn);">⚠️ No se generó el DXF de nombres: ${svgFalloMsg}</span>`:'');
-      setTimeout(()=>{msgEl.style.display='none';cargarCola();},svgFalloMsg?9000:5000);
+      // Buscar automáticamente el archivo de Imprenta que Make.com genera para este COD,
+      // y mostrarlo listo para imprimir apenas esté disponible — sin ocultar el mensaje mientras tanto.
+      if(codMake) rvEsperarYAbrirImprentaPorCOD(codMake, msgEl);
+      else setTimeout(()=>{msgEl.style.display='none';cargarCola();},svgFalloMsg?9000:5000);
     } else {
       throw new Error('Error del servidor');
     }
@@ -6083,10 +6114,6 @@ async function confirmarAprobacion(){
     msgEl.style.border='1px solid #1a4a2a';
     msgEl.style.color='var(--accent)';
     msgEl.innerHTML=`✅ Pago aprobado · <b>${lastCodigoC||''}</b> en cola · ${USUARIOS[unlock]} · ${fechaApro}`;
-
-    // Buscar automáticamente el archivo de Imprenta que Make.com genera para este pedido,
-    // y mostrarlo listo para imprimir apenas esté disponible.
-    if(lastCodigoC) rvEsperarYAbrirImprenta(lastCodigoC, msgEl);
 
     // Notificar al cliente por WhatsApp
     try{
