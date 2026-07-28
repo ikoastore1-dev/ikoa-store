@@ -1115,6 +1115,7 @@ function addPieza(copiarDe=null){
   div.innerHTML=`
     <div class="pieza-num">${labelPrenda} #${id} ${total>pedido.pack?'<span style="color:var(--warn);font-size:11px;">(extra)</span>':''}</div>
     ${total>pedido.pack?`<button class="remove-btn" onclick="removePieza(${id})">✕</button>`:''}
+    ${esToalla?`<input type="hidden" id="pz-genero-${id}" value="N/A"><input type="hidden" id="pz-talla-${id}" value="Talla Única">`:`
     <div class="pieza-grid">
       <div class="field-group">
         <div class="field-label">Género</div>
@@ -1131,7 +1132,7 @@ function addPieza(copiarDe=null){
           <option value="">Seleccionar</option>
         </select>
       </div>
-    </div>
+    </div>`}
     ${!esShort?`<div class="field-group" style="margin-bottom:6px">
       <div class="field-label">${esToalla?'Personalización de nombre':'Nombre en la prenda'}</div>
       <div class="field-note">${esToalla?'Sin iniciales ni logos':'Manga derecha · Sin iniciales ni logos'}</div>
