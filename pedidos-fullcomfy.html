@@ -951,6 +951,7 @@ function addPieza(copiarDe=null){
   const total=document.getElementById('piezas-container').querySelectorAll('.pieza-card').length+1;
   const isDress = modeloFC.toLowerCase().includes('dress');
   const tipoLabel = isDress ? 'Vestido' : 'Franela';
+  const esMangaCeroSelec = mangaFC === 'Manga Cero' || mangaFC === 'Manga Corta';
   const generosHtml = isDress
     ? `<option value="">Seleccionar</option><option value="Kids"${genCopy==='Kids'?' selected':''}>Kids</option><option value="Dama"${genCopy==='Dama'?' selected':''}>Dama</option>`
     : `<option value="">Seleccionar</option><option value="Kids"${genCopy==='Kids'?' selected':''}>Kids</option><option value="Dama"${genCopy==='Dama'?' selected':''}>Dama</option><option value="Caballero"${genCopy==='Caballero'?' selected':''}>Caballero</option>`;
@@ -971,6 +972,7 @@ function addPieza(copiarDe=null){
         </select>
       </div>
     </div>
+    ${esMangaCeroSelec?'':`
     <div class="field-group" style="margin-bottom:6px">
       <div class="field-label">Nombre en la prenda</div>
       <div class="field-note">Manga derecha · Sin iniciales ni logos</div>
@@ -979,7 +981,7 @@ function addPieza(copiarDe=null){
         <label for="pz-sinombre-${id}" style="font-size:13px;color:var(--muted);cursor:pointer;">Sin nombre en manga derecha</label>
       </div>
       <input class="field-input" type="text" id="pz-nombre-${id}" placeholder="Ej: María, Carlos..." value="${nomCopy}" style="${sinCopy?'display:none':''}">
-    </div>
+    </div>`}
     <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;margin-bottom:6px;">
       <input type="checkbox" id="pz-capucha-${id}" ${pedido.capucha==='Con Capucha'?' checked':''} style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
       <label for="pz-capucha-${id}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">Con capucha</label>
@@ -1128,8 +1130,9 @@ function savePiezas(){
     const id=card.id.replace('pieza-','');
     const g=document.getElementById('pz-genero-'+id)?.value||'';
     const t=document.getElementById('pz-talla-'+id)?.value||'';
-    const sinNombre=document.getElementById('pz-sinombre-'+id)?.checked||false;
-    const n=sinNombre?'SIN NOMBRE EN MANGA':(document.getElementById('pz-nombre-'+id)?.value.trim()||'');
+    const esMangaCeroPz = mangaFC === 'Manga Cero' || mangaFC === 'Manga Corta';
+    const sinNombre=esMangaCeroPz?true:(document.getElementById('pz-sinombre-'+id)?.checked||false);
+    const n=esMangaCeroPz?'':(sinNombre?'SIN NOMBRE EN MANGA':(document.getElementById('pz-nombre-'+id)?.value.trim()||''));
     const conCapucha=document.getElementById('pz-capucha-'+id)?.checked||false;
     const rep=parseInt(document.getElementById('rep-count-'+id)?.textContent||'1');
     // Logos
@@ -1302,7 +1305,7 @@ function validarRef(){
     pagoRef=ref;
     pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
     pedido.pagoRef=ref;
-    pedido.pagoMonto=pagoTotalBs;
+    pedido.pagoMonto=(pagoMoneda==='bs')?pagoTotalBs:pagoTotalUsd;
   }
 }
 
@@ -1315,7 +1318,7 @@ function irAlResumen(){
     if(!ref||ref.length<3){ alert('Ingresa la referencia o código de confirmación'); return; }
     pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
     pedido.pagoRef=ref;
-    pedido.pagoMonto=pagoTotalBs;
+    pedido.pagoMonto=(pagoMoneda==='bs')?pagoTotalBs:pagoTotalUsd;
   }
   const curEl=document.getElementById('step6');
   curEl.classList.remove('active');
@@ -1385,9 +1388,11 @@ function buildMensaje(){
   const packsText=pedido.packs.map((pk,i)=>{
     const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conCapucha?' 🧢':''} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('\n');
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
-    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: COMFY PROTECT ${pk.manga}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
+    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: ${(pk.modelo||'COMFY PROTECT').toUpperCase()} ${pk.manga}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
   }).join('\n\n');
-  return `🛍️ *PEDIDO IKOA & BEKATE — COMFY PROTECT*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
+  const primerModelo=(pedido.packs[0]&&pedido.packs[0].modelo)||'';
+  const tituloProducto=primerModelo.toLowerCase().includes('dress')?'COMFY DRESS':'COMFY PROTECT';
+  return `🛍️ *PEDIDO IKOA & BEKATE — ${tituloProducto}*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
 }
 
 async function guardarEnSheets(){
@@ -1407,7 +1412,7 @@ async function guardarEnSheets(){
         correo:pedido.correo,
         cedula:pedido.cedula,
         celular:pedido.celular,
-        modelo:'COMFY PROTECT',
+        modelo:pk.modelo,
         manga:pk.manga,
         capucha:pk.capucha,
         pack:`${pk.pack}PACK`,

@@ -1409,7 +1409,7 @@ function validarRef(){
     pagoRef=ref;
     pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
     pedido.pagoRef=ref;
-    pedido.pagoMonto=pagoTotalBs;
+    pedido.pagoMonto=(pagoMoneda==='bs')?pagoTotalBs:pagoTotalUsd;
   }
 }
 
@@ -1422,7 +1422,7 @@ function irAlResumen(){
     if(!ref||ref.length<3){ alert('Ingresa la referencia o código de confirmación'); return; }
     pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
     pedido.pagoRef=ref;
-    pedido.pagoMonto=pagoTotalBs;
+    pedido.pagoMonto=(pagoMoneda==='bs')?pagoTotalBs:pagoTotalUsd;
   }
   const curEl=document.getElementById('step6');
   curEl.classList.remove('active');
