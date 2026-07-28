@@ -897,7 +897,7 @@ function validateStep(n){
     for(let i=0; i<pedido.piezas.length; i++){
       const p=pedido.piezas[i];
       if(!p.genero||!p.talla){ alert(`Completa género y talla en el${pedido.variante==='Short'?' short':' la franela'} ${i+1}`); return false; }
-      if(pedido.variante!=='Short' && pedido.manga!=='Manga Cero' && pedido.manga!=='Manga Corta' && !p.sinNombre && !p.nombre){ alert(`⚠️ La franela ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
+      if(pedido.variante!=='Short' && pedido.manga!=='Manga Cero' && pedido.manga!=='Manga Corta' && !p.sinNombre && !p.nombre){ const esTo=pedido.variante==='Toalla'; alert(esTo?`⚠️ La toalla ${i+1} no tiene personalización de nombre.\n\nEscribe el nombre o marca "Sin personalización de nombre".`:`⚠️ La franela ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
     }
     return true;
   }
@@ -1309,7 +1309,8 @@ function addPieza(copiarDe=null){
   const mostrarLogos=esChaqueta||esSerieConLogo||esFullComfyOLicra||(esEmpresarial&&pedido._empresarialLogos);
   const ocultarCapuchaCheckbox=(esComfyFamilia||esEmpresarial)&&!pedido._modeloTieneCapucha;
   const esTrajeBano=pedido.variante==='Traje de Baño';
-  const labelPrenda=esShort?'Short':esChaqueta?'Chaqueta':esTrajeBano?'Traje de baño':'Franela';
+  const esToalla=pedido.variante==='Toalla';
+  const labelPrenda=esShort?'Short':esChaqueta?'Chaqueta':esTrajeBano?'Traje de baño':esToalla?'Toalla':'Franela';
   div.innerHTML=`
     <div class="pieza-num">${labelPrenda} #${id} ${total>pedido.pack?'<span style="color:var(--warn);font-size:11px;">(extra)</span>':''}</div>
     ${total>pedido.pack?`<button class="remove-btn" onclick="removePieza(${id})">✕</button>`:''}
@@ -1331,11 +1332,11 @@ function addPieza(copiarDe=null){
       </div>
     </div>
     ${(!esShort&&!esMangaCero)?`<div class="field-group" style="margin-bottom:6px">
-      <div class="field-label">Nombre en la prenda</div>
-      <div class="field-note">Manga derecha · Sin iniciales ni logos</div>
+      <div class="field-label">${esToalla?'Personalización de nombre':'Nombre en la prenda'}</div>
+      <div class="field-note">${esToalla?'Sin iniciales ni logos':'Manga derecha · Sin iniciales ni logos'}</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;margin-top:4px;">
         <input type="checkbox" id="pz-sinombre-${id}" onchange="toggleNombrePrenda(${id})" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);"${sinCopy?' checked':''}>
-        <label for="pz-sinombre-${id}" style="font-size:13px;color:var(--muted);cursor:pointer;">Sin nombre en manga derecha</label>
+        <label for="pz-sinombre-${id}" style="font-size:13px;color:var(--muted);cursor:pointer;">${esToalla?'Sin personalización de nombre':'Sin nombre en manga derecha'}</label>
       </div>
       <input class="field-input" type="text" id="pz-nombre-${id}" placeholder="Ej: María, Carlos..." value="${nomCopy}" style="${sinCopy?'display:none':''}">
     </div>`:`<input type="hidden" id="pz-sinombre-${id}" value="true"><input type="hidden" id="pz-nombre-${id}" value="">`}
