@@ -190,6 +190,41 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div style="text-align:left;width:100%;">
       <div class="field-label" style="margin-bottom:4px;">Mensaje</div>
       <textarea id="edit-rv-mensaje" rows="5" style="background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;outline:none;width:100%;resize:vertical;line-height:1.6;margin-bottom:10px;"></textarea>
+      <div class="field-label" style="margin-bottom:4px;">Descripción de productos</div>
+      <textarea id="edit-rv-productos" rows="3" placeholder="Ej: Full Comfy Manga Larga (3 uds) — Bs 26.688,00 | Short Unicolor (1 ud) — Bs 15.000,00" style="background:var(--surface3);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;outline:none;width:100%;resize:vertical;line-height:1.6;margin-bottom:10px;"></textarea>
+      <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px;">👤 Datos del cliente</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div>
+          <div class="field-label" style="margin-bottom:4px;">Nombre</div>
+          <input class="field-input" type="text" id="edit-rv-nombre" style="font-size:13px;padding:8px 10px;">
+        </div>
+        <div>
+          <div class="field-label" style="margin-bottom:4px;">Cédula</div>
+          <input class="field-input" type="text" id="edit-rv-cedula" style="font-size:13px;padding:8px 10px;">
+        </div>
+        <div>
+          <div class="field-label" style="margin-bottom:4px;">Celular</div>
+          <input class="field-input" type="text" id="edit-rv-celular" style="font-size:13px;padding:8px 10px;">
+        </div>
+        <div>
+          <div class="field-label" style="margin-bottom:4px;">Correo</div>
+          <input class="field-input" type="text" id="edit-rv-correo" style="font-size:13px;padding:8px 10px;">
+        </div>
+        <div>
+          <div class="field-label" style="margin-bottom:4px;">Destino</div>
+          <select class="field-input" id="edit-rv-destino" style="font-size:13px;padding:8px 10px;">
+            <option value="Stock Tienda">Stock Tienda</option>
+            <option value="Envío Taller">Envío Taller</option>
+          </select>
+        </div>
+        <div>
+          <div class="field-label" style="margin-bottom:4px;">Retira</div>
+          <input class="field-input" type="text" id="edit-rv-retira" style="font-size:13px;padding:8px 10px;">
+        </div>
+      </div>
+      <div class="field-label" style="margin-bottom:4px;">Agencia de envío</div>
+      <input class="field-input" type="text" id="edit-rv-agencia" style="font-size:13px;padding:8px 10px;margin-bottom:8px;">
+      <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px;">💳 Pago</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
         <div>
           <div class="field-label" style="margin-bottom:4px;">Banco</div>
@@ -226,6 +261,20 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div>
           <div class="field-label" style="margin-bottom:4px;">Monto</div>
           <input class="field-input" type="number" id="edit-rv-monto" step="0.01" style="font-size:13px;padding:8px 10px;">
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <input type="checkbox" id="edit-rv-es-cashea" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
+        <label for="edit-rv-es-cashea" style="font-size:12px;color:var(--text);cursor:pointer;">🛒 Compra por Cashea</label>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div>
+          <div class="field-label" style="margin-bottom:4px;">% Inicial (Cashea)</div>
+          <input class="field-input" type="number" id="edit-rv-pct-inicial" step="0.01" style="font-size:13px;padding:8px 10px;">
+        </div>
+        <div>
+          <div class="field-label" style="margin-bottom:4px;">Código Cashea</div>
+          <input class="field-input" type="text" id="edit-rv-cod-cashea" style="font-size:13px;padding:8px 10px;">
         </div>
       </div>
       <div class="field-label" style="margin-bottom:4px;">Código de autorización</div>
@@ -4955,8 +5004,10 @@ async function cargarRespaldos(){
       return;
     }
     listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${rows.length} pendiente(s)</div>`;
+    window._rvPendData={};
     rows.forEach(r=>{
       const codigo=String(r[0]||'').trim();
+      window._rvPendData[codigo]=r;
       const fecha=String(r[1]||'').trim();
       const usuario=String(r[2]||'').trim();
       const mensaje=decodeURIComponent(String(r[3]||'').trim());
@@ -4989,7 +5040,7 @@ async function cargarRespaldos(){
         ${productosDetalle?`<div style="background:#0a2a1e;border:1px solid var(--accent);border-radius:8px;padding:10px;font-size:11px;color:var(--text);margin-bottom:10px;"><b style="color:var(--accent);">🛍️ Productos:</b> ${productosDetalle.split(' | ').join('<br>')}</div>`:''}
         <div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13px;line-height:1.8;white-space:pre-wrap;margin-bottom:12px;">${mensaje}</div>
         <button onclick="abrirModalProcesar('${codigo}')" style="width:100%;padding:12px;background:var(--warn);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">✓ MARCAR COMO PROCESADO</button>
-        <button onclick="abrirModalEditarRespaldo('${codigo}','${encodeURIComponent(mensaje)}','${banco}','${referencia}','${factura}','${tasa}','${moneda}','${monto}')" style="width:100%;padding:10px;background:transparent;border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;">✏️ EDITAR</button>
+        <button onclick="abrirModalEditarRespaldo('${codigo}')" style="width:100%;padding:10px;background:transparent;border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;">✏️ EDITAR</button>
         <button onclick="abrirModalRechazarRespaldo('${codigo}')" style="width:100%;padding:10px;background:transparent;border:1.5px solid var(--danger);border-radius:10px;color:var(--danger);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;">✗ RECHAZAR</button>`;
       listEl.appendChild(card);
     });
@@ -4998,19 +5049,32 @@ async function cargarRespaldos(){
   }
 }
 
-function abrirModalEditarRespaldo(codigo,mensaje,banco,referencia,factura,tasa,moneda,monto){
+function abrirModalEditarRespaldo(codigo){
+  const r=(window._rvPendData||{})[codigo];
+  if(!r){ alert('No se encontraron los datos de este respaldo, recarga la lista.'); return; }
   document.getElementById('modal-rv-edit-codigo').textContent='Código: '+codigo;
-  document.getElementById('edit-rv-mensaje').value=decodeURIComponent(mensaje||'');
-  document.getElementById('edit-rv-banco').value=banco||'';
-  document.getElementById('edit-rv-referencia').value=referencia||'';
-  document.getElementById('edit-rv-factura').value=factura||'Acuerdo Cliente/S';
-  document.getElementById('edit-rv-tasa').value=tasa||'';
-  document.getElementById('edit-rv-moneda').value=moneda||'Bs';
-  document.getElementById('edit-rv-monto').value=monto||'';
+  document.getElementById('edit-rv-mensaje').value=decodeURIComponent(String(r[3]||''));
+  document.getElementById('edit-rv-productos').value=decodeURIComponent(String(r[13]||''));
+  document.getElementById('edit-rv-nombre').value=decodeURIComponent(String(r[14]||''));
+  document.getElementById('edit-rv-cedula').value=String(r[16]||'');
+  document.getElementById('edit-rv-celular').value=String(r[17]||'');
+  document.getElementById('edit-rv-correo').value=decodeURIComponent(String(r[18]||''));
+  document.getElementById('edit-rv-destino').value=String(r[10]||'Stock Tienda');
+  document.getElementById('edit-rv-retira').value=decodeURIComponent(String(r[20]||''));
+  document.getElementById('edit-rv-agencia').value=decodeURIComponent(String(r[19]||''));
+  document.getElementById('edit-rv-banco').value=String(r[4]||'');
+  document.getElementById('edit-rv-referencia').value=String(r[5]||'');
+  document.getElementById('edit-rv-factura').value=String(r[6]||'Acuerdo Cliente/S');
+  document.getElementById('edit-rv-tasa').value=String(r[7]||'');
+  document.getElementById('edit-rv-moneda').value=String(r[8]||'Bs');
+  document.getElementById('edit-rv-monto').value=String(r[9]||'');
+  const moneda=String(r[8]||'').trim();
+  document.getElementById('edit-rv-es-cashea').checked=(moneda==='Cashea');
+  document.getElementById('edit-rv-pct-inicial').value=String(r[11]||'');
+  document.getElementById('edit-rv-cod-cashea').value=String(r[12]||'');
   document.getElementById('edit-rv-unlock').value='';
   document.getElementById('edit-rv-error').textContent='';
   document.getElementById('modal-editar-rv').classList.remove('hidden');
-  // Guardar codigo en dataset
   document.getElementById('modal-editar-rv').dataset.codigo=codigo;
   setTimeout(()=>document.getElementById('edit-rv-unlock').focus(),100);
 }
@@ -5027,13 +5091,32 @@ async function confirmarEditarRespaldo(){
   const tasa=document.getElementById('edit-rv-tasa').value.trim();
   const moneda=document.getElementById('edit-rv-moneda').value;
   const monto=document.getElementById('edit-rv-monto').value.trim();
+  const productosDetalle=document.getElementById('edit-rv-productos').value.trim();
+  const nombre=document.getElementById('edit-rv-nombre').value.trim();
+  const cedula=document.getElementById('edit-rv-cedula').value.trim();
+  const celular=document.getElementById('edit-rv-celular').value.trim();
+  const correo=document.getElementById('edit-rv-correo').value.trim();
+  const destino=document.getElementById('edit-rv-destino').value;
+  const retira=document.getElementById('edit-rv-retira').value.trim();
+  const agencia=document.getElementById('edit-rv-agencia').value.trim();
+  const esCashea=document.getElementById('edit-rv-es-cashea').checked;
+  const pctInicial=document.getElementById('edit-rv-pct-inicial').value.trim();
+  const codCashea=document.getElementById('edit-rv-cod-cashea').value.trim();
   document.getElementById('modal-editar-rv').classList.add('hidden');
   try{
     const data=await scriptGETjson({
       action:'editarRespaldo',
       codigo,
       mensaje:encodeURIComponent(mensaje),
-      banco, referencia, factura, tasa, moneda, monto,
+      productos_detalle:encodeURIComponent(productosDetalle),
+      nombre_cliente:encodeURIComponent(nombre),
+      cedula_cliente:cedula, celular_cliente:celular,
+      correo_cliente:encodeURIComponent(correo),
+      destino, retira_cliente:encodeURIComponent(retira),
+      agencia_cliente:encodeURIComponent(agencia),
+      banco, referencia, factura, tasa,
+      moneda:esCashea?'Cashea':moneda, monto,
+      pct_inicial:esCashea?pctInicial:'', cod_cashea:esCashea?codCashea:'',
       usuario:USUARIOS_RESPALDO[unlock],
       fecha_edit:getFechaHora()
     });
