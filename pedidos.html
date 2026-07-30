@@ -1566,9 +1566,10 @@ async function calcularPago(){
     desglose.join('<br>')+
     `<br><span style="color:var(--muted);">• Precio/franela:</span> Bs ${precioComfy.bs.toFixed(2)} / $${precioComfy.usd.toFixed(2)}`+
     (totalRecargas>0?`<br><span style="color:var(--muted);">• Recarga talla grande:</span> Bs ${precioRecarga.bs.toFixed(2)} / $${precioRecarga.usd.toFixed(2)}`:'')+
-    (totalLogosPecho>0?`<br><span style="color:var(--muted);">• Logo Pecho (${totalLogosPecho}):</span> Bs ${precioLogoPecho.bs.toFixed(2)} c/u`:'')+
-    (totalLogosEspalda>0?`<br><span style="color:var(--muted);">• Logo Espalda (${totalLogosEspalda}):</span> Bs ${precioLogoEspalda.bs.toFixed(2)} c/u`:'')+
-    (totalLogosManga>0?`<br><span style="color:var(--muted);">• Logo Manga (${totalLogosManga}):</span> Bs ${precioLogoManga.bs.toFixed(2)} c/u`:'');
+    (totalConCapucha>0?`<br><span style="color:var(--muted);">• Con Capucha (${totalConCapucha}):</span> Bs ${precioCapucha.bs.toFixed(2)} / $${precioCapucha.usd.toFixed(2)} c/u`:'')+
+    (totalLogosPecho>0?`<br><span style="color:var(--muted);">• Logo Pecho (${totalLogosPecho}):</span> Bs ${precioLogoPecho.bs.toFixed(2)} / $${precioLogoPecho.usd.toFixed(2)} c/u`:'')+
+    (totalLogosEspalda>0?`<br><span style="color:var(--muted);">• Logo Espalda (${totalLogosEspalda}):</span> Bs ${precioLogoEspalda.bs.toFixed(2)} / $${precioLogoEspalda.usd.toFixed(2)} c/u`:'')+
+    (totalLogosManga>0?`<br><span style="color:var(--muted);">• Logo Manga (${totalLogosManga}):</span> Bs ${precioLogoManga.bs.toFixed(2)} / $${precioLogoManga.usd.toFixed(2)} c/u`:'');
   document.getElementById('pago-total-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
   document.getElementById('pago-total-usd').textContent='$'+pagoTotalUsd.toFixed(2);
   document.getElementById('pm-monto-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
