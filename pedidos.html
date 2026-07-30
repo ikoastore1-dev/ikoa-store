@@ -276,6 +276,7 @@ window.addEventListener('load',function(){
       <div class="card-title">Selecciona tu pack</div>
       <div class="card-note" id="pack-minimo-label">Mínimo 2 unidades · Mismo color tela y vinil.</div>
       <div class="option-grid cols3" id="pack-grid">
+        <button class="opt-btn" id="btn-pack-1" style="display:none;" onclick="selectPack(this,1)">1 PACK<span class="sub">1 franela</span></button>
         <button class="opt-btn" id="btn-pack-2" onclick="selectPack(this,2)">2 PACK<span class="sub">2 franelas</span></button>
         <button class="opt-btn" onclick="selectPack(this,3)">3 PACK<span class="sub">3 franelas</span></button>
         <button class="opt-btn" onclick="selectPack(this,4)">4 PACK<span class="sub">4 franelas</span></button>
@@ -342,7 +343,7 @@ window.addEventListener('load',function(){
       </div>
     </div>
     <div class="nav-row">
-      <button class="btn-back" onclick="modalidadComfy==='B'?goStep(1):goStep(2)">← Atrás</button>
+      <button class="btn-back" onclick="volverDesdeStep3()">← Atrás</button>
       <button class="btn-next" onclick="intentarPaso4()">Siguiente →</button>
     </div>
   </div>
@@ -741,6 +742,7 @@ function sonColoresSimilares(a,b){
 
 // ── NAVEGACIÓN ────────────────────────────────────────────────
 let origenStep2='manga-tipo';
+let origenStep3='manga-tipo';
 
 function volverDesdeStep1b(){
   document.getElementById('step1b').classList.remove('active');
@@ -749,6 +751,30 @@ function volverDesdeStep1b(){
   } else {
     document.getElementById('step-manga-tipo').classList.add('active');
   }
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function ajustarPackGridMinimo(min){
+  const btn1=document.getElementById('btn-pack-1');
+  const customEl=document.getElementById('pack-custom');
+  const minEl=document.getElementById('pack-minimo-label');
+  if(min===1){
+    if(btn1) btn1.style.display='block';
+    if(customEl) customEl.min='1';
+    if(minEl) minEl.textContent='Mínimo 1 unidad · Mismo color tela y vinil.';
+  } else {
+    if(btn1) btn1.style.display='none';
+    if(customEl) customEl.min='2';
+    if(minEl) minEl.textContent='Mínimo 2 unidades · Mismo color tela y vinil.';
+  }
+}
+
+function volverDesdeStep3(){
+  if(modalidadComfy==='B'){ goStep(1); return; }
+  document.getElementById('step3').classList.remove('active');
+  document.getElementById(origenStep3).classList.add('active');
+  currentStep=(origenStep3==='step-manga-tipo')?'manga-tipo':(origenStep3==='step1'?1:2);
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -807,14 +833,11 @@ function continuarTrasMangaTipo(){
     const infoEl=document.getElementById('modelo-info-comfy'); if(infoEl) infoEl.textContent='SHORT UNICOLOR';
     const subEl=document.getElementById('modelo-info-comfy-sub'); if(subEl) subEl.textContent='';
     const capWrap=document.getElementById('capucha-wrap-comfy'); if(capWrap) capWrap.style.display='none';
-    modalidadComfy='A'; pedido.modalidad='A'; pedido.pack=1;
-    currentStep=2;
+    modalidadComfy='A'; pedido.modalidad='A';
     origenStep2='step-manga-tipo';
+    currentStep=2;
     document.getElementById('step2').classList.add('active');
-    const minEl=document.getElementById('pack-minimo-label');
-    if(minEl) minEl.textContent='Mínimo 1 unidad · Mismo color tela y vinil';
-    const customEl=document.getElementById('pack-custom');
-    if(customEl) customEl.min='1';
+    ajustarPackGridMinimo(1);
     updateProgress();
     window.scrollTo({top:0,behavior:'smooth'});
     return;
@@ -843,15 +866,12 @@ function continuarTrasMangaTipo(){
     currentStep=1;
     document.getElementById('step1').classList.add('active');
   } else {
-    // Manga Corta / Manga Cero / Dress (Larga o Cero) / Short: precio fijo, mínimo 1, un solo color — directo a cantidad
-    modalidadComfy='A'; pedido.modalidad='A'; pedido.pack=1;
-    currentStep=2;
+    // Manga Corta / Manga Cero / Dress (Larga o Cero) / Short: precio fijo por unidad, selector desde 1PACK
+    modalidadComfy='A'; pedido.modalidad='A';
     origenStep2='step-manga-tipo';
+    currentStep=2;
     document.getElementById('step2').classList.add('active');
-    const minEl=document.getElementById('pack-minimo-label');
-    if(minEl) minEl.textContent='Mínimo 1 unidad · Mismo color tela y vinil';
-    const customEl=document.getElementById('pack-custom');
-    if(customEl) customEl.min='1';
+    ajustarPackGridMinimo(1);
   }
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
@@ -865,13 +885,9 @@ function seleccionarLargaModo(modo){
   document.getElementById('step1').classList.remove('active');
   if(modo==='unidad'){
     modalidadComfy='A'; pedido.modalidad='A'; pedido.pack=1;
-    currentStep=2;
-    origenStep2='step1';
-    document.getElementById('step2').classList.add('active');
-    const minEl=document.getElementById('pack-minimo-label');
-    if(minEl) minEl.textContent='Mínimo 1 unidad · Mismo color tela y vinil';
-    const customEl=document.getElementById('pack-custom');
-    if(customEl) customEl.min='1';
+    origenStep3='step1';
+    currentStep=3;
+    document.getElementById('step3').classList.add('active');
   } else {
     document.getElementById('step1b').classList.add('active');
   }
@@ -940,7 +956,7 @@ function goStep(n){
   if(n==='3b') inicializarStep3B();
   if(n===4) inicializarPiezas();
   if(n===3){
-    // El modelo/manga/capucha ya quedaron fijados en seleccionarMangaTipo() — no se reinician aquí
+    origenStep3='step2';
   }
   if(n===5){
     if(pedido.packs.length===0){
@@ -1265,7 +1281,8 @@ function selectPack(btn,n){
 }
 function setCustomPack(val){
   const n=parseInt(val);
-  if(n>=2){ pedido.pack=n; document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected')); document.getElementById('pack-seleccionado').style.display='block'; document.getElementById('pack-label').textContent=n+'PACK — '+n+' franelas'; }
+  const minPermitido=parseInt(document.getElementById('pack-custom').min)||2;
+  if(n>=minPermitido){ pedido.pack=n; document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected')); document.getElementById('pack-seleccionado').style.display='block'; document.getElementById('pack-label').textContent=n+'PACK — '+n+' franelas'; }
 }
 
 function selectOpt(btn,field,val){
