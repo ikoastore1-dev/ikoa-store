@@ -161,6 +161,9 @@ window.addEventListener('load',function(){
         <button onclick="seleccionarPrendaComfy('dress')" id="btn-prenda-dress" style="width:100%;padding:16px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
           <div style="font-size:18px;margin-bottom:4px;">👗 Dress Comfy</div>
         </button>
+        <button onclick="seleccionarPrendaComfy('short')" id="btn-prenda-short" style="width:100%;padding:16px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;margin-bottom:4px;">🩳 Short Unicolor</div>
+        </button>
       </div>
       <div id="manga-sub-opts" style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">
         <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Tipo de manga</div>
@@ -181,6 +184,26 @@ window.addEventListener('load',function(){
   </div>
 
   <div class="step" id="step1">
+    <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title">¿Una unidad o por packs?</div></div>
+    <div class="card">
+      <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">¿Cómo quieres tu Playera Comfy Manga Larga?</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <button onclick="seleccionarLargaModo('unidad')" id="btn-larga-unidad" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;margin-bottom:4px;">1️⃣ Una sola unidad</div>
+          <div style="font-size:13px;font-weight:400;color:var(--muted);">Sin mínimo, un solo color</div>
+        </button>
+        <button onclick="seleccionarLargaModo('packs')" id="btn-larga-packs" style="width:100%;padding:18px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:18px;margin-bottom:4px;">📦 Por Packs</div>
+          <div style="font-size:13px;font-weight:400;color:var(--muted);">2 o más unidades, con descuento</div>
+        </button>
+      </div>
+      <div class="nav-row" style="margin-top:16px;">
+        <button class="btn-back" onclick="document.getElementById('step1').classList.remove('active');document.getElementById('step-manga-tipo').classList.add('active');updateProgress();" style="width:100%;">← Atrás</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="step" id="step1b">
     <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title">Selecciona tu modalidad</div></div>
     <div class="card">
       <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">¿Cómo deseas personalizar tus franelas?</div>
@@ -193,6 +216,9 @@ window.addEventListener('load',function(){
           <div style="font-size:18px;margin-bottom:4px;">🌈 Opción B</div>
           <div style="font-size:13px;font-weight:400;color:var(--muted);">Mínimo 3 unidades · Diferentes telas · Mismo vinil</div>
         </button>
+      </div>
+      <div class="nav-row" style="margin-top:16px;">
+        <button class="btn-back" onclick="volverDesdeStep1b()" style="width:100%;">← Atrás</button>
       </div>
     </div>
   </div>
@@ -266,7 +292,7 @@ window.addEventListener('load',function(){
       <span style="font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="pack-label">—</span>
     </div>
     <div class="nav-row">
-      <button class="btn-back" onclick="goStep(1)">← Atrás</button>
+      <button class="btn-back" onclick="volverDesdeStep2()">← Atrás</button>
       <button class="btn-next" onclick="goStep(3)">Siguiente →</button>
     </div>
   </div>
@@ -280,7 +306,7 @@ window.addEventListener('load',function(){
     </div>
     <div id="franelas-b-container"></div>
     <div class="nav-row">
-      <button class="btn-back" onclick="goStep(1)">← Atrás</button>
+      <button class="btn-back" onclick="document.getElementById('step3b').classList.remove('active');document.getElementById('step1b').classList.add('active');currentStep=1;updateProgress();" style="width:auto;">← Atrás</button>
       <button class="btn-next" onclick="intentarPaso4B()">Siguiente →</button>
     </div>
   </div>
@@ -324,7 +350,7 @@ window.addEventListener('load',function(){
   <!-- STEP 4: PIEZAS -->
   <div class="step" id="step4">
     <div class="step-header"><div class="step-num">Paso 5 de 7</div><div class="step-title">Tallas y nombres</div></div>
-    <div class="nota" style="margin-bottom:14px;">📌 Nombre en <b>manga derecha</b>, sin iniciales ni logos.<br>Completa las <b id="pack-total-lbl">—</b> franelas de tu pack.<br>Usa el contador <b>+/−</b> para repetir franelas iguales.</div>
+    <div class="nota" style="margin-bottom:14px;">📌 Nombre estampado en <b>manga derecha</b>, sin iniciales ni logos.<br>Completa las <b id="pack-total-lbl">—</b> franelas de tu pack.<br>Usa el contador <b>+/−</b> para repetir franelas iguales.</div>
     <div id="franelas-progreso" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;color:var(--warn);"></div>
     <div class="alerta-min" id="alerta-min"></div>
     <div id="piezas-container"></div>
@@ -714,6 +740,27 @@ function sonColoresSimilares(a,b){
 }
 
 // ── NAVEGACIÓN ────────────────────────────────────────────────
+let origenStep2='manga-tipo';
+
+function volverDesdeStep1b(){
+  document.getElementById('step1b').classList.remove('active');
+  if(prendaComfyActual==='playera'){
+    document.getElementById('step1').classList.add('active');
+  } else {
+    document.getElementById('step-manga-tipo').classList.add('active');
+  }
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function volverDesdeStep2(){
+  document.getElementById('step2').classList.remove('active');
+  document.getElementById(origenStep2).classList.add('active');
+  currentStep=(origenStep2==='step-manga-tipo')?'manga-tipo':1;
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
 function seleccionarCapuchaComfy(c){
   pedido.capucha=c;
   document.getElementById('btn-cap-sin').style.borderColor=c==='Sin Capucha'?'var(--accent)':'var(--border)';
@@ -726,15 +773,19 @@ let prendaComfyActual='playera', mangaComfyActual='larga';
 
 function seleccionarPrendaComfy(tipo){
   prendaComfyActual=tipo;
-  const btnP=document.getElementById('btn-prenda-playera'), btnD=document.getElementById('btn-prenda-dress');
+  const btnP=document.getElementById('btn-prenda-playera'), btnD=document.getElementById('btn-prenda-dress'), btnS=document.getElementById('btn-prenda-short');
   const activo=(b)=>{b.style.borderColor='var(--accent)';b.style.background='#0a2a1a';};
   const inactivo=(b)=>{b.style.borderColor='var(--border)';b.style.background='var(--surface2)';};
-  if(tipo==='playera'){ activo(btnP); inactivo(btnD); } else { activo(btnD); inactivo(btnP); }
+  [btnP,btnD,btnS].forEach(inactivo);
+  if(tipo==='playera') activo(btnP); else if(tipo==='dress') activo(btnD); else activo(btnS);
+  // Short Unicolor no tiene mangas — se oculta esa sub-sección
+  const mangaWrap=document.getElementById('manga-sub-opts');
+  if(mangaWrap) mangaWrap.style.display=(tipo==='short')?'none':'flex';
   // Dress no ofrece Manga Corta
   const btnCorta=document.getElementById('btn-manga-corta');
   if(btnCorta) btnCorta.style.display=(tipo==='dress')?'none':'block';
   if(tipo==='dress' && mangaComfyActual==='corta'){ mangaComfyActual='larga'; }
-  seleccionarMangaTipo(mangaComfyActual);
+  if(tipo!=='short') seleccionarMangaTipo(mangaComfyActual);
 }
 
 function seleccionarMangaTipo(manga){
@@ -747,6 +798,27 @@ function seleccionarMangaTipo(manga){
 
 let mangaTipoActual='larga';
 function continuarTrasMangaTipo(){
+  document.getElementById('step-manga-tipo').classList.remove('active');
+  // Short Unicolor — sin manga, sin capucha, precio fijo, mínimo 1
+  if(prendaComfyActual==='short'){
+    mangaTipoActual='short';
+    pedido.modelo='Short Unicolor'; pedido.manga=''; pedido.mangaTipoCodigo='ShortSerie'; pedido.esDress=false;
+    pedido.capucha='Sin Capucha';
+    const infoEl=document.getElementById('modelo-info-comfy'); if(infoEl) infoEl.textContent='SHORT UNICOLOR';
+    const subEl=document.getElementById('modelo-info-comfy-sub'); if(subEl) subEl.textContent='';
+    const capWrap=document.getElementById('capucha-wrap-comfy'); if(capWrap) capWrap.style.display='none';
+    modalidadComfy='A'; pedido.modalidad='A'; pedido.pack=1;
+    currentStep=2;
+    origenStep2='step-manga-tipo';
+    document.getElementById('step2').classList.add('active');
+    const minEl=document.getElementById('pack-minimo-label');
+    if(minEl) minEl.textContent='Mínimo 1 unidad · Mismo color tela y vinil';
+    const customEl=document.getElementById('pack-custom');
+    if(customEl) customEl.min='1';
+    updateProgress();
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
   const tipo=prendaComfyActual==='dress'?('dress-'+mangaComfyActual):mangaComfyActual;
   mangaTipoActual=tipo;
   const mapa={
@@ -766,20 +838,42 @@ function continuarTrasMangaTipo(){
   const bs=document.getElementById('btn-cap-sin'), bc=document.getElementById('btn-cap-con');
   if(bs){ bs.style.borderColor='var(--border)'; bs.style.background='var(--surface2)'; }
   if(bc){ bc.style.borderColor='var(--border)'; bc.style.background='var(--surface2)'; }
-  document.getElementById('step-manga-tipo').classList.remove('active');
-  if(tipo==='larga'){
-    // Manga Larga sigue el flujo existente (Opción A/B)
+  if(tipo==='larga' && prendaComfyActual==='playera'){
+    // Playera + Manga Larga: preguntar primero Una unidad o Por Packs
     currentStep=1;
     document.getElementById('step1').classList.add('active');
   } else {
-    // Los demás: precio fijo por unidad, mínimo 1, un solo color — van directo al paso de cantidad
+    // Manga Corta / Manga Cero / Dress (Larga o Cero) / Short: precio fijo, mínimo 1, un solo color — directo a cantidad
     modalidadComfy='A'; pedido.modalidad='A'; pedido.pack=1;
     currentStep=2;
+    origenStep2='step-manga-tipo';
     document.getElementById('step2').classList.add('active');
     const minEl=document.getElementById('pack-minimo-label');
     if(minEl) minEl.textContent='Mínimo 1 unidad · Mismo color tela y vinil';
     const customEl=document.getElementById('pack-custom');
     if(customEl) customEl.min='1';
+  }
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function seleccionarLargaModo(modo){
+  const btnU=document.getElementById('btn-larga-unidad'), btnP=document.getElementById('btn-larga-packs');
+  const activo=(b)=>{b.style.borderColor='var(--accent)';b.style.background='#0a2a1a';};
+  const inactivo=(b)=>{b.style.borderColor='var(--border)';b.style.background='var(--surface2)';};
+  if(modo==='unidad'){ activo(btnU); inactivo(btnP); } else { activo(btnP); inactivo(btnU); }
+  document.getElementById('step1').classList.remove('active');
+  if(modo==='unidad'){
+    modalidadComfy='A'; pedido.modalidad='A'; pedido.pack=1;
+    currentStep=2;
+    origenStep2='step1';
+    document.getElementById('step2').classList.add('active');
+    const minEl=document.getElementById('pack-minimo-label');
+    if(minEl) minEl.textContent='Mínimo 1 unidad · Mismo color tela y vinil';
+    const customEl=document.getElementById('pack-custom');
+    if(customEl) customEl.min='1';
+  } else {
+    document.getElementById('step1b').classList.add('active');
   }
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
@@ -803,14 +897,19 @@ function seleccionarModalidad(op){
   if(op==='B'){
     // Fijar pack en 3 y ir al step3b
     pedido.pack = 3;
-    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step1b').classList.remove('active');
     currentStep = '3b';
     document.getElementById('step3b').classList.add('active');
     inicializarStep3B();
     updateProgress();
     window.scrollTo({top:0,behavior:'smooth'});
   } else {
-    setTimeout(()=>goStep(2), 300);
+    document.getElementById('step1b').classList.remove('active');
+    currentStep = 2;
+    origenStep2='step1b';
+    document.getElementById('step2').classList.add('active');
+    updateProgress();
+    window.scrollTo({top:0,behavior:'smooth'});
   }
 }
 
