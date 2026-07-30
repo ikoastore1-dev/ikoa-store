@@ -150,8 +150,33 @@ window.addEventListener('load',function(){
   </div>
 
   <!-- STEP 0: MODALIDAD -->
+  <div class="step" id="step-manga-tipo">
+    <div class="step-header"><div class="step-num">Paso 2 de 7</div><div class="step-title">Elige el tipo de franela</div></div>
+    <div class="card">
+      <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">¿Qué modelo de Comfy Mega Promo quieres?</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <button onclick="seleccionarMangaTipo('larga')" id="btn-manga-larga" style="width:100%;padding:16px;background:var(--surface2);border:2px solid var(--accent);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;background:#0a2a1a;">
+          <div style="font-size:17px;margin-bottom:4px;">👕 Manga Larga</div>
+          <div style="font-size:13px;font-weight:400;color:var(--muted);">Con opción de personalizar colores por franela</div>
+        </button>
+        <button onclick="seleccionarMangaTipo('corta')" id="btn-manga-corta" style="width:100%;padding:16px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:17px;margin-bottom:4px;">👕 Manga Corta</div>
+        </button>
+        <button onclick="seleccionarMangaTipo('cero')" id="btn-manga-cero" style="width:100%;padding:16px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:17px;margin-bottom:4px;">🎽 Manga Cero</div>
+        </button>
+        <button onclick="seleccionarMangaTipo('dress-larga')" id="btn-manga-dress-larga" style="width:100%;padding:16px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:17px;margin-bottom:4px;">👗 Dress Manga Larga</div>
+        </button>
+        <button onclick="seleccionarMangaTipo('dress-cero')" id="btn-manga-dress-cero" style="width:100%;padding:16px;background:var(--surface2);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;">
+          <div style="font-size:17px;margin-bottom:4px;">👗 Dress Manga Cero</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="step" id="step1">
-    <div class="step-header"><div class="step-num">Paso 2 de 7</div><div class="step-title">Selecciona tu modalidad</div></div>
+    <div class="step-header"><div class="step-num">Paso 3 de 7</div><div class="step-title">Selecciona tu modalidad</div></div>
     <div class="card">
       <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">¿Cómo deseas personalizar tus franelas?</div>
       <div style="display:flex;flex-direction:column;gap:14px;">
@@ -262,8 +287,15 @@ window.addEventListener('load',function(){
       <!-- MODELO FIJO - solo informativo -->
       <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center;">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Modelo seleccionado</div>
-        <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">COMFY — MEGA PROMO</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:2px;">Manga Larga · Sin Capucha</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;color:var(--accent);" id="modelo-info-comfy">COMFY — MEGA PROMO</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px;" id="modelo-info-comfy-sub">Manga Larga</div>
+      </div>
+      <div id="capucha-wrap-comfy" style="margin-bottom:14px;">
+        <div class="card-title" style="margin-top:0;">¿Con o sin capucha?</div>
+        <div class="option-grid cols2">
+          <button type="button" onclick="seleccionarCapuchaComfy('Sin Capucha')" id="btn-cap-sin" style="padding:14px;background:#0a2a1a;border:2px solid var(--accent);border-radius:12px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Sin Capucha</button>
+          <button type="button" onclick="seleccionarCapuchaComfy('Con Capucha')" id="btn-cap-con" style="padding:14px;background:var(--surface2);border:2px solid var(--border);border-radius:12px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Con Capucha</button>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -677,6 +709,58 @@ function sonColoresSimilares(a,b){
 }
 
 // ── NAVEGACIÓN ────────────────────────────────────────────────
+function seleccionarCapuchaComfy(c){
+  pedido.capucha=c;
+  document.getElementById('btn-cap-sin').style.borderColor=c==='Sin Capucha'?'var(--accent)':'var(--border)';
+  document.getElementById('btn-cap-sin').style.background=c==='Sin Capucha'?'#0a2a1a':'var(--surface2)';
+  document.getElementById('btn-cap-con').style.borderColor=c==='Con Capucha'?'var(--accent)':'var(--border)';
+  document.getElementById('btn-cap-con').style.background=c==='Con Capucha'?'#0a2a1a':'var(--surface2)';
+}
+
+let mangaTipoActual='larga';
+function seleccionarMangaTipo(tipo){
+  mangaTipoActual=tipo;
+  ['larga','corta','cero','dress-larga','dress-cero'].forEach(t=>{
+    const btn=document.getElementById('btn-manga-'+t);
+    if(btn){ btn.style.borderColor=(t===tipo)?'var(--accent)':'var(--border)'; btn.style.background=(t===tipo)?'#0a2a1a':'var(--surface2)'; }
+  });
+  const mapa={
+    larga:      {modelo:'Comfy',       manga:'Manga Larga', codigo:'COMFY11', esDress:false, label:'COMFY — MEGA PROMO', sub:'Manga Larga'},
+    corta:      {modelo:'Comfy',       manga:'Manga Corta', codigo:'COMFY06', esDress:false, label:'COMFY — MEGA PROMO', sub:'Manga Corta'},
+    cero:       {modelo:'Comfy',       manga:'Manga Cero',  codigo:'COMFY07', esDress:false, label:'COMFY — MEGA PROMO', sub:'Manga Cero'},
+    'dress-larga':{modelo:'Comfy Dress', manga:'Manga Larga', codigo:'COMFY04', esDress:true, label:'COMFY DRESS — MEGA PROMO', sub:'Manga Larga'},
+    'dress-cero': {modelo:'Comfy Dress', manga:'Manga Cero',  codigo:'COMFY03', esDress:true, label:'COMFY DRESS — MEGA PROMO', sub:'Manga Cero'}
+  };
+  const cfg=mapa[tipo];
+  pedido.modelo=cfg.modelo; pedido.manga=cfg.manga; pedido.mangaTipoCodigo=cfg.codigo; pedido.esDress=cfg.esDress;
+  pedido.capucha=''; // ahora TODOS los tipos (incluyendo Dress) preguntan capucha
+  const infoEl=document.getElementById('modelo-info-comfy'); if(infoEl) infoEl.textContent=cfg.label;
+  const subEl=document.getElementById('modelo-info-comfy-sub'); if(subEl) subEl.textContent=cfg.sub;
+  const capWrap=document.getElementById('capucha-wrap-comfy');
+  if(capWrap) capWrap.style.display='block';
+  // Resetear selección visual de capucha
+  const bs=document.getElementById('btn-cap-sin'), bc=document.getElementById('btn-cap-con');
+  if(bs){ bs.style.borderColor='var(--border)'; bs.style.background='var(--surface2)'; }
+  if(bc){ bc.style.borderColor='var(--border)'; bc.style.background='var(--surface2)'; }
+  document.getElementById('step-manga-tipo').classList.remove('active');
+  if(tipo==='larga'){
+    // Manga Larga sigue el flujo existente (Opción A/B)
+    currentStep=1;
+    document.getElementById('step1').classList.add('active');
+  } else {
+    // Los demás: precio fijo por unidad, mínimo 1, un solo color — van directo al paso de cantidad
+    modalidadComfy='A'; pedido.modalidad='A'; pedido.pack=1;
+    currentStep=2;
+    document.getElementById('step2').classList.add('active');
+    const minEl=document.getElementById('pack-minimo-label');
+    if(minEl) minEl.textContent='Mínimo 1 unidad · Mismo color tela y vinil';
+    const customEl=document.getElementById('pack-custom');
+    if(customEl) customEl.min='1';
+  }
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
 let modalidadComfy = 'A'; // 'A' o 'B'
 
 function seleccionarModalidad(op){
@@ -733,7 +817,7 @@ function goStep(n){
   if(n==='3b') inicializarStep3B();
   if(n===4) inicializarPiezas();
   if(n===3){
-    pedido.modelo='Comfy'; pedido.manga='Manga Larga'; pedido.capucha='Sin Capucha';
+    // El modelo/manga/capucha ya quedaron fijados en seleccionarMangaTipo() — no se reinician aquí
   }
   if(n===5){
     if(pedido.packs.length===0){
@@ -885,10 +969,9 @@ async function intentarPaso1(){
   // Modal confirmación
   const confirmado=await mostrarModalDatos(pedido.cedula, pedido.celular, pedido.correo);
   if(!confirmado) return;
-  // Avanzar al step1 (modalidad)
+  // Avanzar al nuevo paso de tipo de manga
   document.getElementById('step0').classList.remove('active');
-  currentStep=1;
-  document.getElementById('step1').classList.add('active');
+  document.getElementById('step-manga-tipo').classList.add('active');
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -1007,7 +1090,7 @@ function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidCel(c){ return c.replace(/\D/g,'').length>=7; }
 
 function validateStep(n){
-  if(n===2){ if(!pedido.pack||pedido.pack<(modalidadComfy==='B'?3:2)){ alert('Selecciona la cantidad de franelas (mínimo '+(modalidadComfy==='B'?3:2)+')'); return false; } return true; }
+  if(n===2){ const minReq=(mangaTipoActual!=='larga')?1:(modalidadComfy==='B'?3:2); if(!pedido.pack||pedido.pack<minReq){ alert('Selecciona la cantidad de franelas (mínimo '+minReq+')'); return false; } return true; }
   if(n===3){
     if(!pedido.modelo){ alert('Selecciona el modelo'); return false; }
     if(!pedido.manga){ alert('Selecciona el tipo de manga'); return false; }
@@ -1282,7 +1365,8 @@ async function calcularPago(){
   try{
     const data=await scriptGETjson({action:'leerTodosLosPrecios'});
     if(data.ok){
-      precioComfy={bs:parseFloat(data.pack_precios&&data.pack_precios.COMFY11?data.pack_precios.COMFY11.bs:data.comfy_bs)||0, usd:parseFloat(data.pack_precios&&data.pack_precios.COMFY11?data.pack_precios.COMFY11.usd:data.comfy_usd)||0};
+      const codActivo=pedido.mangaTipoCodigo||'COMFY11';
+      precioComfy={bs:parseFloat(data.pack_precios&&data.pack_precios[codActivo]?data.pack_precios[codActivo].bs:data.comfy_bs)||0, usd:parseFloat(data.pack_precios&&data.pack_precios[codActivo]?data.pack_precios[codActivo].usd:data.comfy_usd)||0};
       precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
       const pp=data.pack_precios||{};
       precioLogoPecho={bs:parseFloat(pp['P.06']?.bs)||0, usd:parseFloat(pp['P.06']?.usd)||0};
@@ -1491,7 +1575,7 @@ async function guardarEnSheets(){
         correo:pedido.correo,
         cedula:pedido.cedula,
         celular:pedido.celular,
-        modelo:'COMFY MEGA PROMO ' + (modalidadComfy==='B'?'(Opción B)':'(Opción A)'),
+        modelo:(pedido.esDress?'COMFY DRESS MEGA PROMO':'COMFY MEGA PROMO') + (mangaTipoActual==='larga'?(' '+(modalidadComfy==='B'?'(Opción B)':'(Opción A)')):''),
         manga:pk.manga,
         capucha:pk.capucha,
         pack:`${pk.pack}PACK`,
