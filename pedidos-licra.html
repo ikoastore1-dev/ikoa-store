@@ -1206,6 +1206,7 @@ function savePiezas(){
 
 // ── PAGO ──────────────────────────────────────────────────────
 let precioComfy={bs:0,usd:0}, precioRecarga={bs:0,usd:0}, precioCapucha={bs:0,usd:0};
+let precioLogoPecho={bs:0,usd:0}, precioLogoEspalda={bs:0,usd:0}, precioLogoManga={bs:0,usd:0};
 let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
 let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
 
@@ -1230,6 +1231,10 @@ async function calcularPago(){
     if(data.ok){
       precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
       precioCapucha={bs:parseFloat(data.capucha_bs)||0, usd:parseFloat(data.capucha_usd)||0};
+      const ppLogos=data.pack_precios||{};
+      precioLogoPecho={bs:parseFloat(ppLogos['P.06']?.bs)||0, usd:parseFloat(ppLogos['P.06']?.usd)||0};
+      precioLogoEspalda={bs:parseFloat(ppLogos['P.05']?.bs)||0, usd:parseFloat(ppLogos['P.05']?.usd)||0};
+      precioLogoManga={bs:parseFloat(ppLogos['P.04']?.bs)||0, usd:parseFloat(ppLogos['P.04']?.usd)||0};
       // tasa BCV
       if(data.tasa_bcv){
         tasaBcvActual=parseFloat(data.tasa_bcv)||0;
@@ -1252,12 +1257,18 @@ async function calcularPago(){
     'CABALLERO XL','CABALLERO XXL','CABALLERO 3XL','CABALLERO XXXL','CABALLERO 2XL'];
 
   let totalBs=0, totalUsd=0;
+  let totalLogosPecho=0, totalLogosEspalda=0, totalLogosManga=0, totalCapuchas=0, totalRecargasG=0;
   let desglose=[];
 
   pedido.packs.forEach((pk,i)=>{
     const franelas=pk.piezas.length||pk.pack||0;
     const recargas=franelas===1?0:pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase().trim())).length;
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
+    const logosPecho=pk.piezas.filter(p=>p.logoPecho).length;
+    const logosEspalda=pk.piezas.filter(p=>p.logoEspalda).length;
+    const logosManga=pk.piezas.filter(p=>p.logoManga).length;
+    totalLogosPecho+=logosPecho; totalLogosEspalda+=logosEspalda; totalLogosManga+=logosManga;
+    totalCapuchas+=capuchas; totalRecargasG+=recargas;
 
     let packBs=0, packUsd=0;
     const esMangaCorta = pk.manga === 'Manga Corta' || pk.modelo === 'Licra Protect Manga Corta';
@@ -1287,17 +1298,21 @@ async function calcularPago(){
     const recargaUsd=recargas*precioRecarga.usd;
     const capuchaBs=capuchas*precioCapucha.bs;
     const capuchaUsd=capuchas*precioCapucha.usd;
+    const logosBs=logosPecho*precioLogoPecho.bs+logosEspalda*precioLogoEspalda.bs+logosManga*precioLogoManga.bs;
+    const logosUsd=logosPecho*precioLogoPecho.usd+logosEspalda*precioLogoEspalda.usd+logosManga*precioLogoManga.usd;
 
-    totalBs+=packBs+recargaBs+capuchaBs;
-    totalUsd+=packUsd+recargaUsd+capuchaUsd;
+    totalBs+=packBs+recargaBs+capuchaBs+logosBs;
+    totalUsd+=packUsd+recargaUsd+capuchaUsd+logosUsd;
 
     const isDressCalc = pk.modelo && pk.modelo.toLowerCase().includes('dress');
     const prendaLabel = isDressCalc ? 'vestido' : 'franela';
     const prendasLabel = isDressCalc ? 'vestidos' : 'franelas';
     const label=franelas===1?`1 ${prendaLabel.charAt(0).toUpperCase()+prendaLabel.slice(1)}`:`${franelas} ${prendasLabel}`;
+    const logosTxt=[logosPecho>0?`${logosPecho} logo pecho`:'',logosEspalda>0?`${logosEspalda} logo espalda`:'',logosManga>0?`${logosManga} logo manga`:''].filter(Boolean).join(', ');
     desglose.push(`Pack ${i+1}: ${label}`+
       (recargas>0?` + ${recargas} plus`:'')+
-      (capuchas>0?` + ${capuchas} capucha(s)`:''));
+      (capuchas>0?` + ${capuchas} capucha(s)`:'')+
+      (logosTxt?` + ${logosTxt}`:''));
   });
 
   pagoTotalBs=Math.round(totalBs*100)/100;
@@ -1305,7 +1320,12 @@ async function calcularPago(){
   pagoTotalCasheaBs=Math.round(pagoTotalBs*(1+casheaPct/100)*100)/100;
   pagoTotalCasheaUsd=tasaBcvActual>0?Math.round((pagoTotalCasheaBs/tasaBcvActual)*100)/100:0;
 
-  document.getElementById('pago-desglose').innerHTML=desglose.join('<br>');
+  document.getElementById('pago-desglose').innerHTML=desglose.join('<br>')+
+    (totalRecargasG>0?`<br><span style="color:var(--muted);">• Recarga talla grande:</span> Bs ${precioRecarga.bs.toFixed(2)} / $${precioRecarga.usd.toFixed(2)}`:'')+
+    (totalCapuchas>0?`<br><span style="color:var(--muted);">• Con Capucha (${totalCapuchas}):</span> Bs ${precioCapucha.bs.toFixed(2)} / $${precioCapucha.usd.toFixed(2)} c/u`:'')+
+    (totalLogosPecho>0?`<br><span style="color:var(--muted);">• Logo Pecho (${totalLogosPecho}):</span> Bs ${precioLogoPecho.bs.toFixed(2)} / $${precioLogoPecho.usd.toFixed(2)} c/u`:'')+
+    (totalLogosEspalda>0?`<br><span style="color:var(--muted);">• Logo Espalda (${totalLogosEspalda}):</span> Bs ${precioLogoEspalda.bs.toFixed(2)} / $${precioLogoEspalda.usd.toFixed(2)} c/u`:'')+
+    (totalLogosManga>0?`<br><span style="color:var(--muted);">• Logo Manga (${totalLogosManga}):</span> Bs ${precioLogoManga.bs.toFixed(2)} / $${precioLogoManga.usd.toFixed(2)} c/u`:'');
   document.getElementById('pago-total-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
   document.getElementById('pago-total-usd').textContent='$'+pagoTotalUsd.toFixed(2);
   document.getElementById('pm-monto-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
