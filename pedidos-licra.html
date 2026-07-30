@@ -1278,13 +1278,9 @@ async function calcularPago(){
       const pp=window._packPrecios&&window._packPrecios['LICRA01'];
       if(pp){ packBs=parseFloat(pp.bs)||0; packUsd=parseFloat(pp.usd)||0; }
     } else {
-      // Descomponer en combinación de packs
-      const combos=descomponerPacks(franelas);
-      combos.forEach(c=>{
-        const key=c+'PACK.L.01';
-        const pp=window._packPrecios&&window._packPrecios[key];
-        if(pp){ packBs+=parseFloat(pp.bs)||0; packUsd+=parseFloat(pp.usd)||0; }
-      });
+      // Manga Larga, 2 o más unidades → precio fijo LICRA02 por unidad (sin descuento por pack)
+      const pp=window._packPrecios&&window._packPrecios['LICRA02'];
+      if(pp){ packBs=(parseFloat(pp.bs)||0)*franelas; packUsd=(parseFloat(pp.usd)||0)*franelas; }
     }
 
     const recargaBs=recargas*precioRecarga.bs;
@@ -1298,7 +1294,7 @@ async function calcularPago(){
     const isDressCalc = pk.modelo && pk.modelo.toLowerCase().includes('dress');
     const prendaLabel = isDressCalc ? 'vestido' : 'franela';
     const prendasLabel = isDressCalc ? 'vestidos' : 'franelas';
-    const label=franelas===1?`1 ${prendaLabel.charAt(0).toUpperCase()+prendaLabel.slice(1)}`:`${franelas} ${prendasLabel} (${descomponerPacks(franelas).map(c=>c+'P').join('+')})`;
+    const label=franelas===1?`1 ${prendaLabel.charAt(0).toUpperCase()+prendaLabel.slice(1)}`:`${franelas} ${prendasLabel}`;
     desglose.push(`Pack ${i+1}: ${label}`+
       (recargas>0?` + ${recargas} plus`:'')+
       (capuchas>0?` + ${capuchas} capucha(s)`:''));
