@@ -885,6 +885,7 @@ function seleccionarLargaModo(modo){
   document.getElementById('step1').classList.remove('active');
   if(modo==='unidad'){
     modalidadComfy='A'; pedido.modalidad='A'; pedido.pack=1;
+    pedido.mangaTipoCodigo='COMFY01'; // Una unidad usa código distinto al de "Por Packs"
     origenStep3='step1';
     currentStep=3;
     document.getElementById('step3').classList.add('active');
@@ -1492,6 +1493,7 @@ function savePiezas(){
 // ── PAGO ──────────────────────────────────────────────────────
 let precioComfy={bs:0,usd:0}, precioRecarga={bs:0,usd:0};
 let precioLogoPecho={bs:0,usd:0}, precioLogoEspalda={bs:0,usd:0}, precioLogoManga={bs:0,usd:0};
+let precioCapucha={bs:0,usd:0};
 let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
 let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
 
@@ -1512,6 +1514,7 @@ async function calcularPago(){
       precioLogoPecho={bs:parseFloat(pp['P.06']?.bs)||0, usd:parseFloat(pp['P.06']?.usd)||0};
       precioLogoEspalda={bs:parseFloat(pp['P.05']?.bs)||0, usd:parseFloat(pp['P.05']?.usd)||0};
       precioLogoManga={bs:parseFloat(pp['P.04']?.bs)||0, usd:parseFloat(pp['P.04']?.usd)||0};
+      precioCapucha={bs:parseFloat(data.capucha_bs)||0, usd:parseFloat(data.capucha_usd)||0};
       if(data.tasa_bcv){
         tasaBcvActual=parseFloat(data.tasa_bcv)||0;
         document.getElementById('pago-tasa-bcv').textContent='Bs '+tasaBcvActual.toFixed(2);
@@ -1531,7 +1534,7 @@ async function calcularPago(){
   const tallasGrandes=['XL','XXL','3XL','XXXL','2XL',
     'DAMA XL','DAMA XXL','DAMA 3XL','DAMA XXXL','DAMA 2XL',
     'CABALLERO XL','CABALLERO XXL','CABALLERO 3XL','CABALLERO XXXL','CABALLERO 2XL'];
-  let totalFranelas=0, totalRecargas=0, totalLogosPecho=0, totalLogosEspalda=0, totalLogosManga=0;
+  let totalFranelas=0, totalRecargas=0, totalLogosPecho=0, totalLogosEspalda=0, totalLogosManga=0, totalConCapucha=0;
   let desglose=[];
   pedido.packs.forEach((pk,i)=>{
     const franelas=pk.piezas.length||pk.pack||0;
@@ -1539,19 +1542,23 @@ async function calcularPago(){
     const logosPecho=pk.piezas.filter(p=>p.logoPecho).length;
     const logosEspalda=pk.piezas.filter(p=>p.logoEspalda).length;
     const logosManga=pk.piezas.filter(p=>p.logoManga).length;
+    const conCapucha=(String(pk.capucha||'').trim()==='Con Capucha')?franelas:0;
     totalFranelas+=franelas;
     totalRecargas+=recargas;
     totalLogosPecho+=logosPecho;
     totalLogosEspalda+=logosEspalda;
     totalLogosManga+=logosManga;
+    totalConCapucha+=conCapucha;
     const logosTxt=[logosPecho>0?`${logosPecho} logo pecho`:'',logosEspalda>0?`${logosEspalda} logo espalda`:'',logosManga>0?`${logosManga} logo manga`:''].filter(Boolean).join(', ');
-    desglose.push(`Pack ${i+1}: ${franelas} franelas${recargas>0?` + ${recargas} recarga(s) talla grande`:''}${logosTxt?` + ${logosTxt}`:''}`);
+    desglose.push(`Pack ${i+1}: ${franelas} franelas${recargas>0?` + ${recargas} recarga(s) talla grande`:''}${conCapucha>0?` + ${conCapucha} con capucha`:''}${logosTxt?` + ${logosTxt}`:''}`);
   });
 
   const totalLogosBs=totalLogosPecho*precioLogoPecho.bs+totalLogosEspalda*precioLogoEspalda.bs+totalLogosManga*precioLogoManga.bs;
   const totalLogosUsd=totalLogosPecho*precioLogoPecho.usd+totalLogosEspalda*precioLogoEspalda.usd+totalLogosManga*precioLogoManga.usd;
-  pagoTotalBs=Math.round((totalFranelas*precioComfy.bs + totalRecargas*precioRecarga.bs + totalLogosBs)*100)/100;
-  pagoTotalUsd=Math.round((totalFranelas*precioComfy.usd + totalRecargas*precioRecarga.usd + totalLogosUsd)*100)/100;
+  const totalCapuchaBs=totalConCapucha*precioCapucha.bs;
+  const totalCapuchaUsd=totalConCapucha*precioCapucha.usd;
+  pagoTotalBs=Math.round((totalFranelas*precioComfy.bs + totalRecargas*precioRecarga.bs + totalLogosBs + totalCapuchaBs)*100)/100;
+  pagoTotalUsd=Math.round((totalFranelas*precioComfy.usd + totalRecargas*precioRecarga.usd + totalLogosUsd + totalCapuchaUsd)*100)/100;
   pagoTotalCasheaBs=Math.round(pagoTotalBs*(1+casheaPct/100)*100)/100;
   pagoTotalCasheaUsd=tasaBcvActual>0?Math.round((pagoTotalCasheaBs/tasaBcvActual)*100)/100:0;
 
