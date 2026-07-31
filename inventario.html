@@ -1604,7 +1604,6 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Producto</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <button onclick="cotModalSelectApp('comfy')" id="cotmbtn-comfy" class="cot-modal-app-btn" style="padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;">Comfy Mega Promo</button>
-          <button onclick="cotModalSelectApp('fullcomfy')" id="cotmbtn-fullcomfy" class="cot-modal-app-btn" style="padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;">Full Comfy</button>
           <button onclick="cotModalSelectApp('licra')" id="cotmbtn-licra" class="cot-modal-app-btn" style="padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;">Licra Protect</button>
           <button onclick="cotModalSelectApp('coleccion')" id="cotmbtn-coleccion" class="cot-modal-app-btn" style="padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;">Licra Coleccion</button>
           <button onclick="cotModalSelectApp('empresarial')" id="cotmbtn-empresarial" class="cot-modal-app-btn" style="padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;">Empresarial</button>
@@ -8116,11 +8115,11 @@ const COT_DEF = {
 
   comfy: {
     nombre:'Comfy Mega Promo', tipo:'comfy',
-    manga:'Manga Larga', capuchaCod:null,
+    manga:'Manga Larga', capuchaCod:'C.01',
     precioUnitCod:'COMFY11', plusCod:'S.COMFY.03',
     plusTallas:['XL','2XL','3XL'], plusDesde1Pack:true,
     hojaColores:'COLORES.COMFY', colorLibre:false,
-    tallas:'todas', minUnidades:2
+    tallas:'todas', minUnidades:1
   },
 
   fullcomfy: {
@@ -8151,13 +8150,13 @@ const COT_DEF = {
     packs:['1PACK','2PACK','3PACK','4PACK','5PACK','6PACK','7PACK','8PACK'],
     packCods:{
       1:[['LICRA01',1]],
-      2:[['2PACK.L.01',2]],
-      3:[['3PACK.L.01',3]],
-      4:[['4PACK.L.01',4]],
-      5:[['2PACK.L.01',2],['3PACK.L.01',3]],
-      6:[['3PACK.L.01',3],['3PACK.L.01',3]],
-      7:[['3PACK.L.01',3],['4PACK.L.01',4]],
-      8:[['4PACK.L.01',4],['4PACK.L.01',4]]
+      2:[['LICRA02',1],['LICRA02',1]],
+      3:[['LICRA02',1],['LICRA02',1],['LICRA02',1]],
+      4:[['LICRA02',1],['LICRA02',1],['LICRA02',1],['LICRA02',1]],
+      5:[['LICRA02',1],['LICRA02',1],['LICRA02',1],['LICRA02',1],['LICRA02',1]],
+      6:[['LICRA02',1],['LICRA02',1],['LICRA02',1],['LICRA02',1],['LICRA02',1],['LICRA02',1]],
+      7:[['LICRA02',1],['LICRA02',1],['LICRA02',1],['LICRA02',1],['LICRA02',1],['LICRA02',1],['LICRA02',1]],
+      8:[['LICRA02',1],['LICRA02',1],['LICRA02',1],['LICRA02',1],['LICRA02',1],['LICRA02',1],['LICRA02',1],['LICRA02',1]]
     }
   },
 
@@ -8385,6 +8384,10 @@ function cotPrecioBS(pp,cod){
 function cotCalcPack(appKey,packN,pp,precios){
   const def=COT_DEF[appKey];
   if(appKey==='comfy'){
+    if(packN===1){
+      const u1=cotPrecioUSD(pp,'COMFY01')||0, b1=cotPrecioBS(pp,'COMFY01')||0;
+      return {totalUSD:u1, precioUnitUSD:u1, totalBS:b1, precioUnitBS:b1};
+    }
     const u=parseFloat(precios.comfy_usd)||0;
     const b=parseFloat(precios.comfy_bs)||0;
     return {totalUSD:u*packN, precioUnitUSD:u, totalBS:b*packN, precioUnitBS:b};
@@ -8854,7 +8857,7 @@ async function cotModalSelectApp(app){
 
   // Comfy, fullcomfy y licra usan input manual de cantidad
   if(app==='comfy'||app==='fullcomfy'||app==='licra'){
-    const minVal = app==='comfy' ? 2 : 1;
+    const minVal = 1;
     cantWrap.style.display='block'; packsDiv.style.display='none';
     const inp=document.getElementById('cotm-cantidad');
     inp.value=minVal; inp.min=minVal;
@@ -8869,9 +8872,9 @@ async function cotModalSelectApp(app){
       packsDiv.appendChild(b);
     });
   }
-  // Tipo de prenda: Franela normal o Dress (solo Full Comfy y Licra Protect la ofrecen)
+  // Tipo de prenda: Franela normal o Dress (Full Comfy, Licra Protect y Comfy Mega Promo)
   let tipoPrendaSec=document.getElementById('cotm-tipo-prenda-section');
-  if(app==='fullcomfy'||app==='licra'){
+  if(app==='fullcomfy'||app==='licra'||app==='comfy'){
     if(!tipoPrendaSec){
       tipoPrendaSec=document.createElement('div');
       tipoPrendaSec.id='cotm-tipo-prenda-section';
@@ -8891,7 +8894,7 @@ async function cotModalSelectApp(app){
         <div style="display:flex;gap:8px;">
           <button type="button" id="cotm-mangaf-larga" onclick="cotmSelMangaFranela('Manga Larga')" style="flex:1;padding:9px;border:2px solid var(--accent);border-radius:8px;background:#0a2a1e;color:var(--accent);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Larga</button>
           <button type="button" id="cotm-mangaf-corta" onclick="cotmSelMangaFranela('Manga Corta')" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Corta</button>
-          ${app==='fullcomfy'?`<button type="button" id="cotm-mangaf-cero" onclick="cotmSelMangaFranela('Manga Cero')" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Cero</button>`:''}
+          ${(app==='fullcomfy'||app==='comfy')?`<button type="button" id="cotm-mangaf-cero" onclick="cotmSelMangaFranela('Manga Cero')" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Cero</button>`:''}
         </div>
       </div>
       <div id="cotm-manga-dress-wrap" style="display:none;margin-top:10px;">
@@ -9599,7 +9602,7 @@ function cotGuardarItem(){
   }
 
   // ── COMFY / FULLCOMFY / LICRA ────────────────────────────
-  if(cotmEsDress && (cotmApp==='fullcomfy'||cotmApp==='licra')){
+  if(cotmEsDress && (cotmApp==='fullcomfy'||cotmApp==='licra'||cotmApp==='comfy')){
     // Dress: precio por unidad (sin pack), según línea + manga
     const skuDress = cotmApp==='licra'
       ? (cotmMangaDress==='Manga Larga'?'LICRA04':'LICRA03')
@@ -9630,11 +9633,11 @@ function cotGuardarItem(){
   }
   const packN=parseInt(cotmPack)||tallas.length; // para lookup de precio según pack seleccionado
   const undsReal=tallas.length; // unidades reales según tallas expandidas
-  const esMangaAlterna=(cotmApp==='fullcomfy'||cotmApp==='licra')&&cotmMangaFranela!=='Manga Larga';
+  const esMangaAlterna=(cotmApp==='fullcomfy'||cotmApp==='licra'||cotmApp==='comfy')&&cotmMangaFranela!=='Manga Larga';
   let precioUnitUSD, precioUnitBS;
   if(esMangaAlterna){
     // Manga Corta / Manga Cero — precio plano por unidad (sin descuento por pack), sin recarga de talla plus
-    const skuAlterno = cotmApp==='fullcomfy'
+    const skuAlterno = (cotmApp==='fullcomfy'||cotmApp==='comfy')
       ? (cotmMangaFranela==='Manga Corta'?'COMFY06':'COMFY07')
       : 'LICRA06'; // Licra solo ofrece Manga Corta (no Cero) en franela normal
     precioUnitUSD=cotPrecioUSD(pp,skuAlterno)||0;
@@ -9680,7 +9683,7 @@ function cotGuardarItem(){
     app:cotmApp, nombreApp:nombreConManga,
     codigo:cotmApp+':'+packN,
     pack:`${undsReal} ud${undsReal>1?'s':''}`,
-    manga:esMangaAlterna?cotmMangaFranela:'Manga Larga', capucha:cotmApp==='comfy'?'Sin Capucha':cotmCapucha,
+    manga:esMangaAlterna?cotmMangaFranela:'Manga Larga', capucha:cotmCapucha,
     tela, vinil, tallas, nPlus,
     precioUnitUSD, precioUnitBS, recargaTotal, recargaTotalBs, capuchaTotal, capuchaTotalBs,
     logoEspalda:logoEspTotal, logoEspaldaBs:logoEspTotalBs,
