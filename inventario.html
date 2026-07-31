@@ -5700,7 +5700,9 @@ async function confirmarPlanificacion(){
         codigoC:codigoC,
         fecha_produccion:fechaProd,
         usuario:USUARIOS[unlock],
-        cod_make:codMake
+        cod_make:codMake,
+        necesita_arte:pendingCola.necesitaArte?'si':'no',
+        cod_arte:pendingCola.necesitaArte?codMake:''
       });
       if(res.ok) lastCodigoP=res.codigoP;
       else throw new Error(res.error||'Error en '+codigoC);
@@ -5775,32 +5777,21 @@ async function confirmarPlanificacion(){
           cashea_flag:pendingCola.cashea||'NO',
           cashea_pct_aplicado:pendingCola.casheaPct||'',
           monto_cashea_usd:pendingCola.codCashea||'',
-          fuente:'Cola'
+          fuente:'Cola',
+          necesita_arte:pendingCola.necesitaArte?'si':'no',
+          cod_arte:pendingCola.necesitaArte?codMake:''
         });
       }
     }catch(e){ console.warn('registrarProduccion error:',e); }
-    // Generar SVG de nombres y subir a Dropbox
-    let svgFalloMsg='';
-    try{
-      const piezasStr = (pendingCola.allPacks||[]).map(pk=>pk.piezas||'').join(' | ');
-      const svgRes = await scriptGETjson({
-        action:'generarSVGNombres',
-        codigo_c: codMake||lastCodigoP,
-        piezas: piezasStr
-      });
-      if(svgRes.ok) console.log('SVG generado:', svgRes.archivo);
-      else { console.warn('SVG error:', svgRes.error); svgFalloMsg=svgRes.error||'Error desconocido'; }
-    }catch(e){ console.warn('SVG nombres error:',e); svgFalloMsg=e.message||'Error de red'; }
     if(response.ok||response.type==='opaque'){
       msgEl.style.background='var(--surface2)';
       msgEl.style.border='1px solid #1a4a2a';
       msgEl.style.color='var(--accent)';
-      msgEl.innerHTML=`✅ Enviado a producción · <b>${lastCodigoP}</b> · COD: ${codMake||'—'} · ${USUARIOS[unlock]}`+
-        (svgFalloMsg?`<br><span style="color:var(--warn);">⚠️ No se generó el DXF de nombres: ${svgFalloMsg}</span>`:'');
+      msgEl.innerHTML=`✅ Enviado a producción · <b>${lastCodigoP}</b> · COD: ${codMake||'—'} · ${USUARIOS[unlock]}`;
       // Buscar automáticamente el archivo de Imprenta que Make.com genera para este COD,
       // y mostrarlo listo para imprimir apenas esté disponible — sin ocultar el mensaje mientras tanto.
       if(codMake) rvEsperarYAbrirImprentaPorCOD(codMake, msgEl);
-      else setTimeout(()=>{msgEl.style.display='none';cargarCola();},svgFalloMsg?9000:5000);
+      else setTimeout(()=>{msgEl.style.display='none';cargarCola();},5000);
     } else {
       throw new Error('Error del servidor');
     }
