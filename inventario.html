@@ -1191,8 +1191,6 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
                 <option value="ZOOM">ZOOM</option>
                 <option value="TEALCA">TEALCA</option>
                 <option value="TIENDA MCY">TIENDA MCY</option>
-                <option value="SHOWROOM CARACAS">SHOWROOM CARACAS</option>
-                <option value="DELIVERY CARACAS">DELIVERY CARACAS</option>
                 <option value="DELIVERY MARACAY">DELIVERY MARACAY</option>
                 <option value="Otro">Otro</option>
               </select>
@@ -5305,6 +5303,25 @@ function filtrarEnviados(q){
 // ── COLA PLANIFICACIÓN ────────────────────────────────────────
 let pendingCola=null;
 
+async function consultarCODActual(spanId){
+  const el=document.getElementById(spanId);
+  if(!el) return;
+  el.textContent='⏳ Consultando...';
+  try{
+    const data=await scriptGETjson({action:'leerCOD'});
+    if(data.ok) el.textContent='COD: '+data.codSiguiente;
+    else el.textContent='⚠️ No se pudo leer';
+  }catch(e){
+    el.textContent='⚠️ Error de conexión';
+  }
+}
+
+function toggleArteCola(colaKey, checkboxId){
+  const checked=document.getElementById(checkboxId).checked;
+  const key='_colaData_'+colaKey;
+  if(window[key]) window[key].necesitaArte=checked;
+}
+
 async function cargarCola(){
   const listEl=document.getElementById('cola-list');
   listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando cola...</div>`;
@@ -5431,7 +5448,13 @@ async function cargarCola(){
               style="padding:8px 14px;background:#1a1a10;border:1.5px solid var(--warn);border-radius:8px;color:var(--warn);font-size:13px;font-weight:700;cursor:pointer;">💾</button>
           </div>
         </div>`;
-        html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+        html+=`<div style="display:flex;align-items:center;gap:8px;margin-top:10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;flex-wrap:wrap;">
+          <input type="checkbox" id="arte-cola-${base}" onchange="toggleArteCola('${colaKey}','arte-cola-${base}')" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+          <label for="arte-cola-${base}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🎨 Necesita Arte</label>
+          <button type="button" onclick="consultarCODActual('cod-guia-${base}')" style="margin-left:auto;padding:6px 10px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;">🔍 Ver COD actual</button>
+          <span id="cod-guia-${base}" style="font-size:12px;color:var(--accent);font-weight:700;"></span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
           <button onclick='abrirEditarCola(window["_colaData_${colaKey}"])'
             style="padding:13px;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:10px;color:var(--accent2);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">✏️ EDITAR</button>
           <button onclick='abrirModalPlanificacion(window["_colaData_${colaKey}"])'
@@ -5640,8 +5663,8 @@ async function confirmarPlanificacion(){
     const makeBody=new FormData();
     makeBody.append('tipo_operacion','COD');
     makeBody.append('status','COD');
-    makeBody.append('selector_agregar_arte','no');
-    makeBody.append('nombre_arte','');
+    makeBody.append('selector_agregar_arte',pendingCola.necesitaArte?'si':'no');
+    makeBody.append('nombre_arte',pendingCola.necesitaArte?codMake:'');
     makeBody.append('nombre',pendingCola.nombre||'');
     makeBody.append('correo',pendingCola.correo||'');
     makeBody.append('cedula',pendingCola.cedula||'');
