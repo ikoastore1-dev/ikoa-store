@@ -1940,6 +1940,14 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div style="font-size:11px;color:var(--muted);" id="kpi-cashea-pct">—</div>
       </div>
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Ventas Cashea (Bs)</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:#00ff88;" id="kpi-cashea-bs">—</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Ventas Cashea ($)</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:#00ff88;" id="kpi-cashea-usd">—</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Ticket Prom.</div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--warn);" id="kpi-ticket">—</div>
       </div>
@@ -3099,6 +3107,18 @@ function renderVentas(){
   },0);
   const totalPed = rows.length;
   const cashea = rows.filter(r=>String(r.cashea||'').toUpperCase()==='SI'||String(r.cashea||'').toUpperCase()==='YES'||String(r.cashea||'')==='true');
+  const casheaBs = cashea.reduce((s,r)=>{
+    const m=parseFloat(r.monto)||0;
+    const esDivisa=String(r.moneda||'').trim()==='Divisa';
+    if(esDivisa){ const t=parseFloat(r.tasa)||0; return s + (t>0 ? m*t : 0); }
+    return s + m;
+  },0);
+  const casheaUsd = cashea.reduce((s,r)=>{
+    const m=parseFloat(r.monto)||0, t=parseFloat(r.tasa)||0;
+    const esDivisa=String(r.moneda||'').trim()==='Divisa';
+    if(esDivisa) return s + m;
+    return s + (t>0 ? m/t : 0);
+  },0);
   const ticket = totalPed>0 ? totalBs/totalPed : 0;
 
   document.getElementById('kpi-total-bs').textContent = 'Bs '+totalBs.toLocaleString('es-VE',{maximumFractionDigits:2});
@@ -3106,6 +3126,8 @@ function renderVentas(){
   document.getElementById('kpi-total-ped').textContent = totalPed;
   document.getElementById('kpi-cashea').textContent = cashea.length;
   document.getElementById('kpi-cashea-pct').textContent = totalPed>0 ? Math.round(cashea.length/totalPed*100)+'%' : '0%';
+  document.getElementById('kpi-cashea-bs').textContent = 'Bs '+casheaBs.toLocaleString('es-VE',{maximumFractionDigits:2});
+  document.getElementById('kpi-cashea-usd').textContent = '$'+casheaUsd.toLocaleString('es-VE',{maximumFractionDigits:2});
   document.getElementById('kpi-ticket').textContent = 'Bs '+ticket.toLocaleString('es-VE',{maximumFractionDigits:0});
 
   // KPIs Gastos
