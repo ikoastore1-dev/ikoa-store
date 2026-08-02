@@ -1896,6 +1896,15 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
   <!-- TAB VENTAS -->
   <div id="tab-ventas" style="display:none;padding:16px;">
+    <div id="ventas-lock-overlay" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;max-width:340px;margin:40px auto;">
+      <div style="font-size:32px;margin-bottom:10px;">🔒</div>
+      <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;">Sección protegida</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Ingresa tu código para ver Ventas</div>
+      <input class="modal-cod-input" type="password" id="ventas-lock-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarVentasLock()" style="margin-bottom:10px;">
+      <div class="modal-error" id="ventas-lock-error"></div>
+      <button class="modal-confirm" onclick="confirmarVentasLock()" style="width:100%;margin-top:8px;">Desbloquear</button>
+    </div>
+    <div id="ventas-contenido">
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;">📊 Ventas</div>
 
     <!-- Filtros -->
@@ -2003,6 +2012,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   </div>
 
@@ -3222,6 +3232,16 @@ function renderVentas(){
     </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">Sin ventas en este período</td></tr>';
 }
 
+function confirmarVentasLock(){
+  const unlock=document.getElementById('ventas-lock-unlock').value.trim();
+  const errEl=document.getElementById('ventas-lock-error');
+  if(unlock!=='271010'){ errEl.textContent='❌ Código incorrecto — acceso denegado'; document.getElementById('ventas-lock-unlock').value=''; return; }
+  document.getElementById('ventas-lock-overlay').style.display='none';
+  document.getElementById('ventas-contenido').style.display='block';
+  setVentasPeriodo('semana');
+  cargarVentas();
+}
+
 function switchTab(tab){
   ['tasa','stock','etiquetas','aprobaciones','respaldo','gestion','taller','programacion','ventas','gastos'].forEach(t=>{
     const el=document.getElementById('tab-'+t);
@@ -3239,7 +3259,13 @@ function switchTab(tab){
     const el=document.getElementById(id);
     if(el) el.style.display='none';
   });
-  if(tab==='ventas'){ setVentasPeriodo('semana'); cargarVentas(); }
+  if(tab==='ventas'){
+    document.getElementById('ventas-lock-overlay').style.display='block';
+    document.getElementById('ventas-contenido').style.display='none';
+    document.getElementById('ventas-lock-unlock').value='';
+    document.getElementById('ventas-lock-error').textContent='';
+    setTimeout(()=>document.getElementById('ventas-lock-unlock').focus(),100);
+  }
   if(tab==='gastos') initGastos();
   if(tab!=='aprobaciones'){
     // Ocultar sección cashea al salir de aprobaciones
