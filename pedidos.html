@@ -824,6 +824,7 @@ function seleccionarMangaTipo(manga){
 
 let mangaTipoActual='larga';
 function continuarTrasMangaTipo(){
+  pasoPorOpcionAB=false; // se pone en true solo si el usuario elige "Por Packs" en seleccionarLargaModo
   document.getElementById('step-manga-tipo').classList.remove('active');
   // Short Unicolor — sin manga, sin capucha, precio fijo, mínimo 1
   if(prendaComfyActual==='short'){
@@ -886,10 +887,12 @@ function seleccionarLargaModo(modo){
   if(modo==='unidad'){
     modalidadComfy='A'; pedido.modalidad='A'; pedido.pack=1;
     pedido.mangaTipoCodigo='COMFY01'; // Una unidad usa código distinto al de "Por Packs"
+    pasoPorOpcionAB=false;
     origenStep3='step1';
     currentStep=3;
     document.getElementById('step3').classList.add('active');
   } else {
+    pasoPorOpcionAB=true;
     document.getElementById('step1b').classList.add('active');
   }
   updateProgress();
@@ -897,6 +900,7 @@ function seleccionarLargaModo(modo){
 }
 
 let modalidadComfy = 'A'; // 'A' o 'B'
+let pasoPorOpcionAB = false; // true solo si eligió "Por Packs" (no "Una unidad")
 
 function seleccionarModalidad(op){
   modalidadComfy = op;
@@ -1714,7 +1718,8 @@ async function guardarEnSheets(){
   let codigoPrincipal='';
   for(let i=0; i<pedido.packs.length; i++){
     const pk=pedido.packs[i];
-    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla} - ${p.nombre}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}`).join(' | ');
+    const capuchaTxt=(pk.capucha==='Con Capucha')?' CON CAPUCHA':'';
+    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${capuchaTxt} - ${p.nombre}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}`).join(' | ');
     try{
       const res=await scriptGETjson({
         action:'addSolicitud',
@@ -1723,7 +1728,7 @@ async function guardarEnSheets(){
         correo:pedido.correo,
         cedula:pedido.cedula,
         celular:pedido.celular,
-        modelo:(pedido.esDress?'COMFY DRESS MEGA PROMO':'COMFY MEGA PROMO') + (mangaTipoActual==='larga'?(' '+(modalidadComfy==='B'?'(Opción B)':'(Opción A)')):''),
+        modelo:(pedido.esDress?'COMFY DRESS MEGA PROMO':'COMFY MEGA PROMO') + (pasoPorOpcionAB?(' '+(modalidadComfy==='B'?'(Opción B)':'(Opción A)')):''),
         manga:pk.manga,
         capucha:pk.capucha,
         pack:`${pk.pack}PACK`,
