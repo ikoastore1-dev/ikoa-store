@@ -978,7 +978,7 @@ function selectColorSerie(btn,color){
     return;
   }
 
-  const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short','Cotton Licra','Traje de Baño']:selectedSerie==='ChaquetaReflectiva'?['Chaqueta']:['Playera','Dress','Cortaviento','Short','Traje de Baño'];
+  const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short','Cotton Licra','Traje de Baño']:selectedSerie==='ChaquetaReflectiva'?['Chaqueta']:selectedSerie==='TiburonBallena'?['Playera','Dress','Cortaviento','Short','Traje de Baño','Toalla']:['Playera','Dress','Cortaviento','Short','Traje de Baño'];
   document.getElementById('variante-grid').innerHTML=variantes.map(v=>`<button class="opt-btn" onclick="selectVariante(this,'${v}')">${v.toUpperCase()}</button>`).join('');
   document.getElementById('variante-wrap').style.display='block';
   document.getElementById('producto-seleccionado').style.display='none';
@@ -999,6 +999,16 @@ function selectVariante(btn,variante){
       <button class="opt-btn" onclick="selectTrajeBano(this,'Bikini Manga Larga','${baseCod}BikiniMLarga')">BIKINI MANGA LARGA</button>
     `;
     document.getElementById('producto-seleccionado').style.display='none';
+    return;
+  }
+
+  // Toalla dentro de la serie Tiburón Ballena — código propio y fijo, sin género/talla/capucha
+  if(variante==='Toalla'){
+    pedido.codigoProducto='TOALLATBALLENA'; pedido.nombreProducto='Toalla Tiburón Ballena';
+    pedido.variante='Toalla'; pedido.pack=1; pedido.manga=''; pedido.capucha='';
+    pedido.tela=selectedColorSerie;
+    document.getElementById('producto-label').textContent='Toalla Tiburón Ballena · TOALLATBALLENA';
+    document.getElementById('producto-seleccionado').style.display='block'; resetCantidadProducto();
     return;
   }
 
@@ -1503,6 +1513,16 @@ async function guardarEnSheets(){
   const retiraNombre=pedido.mismoEnvio?pedido.nombre:pedido.eNombre;
   const retiraCi=pedido.mismoEnvio?pedido.cedula:pedido.eCi;
   const retiraCel=pedido.mismoEnvio?pedido.celular:pedido.eCel;
+  // Registro de auditoría — guarda TODO lo que la app va a enviar, antes del flujo normal
+  try{
+    await scriptGETjson({
+      action:'registrarLogApp',
+      fecha:new Date().toLocaleString('es-VE'),
+      app:'Licra Colección',
+      accion:'addSolicitud',
+      datos:JSON.stringify(pedido)
+    });
+  }catch(e){ console.warn('Error en registro de log:', e); }
   // Guardar una solicitud por cada pack, enlazadas por código S-N, S-N.2, S-N.3...
   let codigoPrincipal='';
   for(let i=0; i<pedido.packs.length; i++){
@@ -1521,14 +1541,19 @@ async function guardarEnSheets(){
     if(variante==='Toalla'){
       modeloParts.push('Toalla'); modeloParts.push(pk.tela||pedido.tela||'');
     } else if(variante==='Chaqueta'||variante==='ChaquetaReflectiva'){
-      modeloParts.push('Chaqueta Reflectiva'); modeloParts.push(pk.capucha||pedido.capucha||'Sin Capucha');
+      modeloParts.push('Chaqueta Reflectiva'); // la capucha va indicada en cada prenda individualmente, no aquí
     } else if(variante==='Cotton Licra'){
       modeloParts.push(pk.serie||selectedSerie||''); modeloParts.push('Cotton Licra'); modeloParts.push('Manga Corta'); modeloParts.push('Sin Capucha');
     } else if(!sinManga.includes(variante)){
-      modeloParts.push(pk.serie||selectedSerie||''); modeloParts.push(variante);
+      modeloParts.push(pk.modelo||`${pk.serie||selectedSerie||''} ${variante}`);
       if(pk.largo) modeloParts.push(pk.largo);
       else if(pk.manga) modeloParts.push(pk.manga);
-      if(variante!=='Short') modeloParts.push(pk.capucha||pedido.capucha||'Sin Capucha');
+      if(variante!=='Short'){
+        const tieneCapuchaPz=pk.piezas.some(p=>p.conCapucha);
+        const todasCapuchaPz=pk.piezas.every(p=>p.conCapucha);
+        const capuchaTxtPz=!tieneCapuchaPz?'':(todasCapuchaPz?'Con Capucha':'');
+        if(capuchaTxtPz) modeloParts.push(capuchaTxtPz);
+      }
     } else {
       modeloParts.push(pk.serie||selectedSerie||''); modeloParts.push(variante);
     }
@@ -1544,7 +1569,7 @@ async function guardarEnSheets(){
         modelo:modeloFinal,
         manga:pk.largo?'':(pk.manga||''),
         capucha:pk.capucha||'Sin Capucha',
-        pack:pk.codigoProducto||pedido.codigoProducto,
+        pack:`${(pk.piezas||[]).length||1} ud${((pk.piezas||[]).length||1)>1?'s':''}`,
         tela:pk.tela||pedido.tela||'',
         vinil:pk.vinil,
         piezas:piezasText,

@@ -1399,6 +1399,16 @@ async function guardarEnSheets(){
   const retiraNombre=pedido.mismoEnvio?pedido.nombre:pedido.eNombre;
   const retiraCi=pedido.mismoEnvio?pedido.cedula:pedido.eCi;
   const retiraCel=pedido.mismoEnvio?pedido.celular:pedido.eCel;
+  // Registro de auditoría — guarda TODO lo que la app va a enviar, antes del flujo normal
+  try{
+    await scriptGETjson({
+      action:'registrarLogApp',
+      fecha:new Date().toLocaleString('es-VE'),
+      app:'Full Comfy',
+      accion:'addSolicitud',
+      datos:JSON.stringify(pedido)
+    });
+  }catch(e){ console.warn('Error en registro de log:', e); }
   // Guardar una solicitud por cada pack, enlazadas por código S-N, S-N.2, S-N.3...
   let codigoPrincipal='';
   for(let i=0; i<pedido.packs.length; i++){

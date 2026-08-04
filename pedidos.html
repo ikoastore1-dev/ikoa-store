@@ -1036,6 +1036,24 @@ function renderFranelasB(){
           Sin nombre en manga
         </button>
       </div>
+      <div style="margin-top:12px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Logos (opcional)</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+          <input type="checkbox" id="logo-pecho-check-b${i}" onchange="document.getElementById('logo-pecho-txt-b${i}').style.display=this.checked?'block':'none'" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
+          <label for="logo-pecho-check-b${i}" style="font-size:12px;color:var(--text);cursor:pointer;">Logo Pecho</label>
+        </div>
+        <input class="field-input" type="text" id="logo-pecho-txt-b${i}" placeholder="Detalle del logo" style="display:none;margin-bottom:8px;font-size:12px;padding:6px 8px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+          <input type="checkbox" id="logo-espalda-check-b${i}" onchange="document.getElementById('logo-espalda-txt-b${i}').style.display=this.checked?'block':'none'" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
+          <label for="logo-espalda-check-b${i}" style="font-size:12px;color:var(--text);cursor:pointer;">Logo Espalda</label>
+        </div>
+        <input class="field-input" type="text" id="logo-espalda-txt-b${i}" placeholder="Detalle del logo" style="display:none;margin-bottom:8px;font-size:12px;padding:6px 8px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+          <input type="checkbox" id="logo-manga-check-b${i}" onchange="document.getElementById('logo-manga-txt-b${i}').style.display=this.checked?'block':'none'" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
+          <label for="logo-manga-check-b${i}" style="font-size:12px;color:var(--text);cursor:pointer;">Logo Manga</label>
+        </div>
+        <input class="field-input" type="text" id="logo-manga-txt-b${i}" placeholder="Detalle del logo" style="display:none;font-size:12px;padding:6px 8px;">
+      </div>
     </div>
   `).join('');
   [0,1,2].forEach(i=>{
@@ -1072,11 +1090,14 @@ function intentarPaso4B(){
     if(!tela){ alert(`Selecciona el color de tela para la Franela ${i+1}`); return; }
     if(!talla){ alert(`Selecciona la talla para la Franela ${i+1}`); return; }
     if(!nombre){ alert(`Ingresa el nombre en manga para la Franela ${i+1} (o escribe SIN NOMBRE EN MANGA)`); return; }
-    franelasB[i]={tela, talla, nombre};
+    const logoPecho=document.getElementById(`logo-pecho-check-b${i}`)?.checked?(document.getElementById(`logo-pecho-txt-b${i}`).value.trim()||'Sí'):'';
+    const logoEspalda=document.getElementById(`logo-espalda-check-b${i}`)?.checked?(document.getElementById(`logo-espalda-txt-b${i}`).value.trim()||'Sí'):'';
+    const logoManga=document.getElementById(`logo-manga-check-b${i}`)?.checked?(document.getElementById(`logo-manga-txt-b${i}`).value.trim()||'Sí'):'';
+    franelasB[i]={tela, talla, nombre, logoPecho, logoEspalda, logoManga};
   }
   pedido.vinil = vinilB;
   pedido.tela = franelasB.map(f=>f.tela).join(' / ');
-  pedido.piezas = franelasB.map(f=>({talla:f.talla, nombre:f.nombre, genero: document.getElementById(`genero-b${franelasB.indexOf(f)}`)?.value||'Dama'}));
+  pedido.piezas = franelasB.map(f=>({talla:f.talla, nombre:f.nombre, genero: document.getElementById(`genero-b${franelasB.indexOf(f)}`)?.value||'Dama', logoPecho:f.logoPecho||'', logoEspalda:f.logoEspalda||'', logoManga:f.logoManga||''}));
   pedido.packs.push({
     pack:3, modelo:'COMFY MEGA PROMO (Opción B)',
     manga:'Manga Larga', capucha:pedido.capucha||'Sin Capucha',
@@ -1709,6 +1730,16 @@ async function guardarEnSheets(){
   const retiraNombre=pedido.mismoEnvio?pedido.nombre:pedido.eNombre;
   const retiraCi=pedido.mismoEnvio?pedido.cedula:pedido.eCi;
   const retiraCel=pedido.mismoEnvio?pedido.celular:pedido.eCel;
+  // Registro de auditoría — guarda TODO lo que la app va a enviar, antes del flujo normal
+  try{
+    await scriptGETjson({
+      action:'registrarLogApp',
+      fecha:new Date().toLocaleString('es-VE'),
+      app:'Mega Promo Comfy',
+      accion:'addSolicitud',
+      datos:JSON.stringify(pedido)
+    });
+  }catch(e){ console.warn('Error en registro de log:', e); }
   // Guardar una solicitud por cada pack, enlazadas por código S-N, S-N.2, S-N.3...
   let codigoPrincipal='';
   for(let i=0; i<pedido.packs.length; i++){
@@ -1743,7 +1774,8 @@ async function guardarEnSheets(){
         cashea_pct_aplicado: pagoMoneda==='cashea' ? String(casheaPct) : ''
       });
       if(i===0 && res.ok) codigoPrincipal=res.codigo;
-    }catch(e){ console.error(e); }
+      if(!res.ok){ alert('⚠️ Error al enviar el pack '+(i+1)+': '+(res.error||'Error desconocido')+'\n\nPor favor intenta de nuevo o contacta soporte.'); return; }
+    }catch(e){ console.error(e); alert('⚠️ Error de conexión al enviar el pack '+(i+1)+': '+e.message+'\n\nPor favor intenta de nuevo.'); return; }
   }
 }
 

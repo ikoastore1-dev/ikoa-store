@@ -202,7 +202,6 @@ window.addEventListener('load',function(){
       <div class="card-title">Línea</div>
       <div class="option-grid cols2" id="linea-grid">
         <button class="opt-btn" onclick="selectLinea(this,'comfy')">COMFY MEGA PROMO<span class="sub">Mínimo 2 unds</span></button>
-        <button class="opt-btn" onclick="selectLinea(this,'fullcomfy')">FULL COMFY PROTECT<span class="sub">Individual o pack</span></button>
         <button class="opt-btn" onclick="selectLinea(this,'licra')">LICRA PROTECT<span class="sub">Individual o pack</span></button>
         <button class="opt-btn" onclick="selectLinea(this,'coleccion')">LICRA COLECCIÓN<span class="sub">Camping/Náutica/Alpha/Unicolor</span></button>
         <button class="opt-btn" onclick="selectLinea(this,'empresarial')">🏢 EMPRESARIAL<span class="sub">Mínimo 6 unds</span></button>
@@ -793,7 +792,7 @@ async function intentarPaso45(){
   // Guardar pack actual en lista de packs
   pedido.packs.push({
     pack: pedido.pack,
-    codigoProducto: pedido.codigoProducto,
+    codigoProducto: (pedido.piezas.length===1 && pedido._codigo1u) ? pedido._codigo1u : pedido.codigoProducto,
     modelo: pedido.nombreProducto,
     serie: selectedSerie,
     variante: pedido.variante,
@@ -1000,14 +999,11 @@ function confirmarCantidadYAvanzar(){
 let selectedLinea='';
 const MODELOS_LINEA={
   comfy:[
-    {nombre:'Comfy Mega Promo', codigo:'COMFY11', manga:'Manga Larga', min:2, hojaColores:'COLORES.COMFY'}
-  ],
-  fullcomfy:[
-    {nombre:'Full Comfy Protect Manga Larga', codigo:'COMFY01', manga:'Manga Larga', min:1, hojaColores:'COLORES.FULLCOMFY', capucha:true},
-    {nombre:'Full Comfy Protect Manga Corta', codigo:'COMFY06', manga:'Manga Corta', min:1, hojaColores:'COLORES.FULLCOMFY', capucha:true},
-    {nombre:'Full Comfy Protect Manga Cero', codigo:'COMFY07', manga:'Manga Cero', min:1, hojaColores:'COLORES.FULLCOMFY', capucha:true},
-    {nombre:'Comfy Dress Manga Larga', codigo:'COMFY04', manga:'Manga Larga Dress', min:1, hojaColores:'COLORES.FULLCOMFY', capucha:false},
-    {nombre:'Comfy Dress Manga Cero', codigo:'COMFY03', manga:'Manga Cero Dress', min:1, hojaColores:'COLORES.FULLCOMFY', capucha:false}
+    {nombre:'Comfy Mega Promo Manga Larga', codigo:'COMFY11', codigo1u:'COMFY01', manga:'Manga Larga', min:1, hojaColores:'COLORES.COMFY', capucha:true},
+    {nombre:'Comfy Mega Promo Manga Corta', codigo:'COMFY06', manga:'Manga Corta', min:1, hojaColores:'COLORES.COMFY', capucha:true},
+    {nombre:'Comfy Mega Promo Manga Cero', codigo:'COMFY07', manga:'Manga Cero', min:1, hojaColores:'COLORES.COMFY', capucha:true},
+    {nombre:'Comfy Dress Manga Larga', codigo:'COMFY04', manga:'Manga Larga Dress', min:1, hojaColores:'COLORES.COMFY', capucha:true},
+    {nombre:'Comfy Dress Manga Cero', codigo:'COMFY03', manga:'Manga Cero Dress', min:1, hojaColores:'COLORES.COMFY', capucha:true}
   ],
   licra:[
     {nombre:'Licra Protect Manga Larga', codigo:'LICRA01', manga:'Manga Larga', min:1, hojaColores:'COLORES.LICRA', capucha:true},
@@ -1062,6 +1058,7 @@ async function selectModelo(btn,linea,idx){
   btn.classList.add('selected');
   const m=MODELOS_LINEA[linea][idx];
   pedido.codigoProducto=m.codigo;
+  pedido._codigo1u=m.codigo1u||null; // si existe, se usa cuando la cantidad final sea 1
   pedido.nombreProducto=m.nombre;
   pedido.variante=linea; // 'comfy' | 'fullcomfy' | 'licra' — usado luego para lógica de precio/capucha/logos
   pedido.manga=m.manga;
@@ -1132,7 +1129,7 @@ function selectColorSerie(btn,color){
     return;
   }
 
-  const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short','Cotton Licra','Traje de Baño']:selectedSerie==='ChaquetaReflectiva'?['Chaqueta']:['Playera','Dress','Cortaviento','Short','Traje de Baño'];
+  const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short','Cotton Licra','Traje de Baño']:selectedSerie==='ChaquetaReflectiva'?['Chaqueta']:selectedSerie==='TiburonBallena'?['Playera','Dress','Cortaviento','Short','Traje de Baño','Toalla']:['Playera','Dress','Cortaviento','Short','Traje de Baño'];
   document.getElementById('variante-grid').innerHTML=variantes.map(v=>`<button class="opt-btn" onclick="selectVariante(this,'${v}')">${v.toUpperCase()}</button>`).join('');
   document.getElementById('variante-wrap').style.display='block';
   document.getElementById('producto-seleccionado').style.display='none';
@@ -1153,6 +1150,16 @@ function selectVariante(btn,variante){
       <button class="opt-btn" onclick="selectTrajeBano(this,'Bikini Manga Larga','${baseCod}BikiniMLarga')">BIKINI MANGA LARGA</button>
     `;
     document.getElementById('producto-seleccionado').style.display='none';
+    return;
+  }
+
+  // Toalla dentro de la serie Tiburón Ballena — código propio y fijo, sin género/talla/capucha
+  if(variante==='Toalla'){
+    pedido.codigoProducto='TOALLATBALLENA'; pedido.nombreProducto='Toalla Tiburón Ballena';
+    pedido.variante='Toalla'; pedido.pack=1; pedido.manga=''; pedido.capucha='';
+    pedido.tela=selectedColorSerie;
+    document.getElementById('producto-label').textContent='Toalla Tiburón Ballena · TOALLATBALLENA';
+    document.getElementById('producto-seleccionado').style.display='block'; resetCantidadProducto();
     return;
   }
 
@@ -1748,6 +1755,16 @@ async function guardarEnSheets(){
   const retiraNombre=pedido.mismoEnvio?pedido.nombre:pedido.eNombre;
   const retiraCi=pedido.mismoEnvio?pedido.cedula:pedido.eCi;
   const retiraCel=pedido.mismoEnvio?pedido.celular:pedido.eCel;
+  // Registro de auditoría — guarda TODO lo que la app va a enviar, antes del flujo normal
+  try{
+    await scriptGETjson({
+      action:'registrarLogApp',
+      fecha:new Date().toLocaleString('es-VE'),
+      app:'Total',
+      accion:'addSolicitud',
+      datos:JSON.stringify(pedido)
+    });
+  }catch(e){ console.warn('Error en registro de log:', e); }
   // Guardar una solicitud por cada pack, enlazadas por código S-N, S-N.2, S-N.3...
   let codigoPrincipal='';
   for(let i=0; i<pedido.packs.length; i++){
@@ -1776,10 +1793,15 @@ async function guardarEnSheets(){
     } else if(variante==='Cotton Licra'){
       modeloParts.push(pk.serie||selectedSerie||''); modeloParts.push('Cotton Licra'); modeloParts.push('Manga Corta'); modeloParts.push('Sin Capucha');
     } else if(!sinManga.includes(variante)){
-      modeloParts.push(pk.serie||selectedSerie||''); modeloParts.push(variante);
+      modeloParts.push(pk.modelo||`${pk.serie||selectedSerie||''} ${variante}`);
       if(pk.largo) modeloParts.push(pk.largo);
       else if(pk.manga) modeloParts.push(pk.manga);
-      if(variante!=='Short') modeloParts.push(pk.capucha||pedido.capucha||'Sin Capucha');
+      if(variante!=='Short'){
+        const tieneCapuchaPz=pk.piezas.some(p=>p.conCapucha);
+        const todasCapuchaPz=pk.piezas.every(p=>p.conCapucha);
+        const capuchaTxtPz=!tieneCapuchaPz?'':(todasCapuchaPz?'Con Capucha':''); // si es mixto, cada pieza lo indica por su cuenta
+        if(capuchaTxtPz) modeloParts.push(capuchaTxtPz);
+      }
     } else {
       modeloParts.push(pk.serie||selectedSerie||''); modeloParts.push(variante);
     }
@@ -1795,7 +1817,7 @@ async function guardarEnSheets(){
         modelo:modeloFinal,
         manga:pk.largo?'':(pk.manga||''),
         capucha:pk.capucha||'Sin Capucha',
-        pack:pk.codigoProducto||pedido.codigoProducto,
+        pack:`${(pk.piezas||[]).length||1} ud${((pk.piezas||[]).length||1)>1?'s':''}`,
         tela:pk.tela||pedido.tela||'',
         vinil:pk.vinil,
         piezas:piezasText,
