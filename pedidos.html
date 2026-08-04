@@ -1064,7 +1064,6 @@ function actualizarTallasB(idx){
 
 function intentarPaso4B(){
   if(!vinilB){ alert('Selecciona el color de vinil'); return; }
-  const telasUsadas=[];
   for(let i=0;i<3;i++){
     const telaEl=document.querySelectorAll(`#tela-opts-b${i} .opt-btn.selected`)[0];
     const tela=telaEl?telaEl.textContent.trim():(franelasB[i].tela||'');
@@ -1073,10 +1072,6 @@ function intentarPaso4B(){
     if(!tela){ alert(`Selecciona el color de tela para la Franela ${i+1}`); return; }
     if(!talla){ alert(`Selecciona la talla para la Franela ${i+1}`); return; }
     if(!nombre){ alert(`Ingresa el nombre en manga para la Franela ${i+1} (o escribe SIN NOMBRE EN MANGA)`); return; }
-    if(telasUsadas.includes(tela.toLowerCase())){
-      alert(`La Franela ${i+1} debe tener un color de tela diferente a las anteriores`); return;
-    }
-    telasUsadas.push(tela.toLowerCase());
     franelasB[i]={tela, talla, nombre};
   }
   pedido.vinil = vinilB;
@@ -1084,7 +1079,7 @@ function intentarPaso4B(){
   pedido.piezas = franelasB.map(f=>({talla:f.talla, nombre:f.nombre, genero: document.getElementById(`genero-b${franelasB.indexOf(f)}`)?.value||'Dama'}));
   pedido.packs.push({
     pack:3, modelo:'COMFY MEGA PROMO (Opción B)',
-    manga:'Manga Larga', capucha:'Sin Capucha',
+    manga:'Manga Larga', capucha:pedido.capucha||'Sin Capucha',
     tela: pedido.tela, vinil: vinilB,
     piezas: JSON.parse(JSON.stringify(pedido.piezas))
   });
