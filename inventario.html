@@ -7611,6 +7611,12 @@ function tallerParsearPiezas(piezasStr){
       piezas[piezas.length-1][campo]=mAnno[2].trim();
       return;
     }
+    // Continuación de tela por pieza (Opción B de Mega Promo Comfy: colores mezclados)
+    const mTela=tok.match(/^Tela\s*:\s*(.+)$/i);
+    if(mTela && piezas.length){
+      piezas[piezas.length-1].tela=mTela[1].trim();
+      return;
+    }
     // Formato A: "Genero Talla[ CON CAPUCHA] - Nombre"
     const mA=tok.match(/^(\S+)\s+(\S+)(\s+CON\s+CAPUCHA)?\s*-\s*(.+)$/i);
     if(mA && generoRegex.test(mA[1])){
@@ -7687,13 +7693,14 @@ function tallerConstruirCortadorHTML(codigos){
     g.packs.forEach(p=>{
       const desc=tallerDescripcionPack(p);
       const piezas=tallerParsearPiezas(p.piezas);
-      // Agrupar por Genero+Talla (ignorando nombre) para el cortador
+      // Agrupar por Genero+Talla+Tela (si varía por pieza) para el cortador
       const grupos={};
       let sinFormato=0;
       piezas.forEach(pz=>{
         if(pz.raw){ sinFormato++; return; }
-        const key=(pz.genero||'—')+'||'+(pz.talla||'—')+(pz.capucha?'||CAP':'');
-        if(!grupos[key]) grupos[key]={genero:pz.genero||'—', talla:pz.talla||'—', capucha:pz.capucha, unds:0};
+        const telaPz=pz.tela||''; // solo se llena cuando el pack tiene colores mezclados (Opción B)
+        const key=(pz.genero||'—')+'||'+(pz.talla||'—')+(pz.capucha?'||CAP':'')+(telaPz?'||'+telaPz:'');
+        if(!grupos[key]) grupos[key]={genero:pz.genero||'—', talla:pz.talla||'—', capucha:pz.capucha, tela:telaPz, unds:0};
         grupos[key].unds++;
       });
       Object.values(grupos).forEach(gr=>{
@@ -7703,7 +7710,7 @@ function tallerConstruirCortadorHTML(codigos){
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${(gr.talla||'—').toUpperCase()}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${(gr.genero||'—').toUpperCase()}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${gr.unds}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${(p.tela||'—').toUpperCase()}</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${(gr.tela||p.tela||'—').toUpperCase()}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${gr.capucha?'CON CAPUCHA':''}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;color:#b00;font-weight:700;">${g.urgente?'URGENTE':''}</td>
         </tr>`;
@@ -7760,7 +7767,7 @@ function tallerConstruirEstampadorHTML(codigos){
     g.packs.forEach(p=>{
       const desc=tallerDescripcionPack(p);
       const piezas=tallerParsearPiezas(p.piezas);
-      // Agrupar por Genero+Talla+Nombre para mostrar "GENERO TALLA - NOMBRE (N UNDS)"
+      // Agrupar por Genero+Talla+Nombre+Tela para mostrar "GENERO TALLA - NOMBRE (N UNDS)"
       const grupos={};
       const logos={pecho:new Set(), espalda:new Set(), manga:new Set()};
       piezas.forEach(pz=>{
@@ -7770,8 +7777,9 @@ function tallerConstruirEstampadorHTML(codigos){
           grupos[key].unds++;
           return;
         }
-        const key=(pz.genero||'—')+'||'+(pz.talla||'—')+'||'+(pz.nombre||'')+(pz.capucha?'||CAP':'');
-        if(!grupos[key]) grupos[key]={genero:pz.genero||'—', talla:pz.talla||'—', nombre:pz.nombre||'', capucha:pz.capucha, unds:0};
+        const telaPz=pz.tela||''; // solo se llena cuando el pack tiene colores mezclados (Opción B)
+        const key=(pz.genero||'—')+'||'+(pz.talla||'—')+'||'+(pz.nombre||'')+(pz.capucha?'||CAP':'')+(telaPz?'||'+telaPz:'');
+        if(!grupos[key]) grupos[key]={genero:pz.genero||'—', talla:pz.talla||'—', nombre:pz.nombre||'', capucha:pz.capucha, tela:telaPz, unds:0};
         grupos[key].unds++;
         if(pz.logoPecho) logos.pecho.add(pz.logoPecho);
         if(pz.logoEspalda) logos.espalda.add(pz.logoEspalda);
@@ -7780,7 +7788,7 @@ function tallerConstruirEstampadorHTML(codigos){
       const lineasTalla=Object.values(grupos).map(gr=>
         gr.raw
           ? `${tallerReformatearTexto(gr.texto)} <span style="color:#888;">(texto original del pedido — sin desglose exacto por talla)</span>`
-          : `${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()}${gr.capucha?' (CON CAPUCHA)':''}${gr.nombre?' - <span style="font-weight:700;font-size:15px;">'+gr.nombre.toUpperCase()+'</span>':''} (${gr.unds} UNDS)`
+          : `${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()}${gr.capucha?' (CON CAPUCHA)':''}${gr.tela?' — TELA <span style="font-weight:700;">'+gr.tela.toUpperCase()+'</span>':''}${gr.nombre?' - <span style="font-weight:700;font-size:15px;">'+gr.nombre.toUpperCase()+'</span>':''} (${gr.unds} UNDS)`
       ).join('<br>');
       const logoLineas=[];
       if(logos.pecho.size)   logoLineas.push('PECHO: '+[...logos.pecho].join(', ').toUpperCase());

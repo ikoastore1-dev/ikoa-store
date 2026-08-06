@@ -1097,7 +1097,7 @@ function intentarPaso4B(){
   }
   pedido.vinil = vinilB;
   pedido.tela = franelasB.map(f=>f.tela).join(' / ');
-  pedido.piezas = franelasB.map(f=>({talla:f.talla, nombre:f.nombre, genero: document.getElementById(`genero-b${franelasB.indexOf(f)}`)?.value||'Dama', logoPecho:f.logoPecho||'', logoEspalda:f.logoEspalda||'', logoManga:f.logoManga||''}));
+  pedido.piezas = franelasB.map(f=>({talla:f.talla, nombre:f.nombre, genero: document.getElementById(`genero-b${franelasB.indexOf(f)}`)?.value||'Dama', logoPecho:f.logoPecho||'', logoEspalda:f.logoEspalda||'', logoManga:f.logoManga||'', tela:f.tela||''}));
   pedido.packs.push({
     pack:3, modelo:'COMFY MEGA PROMO (Opción B)',
     manga:'Manga Larga', capucha:pedido.capucha||'Sin Capucha',
@@ -1745,7 +1745,7 @@ async function guardarEnSheets(){
   for(let i=0; i<pedido.packs.length; i++){
     const pk=pedido.packs[i];
     const capuchaTxt=(pk.capucha==='Con Capucha')?' CON CAPUCHA':'';
-    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${capuchaTxt} - ${p.nombre}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}`).join(' | ');
+    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${capuchaTxt}${p.tela?' | Tela: '+p.tela:''} - ${p.nombre}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}`).join(' | ');
     try{
       const res=await scriptGETjson({
         action:'addSolicitud',
