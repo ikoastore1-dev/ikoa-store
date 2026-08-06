@@ -580,15 +580,161 @@ function scriptGET(params){
 }
 
 // ── TOKEN ─────────────────────────────────────────────────────
+let codigosActivos=null; // null = sin filtro, catálogo completo normal
+
+// Mapa de códigos cortos (los mismos que usa el comando "Cot" de WhatsApp) hacia
+// {linea, modeloIndex} dentro de MODELOS_LINEA — para filtrar qué se muestra.
+const MAPA_CODIGOS_ACTIVACION={
+  'pcp':{linea:'comfy',modeloIndex:0}, 'pcpa':{linea:'comfy',modeloIndex:0}, 'pcpb':{linea:'comfy',modeloIndex:0},
+  'p1cp':{linea:'comfy',modeloIndex:0},
+  'pcpmc':{linea:'comfy',modeloIndex:1}, 'pcpmce':{linea:'comfy',modeloIndex:2},
+  'pcdml':{linea:'comfy',modeloIndex:3}, 'pcdmc':{linea:'comfy',modeloIndex:4},
+  'p1lp':{linea:'licra',modeloIndex:0}, 'plp':{linea:'licra',modeloIndex:0},
+  'plu':{linea:'coleccion',serie:'Unicolor',color:null,variante:'Playera'},
+  'pdu':{linea:'coleccion',serie:'Unicolor',color:null,variante:'Dress'},
+  'pcu':{linea:'coleccion',serie:'Unicolor',color:null,variante:'Cortaviento'},
+  'psu':{linea:'coleccion',serie:'Unicolor',color:null,variante:'Short'},
+  'plsup':{linea:'coleccion',serie:'Unicolor',color:null,variante:'Cotton Licra'},
+  'pcbp':{linea:'coleccion',serie:'Camping',color:'Black',variante:'Playera'},
+  'pcbd':{linea:'coleccion',serie:'Camping',color:'Black',variante:'Dress'},
+  'pcbc':{linea:'coleccion',serie:'Camping',color:'Black',variante:'Cortaviento'},
+  'pcbs':{linea:'coleccion',serie:'Camping',color:'Black',variante:'Short'},
+  'pcbb':{linea:'coleccion',serie:'Camping',color:'Black',variante:'Bikini'},
+  'pcbe':{linea:'coleccion',serie:'Camping',color:'Black',variante:'Enterizo'},
+  'pcbbm':{linea:'coleccion',serie:'Camping',color:'Black',variante:'Bikini Manga Larga'},
+  'pccp':{linea:'coleccion',serie:'Camping',color:'Camuflaje',variante:'Playera'},
+  'pccd':{linea:'coleccion',serie:'Camping',color:'Camuflaje',variante:'Dress'},
+  'pccc':{linea:'coleccion',serie:'Camping',color:'Camuflaje',variante:'Cortaviento'},
+  'pccs':{linea:'coleccion',serie:'Camping',color:'Camuflaje',variante:'Short'},
+  'pccb':{linea:'coleccion',serie:'Camping',color:'Camuflaje',variante:'Bikini'},
+  'pcce':{linea:'coleccion',serie:'Camping',color:'Camuflaje',variante:'Enterizo'},
+  'pccbm':{linea:'coleccion',serie:'Camping',color:'Camuflaje',variante:'Bikini Manga Larga'},
+  'pcsp':{linea:'coleccion',serie:'Camping',color:'Selva',variante:'Playera'},
+  'pcsd':{linea:'coleccion',serie:'Camping',color:'Selva',variante:'Dress'},
+  'pcsc':{linea:'coleccion',serie:'Camping',color:'Selva',variante:'Cortaviento'},
+  'pcss':{linea:'coleccion',serie:'Camping',color:'Selva',variante:'Short'},
+  'pcsb':{linea:'coleccion',serie:'Camping',color:'Selva',variante:'Bikini'},
+  'pcse':{linea:'coleccion',serie:'Camping',color:'Selva',variante:'Enterizo'},
+  'pcsbm':{linea:'coleccion',serie:'Camping',color:'Selva',variante:'Bikini Manga Larga'},
+  'pnpp':{linea:'coleccion',serie:'Nautica',color:'Pink',variante:'Playera'},
+  'pnpd':{linea:'coleccion',serie:'Nautica',color:'Pink',variante:'Dress'},
+  'pnpc':{linea:'coleccion',serie:'Nautica',color:'Pink',variante:'Cortaviento'},
+  'pnps':{linea:'coleccion',serie:'Nautica',color:'Pink',variante:'Short'},
+  'pnpb':{linea:'coleccion',serie:'Nautica',color:'Pink',variante:'Bikini'},
+  'pnpe':{linea:'coleccion',serie:'Nautica',color:'Pink',variante:'Enterizo'},
+  'pnpbm':{linea:'coleccion',serie:'Nautica',color:'Pink',variante:'Bikini Manga Larga'},
+  'pnmp':{linea:'coleccion',serie:'Nautica',color:'Marino',variante:'Playera'},
+  'pnmd':{linea:'coleccion',serie:'Nautica',color:'Marino',variante:'Dress'},
+  'pnmc':{linea:'coleccion',serie:'Nautica',color:'Marino',variante:'Cortaviento'},
+  'pnms':{linea:'coleccion',serie:'Nautica',color:'Marino',variante:'Short'},
+  'pnmb':{linea:'coleccion',serie:'Nautica',color:'Marino',variante:'Bikini'},
+  'pnme':{linea:'coleccion',serie:'Nautica',color:'Marino',variante:'Enterizo'},
+  'pnmbm':{linea:'coleccion',serie:'Nautica',color:'Marino',variante:'Bikini Manga Larga'},
+  'pnmjp':{linea:'coleccion',serie:'Nautica',color:'Mint Jack',variante:'Playera'},
+  'pnmjd':{linea:'coleccion',serie:'Nautica',color:'Mint Jack',variante:'Dress'},
+  'pnmjc':{linea:'coleccion',serie:'Nautica',color:'Mint Jack',variante:'Cortaviento'},
+  'pnmjs':{linea:'coleccion',serie:'Nautica',color:'Mint Jack',variante:'Short'},
+  'pnmjb':{linea:'coleccion',serie:'Nautica',color:'Mint Jack',variante:'Bikini'},
+  'pnmje':{linea:'coleccion',serie:'Nautica',color:'Mint Jack',variante:'Enterizo'},
+  'pnmjbm':{linea:'coleccion',serie:'Nautica',color:'Mint Jack',variante:'Bikini Manga Larga'},
+  'pnbjp':{linea:'coleccion',serie:'Nautica',color:'Black Jack',variante:'Playera'},
+  'pnbjd':{linea:'coleccion',serie:'Nautica',color:'Black Jack',variante:'Dress'},
+  'pnbjc':{linea:'coleccion',serie:'Nautica',color:'Black Jack',variante:'Cortaviento'},
+  'pnbjs':{linea:'coleccion',serie:'Nautica',color:'Black Jack',variante:'Short'},
+  'pnbjb':{linea:'coleccion',serie:'Nautica',color:'Black Jack',variante:'Bikini'},
+  'pnbje':{linea:'coleccion',serie:'Nautica',color:'Black Jack',variante:'Enterizo'},
+  'pnbjbm':{linea:'coleccion',serie:'Nautica',color:'Black Jack',variante:'Bikini Manga Larga'},
+  'pasp':{linea:'coleccion',serie:'Alpha',color:'Selva',variante:'Playera'},
+  'pasd':{linea:'coleccion',serie:'Alpha',color:'Selva',variante:'Dress'},
+  'pasc':{linea:'coleccion',serie:'Alpha',color:'Selva',variante:'Cortaviento'},
+  'pass':{linea:'coleccion',serie:'Alpha',color:'Selva',variante:'Short'},
+  'pasb':{linea:'coleccion',serie:'Alpha',color:'Selva',variante:'Bikini'},
+  'pase':{linea:'coleccion',serie:'Alpha',color:'Selva',variante:'Enterizo'},
+  'pasbm':{linea:'coleccion',serie:'Alpha',color:'Selva',variante:'Bikini Manga Larga'},
+  'pagp':{linea:'coleccion',serie:'Alpha',color:'Gris',variante:'Playera'},
+  'pagd':{linea:'coleccion',serie:'Alpha',color:'Gris',variante:'Dress'},
+  'pagc':{linea:'coleccion',serie:'Alpha',color:'Gris',variante:'Cortaviento'},
+  'pags':{linea:'coleccion',serie:'Alpha',color:'Gris',variante:'Short'},
+  'pagb':{linea:'coleccion',serie:'Alpha',color:'Gris',variante:'Bikini'},
+  'page':{linea:'coleccion',serie:'Alpha',color:'Gris',variante:'Enterizo'},
+  'pagbm':{linea:'coleccion',serie:'Alpha',color:'Gris',variante:'Bikini Manga Larga'},
+  'pamp':{linea:'coleccion',serie:'Alpha',color:'Marino',variante:'Playera'},
+  'pamd':{linea:'coleccion',serie:'Alpha',color:'Marino',variante:'Dress'},
+  'pamc':{linea:'coleccion',serie:'Alpha',color:'Marino',variante:'Cortaviento'},
+  'pams':{linea:'coleccion',serie:'Alpha',color:'Marino',variante:'Short'},
+  'pamb':{linea:'coleccion',serie:'Alpha',color:'Marino',variante:'Bikini'},
+  'pame':{linea:'coleccion',serie:'Alpha',color:'Marino',variante:'Enterizo'},
+  'pambm':{linea:'coleccion',serie:'Alpha',color:'Marino',variante:'Bikini Manga Larga'},
+  'papp':{linea:'coleccion',serie:'Alpha',color:'Pink',variante:'Playera'},
+  'papd':{linea:'coleccion',serie:'Alpha',color:'Pink',variante:'Dress'},
+  'papc':{linea:'coleccion',serie:'Alpha',color:'Pink',variante:'Cortaviento'},
+  'paps':{linea:'coleccion',serie:'Alpha',color:'Pink',variante:'Short'},
+  'papb':{linea:'coleccion',serie:'Alpha',color:'Pink',variante:'Bikini'},
+  'pape':{linea:'coleccion',serie:'Alpha',color:'Pink',variante:'Enterizo'},
+  'papbm':{linea:'coleccion',serie:'Alpha',color:'Pink',variante:'Bikini Manga Larga'},
+  'ptbp':{linea:'coleccion',serie:'TiburonBallena',color:'Tiburón Ballena',variante:'Playera'},
+  'ptbd':{linea:'coleccion',serie:'TiburonBallena',color:'Tiburón Ballena',variante:'Dress'},
+  'ptbc':{linea:'coleccion',serie:'TiburonBallena',color:'Tiburón Ballena',variante:'Cortaviento'},
+  'ptbs':{linea:'coleccion',serie:'TiburonBallena',color:'Tiburón Ballena',variante:'Short'},
+  'ptbb':{linea:'coleccion',serie:'TiburonBallena',color:'Tiburón Ballena',variante:'Bikini'},
+  'ptbe':{linea:'coleccion',serie:'TiburonBallena',color:'Tiburón Ballena',variante:'Enterizo'},
+  'ptbbm':{linea:'coleccion',serie:'TiburonBallena',color:'Tiburón Ballena',variante:'Bikini Manga Larga'},
+  'ptbt':{linea:'coleccion',serie:'TiburonBallena',color:'Tiburón Ballena',variante:'Toalla'},
+};
+
+function aplicarFiltroActivos(){
+  if(!codigosActivos || !codigosActivos.length) return; // sin filtro, catálogo completo normal
+  const lineasNecesarias=new Set();
+  const modelosPorLinea={};
+  const coleccionFiltro=[]; // [{serie,color,variante}, ...]
+  codigosActivos.forEach(cod=>{
+    const info=MAPA_CODIGOS_ACTIVACION[cod.toLowerCase()];
+    if(!info) return;
+    lineasNecesarias.add(info.linea);
+    if(info.linea==='coleccion'){ coleccionFiltro.push(info); return; }
+    if(!modelosPorLinea[info.linea]) modelosPorLinea[info.linea]=new Set();
+    modelosPorLinea[info.linea].add(info.modeloIndex);
+  });
+  if(!lineasNecesarias.size) return; // ningún código reconocido, dejar todo visible
+  window._coleccionFiltro=coleccionFiltro.length?coleccionFiltro:null;
+
+  // Ocultar botones de línea que no se necesiten
+  document.querySelectorAll('#linea-grid .opt-btn').forEach(btn=>{
+    const m=btn.getAttribute('onclick').match(/selectLinea\(this,'([^']+)'\)/);
+    if(m && !lineasNecesarias.has(m[1])) btn.style.display='none';
+  });
+
+  // Filtrar botones de Serie (Camping/Náutica/Alpha/Tiburón Ballena/Unicolor) si aplica Colección
+  if(window._coleccionFiltro){
+    const seriesNecesarias=new Set(window._coleccionFiltro.map(f=>f.serie));
+    document.querySelectorAll('#serie-grid .opt-btn').forEach(btn=>{
+      const m=btn.getAttribute('onclick').match(/selectSerie\(this,'([^']+)'\)/);
+      if(m && !seriesNecesarias.has(m[1])) btn.style.display='none';
+    });
+  }
+
+  // Guardar el filtro de modelos para usarlo cuando se rendericen los botones de modelo
+  window._modelosPorLineaFiltrados=modelosPorLinea;
+
+  // Si solo hace falta una línea, saltarla automáticamente
+  if(lineasNecesarias.size===1){
+    const unicaLinea=[...lineasNecesarias][0];
+    const btnUnico=document.querySelector(`[onclick="selectLinea(this,'${unicaLinea}')"]`);
+    if(btnUnico) setTimeout(()=>btnUnico.click(),50);
+  }
+}
+
 async function verificarToken(){
   const bl=document.getElementById('pantalla-bloqueada');
   bl.style.display='flex';
   const params=new URLSearchParams(window.location.search);
   const token=params.get('token');
+  const activosParam=params.get('activos');
+  if(activosParam) codigosActivos=activosParam.split(',').map(c=>c.trim()).filter(Boolean);
   if(!token){ mostrarBloqueo('🚫','Link inválido','Solicita uno nuevo a IKOA & BEKATE.'); return; }
   try{
     const data=await scriptGETjson({action:'verificarToken',token});
-    if(data && data.ok){ tokenActual=token; bl.style.display='none'; cargarAgencias(); cargarColoresApp(); }
+    if(data && data.ok){ tokenActual=token; bl.style.display='none'; cargarAgencias(); cargarColoresApp(); aplicarFiltroActivos(); }
     else if(data){
       const m={'usado':['✅','Link ya utilizado','Este link ya fue usado.'],'expirado':['⏰','Link expirado','Venció (4h). Solicita uno nuevo.'],'invalido':['🚫','Link inválido','No es válido.']};
       const [i,t,x]=m[data.error]||m['invalido'];
@@ -1047,10 +1193,17 @@ function selectLinea(btn,linea){
   }
   // comfy / fullcomfy / licra
   const modelos=MODELOS_LINEA[linea]||[];
-  document.getElementById('modelo-grid').innerHTML=modelos.map((m,i)=>
+  const filtroModelos=window._modelosPorLineaFiltrados&&window._modelosPorLineaFiltrados[linea];
+  const modelosAMostrar=filtroModelos?modelos.map((m,i)=>({m,i})).filter(({i})=>filtroModelos.has(i)):modelos.map((m,i)=>({m,i}));
+  document.getElementById('modelo-grid').innerHTML=modelosAMostrar.map(({m,i})=>
     `<button class="opt-btn" onclick="selectModelo(this,'${linea}',${i})">${m.nombre.toUpperCase()}</button>`
   ).join('');
   document.getElementById('modelo-wrap').style.display='block';
+  // Si solo queda 1 modelo activado, saltarlo automáticamente
+  if(filtroModelos&&filtroModelos.size===1){
+    const unicoBtn=document.querySelector('#modelo-grid .opt-btn');
+    if(unicoBtn) setTimeout(()=>unicoBtn.click(),50);
+  }
 }
 
 async function selectModelo(btn,linea,idx){
@@ -1106,6 +1259,20 @@ function selectSerie(btn,serie){
   btn.classList.add('selected');
   const s=SERIES_COLECCION[serie];
   document.getElementById('color-serie-grid').innerHTML=s.colores.map(col=>`<button class="opt-btn" onclick="selectColorSerie(this,'${col}')">${col.toUpperCase()}</button>`).join('');
+  if(window._coleccionFiltro){
+    const entradasSerie=window._coleccionFiltro.filter(f=>f.serie===serie);
+    const tieneColorLibre=entradasSerie.some(f=>f.color===null);
+    if(!tieneColorLibre){
+      const coloresNecesarios=new Set(entradasSerie.map(f=>f.color));
+      document.querySelectorAll('#color-serie-grid .opt-btn').forEach(b=>{
+        const m=b.getAttribute('onclick').match(/selectColorSerie\(this,'([^']+)'\)/);
+        if(m && !coloresNecesarios.has(m[1])) b.style.display='none';
+      });
+      // Si solo queda 1 color, saltarlo automáticamente
+      const visibles=[...document.querySelectorAll('#color-serie-grid .opt-btn')].filter(b=>b.style.display!=='none');
+      if(visibles.length===1) setTimeout(()=>visibles[0].click(),50);
+    }
+  }
   document.getElementById('color-serie-wrap').style.display='block';
   document.getElementById('variante-wrap').style.display='none';
   document.getElementById('producto-seleccionado').style.display='none';
@@ -1131,6 +1298,18 @@ function selectColorSerie(btn,color){
 
   const variantes=selectedSerie==='Unicolor'?['Playera','Dress','Cortaviento','Short','Cotton Licra','Traje de Baño']:selectedSerie==='ChaquetaReflectiva'?['Chaqueta']:selectedSerie==='TiburonBallena'?['Playera','Dress','Cortaviento','Short','Traje de Baño','Toalla']:['Playera','Dress','Cortaviento','Short','Traje de Baño'];
   document.getElementById('variante-grid').innerHTML=variantes.map(v=>`<button class="opt-btn" onclick="selectVariante(this,'${v}')">${v.toUpperCase()}</button>`).join('');
+  if(window._coleccionFiltro){
+    const variantesNecesarias=new Set(window._coleccionFiltro.filter(f=>f.serie===selectedSerie&&(f.color===selectedColorSerie||f.color===null)).map(f=>f.variante));
+    const trajeBanoTipos=new Set(['Bikini','Enterizo','Bikini Manga Larga']);
+    const necesitaTrajeBano=[...variantesNecesarias].some(v=>trajeBanoTipos.has(v));
+    document.querySelectorAll('#variante-grid .opt-btn').forEach(b=>{
+      const m=b.getAttribute('onclick').match(/selectVariante\(this,'([^']+)'\)/);
+      if(!m) return;
+      const v=m[1];
+      const visible=variantesNecesarias.has(v)||(v==='Traje de Baño'&&necesitaTrajeBano);
+      if(!visible) b.style.display='none';
+    });
+  }
   document.getElementById('variante-wrap').style.display='block';
   document.getElementById('producto-seleccionado').style.display='none';
 }
