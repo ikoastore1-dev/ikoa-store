@@ -7808,6 +7808,12 @@ function tallerConstruirEstampadorHTML(codigos){
           <td valign="middle" align="center" style="text-align:center;">
             <p style="font-size:22px;font-weight:700;margin:0 0 2px 0;">COD - ${cod}</p>
             ${g.urgente?`<p style="font-size:13px;font-weight:700;color:#d10000;margin:0;">⚡ URGENTE : ${g.urgente.toUpperCase()}</p>`:''}
+          </td>
+          <td width="150" valign="middle" align="center">
+            <div style="display:inline-block;border:2px solid #1a1a1a;border-radius:4px;padding:6px 10px;">
+              <span style="display:inline-block;width:16px;height:16px;border:2px solid #1a1a1a;margin-right:6px;vertical-align:middle;"></span>
+              <span style="font-size:11px;font-weight:700;vertical-align:middle;">VINIL FABRICADO</span>
+            </div>
           </td></tr>
         </table>
         <p style="font-size:11px;font-weight:700;margin:0 0 3px 0;">CLIENTE : ${(g.nombre||'').toUpperCase()} / C.I: ${g.cedula||''} / AGENCIA: ${(g.agencia||'').split('—')[0].trim().toUpperCase()}</p>
