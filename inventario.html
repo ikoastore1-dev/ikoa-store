@@ -9307,6 +9307,7 @@ function cotmAddTalla(opts){
   const restante=maxVal>0?Math.max(1,maxVal-usados):1;
   const div=document.createElement('div');
   div.id='cotm-tr-'+id;
+  const esShortSinNombre = cotmApp==='short_uni' || (cotmApp==='coleccion' && cotmPrenda==='Short');
   if(cotmModoTaller){
     div.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:6px;';
     div.innerHTML=`
@@ -9319,11 +9320,12 @@ function cotmAddTalla(opts){
           style="padding:7px 9px;border:1px solid var(--danger);border-radius:8px;background:transparent;color:var(--danger);font-size:13px;cursor:pointer;">✕</button>
       </div>
       <input type="hidden" class="cotm-talla-cant" value="1">
+      ${esShortSinNombre?`<input type="checkbox" class="cotm-talla-sinombre" id="cotm-tr-sinombre-${id}" checked style="display:none;"><input type="text" class="cotm-talla-nombre" id="cotm-tr-nombre-${id}" value="SIN NOMBRE" style="display:none;">`:`
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
         <input type="checkbox" class="cotm-talla-sinombre" id="cotm-tr-sinombre-${id}" onchange="document.getElementById('cotm-tr-nombre-${id}').style.display=this.checked?'none':'block';" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
         <label for="cotm-tr-sinombre-${id}" style="font-size:11px;color:var(--muted);cursor:pointer;">${cotmApp==='toalla'?'Sin personalización de nombre':'Sin nombre en manga derecha'}</label>
       </div>
-      <input class="field-input cotm-talla-nombre" id="cotm-tr-nombre-${id}" type="text" placeholder="${cotmApp==='toalla'?'Nombre para personalizar':'Nombre para bordar/estampar'}" style="font-size:12px;padding:6px 8px;width:100%;margin-bottom:8px;">
+      <input class="field-input cotm-talla-nombre" id="cotm-tr-nombre-${id}" type="text" placeholder="${cotmApp==='toalla'?'Nombre para personalizar':'Nombre para bordar/estampar'}" style="font-size:12px;padding:6px 8px;width:100%;margin-bottom:8px;">`}
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Logos (con costo adicional)</div>
       <div style="display:flex;flex-direction:column;gap:4px;">
         <label style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text);cursor:pointer;">
@@ -9743,7 +9745,7 @@ function cotGuardarItem(){
       app:cotmApp, nombreApp:def.nombre,
       codigo:def.precioUnitCod,
       pack:`${tallas.length} ud${tallas.length>1?'s':''}`,
-      manga:'', capucha:'', tela, vinil:'', tallas, nPlus:0,
+      manga:'', capucha:'', tela, vinil:document.getElementById('cotm-vinil')?.value||'', tallas, nPlus:0,
       precioUnitUSD, precioUnitBS, recargaTotal:0, recargaTotalBs:0,
       capuchaTotal:0, capuchaTotalBs:0,
       logoEspalda:0, logoPecho:0, logoEspaldaBs:0, logoPechoBs:0,
