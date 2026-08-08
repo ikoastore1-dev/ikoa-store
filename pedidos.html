@@ -198,7 +198,7 @@ window.addEventListener('load',function(){
         </button>
       </div>
       <div class="nav-row" style="margin-top:16px;">
-        <button class="btn-back" onclick="document.getElementById('step1').classList.remove('active');document.getElementById('step-manga-tipo').classList.add('active');updateProgress();" style="width:100%;">← Atrás</button>
+        <button class="btn-back" onclick="volverDesdeStep1()" style="width:100%;">← Atrás</button>
       </div>
     </div>
   </div>
@@ -294,13 +294,13 @@ window.addEventListener('load',function(){
     </div>
     <div class="nav-row">
       <button class="btn-back" onclick="volverDesdeStep2()">← Atrás</button>
-      <button class="btn-next" onclick="goStep(3)">Siguiente →</button>
+      <button class="btn-next" onclick="continuarDesdeCantidad()">Siguiente →</button>
     </div>
   </div>
 
   <!-- STEP 3B: OPCIÓN B — 3 FRANELAS INDIVIDUALES -->
   <div class="step" id="step3b">
-    <div class="step-header"><div class="step-num">Paso 4 de 7</div><div class="step-title">Configura tus 3 franelas</div></div>
+    <div class="step-header"><div class="step-num">Paso 4 de 7</div><div class="step-title" id="step3b-titulo">Configura tus franelas</div></div>
     <div class="card">
       <div class="card-title">🎨 Vinil (mismo para todas)</div>
       <div class="option-grid cols2" id="vinil-opts-b"></div>
@@ -744,11 +744,21 @@ function sonColoresSimilares(a,b){
 let origenStep2='manga-tipo';
 let origenStep3='manga-tipo';
 
+function volverDesdeStep1(){
+  document.getElementById('step1').classList.remove('active');
+  currentStep='manga-tipo';
+  document.getElementById('step-manga-tipo').classList.add('active');
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
 function volverDesdeStep1b(){
   document.getElementById('step1b').classList.remove('active');
   if(prendaComfyActual==='playera'){
+    currentStep=1;
     document.getElementById('step1').classList.add('active');
   } else {
+    currentStep='manga-tipo';
     document.getElementById('step-manga-tipo').classList.add('active');
   }
   updateProgress();
@@ -777,6 +787,23 @@ function volverDesdeStep3(){
   currentStep=(origenStep3==='step-manga-tipo')?'manga-tipo':(origenStep3==='step1'?1:2);
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function continuarDesdeCantidad(){
+  if(modalidadComfy==='B' && pasoPorOpcionAB){
+    if(!pedido.pack || pedido.pack<3){ alert('Selecciona la cantidad de franelas (mínimo 3)'); return; }
+    franelasB=Array.from({length:pedido.pack},()=>({tela:'',talla:'',nombre:''}));
+    const tituloB=document.getElementById('step3b-titulo');
+    if(tituloB) tituloB.textContent='Configura tus '+pedido.pack+' franelas';
+    document.getElementById('step2').classList.remove('active');
+    currentStep='3b';
+    document.getElementById('step3b').classList.add('active');
+    inicializarStep3B();
+    updateProgress();
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+  goStep(3);
 }
 
 function volverDesdeStep2(){
@@ -893,6 +920,7 @@ function seleccionarLargaModo(modo){
     document.getElementById('step3').classList.add('active');
   } else {
     pasoPorOpcionAB=true;
+    currentStep='1b';
     document.getElementById('step1b').classList.add('active');
   }
   updateProgress();
@@ -913,38 +941,30 @@ function seleccionarModalidad(op){
   if(minEl) minEl.textContent = op==='B' ? 'Mínimo 3 unidades · Diferentes telas · Mismo vinil' : 'Mínimo 2 unidades · Mismo color tela y vinil';
   const btn2pack = document.getElementById('btn-pack-2');
   if(btn2pack) btn2pack.style.display = op==='B' ? 'none' : '';
+  const btn1pack = document.getElementById('btn-pack-1');
+  if(btn1pack) btn1pack.style.display = 'none';
   const customEl = document.getElementById('pack-custom');
   if(customEl) customEl.min = op==='B' ? '3' : '2';
-  if(op==='B'){
-    // Fijar pack en 3 y ir al step3b
-    pedido.pack = 3;
-    document.getElementById('step1b').classList.remove('active');
-    currentStep = '3b';
-    document.getElementById('step3b').classList.add('active');
-    inicializarStep3B();
-    updateProgress();
-    window.scrollTo({top:0,behavior:'smooth'});
-  } else {
-    document.getElementById('step1b').classList.remove('active');
-    currentStep = 2;
-    origenStep2='step1b';
-    document.getElementById('step2').classList.add('active');
-    updateProgress();
-    window.scrollTo({top:0,behavior:'smooth'});
-  }
+  document.getElementById('step1b').classList.remove('active');
+  origenStep2='step1b';
+  currentStep = 2;
+  document.getElementById('step2').classList.add('active');
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function goStep(n){
   // Salir del step actual
-  const curId = currentStep==='3b' ? 'step3b' : 'step'+(currentStep===45?'45':currentStep);
+  const idDeStep=(s)=> s==='3b'?'step3b' : s==='1b'?'step1b' : s==='manga-tipo'?'step-manga-tipo' : 'step'+(s===45?'45':s);
+  const curId = idDeStep(currentStep);
   const curEl = document.getElementById(curId);
   if(curEl) curEl.classList.remove('active');
 
   // Atrás sin validar
-  const curNum = currentStep==='3b' ? 3 : currentStep;
+  const curNum = (currentStep==='3b'||currentStep==='1b'||currentStep==='manga-tipo') ? -1 : currentStep;
   if(n < curNum || n==='3b'){
     currentStep = n;
-    const nEl = document.getElementById(n==='3b'?'step3b':'step'+(n===45?'45':n));
+    const nEl = document.getElementById(idDeStep(n));
     if(nEl) nEl.classList.add('active');
     if(n==='3b') inicializarStep3B();
     updateProgress();
@@ -952,10 +972,10 @@ function goStep(n){
     return;
   }
 
-  if(!validateStep(currentStep==='3b'?'3b':currentStep)) return;
+  if(!validateStep(currentStep)) return;
 
   currentStep = n;
-  const nEl = document.getElementById(n==='3b'?'step3b':'step'+(n===45?'45':n));
+  const nEl = document.getElementById(idDeStep(n));
   if(nEl) nEl.classList.add('active');
 
   if(n==='3b') inicializarStep3B();
@@ -1003,7 +1023,7 @@ function renderFranelasB(){
   const container=document.getElementById('franelas-b-container');
   const telaOptsA=document.getElementById('tela-opts');
   const telasBtns = telaOptsA ? telaOptsA.innerHTML : '';
-  container.innerHTML = [0,1,2].map(i=>`
+  container.innerHTML = franelasB.map((_,i)=>`
     <div class="card" style="margin-bottom:12px;">
       <div class="card-title" style="color:var(--accent);">👕 Franela ${i+1}</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Color de tela</div>
@@ -1082,7 +1102,7 @@ function actualizarTallasB(idx){
 
 function intentarPaso4B(){
   if(!vinilB){ alert('Selecciona el color de vinil'); return; }
-  for(let i=0;i<3;i++){
+  for(let i=0;i<franelasB.length;i++){
     const telaEl=document.querySelectorAll(`#tela-opts-b${i} .opt-btn.selected`)[0];
     const tela=telaEl?telaEl.textContent.trim():(franelasB[i].tela||'');
     const talla=document.getElementById(`talla-b${i}`)?.value||'';
@@ -1099,7 +1119,7 @@ function intentarPaso4B(){
   pedido.tela = franelasB.map(f=>f.tela).join(' / ');
   pedido.piezas = franelasB.map(f=>({talla:f.talla, nombre:f.nombre, genero: document.getElementById(`genero-b${franelasB.indexOf(f)}`)?.value||'Dama', logoPecho:f.logoPecho||'', logoEspalda:f.logoEspalda||'', logoManga:f.logoManga||'', tela:f.tela||''}));
   pedido.packs.push({
-    pack:3, modelo:'COMFY MEGA PROMO (Opción B)',
+    pack:franelasB.length, modelo:'COMFY MEGA PROMO (Opción B)',
     manga:'Manga Larga', capucha:pedido.capucha||'Sin Capucha',
     tela: pedido.tela, vinil: vinilB,
     piezas: JSON.parse(JSON.stringify(pedido.piezas))
@@ -1165,6 +1185,17 @@ async function intentarPaso2(){
 // Se quita ese pack de la lista antes de volver, para que al guardar de nuevo
 // (intentarPaso45) no quede duplicado — antes se agregaba uno nuevo sin quitar el viejo.
 function volverAEditarPiezas(){
+  if(pasoPorOpcionAB){
+    // El pedido viene de Opción B (3+ franelas, se configuraron en step3b) — volver ahí, no al step4 normal
+    if(pedido.packs.length>0) pedido.packs.pop();
+    document.getElementById('step5').classList.remove('active');
+    currentStep='3b';
+    document.getElementById('step3b').classList.add('active');
+    inicializarStep3B();
+    updateProgress();
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
   if(pedido.packs.length>0) pedido.packs.pop();
   goStep(4);
 }
@@ -1250,6 +1281,7 @@ function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidCel(c){ return c.replace(/\D/g,'').length>=7; }
 
 function validateStep(n){
+  if(n==='manga-tipo'||n==='1b') return true; // pasos sin validación propia, no deben bloquear la navegación
   if(n===2){ const minReq=(mangaTipoActual!=='larga')?1:(modalidadComfy==='B'?3:2); if(!pedido.pack||pedido.pack<minReq){ alert('Selecciona la cantidad de franelas (mínimo '+minReq+')'); return false; } return true; }
   if(n===3){
     if(!pedido.modelo){ alert('Selecciona el modelo'); return false; }
