@@ -1357,8 +1357,9 @@ async function calcularPago(){
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
     const codigoProd=pk.codigoProducto||pedido.codigoProducto;
     const pp=window._packPrecios&&window._packPrecios[codigoProd];
-    let packBs=pp?parseFloat(pp.bs)||0:0;
-    let packUsd=pp?parseFloat(pp.usd)||0:0;
+    const numPiezasPack=pk.piezas.length||pk.pack||1;
+    let packBs=(pp?parseFloat(pp.bs)||0:0)*numPiezasPack;
+    let packUsd=(pp?parseFloat(pp.usd)||0:0)*numPiezasPack;
     // Capucha aplica costo a Playera y Dress. Para Chaqueta Reflectiva, con o sin capucha cuesta igual (sin recargo).
     const v=pk.variante||pedido.variante;
     const serieDePack=pk.serie||selectedSerie;
