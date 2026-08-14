@@ -4955,7 +4955,7 @@ async function guardarRespaldo(){
     let packsTaller=cotItems.map(item=>{
       const piezasStr=item.tallas.map((talla,i)=>{
         const pz=item.piezasDetalle[i];
-        const capuchaTxt=(item.capucha&&item.capucha!=='Sin Capucha')?' CON CAPUCHA':'';
+        const capuchaTxt=pz.capucha?' CON CAPUCHA':'';
         const nombreTxt=pz.sinNombre?'SIN NOMBRE EN MANGA':pz.nombre.trim().toUpperCase();
         const logosTxt=[
           pz.logoPecho?('LOGO PECHO'+(pz.logoPechoTxt?': '+pz.logoPechoTxt.toUpperCase():'')):'',
@@ -7788,7 +7788,7 @@ function tallerConstruirEstampadorHTML(codigos){
       const lineasTalla=Object.values(grupos).map(gr=>
         gr.raw
           ? `${tallerReformatearTexto(gr.texto)} <span style="color:#888;">(texto original del pedido — sin desglose exacto por talla)</span>`
-          : `${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()}${gr.capucha?' (CON CAPUCHA)':''}${gr.tela?' — TELA <span style="font-weight:700;">'+gr.tela.toUpperCase()+'</span>':''}${gr.nombre?' - <span style="font-weight:700;font-size:15px;">'+gr.nombre.toUpperCase()+'</span>':''} (${gr.unds} UNDS)`
+          : `${gr.tela?'<span style="color:#555;">COLOR: '+gr.tela.toUpperCase()+'</span><br>':''}${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()}${gr.capucha?' (CON CAPUCHA)':''}${gr.nombre?' - <span style="font-weight:700;font-size:15px;">'+gr.nombre.toUpperCase()+'</span>':''} (${gr.unds} UNDS)`
       ).join('<br>');
       const logoLineas=[];
       if(logos.pecho.size)   logoLineas.push('PECHO: '+[...logos.pecho].join(', ').toUpperCase());
@@ -9308,6 +9308,9 @@ function cotmAddTalla(opts){
   const div=document.createElement('div');
   div.id='cotm-tr-'+id;
   const esShortSinNombre = cotmApp==='short_uni' || (cotmApp==='coleccion' && cotmPrenda==='Short');
+  const defActual=COT_DEF[cotmApp];
+  const aplicaCapuchaPorPieza=!!(defActual&&defActual.capuchaCod) || (cotmApp==='coleccion'&&(COT_DEF.coleccion.prendas[cotmPrenda]||{}).capuchaCod);
+  const capuchaMarcadaPorDefecto=(cotmApp==='coleccion'?cotmCapuchaCol:cotmCapucha)==='Con Capucha';
   if(cotmModoTaller){
     div.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:6px;';
     div.innerHTML=`
@@ -9326,6 +9329,10 @@ function cotmAddTalla(opts){
         <label for="cotm-tr-sinombre-${id}" style="font-size:11px;color:var(--muted);cursor:pointer;">${cotmApp==='toalla'?'Sin personalización de nombre':'Sin nombre en manga derecha'}</label>
       </div>
       <input class="field-input cotm-talla-nombre" id="cotm-tr-nombre-${id}" type="text" placeholder="${cotmApp==='toalla'?'Nombre para personalizar':'Nombre para bordar/estampar'}" style="font-size:12px;padding:6px 8px;width:100%;margin-bottom:8px;">`}
+      ${aplicaCapuchaPorPieza?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <input type="checkbox" class="cotm-talla-capucha" id="cotm-tr-capucha-${id}" ${capuchaMarcadaPorDefecto?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
+        <label for="cotm-tr-capucha-${id}" style="font-size:11px;color:var(--text);cursor:pointer;font-weight:600;">🧢 Con Capucha (esta prenda)</label>
+      </div>`:''}
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Logos (con costo adicional)</div>
       <div style="display:flex;flex-direction:column;gap:4px;">
         <label style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text);cursor:pointer;">
@@ -9480,7 +9487,8 @@ function cotGuardarItem(){
         const logoEspaldaTxt=row.querySelector('.cotm-talla-logo-espalda-txt')?.value.trim()||'';
         const logoManga=row.querySelector('.cotm-talla-logo-manga')?.checked||false;
         const logoMangaTxt=row.querySelector('.cotm-talla-logo-manga-txt')?.value.trim()||'';
-        for(let i=0;i<cant;i++) piezasDetalleModal.push({genero:generoDerivado,nombre,sinNombre,logoPecho,logoPechoTxt,logoEspalda,logoEspaldaTxt,logoManga,logoMangaTxt});
+        const capuchaPieza=row.querySelector('.cotm-talla-capucha')?.checked||false;
+        for(let i=0;i<cant;i++) piezasDetalleModal.push({genero:generoDerivado,nombre,sinNombre,logoPecho,logoPechoTxt,logoEspalda,logoEspaldaTxt,logoManga,logoMangaTxt,capucha:capuchaPieza});
       }
     }
   }
@@ -9519,7 +9527,7 @@ function cotGuardarItem(){
         nLogoEsp:0, nLogoPec:0, nLogoMan:0,
         estampado:'', colorLibre:'',
         subtotalUSD:precioUnitUSDTB*tallas.length, subtotalBs:precioUnitBSTB*tallas.length, tasaBCV:cotmTasaBCV,
-        piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
+        piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga,capucha:p.capucha})):undefined
       });
       document.getElementById('cot-modal-wrap').style.display='none';
       cotRenderItems(); return;
@@ -9563,7 +9571,7 @@ function cotGuardarItem(){
       logoManga:logoManTotal, logoMangaBs:logoManTotalBs,
       nLogoEsp, nLogoPec, nLogoMan,
       estampado:'', colorLibre:'',
-      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
+      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga,capucha:p.capucha})):undefined
     });
     document.getElementById('cot-modal-wrap').style.display='none';
     cotRenderItems(); return;
@@ -9587,7 +9595,7 @@ function cotGuardarItem(){
       capuchaTotal:0, capuchaTotalBs:0,
       logoEspalda:0, logoPecho:0, logoEspaldaBs:0, logoPechoBs:0,
       estampado:'', colorLibre,
-      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
+      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga,capucha:p.capucha})):undefined
     });
     document.getElementById('cot-modal-wrap').style.display='none';
     cotRenderItems(); return;
@@ -9630,7 +9638,7 @@ function cotGuardarItem(){
       logoManga:logoManTotal, logoMangaBs:logoManTotalBs,
       nLogoEsp, nLogoPec, nLogoMan,
       estampado:'', colorLibre:'',
-      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
+      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga,capucha:p.capucha})):undefined
     });
     document.getElementById('cot-modal-wrap').style.display='none';
     cotRenderItems(); return;
@@ -9648,10 +9656,11 @@ function cotGuardarItem(){
     const plusBS =cotPrecioBS(pp,'S.COMFY.03')||parseFloat(cotmPrecios.recarga_bs)||0;
     const recargaTotal=plusUSD*nPlus;
     const recargaTotalBs=plusBS*nPlus;
-    const capUSD=(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioUSD(pp,def.capuchaCod)||parseFloat(cotmPrecios.capucha_usd)||0):0;
-    const capBS =(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioBS(pp,def.capuchaCod)||parseFloat(cotmPrecios.capucha_bs)||0):0;
-    const capuchaTotal=capUSD*tallas.length;
-    const capuchaTotalBs=capBS*tallas.length;
+    const nCapuchaSub=cotmModoTaller?piezasDetalleModal.filter(p=>p.capucha).length:((cotmCapucha==='Con Capucha')?tallas.length:0);
+    const capUSD=(nCapuchaSub>0&&def.capuchaCod)?(cotPrecioUSD(pp,def.capuchaCod)||parseFloat(cotmPrecios.capucha_usd)||0):0;
+    const capBS =(nCapuchaSub>0&&def.capuchaCod)?(cotPrecioBS(pp,def.capuchaCod)||parseFloat(cotmPrecios.capucha_bs)||0):0;
+    const capuchaTotal=capUSD*nCapuchaSub;
+    const capuchaTotalBs=capBS*nCapuchaSub;
     // Logos — Espalda, Pecho y Manga
     const nLogoEspSub=cotmModoTaller?piezasDetalleModal.filter(p=>p.logoEspalda).length:(parseInt(document.getElementById('cotm-logo-espalda')?.value)||0);
     const nLogoPecSub=cotmModoTaller?piezasDetalleModal.filter(p=>p.logoPecho).length:(parseInt(document.getElementById('cotm-logo-pecho')?.value)||0);
@@ -9678,7 +9687,7 @@ function cotGuardarItem(){
       logoManga:logoManTotalSub, logoMangaBs:logoManTotalBsSub,
       nLogoEsp:nLogoEspSub, nLogoPec:nLogoPecSub, nLogoMan:nLogoManSub,
       estampado, colorLibre:'',
-      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
+      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga,capucha:p.capucha})):undefined
     });
     document.getElementById('cot-modal-wrap').style.display='none';
     cotRenderItems(); return;
@@ -9694,10 +9703,11 @@ function cotGuardarItem(){
     const plusBS =cotPrecioBS(pp,'S.COMFY.03')||parseFloat(cotmPrecios.recarga_bs)||0;
     const recargaTotal=plusUSD*nPlus;
     const recargaTotalBs=plusBS*nPlus;
-    const capUSD=(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioUSD(pp,def.capuchaCod)||parseFloat(cotmPrecios.capucha_usd)||0):0;
-    const capBS =(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(cotPrecioBS(pp,def.capuchaCod)||parseFloat(cotmPrecios.capucha_bs)||0):0;
-    const capuchaTotal=capUSD*packN;
-    const capuchaTotalBs=capBS*packN;
+    const nCapuchaEmp=cotmModoTaller?piezasDetalleModal.filter(p=>p.capucha).length:((cotmCapucha==='Con Capucha')?packN:0);
+    const capUSD=(nCapuchaEmp>0&&def.capuchaCod)?(cotPrecioUSD(pp,def.capuchaCod)||parseFloat(cotmPrecios.capucha_usd)||0):0;
+    const capBS =(nCapuchaEmp>0&&def.capuchaCod)?(cotPrecioBS(pp,def.capuchaCod)||parseFloat(cotmPrecios.capucha_bs)||0):0;
+    const capuchaTotal=capUSD*nCapuchaEmp;
+    const capuchaTotalBs=capBS*nCapuchaEmp;
     const nLogoEsp=cotmModoTaller?piezasDetalleModal.filter(p=>p.logoEspalda).length:(parseInt(document.getElementById('cotm-logo-espalda')?.value)||0);
     const nLogoPec=cotmModoTaller?piezasDetalleModal.filter(p=>p.logoPecho).length:(parseInt(document.getElementById('cotm-logo-pecho')?.value)||0);
     const nLogoMan=cotmModoTaller?piezasDetalleModal.filter(p=>p.logoManga).length:(parseInt(document.getElementById('cotm-logo-manga')?.value)||0);
@@ -9727,7 +9737,7 @@ function cotGuardarItem(){
       logoPecho:logoPecTotal, logoPechoBs:logoPecTotalBs,
       logoManga:logoManTotal, logoMangaBs:logoManTotalBs,
       nLogoEsp, nLogoPec, nLogoMan, estampado:'', colorLibre:'',
-      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
+      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga,capucha:p.capucha})):undefined
     });
     document.getElementById('cot-modal-wrap').style.display='none';
     cotRenderItems(); return;
@@ -9750,7 +9760,7 @@ function cotGuardarItem(){
       capuchaTotal:0, capuchaTotalBs:0,
       logoEspalda:0, logoPecho:0, logoEspaldaBs:0, logoPechoBs:0,
       estampado:'', colorLibre:'',
-      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
+      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga,capucha:p.capucha})):undefined
     });
     document.getElementById('cot-modal-wrap').style.display='none';
     cotRenderItems(); return;
@@ -9781,7 +9791,7 @@ function cotGuardarItem(){
       logoEspalda:0, logoPecho:0, logoEspaldaBs:0, logoPechoBs:0,
       logoManga:0, logoMangaBs:0, nLogoEsp:0, nLogoPec:0, nLogoMan:0,
       estampado:'', colorLibre:'',
-      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
+      subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga,capucha:p.capucha})):undefined
     });
     document.getElementById('cot-modal-wrap').style.display='none';
     cotRenderItems(); return;
@@ -9808,10 +9818,11 @@ function cotGuardarItem(){
   const nPlus=esMangaAlterna?0:tallas.filter(t=>(def.plusTallas||[]).some(pt=>t.includes(pt))).length;
   const recargaTotal=plusUSD*nPlus;
   const recargaTotalBs=plusBS*nPlus;
-  const capUSD=(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(parseFloat(cotmPrecios.capucha_usd)||0):0;
-  const capBS =(cotmCapucha==='Con Capucha'&&def.capuchaCod)?(parseFloat(cotmPrecios.capucha_bs)||0):0;
-  const capuchaTotal=capUSD*undsReal;
-  const capuchaTotalBs=capBS*undsReal;
+  const nCapucha=cotmModoTaller?piezasDetalleModal.filter(p=>p.capucha).length:((cotmCapucha==='Con Capucha')?undsReal:0);
+  const capUSD=(nCapucha>0&&def.capuchaCod)?(parseFloat(cotmPrecios.capucha_usd)||0):0;
+  const capBS =(nCapucha>0&&def.capuchaCod)?(parseFloat(cotmPrecios.capucha_bs)||0):0;
+  const capuchaTotal=capUSD*nCapucha;
+  const capuchaTotalBs=capBS*nCapucha;
   // Logos — Full Comfy, Licra Protect y Comfy Mega Promo
   const esCFLconLogos=(cotmApp==='fullcomfy'||cotmApp==='licra'||cotmApp==='comfy');
   const nLogoEsp=cotmModoTaller?piezasDetalleModal.filter(p=>p.logoEspalda).length:(esCFLconLogos?(parseInt(document.getElementById('cotm-logo-espalda')?.value)||0):0);
@@ -9846,7 +9857,7 @@ function cotGuardarItem(){
     logoManga:logoManTotal, logoMangaBs:logoManTotalBs,
     nLogoEsp, nLogoPec, nLogoMan,
     estampado:'', colorLibre:'',
-    subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga})):undefined
+    subtotalUSD, subtotalBs, tasaBCV:cotmTasaBCV, piezasDetalle:(cotmModoTaller&&piezasDetalleModal.length)?piezasDetalleModal.map(p=>({genero:p.genero,nombre:p.nombre,sinNombre:p.sinNombre,logoPecho:p.logoPecho,logoEspalda:p.logoEspalda,logoManga:p.logoManga,capucha:p.capucha})):undefined
   });
   document.getElementById('cot-modal-wrap').style.display='none';
   cotRenderItems();
