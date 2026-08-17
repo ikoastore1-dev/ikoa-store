@@ -1531,7 +1531,9 @@ async function guardarEnSheets(){
     const esShort=pk.variante==='Short'||pedido.variante==='Short';
     const esCotton=pk.variante==='Cotton Licra'||pedido.variante==='Cotton Licra';
     const piezasText=pk.piezas.map(p=>{
-      const base=`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''}`;
+      const esCortavientoOChaqueta=['Cortaviento','Chaqueta','ChaquetaReflectiva'].includes(pk.variante||pedido.variante);
+      const capuchaTxtPieza=p.conCapucha?' CON CAPUCHA':(esCortavientoOChaqueta?' SIN CAPUCHA':'');
+      const base=`${p.genero} ${p.talla}${capuchaTxtPieza}`;
       const logosSuffix=`${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}`;
       if(esShort||esCotton||p.sinNombre||!p.nombre||p.nombre==='SIN NOMBRE EN MANGA') return base+logosSuffix;
       return `${base} - ${p.nombre}${logosSuffix}`;
@@ -1542,7 +1544,10 @@ async function guardarEnSheets(){
     if(variante==='Toalla'){
       modeloParts.push('Toalla'); modeloParts.push(pk.tela||pedido.tela||'');
     } else if(variante==='Chaqueta'||variante==='ChaquetaReflectiva'){
-      modeloParts.push('Chaqueta Reflectiva'); // la capucha va indicada en cada prenda individualmente, no aquí
+      modeloParts.push('Chaqueta Reflectiva');
+      const tieneCapuchaChq=pk.piezas.some(p=>p.conCapucha);
+      const todasCapuchaChq=pk.piezas.every(p=>p.conCapucha);
+      modeloParts.push(tieneCapuchaChq?(todasCapuchaChq?'Con Capucha':''):'Sin Capucha'); // capucha mixta se aclara por prenda; si ninguna la lleva, se indica aquí
     } else if(variante==='Cotton Licra'){
       modeloParts.push(pk.serie||selectedSerie||''); modeloParts.push('Cotton Licra'); modeloParts.push('Manga Corta'); modeloParts.push('Sin Capucha');
     } else if(!sinManga.includes(variante)){
@@ -1552,7 +1557,8 @@ async function guardarEnSheets(){
       if(variante!=='Short'){
         const tieneCapuchaPz=pk.piezas.some(p=>p.conCapucha);
         const todasCapuchaPz=pk.piezas.every(p=>p.conCapucha);
-        const capuchaTxtPz=!tieneCapuchaPz?'':(todasCapuchaPz?'Con Capucha':'');
+        let capuchaTxtPz=!tieneCapuchaPz?'':(todasCapuchaPz?'Con Capucha':'');
+        if(!capuchaTxtPz && variante==='Cortaviento') capuchaTxtPz='Sin Capucha'; // Cortaviento: aclarar explícitamente para fabricación
         if(capuchaTxtPz) modeloParts.push(capuchaTxtPz);
       }
     } else {

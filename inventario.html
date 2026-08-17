@@ -7797,9 +7797,8 @@ function tallerConstruirEstampadorHTML(codigos){
     g.packs.forEach(p=>{
       const desc=tallerDescripcionPack(p);
       const piezas=tallerParsearPiezas(p.piezas);
-      // Agrupar por Genero+Talla+Nombre+Tela para mostrar "GENERO TALLA - NOMBRE (N UNDS)"
+      // Agrupar por Genero+Talla+Nombre+Tela+Logos para mostrar "GENERO TALLA - NOMBRE (N UNDS)" con sus propios logos
       const grupos={};
-      const logos={pecho:new Set(), espalda:new Set(), manga:new Set()};
       piezas.forEach(pz=>{
         if(pz.raw){
           const key='RAW||'+pz.nombre;
@@ -7808,27 +7807,25 @@ function tallerConstruirEstampadorHTML(codigos){
           return;
         }
         const telaPz=pz.tela||''; // solo se llena cuando el pack tiene colores mezclados (Opción B)
-        const key=(pz.genero||'—')+'||'+(pz.talla||'—')+'||'+(pz.nombre||'')+(pz.capucha?'||CAP':'')+(telaPz?'||'+telaPz:'');
-        if(!grupos[key]) grupos[key]={genero:pz.genero||'—', talla:pz.talla||'—', nombre:pz.nombre||'', capucha:pz.capucha, tela:telaPz, unds:0};
+        const logoKey=(pz.logoPecho||'')+'|'+(pz.logoEspalda||'')+'|'+(pz.logoManga||'');
+        const key=(pz.genero||'—')+'||'+(pz.talla||'—')+'||'+(pz.nombre||'')+(pz.capucha?'||CAP':'')+(telaPz?'||'+telaPz:'')+'||'+logoKey;
+        if(!grupos[key]) grupos[key]={genero:pz.genero||'—', talla:pz.talla||'—', nombre:pz.nombre||'', capucha:pz.capucha, tela:telaPz,
+          logoPecho:pz.logoPecho||'', logoEspalda:pz.logoEspalda||'', logoManga:pz.logoManga||'', unds:0};
         grupos[key].unds++;
-        if(pz.logoPecho) logos.pecho.add(pz.logoPecho);
-        if(pz.logoEspalda) logos.espalda.add(pz.logoEspalda);
-        if(pz.logoManga) logos.manga.add(pz.logoManga);
       });
-      const lineasTalla=Object.values(grupos).map(gr=>
-        gr.raw
-          ? `${tallerReformatearTexto(gr.texto)} <span style="color:#888;">(texto original del pedido — sin desglose exacto por talla)</span>`
-          : `${gr.tela?'<span style="color:#555;">COLOR: '+gr.tela.toUpperCase()+'</span><br>':''}${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()}${gr.capucha?' (CON CAPUCHA)':''}${gr.nombre?' - <span style="font-weight:700;font-size:15px;">'+gr.nombre.toUpperCase()+'</span>':''} (${gr.unds} UNDS)`
-      ).join('<br>');
-      const logoLineas=[];
-      if(logos.pecho.size)   logoLineas.push('PECHO: '+[...logos.pecho].join(', ').toUpperCase());
-      if(logos.espalda.size) logoLineas.push('ESPALDA: '+[...logos.espalda].join(', ').toUpperCase()+' (EN GRANDE)');
-      if(logos.manga.size)   logoLineas.push('MANGA: '+[...logos.manga].join(', ').toUpperCase());
+      const lineasTalla=Object.values(grupos).map(gr=>{
+        if(gr.raw) return `${tallerReformatearTexto(gr.texto)} <span style="color:#888;">(texto original del pedido — sin desglose exacto por talla)</span>`;
+        const logosPieza=[];
+        if(gr.logoPecho)   logosPieza.push('PECHO: '+gr.logoPecho.toUpperCase());
+        if(gr.logoEspalda) logosPieza.push('ESPALDA: '+gr.logoEspalda.toUpperCase()+' (EN GRANDE)');
+        if(gr.logoManga)   logosPieza.push('MANGA: '+gr.logoManga.toUpperCase());
+        const logosTxt=logosPieza.length?`<br><span style="font-weight:700;color:#a00;">${logosPieza.join(' · ')}</span>`:'';
+        return `${gr.tela?'<span style="color:#555;">COLOR: '+gr.tela.toUpperCase()+'</span><br>':''}${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()}${gr.capucha?' (CON CAPUCHA)':''}${gr.nombre?' - <span style="font-weight:700;font-size:15px;">'+gr.nombre.toUpperCase()+'</span>':''} (${gr.unds} UNDS)${logosTxt}`;
+      }).join('<br><br>');
       packsHtml+=`
         <p style="font-size:11px;font-weight:700;margin:10px 0 2px 0;">${desc}</p>
         <p style="font-size:10.5px;margin:0 0 4px 0;">TELA ${(p.tela||'—').toUpperCase()} - VINIL ${(p.vinil||'—').toUpperCase()}</p>
         <p style="font-size:10.5px;margin:0 0 4px 0;">${lineasTalla}</p>
-        ${logoLineas.length?`<p style="font-size:10.5px;font-weight:700;margin:0 0 4px 0;">${logoLineas.join('<br>')}</p>`:''}
       `;
     });
     bloques+=`
