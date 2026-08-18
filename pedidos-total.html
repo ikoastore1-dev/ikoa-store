@@ -972,10 +972,10 @@ function renderPacksResumen(){
 
 function agregarOtroPack(){
   // Resetear campos de modelo/pack para nuevo pack (capucha se selecciona manualmente)
-  pedido.pack=0; pedido.modelo='Licra Colección'; pedido.manga='Manga Larga';
+  pedido.pack=0; pedido.modelo=''; pedido.manga='Manga Larga';
   pedido.tela=''; pedido.vinil=''; pedido.piezas=[]; pedido.capucha=''; pedido.largo='';
   pedido.codigoProducto=''; pedido.nombreProducto=''; pedido.variante='';
-  pedido._minUnidades=1; pedido._hojaColores=null; pedido._modeloTieneCapucha=false; pedido._colorLibreEmp=false; pedido._empresarialLogos=false;
+  pedido._minUnidades=1; pedido._hojaColores=null; pedido._modeloTieneCapucha=false; pedido._colorLibreEmp=false; pedido._empresarialLogos=false; pedido._codigo1u=null;
   selectedSerie=''; selectedColorSerie=''; selectedVariante=''; selectedLinea='';
   // Limpiar selecciones visuales
   document.querySelectorAll('#tela-opts .opt-btn, #vinil-opts .opt-btn').forEach(b=>b.classList.remove('selected'));
@@ -1254,7 +1254,7 @@ function selectEmpresarial(btn,tipo){
 
 function selectSerie(btn,serie){
   selectedSerie=serie; selectedColorSerie=''; selectedVariante='';
-  pedido._minUnidades=1; pedido._hojaColores=null; pedido._modeloTieneCapucha=false; pedido._colorLibreEmp=false; pedido._empresarialLogos=false;
+  pedido._minUnidades=1; pedido._hojaColores=null; pedido._modeloTieneCapucha=false; pedido._colorLibreEmp=false; pedido._empresarialLogos=false; pedido._codigo1u=null;
   document.querySelectorAll('#serie-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   const s=SERIES_COLECCION[serie];
