@@ -7642,7 +7642,7 @@ function tallerParsearPiezas(piezasStr){
       return;
     }
     // Continuación de tela por pieza (Opción B de Mega Promo Comfy: colores mezclados)
-    const mTela=tok.match(/^Tela\s*:\s*(.+)$/i);
+    const mTela=tok.match(/^Tela\s*:\s*([^-]+)/i);
     if(mTela && piezas.length){
       piezas[piezas.length-1].tela=mTela[1].trim();
       return;
@@ -7740,7 +7740,7 @@ function tallerConstruirCortadorHTML(codigos){
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${(gr.talla||'—').toUpperCase()}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${(gr.genero||'—').toUpperCase()}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${gr.unds}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${(gr.tela||p.tela||'—').toUpperCase()}</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${(gr.tela||p.tela||'—').split('-')[0].trim().toUpperCase()}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${gr.capucha?'CON CAPUCHA':''}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;color:#b00;font-weight:700;">${g.urgente?'URGENTE':''}</td>
         </tr>`;
