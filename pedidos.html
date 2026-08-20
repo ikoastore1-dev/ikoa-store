@@ -976,11 +976,6 @@ function goStep(n){
   if(n===3){
     origenStep3='step2';
   }
-  if(n===5){
-    if(pedido.packs.length===0){
-      pedido.packs.push({pack:pedido.pack,modelo:pedido.modelo,manga:pedido.manga,capucha:pedido.capucha,tela:pedido.tela,vinil:pedido.vinil,piezas:JSON.parse(JSON.stringify(pedido.piezas))});
-    }
-  }
   if(n===6) calcularPago();
   if(n===7) buildResumen();
   updateProgress();
@@ -1201,7 +1196,7 @@ async function intentarPaso45(){
     pack: pedido.pack,
     modelo: pedido.modelo,
     manga: pedido.manga,
-    capucha: pedido.capucha,
+    capucha: pedido.piezas.some(p=>p.conCapucha)?'Con Capucha':'Sin Capucha',
     tela: pedido.tela,
     vinil: pedido.vinil,
     piezas: JSON.parse(JSON.stringify(pedido.piezas))
@@ -1237,8 +1232,9 @@ function eliminarPack(idx){
 
 function agregarOtroPack(){
   // Resetear campos de modelo/pack para nuevo pack
-  pedido.pack=0; pedido.modelo='Comfy'; pedido.manga='Manga Larga'; pedido.capucha='Sin Capucha'; pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
-  modalidadComfy='A';
+  pedido.pack=0; pedido.modelo=''; pedido.manga=''; pedido.capucha=''; pedido.tela=''; pedido.vinil=''; pedido.piezas=[];
+  pedido.esDress=false; pedido.mangaTipoCodigo=null; pedido._codigo1u=null;
+  modalidadComfy='A'; pasoPorOpcionAB=false; prendaComfyActual='playera'; mangaComfyActual='larga'; mangaTipoActual='larga';
   // Limpiar selecciones visuales
   document.querySelectorAll('#tela-opts .opt-btn, #vinil-opts .opt-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
@@ -1247,8 +1243,17 @@ function agregarOtroPack(){
   document.getElementById('btn-modal-a').style.background='var(--surface2)';
   document.getElementById('btn-modal-b').style.background='var(--surface2)';
   document.getElementById('step45').classList.remove('active');
-  currentStep=1;
-  document.getElementById('step1').classList.add('active');
+  document.querySelectorAll('#btn-prenda-playera, #btn-prenda-dress, #btn-prenda-short, #btn-manga-larga, #btn-manga-corta, #btn-manga-cero').forEach(b=>{
+    if(b){ b.style.borderColor='var(--border)'; b.style.background='var(--surface2)'; }
+  });
+  const btnPlayera=document.getElementById('btn-prenda-playera');
+  if(btnPlayera){ btnPlayera.style.borderColor='var(--accent)'; btnPlayera.style.background='#0a2a1a'; }
+  const btnLarga=document.getElementById('btn-manga-larga');
+  if(btnLarga){ btnLarga.style.borderColor='var(--accent)'; btnLarga.style.background='#0a2a1a'; }
+  const btnCorta=document.getElementById('btn-manga-corta');
+  if(btnCorta) btnCorta.style.display='block';
+  currentStep='manga-tipo';
+  document.getElementById('step-manga-tipo').classList.add('active');
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
 }
