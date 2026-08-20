@@ -1220,10 +1220,19 @@ function renderPacksResumen(){
   if(!el||!pedido.packs.length) return;
   el.innerHTML=`<div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Packs en este pedido:</div>`+
     pedido.packs.map((p,i)=>`
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;">
-        <b style="color:var(--accent)">Pack ${i+1}</b> · ${p.pack}PACK · ${p.modelo} · ${p.tela} / ${p.vinil}
-        <span style="color:var(--muted);font-size:12px;"> · ${p.piezas.length} franelas</span>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <div>
+          <b style="color:var(--accent)">Pack ${i+1}</b> · ${p.pack}PACK · ${p.modelo} · ${p.tela} / ${p.vinil}
+          <span style="color:var(--muted);font-size:12px;"> · ${p.piezas.length} franelas</span>
+        </div>
+        <button onclick="eliminarPack(${i})" style="flex-shrink:0;padding:6px 10px;background:transparent;border:1.5px solid var(--danger);border-radius:6px;color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;">✕ Eliminar</button>
       </div>`).join('');
+}
+
+function eliminarPack(idx){
+  if(!confirm(`¿Seguro que deseas eliminar el Pack ${idx+1}?`)) return;
+  pedido.packs.splice(idx,1);
+  renderPacksResumen();
 }
 
 function agregarOtroPack(){
@@ -1297,6 +1306,10 @@ function validateStep(n){
       if(!p.genero||!p.talla){ alert(`Completa género y talla en la franela ${i+1}`); return false; }
       if(!p.sinNombre && !p.nombre){ alert(`⚠️ La franela ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
     }
+    return true;
+  }
+  if(n===45){
+    if(!pedido.packs.length){ alert('Agrega al menos un pack antes de continuar'); return false; }
     return true;
   }
   if(n===5){
@@ -1721,7 +1734,7 @@ function copiarDato(texto, btnId){
 function buildResumen(){
   const retiraText=pedido.mismoEnvio?`${pedido.nombre} · ${pedido.cedula} · ${pedido.celular}`:`${pedido.eNombre} · ${pedido.eCi} · ${pedido.eCel}`;
   const packsHtml=pedido.packs.map((pk,i)=>{
-    const piezasHtml=pk.piezas.map((p,j)=>`<b>Franela ${j+1}:</b> ${p.genero} Talla ${p.talla} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('<br>');
+    const piezasHtml=pk.piezas.map((p,j)=>`<b>Franela ${j+1}:</b> ${p.genero} Talla ${p.talla}${p.conCapucha?' 🧢 CON CAPUCHA':''} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('<br>');
     return `<div class="resumen-label">📦 Pack ${i+1} · ${pk.pack}PACK</div>
       <div class="resumen-block"><b>Modelo:</b> ${pk.modelo} ${pk.manga} ${pk.capucha}<br><b>Tela:</b> ${pk.tela} · <b>Vinil:</b> ${pk.vinil}</div>
       <div class="resumen-label">📏 Franelas (${pk.piezas.length})</div>
