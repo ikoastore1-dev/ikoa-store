@@ -322,13 +322,6 @@ window.addEventListener('load',function(){
         <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;color:var(--accent);" id="modelo-info-comfy">COMFY — MEGA PROMO</div>
         <div style="font-size:13px;color:var(--muted);margin-top:2px;" id="modelo-info-comfy-sub">Manga Larga</div>
       </div>
-      <div id="capucha-wrap-comfy" style="margin-bottom:14px;">
-        <div class="card-title" style="margin-top:0;">¿Con o sin capucha?</div>
-        <div class="option-grid cols2">
-          <button type="button" onclick="seleccionarCapuchaComfy('Sin Capucha')" id="btn-cap-sin" style="padding:14px;background:#0a2a1a;border:2px solid var(--accent);border-radius:12px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Sin Capucha</button>
-          <button type="button" onclick="seleccionarCapuchaComfy('Con Capucha')" id="btn-cap-con" style="padding:14px;background:var(--surface2);border:2px solid var(--border);border-radius:12px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Con Capucha</button>
-        </div>
-      </div>
     </div>
     <div class="card">
       
@@ -1120,7 +1113,7 @@ function intentarPaso4B(){
   pedido.piezas = franelasB.map(f=>({talla:f.talla, nombre:f.nombre, genero: document.getElementById(`genero-b${franelasB.indexOf(f)}`)?.value||'Dama', logoPecho:f.logoPecho||'', logoEspalda:f.logoEspalda||'', logoManga:f.logoManga||'', tela:f.tela||''}));
   pedido.packs.push({
     pack:franelasB.length, modelo:'COMFY MEGA PROMO (Opción B)',
-    manga:'Manga Larga', capucha:pedido.capucha||'Sin Capucha',
+    manga:'Manga Larga', capucha:pedido.piezas.some(p=>p.conCapucha)?'Con Capucha':'Sin Capucha',
     tela: pedido.tela, vinil: vinilB,
     piezas: JSON.parse(JSON.stringify(pedido.piezas))
   });
@@ -1286,7 +1279,6 @@ function validateStep(n){
   if(n===3){
     if(!pedido.modelo){ alert('Selecciona el modelo'); return false; }
     if(!pedido.manga){ alert('Selecciona el tipo de manga'); return false; }
-    if(!pedido.capucha){ alert('Selecciona si deseas capucha'); return false; }
     if(!pedido.tela){ alert('Selecciona el color de tela'); return false; }
     if(!pedido.vinil){ alert('Selecciona el color del vinil'); return false; }
     return true;
@@ -1402,6 +1394,10 @@ function addPieza(copiarDe=null){
         <label for="pz-sinombre-${id}" style="font-size:13px;color:var(--muted);cursor:pointer;">Sin nombre en manga derecha</label>
       </div>
       <input class="field-input" type="text" id="pz-nombre-${id}" placeholder="Ej: María, Carlos..." value="${nomCopy}" style="${sinCopy?'display:none':''}">
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <input type="checkbox" id="pz-capucha-${id}" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+      <label for="pz-capucha-${id}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🧢 Con Capucha (esta franela)</label>
     </div>
     <div style="margin-top:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;">
       <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Logos (opcional, con costo adicional):</div>
@@ -1535,9 +1531,10 @@ function savePiezas(){
     const logoPecho=document.getElementById('pz-logo-pecho-'+id)?.checked?(document.getElementById('pz-logo-pecho-txt-'+id)?.value.trim()||'SI'):'';
     const logoEspalda=document.getElementById('pz-logo-espalda-'+id)?.checked?(document.getElementById('pz-logo-espalda-txt-'+id)?.value.trim()||'SI'):'';
     const logoManga=document.getElementById('pz-logo-manga-'+id)?.checked?(document.getElementById('pz-logo-manga-txt-'+id)?.value.trim()||'SI'):'';
+    const conCapucha=document.getElementById('pz-capucha-'+id)?.checked||false;
     // Expandir repeticiones
     for(let i=0;i<rep;i++){
-      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre,logoPecho,logoEspalda,logoManga});
+      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre,logoPecho,logoEspalda,logoManga,conCapucha});
     }
   });
 }
@@ -1594,7 +1591,7 @@ async function calcularPago(){
     const logosPecho=pk.piezas.filter(p=>p.logoPecho).length;
     const logosEspalda=pk.piezas.filter(p=>p.logoEspalda).length;
     const logosManga=pk.piezas.filter(p=>p.logoManga).length;
-    const conCapucha=(String(pk.capucha||'').trim()==='Con Capucha')?franelas:0;
+    const conCapucha=pk.piezas.filter(p=>p.conCapucha).length;
     totalFranelas+=franelas;
     totalRecargas+=recargas;
     totalLogosPecho+=logosPecho;
@@ -1776,8 +1773,7 @@ async function guardarEnSheets(){
   let codigoPrincipal='';
   for(let i=0; i<pedido.packs.length; i++){
     const pk=pedido.packs[i];
-    const capuchaTxt=(pk.capucha==='Con Capucha')?' CON CAPUCHA':'';
-    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${capuchaTxt}${p.tela?' | Tela: '+p.tela:''} - ${p.nombre}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}`).join(' | ');
+    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''} - ${p.nombre}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}${p.tela?' | Tela: '+p.tela:''}`).join(' | ');
     try{
       const res=await scriptGETjson({
         action:'addSolicitud',
@@ -1788,7 +1784,7 @@ async function guardarEnSheets(){
         celular:pedido.celular,
         modelo:(pedido.esDress?'COMFY DRESS MEGA PROMO':'COMFY MEGA PROMO') + (pasoPorOpcionAB?(' '+(modalidadComfy==='B'?'(Opción B)':'(Opción A)')):''),
         manga:pk.manga,
-        capucha:pk.capucha,
+        capucha:pk.piezas.some(p=>p.conCapucha)?'Con Capucha':'Sin Capucha',
         pack:`${pk.pack}PACK`,
         tela:pk.tela,
         vinil:pk.vinil,
