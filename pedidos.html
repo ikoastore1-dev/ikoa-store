@@ -1184,8 +1184,12 @@ function volverAEditarPiezas(){
     window.scrollTo({top:0,behavior:'smooth'});
     return;
   }
-  if(pedido.packs.length>0) pedido.packs.pop();
-  goStep(4);
+  document.getElementById('step5').classList.remove('active');
+  currentStep=45;
+  document.getElementById('step45').classList.add('active');
+  renderPacksResumen();
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 // Paso 4 → 4.5: guardar pack actual y preguntar si agrega otro
@@ -1227,6 +1231,11 @@ function renderPacksResumen(){
 function eliminarPack(idx){
   if(!confirm(`¿Seguro que deseas eliminar el Pack ${idx+1}?`)) return;
   pedido.packs.splice(idx,1);
+  if(pedido.packs.length===0){
+    alert('Se eliminaron todos los packs. Vamos a empezar de nuevo la selección.');
+    agregarOtroPack(); // reutiliza el mismo reseteo completo y navegación a step-manga-tipo
+    return;
+  }
   renderPacksResumen();
 }
 
