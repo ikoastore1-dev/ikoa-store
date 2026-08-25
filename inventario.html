@@ -10031,6 +10031,26 @@ function rvRenderItemsYMonto(){
   if(rvModalOverlayActivo) rvCerrarOverlayModal();
 }
 
+let cotTasaBCVReal=null;
+
+function cotConvertirATasaBCV(totalBs){
+  const tasaTexto=prompt('Ingresa la tasa BCV oficial de hoy (Bs por $1):');
+  if(!tasaTexto) return;
+  const tasaBCVReal=parseFloat(tasaTexto.replace(',','.'));
+  if(!tasaBCVReal||tasaBCVReal<=0){ alert('Ingresa un número válido para la tasa'); return; }
+  cotTasaBCVReal=tasaBCVReal;
+  const nuevoMontoUSD=totalBs/tasaBCVReal;
+  const el=document.getElementById('cot-monto-bcv-real');
+  if(el) el.innerHTML=`
+    <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:8px;padding:10px 12px;font-size:13px;">
+      <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">A tasa BCV ${tasaBCVReal}</div>
+      <div style="display:flex;justify-content:space-between;font-weight:700;color:var(--accent);">
+        <span>Monto en $</span><span>$${nuevoMontoUSD.toFixed(2)}</span>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;">✓ El documento que generes ahora incluirá este cálculo por producto.</div>
+    </div>`;
+}
+
 function cotRenderItems(){
   const list=document.getElementById('cot-items-list');
   list.innerHTML='';
@@ -10087,7 +10107,9 @@ function cotRenderItems(){
       ${totalBs>0?`<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--text);padding-bottom:4px;">
         <span>TOTAL BS <span style="font-size:10px;font-weight:400;color:var(--muted);">(BCV ${tasaBCV})</span></span>
         <span>Bs ${fmt(totalBs)}</span>
-      </div>`:''}
+      </div>
+      <button onclick="cotConvertirATasaBCV(${totalBs})" style="width:100%;margin-top:6px;padding:9px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;">💵 Monto en Dólares a Tasa BCV</button>
+      <div id="cot-monto-bcv-real" style="margin-top:6px;"></div>`:''}
     `;
   }
   rvRenderItemsYMonto();
@@ -10498,6 +10520,7 @@ function cotConstruirHTMLDocumento(items, datosCliente, montosFactura, codigoCot
     const precioUnitBs=item.precioUnitBS||0;
     const totalItemBs=item.subtotalBs||0;
     const totalItemUSD=item.subtotalUSD||0;
+    const usdBCVTexto=(cotTasaBCVReal&&totalItemBs>0)?` <span style="color:#666;font-weight:400;">($${(totalItemBs/cotTasaBCVReal).toFixed(2)} a BCV ${cotTasaBCVReal})</span>`:'';
     const dl2parts=[];
     if(item.tela)      dl2parts.push('COLOR: '+item.tela.toUpperCase());
     if(item.vinil)     dl2parts.push('VINIL: '+item.vinil.toUpperCase());
@@ -10532,7 +10555,7 @@ function cotConstruirHTMLDocumento(items, datosCliente, montosFactura, codigoCot
         </td>
         <td style="padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;text-align:right;">${precioUnitBs>0?fmt(precioUnitBs):('$'+item.precioUnitUSD.toFixed(2))}</td>
         <td style="padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;text-align:center;">${item.tallas.length}</td>
-        <td style="padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;text-align:right;font-weight:600;">${totalItemBs>0?fmt(totalItemBs):('$'+totalItemUSD.toFixed(2))}</td>
+        <td style="padding:6px;border-bottom:1px solid #c8c8c8;border-left:none;border-right:none;border-top:none;vertical-align:top;font-size:11px;text-align:right;font-weight:600;">${totalItemBs>0?fmt(totalItemBs):('$'+totalItemUSD.toFixed(2))}${usdBCVTexto}</td>
       </tr>`;
     } else {
       filasHTML+=`<tr>
@@ -10544,7 +10567,7 @@ function cotConstruirHTMLDocumento(items, datosCliente, montosFactura, codigoCot
         </td>
         <td class="prec">${precioUnitBs>0?fmt(precioUnitBs):('$'+item.precioUnitUSD.toFixed(2))}</td>
         <td class="und">${item.tallas.length}</td>
-        <td class="pv">${totalItemBs>0?fmt(totalItemBs):('$'+totalItemUSD.toFixed(2))}</td>
+        <td class="pv">${totalItemBs>0?fmt(totalItemBs):('$'+totalItemUSD.toFixed(2))}${usdBCVTexto}</td>
       </tr>`;
     }
   });
@@ -11250,7 +11273,7 @@ async function cotbConfirmarRechazo(){
 }
 
 function cotReset(){
-  cotItems=[]; cotItemEditIdx=-1; cotModoEdicion=null;
+  cotItems=[]; cotItemEditIdx=-1; cotModoEdicion=null; cotTasaBCVReal=null;
   cotmApp=''; cotmPack=''; cotmCapucha='Sin Capucha';
   cotmSerie=''; cotmPrenda=''; cotmCapuchaCol='Sin Capucha';
   cotUltimaCotizacionAprobada=null;
