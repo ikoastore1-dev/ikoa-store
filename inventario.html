@@ -10520,7 +10520,8 @@ function cotConstruirHTMLDocumento(items, datosCliente, montosFactura, codigoCot
     const precioUnitBs=item.precioUnitBS||0;
     const totalItemBs=item.subtotalBs||0;
     const totalItemUSD=item.subtotalUSD||0;
-    const usdBCVTexto=(cotTasaBCVReal&&totalItemBs>0)?` <span style="color:#666;font-weight:400;">($${(totalItemBs/cotTasaBCVReal).toFixed(2)} a BCV ${cotTasaBCVReal})</span>`:'';
+    const tasaBCVActiva=cotTasaBCVReal||cotbTasaBCVReal;
+    const usdBCVTexto=(tasaBCVActiva&&totalItemBs>0)?` <span style="color:#666;font-weight:400;">($${(totalItemBs/tasaBCVActiva).toFixed(2)} a BCV ${tasaBCVActiva})</span>`:'';
     const dl2parts=[];
     if(item.tela)      dl2parts.push('COLOR: '+item.tela.toUpperCase());
     if(item.vinil)     dl2parts.push('VINIL: '+item.vinil.toUpperCase());
@@ -10881,6 +10882,26 @@ async function cotBuscarCotizaciones(){
   }
 }
 
+let cotbTasaBCVReal=null;
+
+function cotbConvertirATasaBCV(totalBs, codigo){
+  const tasaTexto=prompt('Ingresa la tasa BCV oficial de hoy (Bs por $1):');
+  if(!tasaTexto) return;
+  const tasaBCVReal=parseFloat(tasaTexto.replace(',','.'));
+  if(!tasaBCVReal||tasaBCVReal<=0){ alert('Ingresa un número válido para la tasa'); return; }
+  cotbTasaBCVReal=tasaBCVReal;
+  const nuevoMontoUSD=totalBs/tasaBCVReal;
+  const el=document.getElementById('cotb-monto-bcv-real');
+  if(el) el.innerHTML=`
+    <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:8px;padding:10px 12px;font-size:13px;margin-top:6px;">
+      <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">A tasa BCV ${tasaBCVReal}</div>
+      <div style="display:flex;justify-content:space-between;font-weight:700;color:var(--accent);">
+        <span>Monto en $</span><span>$${nuevoMontoUSD.toFixed(2)}</span>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;">✓ Si vuelves a generar el documento de esta cotización, incluirá este cálculo por producto.</div>
+    </div>`;
+}
+
 async function cotbAbrirDetalle(codigo){
   const detalle=document.getElementById('cotb-detalle');
   detalle.style.display='block';
@@ -10944,9 +10965,12 @@ async function cotbAbrirDetalle(codigo){
   });
 
   const fmt=n=>n.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const totalBsExistente=parseFloat(resp.total_pagar_bs)||0;
   document.getElementById('cotb-detalle-totales').innerHTML=`
     <div style="display:flex;justify-content:space-between;"><span>Subtotal</span><span>$${(parseFloat(resp.subtotal_usd)||0).toFixed(2)} ${resp.subtotal_bs?('/ Bs '+fmt(parseFloat(resp.subtotal_bs))):''}</span></div>
-    <div style="display:flex;justify-content:space-between;font-weight:700;color:var(--accent);"><span>Total a pagar</span><span>${parseFloat(resp.total_pagar_bs)>0?('Bs '+fmt(parseFloat(resp.total_pagar_bs))):('$'+(parseFloat(resp.total_pagar_usd)||0).toFixed(2))}</span></div>
+    <div style="display:flex;justify-content:space-between;font-weight:700;color:var(--accent);"><span>Total a pagar</span><span>${totalBsExistente>0?('Bs '+fmt(totalBsExistente)):('$'+(parseFloat(resp.total_pagar_usd)||0).toFixed(2))}</span></div>
+    ${totalBsExistente>0?`<button onclick="cotbConvertirATasaBCV(${totalBsExistente},'${codigo}')" style="width:100%;margin-top:8px;padding:9px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;">💵 Monto en Dólares a Tasa BCV</button>
+    <div id="cotb-monto-bcv-real"></div>`:''}
   `;
 
   // Si ya está resuelta (no En espera cliente), ocultar acciones y mostrar badge
