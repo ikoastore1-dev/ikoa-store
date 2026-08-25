@@ -1113,7 +1113,7 @@ function intentarPaso4B(){
   pedido.piezas = franelasB.map(f=>({talla:f.talla, nombre:f.nombre, genero: document.getElementById(`genero-b${franelasB.indexOf(f)}`)?.value||'Dama', logoPecho:f.logoPecho||'', logoEspalda:f.logoEspalda||'', logoManga:f.logoManga||'', tela:f.tela||'', conCapucha:f.conCapucha||false}));
   pedido.packs.push({
     pack:franelasB.length, modelo:'COMFY MEGA PROMO (Opción B)',
-    manga:'Manga Larga', capucha:pedido.piezas.some(p=>p.conCapucha)?'Con Capucha':'Sin Capucha',
+    manga:'Manga Larga', capucha:pedido.piezas.every(p=>p.conCapucha)?'Con Capucha':(pedido.piezas.some(p=>p.conCapucha)?'':'Sin Capucha'),
     tela: pedido.tela, vinil: vinilB,
     piezas: JSON.parse(JSON.stringify(pedido.piezas))
   });
@@ -1195,7 +1195,7 @@ async function intentarPaso45(){
     pack: pedido.pack,
     modelo: pedido.modelo,
     manga: pedido.manga,
-    capucha: pedido.piezas.some(p=>p.conCapucha)?'Con Capucha':'Sin Capucha',
+    capucha: pedido.piezas.every(p=>p.conCapucha)?'Con Capucha':(pedido.piezas.some(p=>p.conCapucha)?'':'Sin Capucha'), // mixto: no se indica aquí, la Observación por pieza ya lo aclara
     tela: pedido.tela,
     vinil: pedido.vinil,
     piezas: JSON.parse(JSON.stringify(pedido.piezas))

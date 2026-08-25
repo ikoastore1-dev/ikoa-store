@@ -764,7 +764,7 @@ function goStep(n){
   }
   if(n===5){
     if(pedido.packs.length===0){
-      pedido.packs.push({pack:pedido.pack,modelo:pedido.modelo,manga:pedido.manga,capucha:pedido.capucha,tela:pedido.tela,vinil:pedido.vinil,piezas:JSON.parse(JSON.stringify(pedido.piezas))});
+      pedido.packs.push({pack:pedido.pack,modelo:pedido.modelo,manga:pedido.manga,capucha:pedido.piezas.every(p=>p.conCapucha)?'Con Capucha':(pedido.piezas.some(p=>p.conCapucha)?'':'Sin Capucha'),tela:pedido.tela,vinil:pedido.vinil,piezas:JSON.parse(JSON.stringify(pedido.piezas))});
     }
   }
   if(n===6) calcularPago();
@@ -840,7 +840,7 @@ async function intentarPaso45(){
     pack: pedido.pack,
     modelo: pedido.modelo,
     manga: pedido.manga,
-    capucha: pedido.capucha,
+    capucha: pedido.piezas.every(p=>p.conCapucha)?'Con Capucha':(pedido.piezas.some(p=>p.conCapucha)?'':'Sin Capucha'),
     tela: pedido.tela,
     vinil: pedido.vinil,
     piezas: JSON.parse(JSON.stringify(pedido.piezas))
