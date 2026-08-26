@@ -257,6 +257,12 @@ window.addEventListener('load',function(){
         </div>
         <div id="cantidad-min-nota" style="font-size:11px;color:var(--warn);margin-top:6px;"></div>
       </div>
+      <div id="colores-mixtos-wrap" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
+          <input type="checkbox" id="chk-colores-mixtos" onchange="toggleColoresMixtos(this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+          <label for="chk-colores-mixtos" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🎨 Colores diferentes por franela (mismo vinil)</label>
+        </div>
+      </div>
     </div>
     <div class="nav-row">
       <button class="btn-back" onclick="goStep(1)">← Atrás</button>
@@ -935,6 +941,11 @@ function volverAEditarPiezas(){
 
 async function intentarPaso45(){
   if(!validateStep(4)) return;
+  if(pedido._coloresMixtos){
+    const colores=[...new Set(pedido.piezas.map(p=>p.tela).filter(Boolean))];
+    if(pedido.piezas.some(p=>!p.tela)){ alert('Selecciona el color de tela para cada franela'); return; }
+    pedido.tela=colores.join(' / ');
+  }
   // Guardar pack actual en lista de packs
   pedido.packs.push({
     pack: pedido.pack,
@@ -975,7 +986,7 @@ function agregarOtroPack(){
   pedido.pack=0; pedido.modelo=''; pedido.manga='Manga Larga';
   pedido.tela=''; pedido.vinil=''; pedido.piezas=[]; pedido.capucha=''; pedido.largo='';
   pedido.codigoProducto=''; pedido.nombreProducto=''; pedido.variante='';
-  pedido._minUnidades=1; pedido._hojaColores=null; pedido._modeloTieneCapucha=false; pedido._colorLibreEmp=false; pedido._empresarialLogos=false; pedido._codigo1u=null;
+  pedido._minUnidades=1; pedido._hojaColores=null; pedido._modeloTieneCapucha=false; pedido._colorLibreEmp=false; pedido._empresarialLogos=false; pedido._codigo1u=null; pedido._coloresMixtos=false;
   selectedSerie=''; selectedColorSerie=''; selectedVariante=''; selectedLinea='';
   // Limpiar selecciones visuales
   document.querySelectorAll('#tela-opts .opt-btn, #vinil-opts .opt-btn').forEach(b=>b.classList.remove('selected'));
@@ -1121,6 +1132,7 @@ function resetCantidadProducto(){
   pedido.pack=min;
   const lbl=document.getElementById('cantidad-producto-label');
   if(lbl) lbl.textContent=min;
+  actualizarVisibilidadColoresMixtos(min);
 }
 function cambiarCantidadProducto(delta){
   const lbl=document.getElementById('cantidad-producto-label');
@@ -1130,6 +1142,18 @@ function cambiarCantidadProducto(delta){
   if(n<min) n=min;
   lbl.textContent=n;
   pedido.pack=n;
+  actualizarVisibilidadColoresMixtos(n);
+}
+function actualizarVisibilidadColoresMixtos(cantidad){
+  const wrap=document.getElementById('colores-mixtos-wrap');
+  if(!wrap) return;
+  const esComfyMangaLarga=pedido.codigoProducto==='COMFY11'||pedido.codigoProducto==='COMFY01';
+  const aplica=esComfyMangaLarga&&cantidad>=3;
+  wrap.style.display=aplica?'block':'none';
+  if(!aplica){ document.getElementById('chk-colores-mixtos').checked=false; pedido._coloresMixtos=false; }
+}
+function toggleColoresMixtos(activo){
+  pedido._coloresMixtos=activo;
 }
 function confirmarCantidadYAvanzar(){
   if(!pedido.codigoProducto){ alert('Selecciona un producto primero'); return; }
@@ -1254,7 +1278,7 @@ function selectEmpresarial(btn,tipo){
 
 function selectSerie(btn,serie){
   selectedSerie=serie; selectedColorSerie=''; selectedVariante='';
-  pedido._minUnidades=1; pedido._hojaColores=null; pedido._modeloTieneCapucha=false; pedido._colorLibreEmp=false; pedido._empresarialLogos=false; pedido._codigo1u=null;
+  pedido._minUnidades=1; pedido._hojaColores=null; pedido._modeloTieneCapucha=false; pedido._colorLibreEmp=false; pedido._empresarialLogos=false; pedido._codigo1u=null; pedido._coloresMixtos=false;
   document.querySelectorAll('#serie-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   const s=SERIES_COLECCION[serie];
@@ -1420,7 +1444,12 @@ async function actualizarPaso3(){
       pedido.vinil='';
     } else if(pedido._hojaColores){
       if(telaLibreCard) telaLibreCard.style.display='none';
-      if(telaCard) telaCard.style.display='block';
+      if(pedido._coloresMixtos){
+        // Colores mixtos: la tela se elige por franela en el paso siguiente, no aquí
+        if(telaCard) telaCard.style.display='none';
+      } else {
+        if(telaCard) telaCard.style.display='block';
+      }
       if(vinilCard) vinilCard.style.display='block';
       try{
         const data=await scriptGETjson({action:'leerColores',hoja:pedido._hojaColores});
@@ -1429,6 +1458,7 @@ async function actualizarPaso3(){
         if(data.ok){
           if(telaOpts) telaOpts.innerHTML=(data.telas||[]).map(t=>`<button class="opt-btn" onclick="selectColor(this,'tela','${t}')">${t.toUpperCase()}</button>`).join('');
           if(vinilOpts) vinilOpts.innerHTML=(data.viniles||[]).map(vv=>`<button class="opt-btn" onclick="selectColor(this,'vinil','${vv}')">${vv.toUpperCase()}</button>`).join('');
+          window._telasParaPiezaMixta=data.telas||[];
         }
       }catch(e){ console.warn('Error cargando colores linea:',e); }
     }
@@ -1518,6 +1548,13 @@ function addPieza(copiarDe=null){
         </select>
       </div>
     </div>`}
+    ${pedido._coloresMixtos?`<div class="field-group" style="margin-bottom:6px;">
+      <div class="field-label">Color de Tela (esta franela)</div>
+      <select class="field-input" id="pz-tela-${id}">
+        <option value="">Seleccionar</option>
+        ${(window._telasParaPiezaMixta||[]).map(t=>`<option value="${t}">${t.toUpperCase()}</option>`).join('')}
+      </select>
+    </div>`:''}
     ${(!esShort&&!esMangaCero)?`<div class="field-group" style="margin-bottom:6px">
       <div class="field-label">${esToalla?'Personalización de nombre':'Nombre en la prenda'}</div>
       <div class="field-note">${esToalla?'Sin iniciales ni logos':'Manga derecha · Sin iniciales ni logos'}</div>
@@ -1674,9 +1711,10 @@ function savePiezas(){
     const logoEspalda=document.getElementById('pz-logo-espalda-'+id)?.checked?(document.getElementById('pz-logo-espalda-txt-'+id)?.value.trim()||'SI'):'';
     const logoManga=document.getElementById('pz-logo-manga-'+id)?.checked?(document.getElementById('pz-logo-manga-txt-'+id)?.value.trim()||'SI'):'';
     const rep=parseInt(document.getElementById('rep-count-'+id)?.textContent||'1');
+    const telaPieza=pedido._coloresMixtos?(document.getElementById('pz-tela-'+id)?.value||''):'';
     // Expandir repeticiones
     for(let i=0;i<rep;i++){
-      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre,conCapucha,logoPecho,logoEspalda,logoManga});
+      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre,conCapucha,logoPecho,logoEspalda,logoManga,tela:telaPieza});
     }
   });
 }
