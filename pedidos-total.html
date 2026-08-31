@@ -1555,7 +1555,7 @@ function addPieza(copiarDe=null){
         ${(window._telasParaPiezaMixta||[]).map(t=>`<option value="${t}">${t.toUpperCase()}</option>`).join('')}
       </select>
     </div>`:''}
-    ${(!esShort&&!esMangaCero)?`<div class="field-group" style="margin-bottom:6px">
+    ${(!esShort&&!esMangaCero&&!esTrajeBano)?`<div class="field-group" style="margin-bottom:6px">
       <div class="field-label">${esToalla?'Personalización de nombre':'Nombre en la prenda'}</div>
       <div class="field-note">${esToalla?'Sin iniciales ni logos':'Manga derecha · Sin iniciales ni logos'}</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;margin-top:4px;">

@@ -753,7 +753,7 @@ async function intentarPaso45(){
   pedido.packs.push({
     pack: pedido.pack,
     codigoProducto: pedido.codigoProducto,
-    modelo: pedido.modelo,
+    modelo: pedido.nombreProducto||pedido.modelo,
     serie: selectedSerie,
     variante: pedido.variante,
     manga: pedido.manga,
@@ -785,7 +785,7 @@ function renderPacksResumen(){
 
 function agregarOtroPack(){
   // Resetear campos de modelo/pack para nuevo pack (capucha se selecciona manualmente)
-  pedido.pack=0; pedido.modelo='Licra Colección'; pedido.manga='Manga Larga';
+  pedido.pack=0; pedido.modelo=''; pedido.manga='Manga Larga';
   pedido.tela=''; pedido.vinil=''; pedido.piezas=[]; pedido.capucha=''; pedido.largo='';
   pedido.codigoProducto=''; pedido.nombreProducto=''; pedido.variante='';
   selectedSerie=''; selectedColorSerie=''; selectedVariante='';
@@ -1143,7 +1143,7 @@ function addPieza(copiarDe=null){
         </select>
       </div>
     </div>`}
-    ${!esShort?`<div class="field-group" style="margin-bottom:6px">
+    ${(!esShort&&!esTrajeBano)?`<div class="field-group" style="margin-bottom:6px">
       <div class="field-label">${esToalla?'Personalización de nombre':'Nombre en la prenda'}</div>
       <div class="field-note">${esToalla?'Sin iniciales ni logos':'Manga derecha · Sin iniciales ni logos'}</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;margin-top:4px;">
