@@ -1670,7 +1670,7 @@ async function calcularPago(){
   const tallasGrandes=['XL','XXL','3XL','XXXL','2XL',
     'DAMA XL','DAMA XXL','DAMA 3XL','DAMA XXXL','DAMA 2XL',
     'CABALLERO XL','CABALLERO XXL','CABALLERO 3XL','CABALLERO XXXL','CABALLERO 2XL'];
-  let totalLogosPecho=0, totalLogosEspalda=0, totalLogosManga=0, totalConCapucha=0;
+  let totalLogosPecho=0, totalLogosEspalda=0, totalLogosManga=0, totalConCapucha=0, totalRecargas=0;
   let sumaBs=0, sumaUsd=0;
   let desglose=[];
   const preciosPorCodigo=window._packPreciosComfy||{};
@@ -1685,6 +1685,7 @@ async function calcularPago(){
     totalLogosEspalda+=logosEspalda;
     totalLogosManga+=logosManga;
     totalConCapucha+=conCapucha;
+    totalRecargas+=recargas;
     // Precio específico de ESTE pack (no el global de la selección actual)
     const codPack=pk.codigoPrecio||pedido.mangaTipoCodigo||'COMFY11';
     const precioPackBs=parseFloat(preciosPorCodigo[codPack]?.bs)||precioComfy.bs;
