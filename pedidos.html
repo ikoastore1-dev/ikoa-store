@@ -1117,7 +1117,7 @@ function intentarPaso4B(){
   pedido.packs.push({
     pack:franelasB.length, modelo:'COMFY MEGA PROMO (Opción B)',
     manga:'Manga Larga', capucha:pedido.piezas.every(p=>p.conCapucha)?'Con Capucha':(pedido.piezas.some(p=>p.conCapucha)?'':'Sin Capucha'),
-    tela: pedido.tela, vinil: vinilB,
+    tela: pedido.tela, vinil: vinilB, esDress:false, mangaTipo:'larga',
     piezas: JSON.parse(JSON.stringify(pedido.piezas))
   });
   document.getElementById('step3b').classList.remove('active');
@@ -1201,6 +1201,8 @@ async function intentarPaso45(){
     capucha: pedido.piezas.every(p=>p.conCapucha)?'Con Capucha':(pedido.piezas.some(p=>p.conCapucha)?'':'Sin Capucha'), // mixto: no se indica aquí, la Observación por pieza ya lo aclara
     tela: pedido.tela,
     vinil: pedido.vinil,
+    esDress: pedido.esDress,
+    mangaTipo: mangaTipoActual,
     piezas: JSON.parse(JSON.stringify(pedido.piezas))
   });
   // Mostrar resumen de packs agregados
@@ -1315,9 +1317,10 @@ function validateStep(n){
     alerta.style.display='none';
     for(let i=0; i<pedido.piezas.length; i++){
       const p=pedido.piezas[i];
-      if(!p.genero||!p.talla){ alert(`Completa género y talla en la franela ${i+1}`); return false; }
+      const etiquetaPieza=(mangaTipoActual==='short')?'short':(pedido.esDress?'vestido':'franela');
+      if(!p.genero||!p.talla){ alert(`Completa género y talla en el ${etiquetaPieza} ${i+1}`); return false; }
       if(mangaTipoActual==='short' && !p.largo){ alert(`Selecciona el largo (Playero o Sport) en el short ${i+1}`); return false; }
-      if(!p.sinNombre && !p.nombre){ alert(`⚠️ La franela ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
+      if(!p.sinNombre && !p.nombre){ alert(`⚠️ El ${etiquetaPieza} ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
     }
     return true;
   }
@@ -1386,6 +1389,7 @@ function addPieza(copiarDe=null){
   const id=piezaCount;
   const esShort=mangaTipoActual==='short';
   const esMangaCero=mangaTipoActual==='cero'||mangaTipoActual==='dress-cero';
+  const esDress=pedido.esDress;
   const sinNombreEnManga=esShort||esMangaCero;
   const div=document.createElement('div');
   div.className='pieza-card'; div.id='pieza-'+id;
@@ -1396,7 +1400,7 @@ function addPieza(copiarDe=null){
   const largoCopy=copiarDe?document.getElementById('pz-largo-'+copiarDe)?.value:'';
   const total=document.getElementById('piezas-container').querySelectorAll('.pieza-card').length+1;
   div.innerHTML=`
-    <div class="pieza-num">${esShort?'Short':'Franela'} #${id} ${total>pedido.pack?'<span style="color:var(--warn);font-size:11px;">(extra)</span>':''}</div>
+    <div class="pieza-num">${esShort?'Short':(esDress?'Vestido':'Franela')} #${id} ${total>pedido.pack?'<span style="color:var(--warn);font-size:11px;">(extra)</span>':''}</div>
     ${total>pedido.pack?`<button class="remove-btn" onclick="removePieza(${id})">✕</button>`:''}
     <div class="pieza-grid">
       <div class="field-group">
@@ -1793,7 +1797,8 @@ function copiarDato(texto, btnId){
 function buildResumen(){
   const retiraText=pedido.mismoEnvio?`${pedido.nombre} · ${pedido.cedula} · ${pedido.celular}`:`${pedido.eNombre} · ${pedido.eCi} · ${pedido.eCel}`;
   const packsHtml=pedido.packs.map((pk,i)=>{
-    const piezasHtml=pk.piezas.map((p,j)=>`<b>Franela ${j+1}:</b> ${p.genero} Talla ${p.talla}${p.conCapucha?' 🧢 CON CAPUCHA':''} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('<br>');
+    const etiquetaResumen=(pk.mangaTipo==='short')?'Short':(pk.esDress?'Vestido':'Franela');
+    const piezasHtml=pk.piezas.map((p,j)=>`<b>${etiquetaResumen} ${j+1}:</b> ${p.genero} Talla ${p.talla}${p.conCapucha?' 🧢 CON CAPUCHA':''} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('<br>');
     return `<div class="resumen-label">📦 Pack ${i+1} · ${pk.pack}PACK</div>
       <div class="resumen-block"><b>Modelo:</b> ${pk.modelo} ${pk.manga} ${pk.capucha}<br><b>Tela:</b> ${pk.tela} · <b>Vinil:</b> ${pk.vinil}</div>
       <div class="resumen-label">📏 Franelas (${pk.piezas.length})</div>
