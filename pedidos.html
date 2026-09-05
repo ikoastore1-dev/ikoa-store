@@ -1316,6 +1316,7 @@ function validateStep(n){
     for(let i=0; i<pedido.piezas.length; i++){
       const p=pedido.piezas[i];
       if(!p.genero||!p.talla){ alert(`Completa género y talla en la franela ${i+1}`); return false; }
+      if(mangaTipoActual==='short' && !p.largo){ alert(`Selecciona el largo (Playero o Sport) en el short ${i+1}`); return false; }
       if(!p.sinNombre && !p.nombre){ alert(`⚠️ La franela ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
     }
     return true;
@@ -1383,15 +1384,19 @@ function inicializarPiezas(){
 function addPieza(copiarDe=null){
   piezaCount++;
   const id=piezaCount;
+  const esShort=mangaTipoActual==='short';
+  const esMangaCero=mangaTipoActual==='cero'||mangaTipoActual==='dress-cero';
+  const sinNombreEnManga=esShort||esMangaCero;
   const div=document.createElement('div');
   div.className='pieza-card'; div.id='pieza-'+id;
   const genCopy=copiarDe?document.getElementById('pz-genero-'+copiarDe)?.value:'';
   const talCopy=copiarDe?document.getElementById('pz-talla-'+copiarDe)?.value:'';
   const nomCopy=copiarDe?document.getElementById('pz-nombre-'+copiarDe)?.value:'';
   const sinCopy=copiarDe?document.getElementById('pz-sinombre-'+copiarDe)?.checked:false;
+  const largoCopy=copiarDe?document.getElementById('pz-largo-'+copiarDe)?.value:'';
   const total=document.getElementById('piezas-container').querySelectorAll('.pieza-card').length+1;
   div.innerHTML=`
-    <div class="pieza-num">Franela #${id} ${total>pedido.pack?'<span style="color:var(--warn);font-size:11px;">(extra)</span>':''}</div>
+    <div class="pieza-num">${esShort?'Short':'Franela'} #${id} ${total>pedido.pack?'<span style="color:var(--warn);font-size:11px;">(extra)</span>':''}</div>
     ${total>pedido.pack?`<button class="remove-btn" onclick="removePieza(${id})">✕</button>`:''}
     <div class="pieza-grid">
       <div class="field-group">
@@ -1399,7 +1404,7 @@ function addPieza(copiarDe=null){
         <select class="field-input" id="pz-genero-${id}" onchange="updateTallas(${id})">
           <option value="">Seleccionar</option>
           <option value="Kids"${genCopy==='Kids'?' selected':''}>Kids</option>
-          <option value="Dama"${genCopy==='Dama'?' selected':''}>Dama</option>
+          ${esShort?'':`<option value="Dama"${genCopy==='Dama'?' selected':''}>Dama</option>`}
           <option value="Caballero"${genCopy==='Caballero'?' selected':''}>Caballero</option>
         </select>
       </div>
@@ -1410,6 +1415,26 @@ function addPieza(copiarDe=null){
         </select>
       </div>
     </div>
+    ${esShort?`
+    <div class="field-group" style="margin-bottom:6px">
+      <div class="field-label">Largo</div>
+      <select class="field-input" id="pz-largo-${id}">
+        <option value="">Seleccionar</option>
+        <option value="Largo Playero"${largoCopy==='Largo Playero'?' selected':''}>Largo Playero</option>
+        <option value="Largo Sport"${largoCopy==='Largo Sport'?' selected':''}>Largo Sport</option>
+      </select>
+    </div>
+    <input type="hidden" id="pz-sinombre-${id}" value="true">
+    <input type="hidden" id="pz-nombre-${id}" value="">
+    <input type="hidden" id="pz-capucha-${id}">
+    <input type="hidden" id="pz-logo-pecho-${id}"><input type="hidden" id="pz-logo-pecho-txt-${id}" value="">
+    <input type="hidden" id="pz-logo-espalda-${id}"><input type="hidden" id="pz-logo-espalda-txt-${id}" value="">
+    <input type="hidden" id="pz-logo-manga-${id}"><input type="hidden" id="pz-logo-manga-txt-${id}" value="">
+    ` : `
+    ${sinNombreEnManga?`
+    <input type="hidden" id="pz-sinombre-${id}" value="true">
+    <input type="hidden" id="pz-nombre-${id}" value="">
+    ` : `
     <div class="field-group" style="margin-bottom:6px">
       <div class="field-label">Nombre en la prenda</div>
       <div class="field-note">Manga derecha · Sin iniciales</div>
@@ -1420,6 +1445,7 @@ function addPieza(copiarDe=null){
       </div>
       <input class="field-input" type="text" id="pz-nombre-${id}" placeholder="Ej: María, Carlos..." value="${nomCopy}" style="${sinCopy?'display:none':''}">
     </div>
+    `}
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <input type="checkbox" id="pz-capucha-${id}" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
       <label for="pz-capucha-${id}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🧢 Con Capucha (esta franela)</label>
@@ -1437,13 +1463,16 @@ function addPieza(copiarDe=null){
           <span style="font-size:12px;color:var(--text);">Logo Espalda</span>
         </label>
         <input class="field-input" type="text" id="pz-logo-espalda-txt-${id}" placeholder="Texto/detalle del logo (opcional)" style="display:none;font-size:12px;padding:6px 10px;">
+        ${sinNombreEnManga?`<input type="hidden" id="pz-logo-manga-${id}"><input type="hidden" id="pz-logo-manga-txt-${id}" value="">` : `
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="pz-logo-manga-${id}" onchange="document.getElementById('pz-logo-manga-txt-${id}').style.display=this.checked?'block':'none';" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);">
           <span style="font-size:12px;color:var(--text);">Logo Manga</span>
         </label>
         <input class="field-input" type="text" id="pz-logo-manga-txt-${id}" placeholder="Texto/detalle del logo (opcional)" style="display:none;font-size:12px;padding:6px 10px;">
+        `}
       </div>
     </div>
+    `}
     <div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 10px;background:var(--surface2);border-radius:8px;">
       <div style="font-size:12px;color:var(--muted);flex:1;">Repetir esta franela:</div>
       <button onclick="cambiarRepeticion(${id},-1)" style="width:32px;height:32px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
@@ -1546,20 +1575,23 @@ function removePieza(id){
 
 function savePiezas(){
   pedido.piezas=[];
+  const esShort=mangaTipoActual==='short';
+  const esMangaCero=mangaTipoActual==='cero'||mangaTipoActual==='dress-cero';
   document.querySelectorAll('.pieza-card').forEach(card=>{
     const id=card.id.replace('pieza-','');
     const g=document.getElementById('pz-genero-'+id)?.value||'';
     const t=document.getElementById('pz-talla-'+id)?.value||'';
-    const sinNombre=document.getElementById('pz-sinombre-'+id)?.checked||false;
+    const largo=esShort?(document.getElementById('pz-largo-'+id)?.value||''):'';
+    const sinNombre=(esShort||esMangaCero)?true:(document.getElementById('pz-sinombre-'+id)?.checked||false);
     const n=sinNombre?'SIN NOMBRE EN MANGA':(document.getElementById('pz-nombre-'+id)?.value.trim()||'');
     const rep=parseInt(document.getElementById('rep-count-'+id)?.textContent||'1');
-    const logoPecho=document.getElementById('pz-logo-pecho-'+id)?.checked?(document.getElementById('pz-logo-pecho-txt-'+id)?.value.trim()||'SI'):'';
-    const logoEspalda=document.getElementById('pz-logo-espalda-'+id)?.checked?(document.getElementById('pz-logo-espalda-txt-'+id)?.value.trim()||'SI'):'';
-    const logoManga=document.getElementById('pz-logo-manga-'+id)?.checked?(document.getElementById('pz-logo-manga-txt-'+id)?.value.trim()||'SI'):'';
-    const conCapucha=document.getElementById('pz-capucha-'+id)?.checked||false;
+    const logoPecho=esShort?'':(document.getElementById('pz-logo-pecho-'+id)?.checked?(document.getElementById('pz-logo-pecho-txt-'+id)?.value.trim()||'SI'):'');
+    const logoEspalda=esShort?'':(document.getElementById('pz-logo-espalda-'+id)?.checked?(document.getElementById('pz-logo-espalda-txt-'+id)?.value.trim()||'SI'):'');
+    const logoManga=(esShort||esMangaCero)?'':(document.getElementById('pz-logo-manga-'+id)?.checked?(document.getElementById('pz-logo-manga-txt-'+id)?.value.trim()||'SI'):'');
+    const conCapucha=esShort?false:(document.getElementById('pz-capucha-'+id)?.checked||false);
     // Expandir repeticiones
     for(let i=0;i<rep;i++){
-      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre,logoPecho,logoEspalda,logoManga,conCapucha});
+      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre,logoPecho,logoEspalda,logoManga,conCapucha,largo});
     }
   });
 }
@@ -1813,7 +1845,7 @@ async function guardarEnSheets(){
   let codigoPrincipal='';
   for(let i=0; i<pedido.packs.length; i++){
     const pk=pedido.packs[i];
-    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''} - ${p.nombre}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}${p.tela?' | Tela: '+p.tela:''}`).join(' | ');
+    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''} - ${p.nombre}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}${p.tela?' | Tela: '+p.tela:''}${p.largo?' | Largo: '+p.largo:''}`).join(' | ');
     try{
       const res=await scriptGETjson({
         action:'addSolicitud',
