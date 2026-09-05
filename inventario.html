@@ -7697,20 +7697,29 @@ function tallerParsearPiezas(piezasStr){
       piezas[piezas.length-1].tela=mTela[1].trim();
       return;
     }
+    // Continuación de largo por pieza (Short Unicolor: Largo Playero / Largo Sport)
+    const mLargo=tok.match(/^Largo\s*:\s*([^-]+)/i);
+    if(mLargo && piezas.length){
+      piezas[piezas.length-1].largo=mLargo[1].trim();
+      return;
+    }
     // Formato A: "Genero Talla[ CON CAPUCHA] - Nombre"
     const mA=tok.match(/^(\S+)\s+(\S+)(\s+CON\s+CAPUCHA)?\s*-\s*(.+)$/i);
     if(mA && generoRegex.test(mA[1])){
       piezas.push({genero:mA[1].trim(), talla:mA[2].trim(), capucha:!!mA[3], nombre:mA[4].trim()});
       return;
     }
-    // Formato B: "Genero Talla[ xN]" (de cotizaciones, sin nombre, sin guion)
+    // Formato B: "Genero Talla[ CON CAPUCHA][ xN]" (Short/Manga Cero sin nombre, sin guion)
     const mB=tok.match(generoRegex);
     if(mB){
       let resto=tok.slice(mB[0].length).trim();
+      const mCap=resto.match(/^(.*?)\s+CON\s+CAPUCHA\s*$/i);
+      const tieneCapucha=!!mCap;
+      if(mCap) resto=mCap[1].trim();
       let n=1;
       const mCount=resto.match(/\s+x(\d+)\s*$/i);
       if(mCount){ n=parseInt(mCount[1])||1; resto=resto.slice(0,mCount.index).trim(); }
-      for(let i=0;i<n;i++) piezas.push({genero:mB[1].trim(), talla:resto, capucha:false, nombre:''});
+      for(let i=0;i<n;i++) piezas.push({genero:mB[1].trim(), talla:resto, capucha:tieneCapucha, nombre:''});
       return;
     }
     // Formato C: "Talla[ xN]" suelta, sin genero
@@ -7779,8 +7788,9 @@ function tallerConstruirCortadorHTML(codigos){
       piezas.forEach(pz=>{
         if(pz.raw){ sinFormato++; return; }
         const telaPz=pz.tela||''; // solo se llena cuando el pack tiene colores mezclados (Opción B)
-        const key=(pz.genero||'—')+'||'+(pz.talla||'—')+(pz.capucha?'||CAP':'')+(telaPz?'||'+telaPz:'');
-        if(!grupos[key]) grupos[key]={genero:pz.genero||'—', talla:pz.talla||'—', capucha:pz.capucha, tela:telaPz, unds:0};
+        const largoPz=pz.largo||''; // solo se llena para Short Unicolor (Largo Playero/Sport)
+        const key=(pz.genero||'—')+'||'+(pz.talla||'—')+(pz.capucha?'||CAP':'')+(telaPz?'||'+telaPz:'')+(largoPz?'||'+largoPz:'');
+        if(!grupos[key]) grupos[key]={genero:pz.genero||'—', talla:pz.talla||'—', capucha:pz.capucha, tela:telaPz, largo:largoPz, unds:0};
         grupos[key].unds++;
       });
       Object.values(grupos).forEach(gr=>{
@@ -7791,7 +7801,7 @@ function tallerConstruirCortadorHTML(codigos){
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${(gr.genero||'—').toUpperCase()}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${gr.unds}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${(gr.tela||p.tela||'—').split('-')[0].trim().toUpperCase()}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${gr.capucha?'CON CAPUCHA':'SIN CAPUCHA'}</td>
+          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${gr.largo?gr.largo.toUpperCase():(gr.capucha?'CON CAPUCHA':'SIN CAPUCHA')}</td>
           <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;color:#b00;font-weight:700;">${g.urgente?'URGENTE':''}</td>
         </tr>`;
       });

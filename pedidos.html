@@ -774,6 +774,12 @@ function ajustarPackGridMinimo(min){
     if(customEl) customEl.min='2';
     if(minEl) minEl.textContent='Mínimo 2 unidades · Mismo color tela y vinil.';
   }
+  // Actualizar la etiqueta de cada botón según el tipo de producto
+  const etiqueta=(mangaTipoActual==='short')?'short':(pedido.esDress?'vestido':'franela');
+  document.querySelectorAll('#pack-grid .opt-btn .sub').forEach(sub=>{
+    const n=parseInt(sub.textContent)||1;
+    sub.textContent=`${n} ${etiqueta}${n>1?'s':''}`;
+  });
 }
 
 function volverDesdeStep3(){
@@ -1117,7 +1123,7 @@ function intentarPaso4B(){
   pedido.packs.push({
     pack:franelasB.length, modelo:'COMFY MEGA PROMO (Opción B)',
     manga:'Manga Larga', capucha:pedido.piezas.every(p=>p.conCapucha)?'Con Capucha':(pedido.piezas.some(p=>p.conCapucha)?'':'Sin Capucha'),
-    tela: pedido.tela, vinil: vinilB, esDress:false, mangaTipo:'larga',
+    tela: pedido.tela, vinil: vinilB, esDress:false, mangaTipo:'larga', codigoPrecio:'COMFY11',
     piezas: JSON.parse(JSON.stringify(pedido.piezas))
   });
   document.getElementById('step3b').classList.remove('active');
@@ -1203,6 +1209,7 @@ async function intentarPaso45(){
     vinil: pedido.vinil,
     esDress: pedido.esDress,
     mangaTipo: mangaTipoActual,
+    codigoPrecio: pedido.mangaTipoCodigo,
     piezas: JSON.parse(JSON.stringify(pedido.piezas))
   });
   // Mostrar resumen de packs agregados
@@ -1351,12 +1358,14 @@ function selectPack(btn,n){
   btn.classList.add('selected'); pedido.pack=n;
   document.getElementById('pack-custom').value='';
   document.getElementById('pack-seleccionado').style.display='block';
-  document.getElementById('pack-label').textContent=n+'PACK — '+n+' franelas';
+  const etiqueta=(mangaTipoActual==='short')?'short':(pedido.esDress?'vestido':'franela');
+  document.getElementById('pack-label').textContent=n+'PACK — '+n+' '+etiqueta+(n>1?'s':'');
 }
 function setCustomPack(val){
   const n=parseInt(val);
   const minPermitido=parseInt(document.getElementById('pack-custom').min)||2;
-  if(n>=minPermitido){ pedido.pack=n; document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected')); document.getElementById('pack-seleccionado').style.display='block'; document.getElementById('pack-label').textContent=n+'PACK — '+n+' franelas'; }
+  const etiqueta=(mangaTipoActual==='short')?'short':(pedido.esDress?'vestido':'franela');
+  if(n>=minPermitido){ pedido.pack=n; document.querySelectorAll('#pack-grid .opt-btn').forEach(b=>b.classList.remove('selected')); document.getElementById('pack-seleccionado').style.display='block'; document.getElementById('pack-label').textContent=n+'PACK — '+n+' '+etiqueta+(n>1?'s':''); }
 }
 
 function selectOpt(btn,field,val){
@@ -1587,7 +1596,7 @@ function savePiezas(){
     const t=document.getElementById('pz-talla-'+id)?.value||'';
     const largo=esShort?(document.getElementById('pz-largo-'+id)?.value||''):'';
     const sinNombre=(esShort||esMangaCero)?true:(document.getElementById('pz-sinombre-'+id)?.checked||false);
-    const n=sinNombre?'SIN NOMBRE EN MANGA':(document.getElementById('pz-nombre-'+id)?.value.trim()||'');
+    const n=(esShort||esMangaCero)?'':(sinNombre?'SIN NOMBRE EN MANGA':(document.getElementById('pz-nombre-'+id)?.value.trim()||''));
     const rep=parseInt(document.getElementById('rep-count-'+id)?.textContent||'1');
     const logoPecho=esShort?'':(document.getElementById('pz-logo-pecho-'+id)?.checked?(document.getElementById('pz-logo-pecho-txt-'+id)?.value.trim()||'SI'):'');
     const logoEspalda=esShort?'':(document.getElementById('pz-logo-espalda-'+id)?.checked?(document.getElementById('pz-logo-espalda-txt-'+id)?.value.trim()||'SI'):'');
@@ -1632,6 +1641,7 @@ async function calcularPago(){
   try{
     const data=await scriptGETjson({action:'leerTodosLosPrecios'});
     if(data.ok){
+      window._packPreciosComfy=data.pack_precios||{};
       const codActivo=pedido.mangaTipoCodigo||'COMFY11';
       precioComfy={bs:parseFloat(data.pack_precios&&data.pack_precios[codActivo]?data.pack_precios[codActivo].bs:data.comfy_bs)||0, usd:parseFloat(data.pack_precios&&data.pack_precios[codActivo]?data.pack_precios[codActivo].usd:data.comfy_usd)||0};
       precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
@@ -1655,12 +1665,15 @@ async function calcularPago(){
     }
   }catch(e){ console.error('Error leyendo precios:',e); }
 
-  // Contar franelas totales y recargas
+  // Contar franelas totales y recargas — cada pack usa SU PROPIO código de precio,
+  // ya que un pedido puede combinar Manga Larga + Corta + Short + Vestido, cada uno con precio distinto.
   const tallasGrandes=['XL','XXL','3XL','XXXL','2XL',
     'DAMA XL','DAMA XXL','DAMA 3XL','DAMA XXXL','DAMA 2XL',
     'CABALLERO XL','CABALLERO XXL','CABALLERO 3XL','CABALLERO XXXL','CABALLERO 2XL'];
-  let totalFranelas=0, totalRecargas=0, totalLogosPecho=0, totalLogosEspalda=0, totalLogosManga=0, totalConCapucha=0;
+  let totalLogosPecho=0, totalLogosEspalda=0, totalLogosManga=0, totalConCapucha=0;
+  let sumaBs=0, sumaUsd=0;
   let desglose=[];
+  const preciosPorCodigo=window._packPreciosComfy||{};
   pedido.packs.forEach((pk,i)=>{
     const franelas=pk.piezas.length||pk.pack||0;
     const recargas=pk.piezas.filter(p=>tallasGrandes.includes(p.talla.toUpperCase().trim())).length;
@@ -1668,22 +1681,29 @@ async function calcularPago(){
     const logosEspalda=pk.piezas.filter(p=>p.logoEspalda).length;
     const logosManga=pk.piezas.filter(p=>p.logoManga).length;
     const conCapucha=pk.piezas.filter(p=>p.conCapucha).length;
-    totalFranelas+=franelas;
-    totalRecargas+=recargas;
     totalLogosPecho+=logosPecho;
     totalLogosEspalda+=logosEspalda;
     totalLogosManga+=logosManga;
     totalConCapucha+=conCapucha;
+    // Precio específico de ESTE pack (no el global de la selección actual)
+    const codPack=pk.codigoPrecio||pedido.mangaTipoCodigo||'COMFY11';
+    const precioPackBs=parseFloat(preciosPorCodigo[codPack]?.bs)||precioComfy.bs;
+    const precioPackUsd=parseFloat(preciosPorCodigo[codPack]?.usd)||precioComfy.usd;
+    sumaBs+=franelas*precioPackBs;
+    sumaUsd+=franelas*precioPackUsd;
+    const etiquetaPack=(pk.mangaTipo==='short')?(franelas>1?'shorts':'short'):(pk.esDress?(franelas>1?'vestidos':'vestido'):(franelas>1?'franelas':'franela'));
     const logosTxt=[logosPecho>0?`${logosPecho} logo pecho`:'',logosEspalda>0?`${logosEspalda} logo espalda`:'',logosManga>0?`${logosManga} logo manga`:''].filter(Boolean).join(', ');
-    desglose.push(`Pack ${i+1}: ${franelas} franelas${recargas>0?` + ${recargas} recarga(s) talla grande`:''}${conCapucha>0?` + ${conCapucha} con capucha`:''}${logosTxt?` + ${logosTxt}`:''}`);
+    desglose.push(`Pack ${i+1}: ${franelas} ${etiquetaPack}${recargas>0?` + ${recargas} recarga(s) talla grande`:''}${conCapucha>0?` + ${conCapucha} con capucha`:''}${logosTxt?` + ${logosTxt}`:''}`);
+    sumaBs+=recargas*precioRecarga.bs;
+    sumaUsd+=recargas*precioRecarga.usd;
   });
 
   const totalLogosBs=totalLogosPecho*precioLogoPecho.bs+totalLogosEspalda*precioLogoEspalda.bs+totalLogosManga*precioLogoManga.bs;
   const totalLogosUsd=totalLogosPecho*precioLogoPecho.usd+totalLogosEspalda*precioLogoEspalda.usd+totalLogosManga*precioLogoManga.usd;
   const totalCapuchaBs=totalConCapucha*precioCapucha.bs;
   const totalCapuchaUsd=totalConCapucha*precioCapucha.usd;
-  pagoTotalBs=Math.round((totalFranelas*precioComfy.bs + totalRecargas*precioRecarga.bs + totalLogosBs + totalCapuchaBs)*100)/100;
-  pagoTotalUsd=Math.round((totalFranelas*precioComfy.usd + totalRecargas*precioRecarga.usd + totalLogosUsd + totalCapuchaUsd)*100)/100;
+  pagoTotalBs=Math.round((sumaBs + totalLogosBs + totalCapuchaBs)*100)/100;
+  pagoTotalUsd=Math.round((sumaUsd + totalLogosUsd + totalCapuchaUsd)*100)/100;
   pagoTotalCasheaBs=Math.round(pagoTotalBs*(1+casheaPct/100)*100)/100;
   pagoTotalCasheaUsd=tasaBcvActual>0?Math.round((pagoTotalCasheaBs/tasaBcvActual)*100)/100:0;
 
@@ -1798,10 +1818,11 @@ function buildResumen(){
   const retiraText=pedido.mismoEnvio?`${pedido.nombre} · ${pedido.cedula} · ${pedido.celular}`:`${pedido.eNombre} · ${pedido.eCi} · ${pedido.eCel}`;
   const packsHtml=pedido.packs.map((pk,i)=>{
     const etiquetaResumen=(pk.mangaTipo==='short')?'Short':(pk.esDress?'Vestido':'Franela');
+    const etiquetaResumenPlural=(pk.mangaTipo==='short')?'Shorts':(pk.esDress?'Vestidos':'Franelas');
     const piezasHtml=pk.piezas.map((p,j)=>`<b>${etiquetaResumen} ${j+1}:</b> ${p.genero} Talla ${p.talla}${p.conCapucha?' 🧢 CON CAPUCHA':''} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('<br>');
     return `<div class="resumen-label">📦 Pack ${i+1} · ${pk.pack}PACK</div>
       <div class="resumen-block"><b>Modelo:</b> ${pk.modelo} ${pk.manga} ${pk.capucha}<br><b>Tela:</b> ${pk.tela} · <b>Vinil:</b> ${pk.vinil}</div>
-      <div class="resumen-label">📏 Franelas (${pk.piezas.length})</div>
+      <div class="resumen-label">📏 ${etiquetaResumenPlural} (${pk.piezas.length})</div>
       <div class="resumen-block">${piezasHtml}</div>`;
   }).join('');
   document.getElementById('resumen-container').innerHTML=`
@@ -1850,7 +1871,7 @@ async function guardarEnSheets(){
   let codigoPrincipal='';
   for(let i=0; i<pedido.packs.length; i++){
     const pk=pedido.packs[i];
-    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''} - ${p.nombre}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}${p.tela?' | Tela: '+p.tela:''}${p.largo?' | Largo: '+p.largo:''}`).join(' | ');
+    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''}${p.nombre?' - '+p.nombre:''}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}${p.tela?' | Tela: '+p.tela:''}${p.largo?' | Largo: '+p.largo:''}`).join(' | ');
     try{
       const res=await scriptGETjson({
         action:'addSolicitud',
