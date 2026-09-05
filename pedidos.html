@@ -467,15 +467,18 @@ window.addEventListener('load',function(){
           <span><span style="color:var(--muted);">Banco:</span> <b>Banesco</b></span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
+          <span><span style="color:var(--muted);">Titular:</span> <b id="pm-nombre">Johan Cazorla</b></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
           <span><span style="color:var(--muted);">Celular:</span> <b id="pm-cel">04149450742</b></span>
           <div style="display:flex;gap:4px;">
-            <button onclick="copiarDato('04149450742','btn-copy-cel')" id="btn-copy-cel" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Completo</button>
-            <button onclick="copiarDato('9450742','btn-copy-cel2')" id="btn-copy-cel2" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Sin código</button>
+            <button onclick="copiarDato(document.getElementById('pm-cel').textContent,'btn-copy-cel')" id="btn-copy-cel" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Completo</button>
+            <button onclick="copiarDato(document.getElementById('pm-cel').textContent.slice(-7),'btn-copy-cel2')" id="btn-copy-cel2" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Sin código</button>
           </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
           <span><span style="color:var(--muted);">Cédula:</span> <b id="pm-ci">18265345</b></span>
-          <button onclick="copiarDato('18265345','btn-copy-ci')" id="btn-copy-ci" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
+          <button onclick="copiarDato(document.getElementById('pm-ci').textContent,'btn-copy-ci')" id="btn-copy-ci" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;"><span><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-bs" style="color:var(--accent);">—</b></span><button onclick="copiarMonto('bs','btn-copy-monto-bs')" id="btn-copy-monto-bs" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button></div>
       </div>
@@ -976,7 +979,7 @@ function goStep(n){
   if(n===3){
     origenStep3='step2';
   }
-  if(n===6) calcularPago();
+  if(n===6){ calcularPago(); aplicarCuentaActiva(); }
   if(n===7) buildResumen();
   updateProgress();
   window.scrollTo({top:0,behavior:'smooth'});
@@ -1296,7 +1299,7 @@ function validateStep(n){
   if(n===2){ const minReq=(mangaTipoActual!=='larga')?1:(modalidadComfy==='B'?3:2); if(!pedido.pack||pedido.pack<minReq){ alert('Selecciona la cantidad de franelas (mínimo '+minReq+')'); return false; } return true; }
   if(n===3){
     if(!pedido.modelo){ alert('Selecciona el modelo'); return false; }
-    if(!pedido.manga){ alert('Selecciona el tipo de manga'); return false; }
+    if(mangaTipoActual!=='short' && !pedido.manga){ alert('Selecciona el tipo de manga'); return false; }
     if(!pedido.tela){ alert('Selecciona el color de tela'); return false; }
     if(!pedido.vinil){ alert('Selecciona el color del vinil'); return false; }
     return true;
@@ -1567,6 +1570,21 @@ let precioLogoPecho={bs:0,usd:0}, precioLogoEspalda={bs:0,usd:0}, precioLogoMang
 let precioCapucha={bs:0,usd:0};
 let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
 let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
+
+const CUENTAS_BANCARIAS={
+  empresa:{nombre:'Ikoa Brand Corp C.A.', cel:'04121574901', cedula:'J505031716'},
+  personal:{nombre:'Johan Cazorla', cel:'04149450742', cedula:'18265345'}
+};
+async function aplicarCuentaActiva(){
+  try{
+    const data=await scriptGETjson({action:'leerCuentaActiva'});
+    const cuenta=CUENTAS_BANCARIAS[data.cuenta]||CUENTAS_BANCARIAS.personal;
+    const elNombre=document.getElementById('pm-nombre'), elCel=document.getElementById('pm-cel'), elCi=document.getElementById('pm-ci');
+    if(elNombre) elNombre.textContent=cuenta.nombre;
+    if(elCel) elCel.textContent=cuenta.cel;
+    if(elCi) elCi.textContent=cuenta.cedula;
+  }catch(e){ console.warn('Error al leer cuenta activa:', e); }
+}
 
 async function calcularPago(){
   // Deshabilitar los botones de pago hasta que el precio real termine de cargar,

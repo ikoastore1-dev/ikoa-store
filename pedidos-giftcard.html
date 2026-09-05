@@ -272,12 +272,15 @@ main{max-width:480px;margin:0 auto;padding:16px;}
               <button onclick="copiarDato('Banesco',this)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">📋 Copiar</button>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <div><div style="font-size:11px;color:var(--muted);">Teléfono</div><div style="font-size:14px;font-weight:700;color:var(--text);">04149450742</div></div>
-              <button onclick="copiarDato('04149450742',this)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">📋 Copiar</button>
+              <div><div style="font-size:11px;color:var(--muted);">Titular</div><div id="r-pm-nombre" style="font-size:14px;font-weight:700;color:var(--text);">Johan Cazorla</div></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <div><div style="font-size:11px;color:var(--muted);">Teléfono</div><div id="r-pm-cel" style="font-size:14px;font-weight:700;color:var(--text);">04149450742</div></div>
+              <button onclick="copiarDato(document.getElementById('r-pm-cel').textContent,this)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">📋 Copiar</button>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-              <div><div style="font-size:11px;color:var(--muted);">Cédula</div><div style="font-size:14px;font-weight:700;color:var(--text);">V-18265345</div></div>
-              <button onclick="copiarDato('18265345',this)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">📋 Copiar</button>
+              <div><div style="font-size:11px;color:var(--muted);">Cédula</div><div id="r-pm-ci" style="font-size:14px;font-weight:700;color:var(--text);">V-18265345</div></div>
+              <button onclick="copiarDato(document.getElementById('r-pm-ci').textContent,this)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">📋 Copiar</button>
             </div>
             <div style="background:var(--surface);border-radius:8px;padding:10px;text-align:center;">
               <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Monto en Bs (tasa IKOA)</div>
@@ -1441,6 +1444,21 @@ async function rCargarTasa(){
   }catch(e){}
 }
 
+const CUENTAS_BANCARIAS_GC={
+  empresa:{nombre:'Ikoa Brand Corp C.A.', cel:'04121574901', cedula:'V-J505031716'},
+  personal:{nombre:'Johan Cazorla', cel:'04149450742', cedula:'V-18265345'}
+};
+async function aplicarCuentaActivaGC(){
+  try{
+    const data=await scriptGETjson({action:'leerCuentaActiva'});
+    const cuenta=CUENTAS_BANCARIAS_GC[data.cuenta]||CUENTAS_BANCARIAS_GC.personal;
+    const elNombre=document.getElementById('r-pm-nombre'), elCel=document.getElementById('r-pm-cel'), elCi=document.getElementById('r-pm-ci');
+    if(elNombre) elNombre.textContent=cuenta.nombre;
+    if(elCel) elCel.textContent=cuenta.cel;
+    if(elCi) elCi.textContent=cuenta.cedula;
+  }catch(e){ console.warn('Error al leer cuenta activa:', e); }
+}
+
 function rSelectPago(tipo){
   rPagoSel=tipo;
   document.getElementById('r-pm-bs').classList.toggle('selected',tipo==='bs');
@@ -1450,6 +1468,7 @@ function rSelectPago(tipo){
   // Mostrar info de pago correspondiente
   document.getElementById('r-pago-bs-info').style.display=tipo==='bs'?'block':'none';
   document.getElementById('r-pago-usd-info').style.display=tipo==='usd'?'block':'none';
+  if(tipo==='bs') aplicarCuentaActivaGC();
   // Calcular monto diferencia
   const totalCarrito=rCarrito.reduce((s,p)=>s+p.precioUsd,0);
   const diferencia=Math.max(0,totalCarrito-Number(gcData.monto_usd));

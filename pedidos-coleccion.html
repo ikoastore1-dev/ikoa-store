@@ -409,15 +409,18 @@ window.addEventListener('load',function(){
           <span><span style="color:var(--muted);">Banco:</span> <b>Banesco</b></span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
+          <span><span style="color:var(--muted);">Titular:</span> <b id="pm-nombre">Johan Cazorla</b></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
           <span><span style="color:var(--muted);">Celular:</span> <b id="pm-cel">04149450742</b></span>
           <div style="display:flex;gap:4px;">
-            <button onclick="copiarDato('04149450742','btn-copy-cel')" id="btn-copy-cel" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Completo</button>
-            <button onclick="copiarDato('9450742','btn-copy-cel2')" id="btn-copy-cel2" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Sin código</button>
+            <button onclick="copiarDato(document.getElementById('pm-cel').textContent,'btn-copy-cel')" id="btn-copy-cel" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Completo</button>
+            <button onclick="copiarDato(document.getElementById('pm-cel').textContent.slice(-7),'btn-copy-cel2')" id="btn-copy-cel2" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Sin código</button>
           </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
           <span><span style="color:var(--muted);">Cédula:</span> <b id="pm-ci">18265345</b></span>
-          <button onclick="copiarDato('18265345','btn-copy-ci')" id="btn-copy-ci" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
+          <button onclick="copiarDato(document.getElementById('pm-ci').textContent,'btn-copy-ci')" id="btn-copy-ci" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;"><span><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-bs" style="color:var(--accent);">—</b></span><button onclick="copiarMonto('bs','btn-copy-monto-bs')" id="btn-copy-monto-bs" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button></div>
       </div>
@@ -710,7 +713,7 @@ function goStep(n){
       pedido.packs.push({pack:1,codigoProducto:pedido.codigoProducto,modelo:pedido.nombreProducto,serie:selectedSerie,variante:pedido.variante,manga:'',capucha:pedido.capucha,largo:pedido.largo,tela:pedido.tela||'',vinil:pedido.vinil,piezas:JSON.parse(JSON.stringify(pedido.piezas))});
     }
   }
-  if(n===6) calcularPago();
+  if(n===6){ calcularPago(); aplicarCuentaActiva(); }
   if(n===7) buildResumen();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -1320,6 +1323,21 @@ let precioRecarga={bs:0,usd:0}, precioCapucha={bs:0,usd:0};
 let precioLogoPecho={bs:0,usd:0}, precioLogoEspalda={bs:0,usd:0}, precioLogoManga={bs:0,usd:0};
 let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
 let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
+
+const CUENTAS_BANCARIAS={
+  empresa:{nombre:'Ikoa Brand Corp C.A.', cel:'04121574901', cedula:'J505031716'},
+  personal:{nombre:'Johan Cazorla', cel:'04149450742', cedula:'18265345'}
+};
+async function aplicarCuentaActiva(){
+  try{
+    const data=await scriptGETjson({action:'leerCuentaActiva'});
+    const cuenta=CUENTAS_BANCARIAS[data.cuenta]||CUENTAS_BANCARIAS.personal;
+    const elNombre=document.getElementById('pm-nombre'), elCel=document.getElementById('pm-cel'), elCi=document.getElementById('pm-ci');
+    if(elNombre) elNombre.textContent=cuenta.nombre;
+    if(elCel) elCel.textContent=cuenta.cel;
+    if(elCi) elCi.textContent=cuenta.cedula;
+  }catch(e){ console.warn('Error al leer cuenta activa:', e); }
+}
 
 async function calcularPago(){
   const botonesPago=['btn-pago-bs','btn-pago-usd','btn-pago-cashea'].map(id=>document.getElementById(id)).filter(Boolean);
