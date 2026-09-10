@@ -752,6 +752,11 @@ function volverAEditarPiezas(){
 
 async function intentarPaso45(){
   if(!validateStep(4)) return;
+  // Recalcular el nombre justo antes de guardar, como respaldo — nunca depender
+  // de un valor que pudo quedarse desactualizado de un pack anterior.
+  if(pedido.variante!=='Toalla' && !['Bikini','Enterizo','Bikini Manga Larga'].includes(pedido.variante)){
+    pedido.nombreProducto=calcularNombreProducto();
+  }
   // Guardar pack actual en lista de packs
   pedido.packs.push({
     pack: pedido.pack,
@@ -987,6 +992,16 @@ function selectColorSerie(btn,color){
   document.getElementById('producto-seleccionado').style.display='none';
 }
 
+function calcularNombreProducto(){
+  if(selectedVariante==='Toalla') return 'Toalla Tiburón Ballena';
+  const s=SERIES_COLECCION[selectedSerie];
+  if(!s || !selectedVariante) return pedido.nombreProducto||'';
+  if(selectedSerie==='ChaquetaReflectiva') return 'Chaqueta Reflectiva';
+  if(selectedSerie==='Unicolor') return `${selectedVariante} Serie ${selectedColorSerie}`;
+  if(s.nombre===selectedColorSerie) return `${selectedVariante} ${s.nombre}`;
+  return `${selectedVariante} ${s.nombre} ${selectedColorSerie}`;
+}
+
 function selectVariante(btn,variante){
   selectedVariante=variante;
   document.querySelectorAll('#variante-grid .opt-btn').forEach(b=>b.classList.remove('selected'));
@@ -1017,11 +1032,7 @@ function selectVariante(btn,variante){
 
   const s=SERIES_COLECCION[selectedSerie];
   const codigo=s.codigos[selectedColorSerie][variante];
-  let nombre;
-  if(selectedSerie==='ChaquetaReflectiva') nombre='Chaqueta Reflectiva';
-  else if(selectedSerie==='Unicolor') nombre=`${variante} Serie ${selectedColorSerie}`;
-  else if(s.nombre===selectedColorSerie) nombre=`${variante} ${s.nombre}`; // series de un solo color/estampado (ej. Tiburón Ballena) — no repetir
-  else nombre=`${variante} ${s.nombre} ${selectedColorSerie}`;
+  const nombre=calcularNombreProducto();
   pedido.codigoProducto=codigo; pedido.nombreProducto=nombre; pedido.variante=variante; pedido.pack=1;
   // Cotton Licra, T-Shirt y Short: sin capucha
   if(variante==='ChaquetaReflectiva'||variante==='Chaqueta'){
@@ -1064,6 +1075,9 @@ function selectShortSerie(btn,color){
 
 function actualizarPaso3(){
   const v=pedido.variante;
+  if(selectedSerie && v!=='Toalla' && !['Bikini','Enterizo','Bikini Manga Larga'].includes(v)){
+    pedido.nombreProducto=calcularNombreProducto();
+  }
   document.getElementById('capucha-wrap').style.display=(v==='Playera'||v==='Dress'||v==='Cortaviento'||v==='Chaqueta'||v==='ChaquetaReflectiva')?'block':'none';
   document.getElementById('largo-wrap').style.display=v==='Short'?'block':'none';
   document.getElementById('cortaviento-info').style.display=v==='Cortaviento'?'block':'none';
@@ -1088,6 +1102,11 @@ function setMismoEnvio(val){
 // ── PIEZAS ────────────────────────────────────────────────────
 function inicializarPiezas(){
   if(!pedido.pack||pedido.pack<1){ alert('Selecciona el producto primero'); goStep(2); return; }
+  // Respaldo extra: recalcular el nombre justo aquí también, por si algún camino de
+  // navegación no lo actualizó correctamente antes de llegar a este paso.
+  if(selectedSerie && pedido.variante!=='Toalla' && !['Bikini','Enterizo','Bikini Manga Larga'].includes(pedido.variante)){
+    pedido.nombreProducto=calcularNombreProducto();
+  }
   const esShort=pedido.variante==='Short';
   // Show product label in step4
   const lbl=document.getElementById('step4-producto-label');
