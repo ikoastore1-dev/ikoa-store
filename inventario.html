@@ -694,7 +694,65 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div id="precios-agregados-wrap" style="margin-top:20px;display:none;">
       <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Agregados a la cotización:</div>
       <div id="precios-agregados-list"></div>
-      <button onclick="switchTab('gestion');cotSetSubTab('nuevo')" style="width:100%;margin-top:10px;padding:12px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:10px;color:#000;font-size:14px;font-weight:700;cursor:pointer;">Ir a Cotización →</button>
+    </div>
+  </div>
+
+  <!-- MODAL CANTIDAD PRECIOS -->
+  <div id="precios-modal-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:340px;width:100%;">
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Cantidad</div>
+      <div id="precios-modal-nombre" style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:20px;">—</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:20px;">
+        <button onclick="cambiarCantidadModalPrecio(-1)" style="width:48px;height:48px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:24px;cursor:pointer;">−</button>
+        <span id="precios-modal-cantidad" style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:800;color:var(--accent);min-width:60px;text-align:center;">1</span>
+        <button onclick="cambiarCantidadModalPrecio(1)" style="width:48px;height:48px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:24px;cursor:pointer;">+</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">🧢 Con capucha</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button onclick="cambiarSubcantidadModal('capucha',-1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;">−</button>
+            <span id="precios-modal-capucha" style="font-size:16px;font-weight:700;color:var(--text);min-width:20px;text-align:center;">0</span>
+            <button onclick="cambiarSubcantidadModal('capucha',1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;">+</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">📏 Talla Plus</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button onclick="cambiarSubcantidadModal('plus',-1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;">−</button>
+            <span id="precios-modal-plus" style="font-size:16px;font-weight:700;color:var(--text);min-width:20px;text-align:center;">0</span>
+            <button onclick="cambiarSubcantidadModal('plus',1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;">+</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">🎨 Logo Pecho</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button onclick="cambiarSubcantidadModal('logoPecho',-1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;">−</button>
+            <span id="precios-modal-logoPecho" style="font-size:16px;font-weight:700;color:var(--text);min-width:20px;text-align:center;">0</span>
+            <button onclick="cambiarSubcantidadModal('logoPecho',1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;">+</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">🎨 Logo Espalda</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button onclick="cambiarSubcantidadModal('logoEspalda',-1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;">−</button>
+            <span id="precios-modal-logoEspalda" style="font-size:16px;font-weight:700;color:var(--text);min-width:20px;text-align:center;">0</span>
+            <button onclick="cambiarSubcantidadModal('logoEspalda',1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;">+</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">🎨 Logo Manga</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button onclick="cambiarSubcantidadModal('logoManga',-1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;">−</button>
+            <span id="precios-modal-logoManga" style="font-size:16px;font-weight:700;color:var(--text);min-width:20px;text-align:center;">0</span>
+            <button onclick="cambiarSubcantidadModal('logoManga',1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;">+</button>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="cerrarModalPrecio()" style="flex:1;padding:13px;background:transparent;border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;">Cancelar</button>
+        <button onclick="confirmarModalPrecio()" style="flex:1.5;padding:13px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:10px;color:#000;font-size:14px;font-weight:700;cursor:pointer;">Agregar</button>
+      </div>
     </div>
   </div>
 
@@ -3052,48 +3110,121 @@ const PRECIOS_BOTONES=[
 let preciosPP={}, preciosAgregados=[];
 
 async function cargarPrecios(){
-  renderBotonesPrecios();
+  document.getElementById('precios-botones').innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);grid-column:1/-1;">Cargando precios...</div>';
   try{
     const data=await scriptGETjson({action:'leerTodosLosPrecios'});
     if(data.ok) preciosPP=data.pack_precios||{};
   }catch(e){ console.warn('Error al leer precios:', e); }
+  renderBotonesPrecios();
 }
 
 function renderBotonesPrecios(){
   const cont=document.getElementById('precios-botones');
-  cont.innerHTML=PRECIOS_BOTONES.map((b,i)=>`
-    <button onclick="tocarBotonPrecio(${i})" style="padding:18px 10px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;text-align:center;">
-      ${b.nombre}
-    </button>`).join('');
+  cont.innerHTML=PRECIOS_BOTONES.map((b,i)=>{
+    const precio=preciosPP[b.codigo]||preciosPP[b.codigo.toUpperCase()]||preciosPP[b.codigo.toLowerCase()];
+    const bs=precio?parseFloat(precio.bs)||0:0;
+    const usd=precio?parseFloat(precio.usd)||0:0;
+    return `
+    <button onclick="tocarBotonPrecio(${i})" style="padding:20px 14px;background:linear-gradient(160deg,var(--surface),var(--surface2));border:1.5px solid var(--border);border-radius:14px;color:var(--text);cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.02em;">${b.nombre}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:var(--accent);line-height:1;">Bs ${bs.toLocaleString('es-VE',{minimumFractionDigits:2})}</div>
+      <div style="font-size:15px;font-weight:600;color:var(--muted);">$${usd.toFixed(2)}</div>
+    </button>`;
+  }).join('');
 }
+
+let preciosModalIdx=null, preciosModalCantidad=1, preciosModalCapucha=0, preciosModalPlus=0, preciosModalLogoPecho=0, preciosModalLogoEspalda=0, preciosModalLogoManga=0;
 
 function tocarBotonPrecio(idx){
   const b=PRECIOS_BOTONES[idx];
   const precio=preciosPP[b.codigo]||preciosPP[b.codigo.toUpperCase()]||preciosPP[b.codigo.toLowerCase()];
   if(!precio){ alert('No se encontró el precio de "'+b.nombre+'" (código '+b.codigo+'). Verifica tu hoja CODIGOS.'); return; }
-  const cantTexto=prompt(`¿Cuántas unidades de "${b.nombre}"?`, '1');
-  if(!cantTexto) return;
-  const cant=parseInt(cantTexto);
-  if(!cant||cant<1){ alert('Ingresa una cantidad válida'); return; }
-  const bs=parseFloat(precio.bs)||0, usd=parseFloat(precio.usd)||0;
-  preciosAgregados.push({
-    nombre:b.nombre, codigo:b.codigo, cantidad:cant,
-    precioUnitBs:bs, precioUnitUsd:usd,
-    subtotalBs:bs*cant, subtotalUsd:usd*cant
+  preciosModalIdx=idx; preciosModalCantidad=1; preciosModalCapucha=0; preciosModalPlus=0;
+  preciosModalLogoPecho=0; preciosModalLogoEspalda=0; preciosModalLogoManga=0;
+  document.getElementById('precios-modal-nombre').textContent=b.nombre;
+  ['cantidad','capucha','plus','logoPecho','logoEspalda','logoManga'].forEach(k=>{
+    document.getElementById('precios-modal-'+k).textContent=k==='cantidad'?'1':'0';
   });
-  // Reflejar también en cotItems para que "Ir a Cotización" ya lo tenga listo
+  document.getElementById('precios-modal-overlay').style.display='flex';
+}
+
+function cambiarCantidadModalPrecio(delta){
+  preciosModalCantidad=Math.max(1,preciosModalCantidad+delta);
+  document.getElementById('precios-modal-cantidad').textContent=preciosModalCantidad;
+  ['capucha','plus','logoPecho','logoEspalda','logoManga'].forEach(k=>{
+    const varName='preciosModal'+k.charAt(0).toUpperCase()+k.slice(1);
+    if(window[varName]>preciosModalCantidad){
+      window[varName]=preciosModalCantidad;
+      document.getElementById('precios-modal-'+k).textContent=preciosModalCantidad;
+    }
+  });
+}
+
+function cambiarSubcantidadModal(tipo,delta){
+  const varName='preciosModal'+tipo.charAt(0).toUpperCase()+tipo.slice(1);
+  window[varName]=Math.max(0,Math.min(preciosModalCantidad,window[varName]+delta));
+  document.getElementById('precios-modal-'+tipo).textContent=window[varName];
+}
+
+function cerrarModalPrecio(){
+  document.getElementById('precios-modal-overlay').style.display='none';
+  preciosModalIdx=null;
+}
+
+function confirmarModalPrecio(){
+  const idx=preciosModalIdx, cant=preciosModalCantidad, nCap=preciosModalCapucha, nPlus=preciosModalPlus;
+  const nLogoPecho=preciosModalLogoPecho, nLogoEspalda=preciosModalLogoEspalda, nLogoManga=preciosModalLogoManga;
+  if(idx===null) return;
+  const b=PRECIOS_BOTONES[idx];
+  const precio=preciosPP[b.codigo]||preciosPP[b.codigo.toUpperCase()]||preciosPP[b.codigo.toLowerCase()];
+  const bs=parseFloat(precio.bs)||0, usd=parseFloat(precio.usd)||0;
+  const capData=preciosPP['C.01'];
+  const capBs=capData?parseFloat(capData.bs)||0:0, capUsd=capData?parseFloat(capData.usd)||0:0;
+  const plusData=preciosPP['S.COMFY.03'];
+  const plusBs=plusData?parseFloat(plusData.bs)||0:0, plusUsd=plusData?parseFloat(plusData.usd)||0:0;
+  const logoPechoData=preciosPP['P.06'];
+  const logoPechoBs=logoPechoData?parseFloat(logoPechoData.bs)||0:0, logoPechoUsd=logoPechoData?parseFloat(logoPechoData.usd)||0:0;
+  const logoEspaldaData=preciosPP['P.05'];
+  const logoEspaldaBs=logoEspaldaData?parseFloat(logoEspaldaData.bs)||0:0, logoEspaldaUsd=logoEspaldaData?parseFloat(logoEspaldaData.usd)||0:0;
+  const logoMangaData=preciosPP['P.04'];
+  const logoMangaBs=logoMangaData?parseFloat(logoMangaData.bs)||0:0, logoMangaUsd=logoMangaData?parseFloat(logoMangaData.usd)||0:0;
+
+  const capuchaTotalBs=capBs*nCap, capuchaTotalUsd=capUsd*nCap;
+  const plusTotalBs=plusBs*nPlus, plusTotalUsd=plusUsd*nPlus;
+  const logoPechoTotalBs=logoPechoBs*nLogoPecho, logoPechoTotalUsd=logoPechoUsd*nLogoPecho;
+  const logoEspaldaTotalBs=logoEspaldaBs*nLogoEspalda, logoEspaldaTotalUsd=logoEspaldaUsd*nLogoEspalda;
+  const logoMangaTotalBs=logoMangaBs*nLogoManga, logoMangaTotalUsd=logoMangaUsd*nLogoManga;
+
+  const subtotalBs=bs*cant+capuchaTotalBs+plusTotalBs+logoPechoTotalBs+logoEspaldaTotalBs+logoMangaTotalBs;
+  const subtotalUsd=usd*cant+capuchaTotalUsd+plusTotalUsd+logoPechoTotalUsd+logoEspaldaTotalUsd+logoMangaTotalUsd;
+
+  const detalles=[];
+  if(nCap>0) detalles.push(nCap+' con capucha');
+  if(nPlus>0) detalles.push(nPlus+' talla plus');
+  if(nLogoPecho>0) detalles.push(nLogoPecho+' logo pecho');
+  if(nLogoEspalda>0) detalles.push(nLogoEspalda+' logo espalda');
+  if(nLogoManga>0) detalles.push(nLogoManga+' logo manga');
+
+  preciosAgregados.push({
+    nombre:b.nombre+(detalles.length?' ('+detalles.join(', ')+')':''), codigo:b.codigo, cantidad:cant,
+    precioUnitBs:bs, precioUnitUsd:usd,
+    subtotalBs, subtotalUsd
+  });
   cotItems.push({
     app:'precios_rapidos', nombreApp:b.nombre, codigo:b.codigo,
     pack:`${cant} ud${cant>1?'s':''}`,
-    manga:'', capucha:'', tela:'', vinil:'', tallas:new Array(cant).fill('—'), nPlus:0,
-    precioUnitUSD:usd, precioUnitBS:bs, recargaTotal:0, recargaTotalBs:0,
-    capuchaTotal:0, capuchaTotalBs:0,
-    logoEspalda:0, logoEspaldaBs:0, logoPecho:0, logoPechoBs:0, logoManga:0, logoMangaBs:0,
-    nLogoEsp:0, nLogoPec:0, nLogoMan:0, estampado:'', colorLibre:'',
-    subtotalUSD:usd*cant, subtotalBs:bs*cant, tasaBCV:0
+    manga:'', capucha:nCap>0?`${nCap} con capucha`:'', tela:'', vinil:'', tallas:new Array(cant).fill('—'), nPlus,
+    precioUnitUSD:usd, precioUnitBS:bs, recargaTotal:plusTotalUsd, recargaTotalBs:plusTotalBs,
+    capuchaTotal:capuchaTotalUsd, capuchaTotalBs:capuchaTotalBs,
+    logoEspalda:logoEspaldaTotalUsd, logoEspaldaBs:logoEspaldaTotalBs,
+    logoPecho:logoPechoTotalUsd, logoPechoBs:logoPechoTotalBs,
+    logoManga:logoMangaTotalUsd, logoMangaBs:logoMangaTotalBs,
+    nLogoEsp:nLogoEspalda, nLogoPec:nLogoPecho, nLogoMan:nLogoManga, estampado:'', colorLibre:'',
+    subtotalUSD:subtotalUsd, subtotalBs:subtotalBs, tasaBCV:0
   });
   cotRenderItems();
   renderPreciosAgregados();
+  cerrarModalPrecio();
 }
 
 function renderPreciosAgregados(){
