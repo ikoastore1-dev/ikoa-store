@@ -3422,12 +3422,12 @@ function confirmarVentasLock(){
 }
 
 function switchTab(tab){
-  ['tasa','stock','etiquetas','aprobaciones','respaldo','gestion','taller','programacion','ventas','gastos'].forEach(t=>{
+  ['tasa','precios','stock','etiquetas','aprobaciones','respaldo','gestion','taller','programacion','ventas','gastos'].forEach(t=>{
     const el=document.getElementById('tab-'+t);
     if(el) el.style.display=t===tab?'block':'none';
   });
   document.querySelectorAll('.main-tab').forEach((b,i)=>{
-    b.classList.toggle('active',['tasa','stock','etiquetas','aprobaciones','respaldo','gestion','taller','programacion','ventas','gastos'][i]===tab);
+    b.classList.toggle('active',['tasa','precios','stock','etiquetas','aprobaciones','respaldo','gestion','taller','programacion','ventas','gastos'][i]===tab);
   });
   ['product-area','msg-area','historial-list','solicitudes-list','cola-list',
    'rv-list','rv-historial-list','apro-msg','cola-msg'].forEach(id=>{
