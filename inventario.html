@@ -581,6 +581,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <button class="main-tab tab" onclick="switchTab('stock')">📦 Stock</button>
     <button class="main-tab tab" onclick="switchTab('etiquetas')">🆕 Productos Nuevos</button>
     <button class="main-tab tab" onclick="switchTab('aprobaciones')">✅ Aprobaciones</button>
+    <button class="main-tab tab" onclick="switchTab('factura')">🧾 Factura</button>
     <button class="main-tab tab" onclick="switchTab('respaldo')">💬 Respaldo</button>
     <button class="main-tab tab" onclick="switchTab('gestion')">📋 Gestión</button>
     <button class="main-tab tab" onclick="switchTab('taller')">🏭 Taller</button>
@@ -1210,6 +1211,13 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div id="cashea-pagadas-list"></div>
       </div>
     </div>
+  </div>
+
+  <!-- TAB FACTURA -->
+  <div id="tab-factura" style="display:none;padding:16px;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">🧾 Factura</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Cola de pedidos Cashea aprobados, pendientes de facturar.</div>
+    <div id="factura-list"><div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div></div>
   </div>
 
   <!-- TAB RESPALDO VENTA -->
@@ -3094,6 +3102,76 @@ async function registrarGasto(){
 }
 
 // Inicializar fecha de hoy en el formulario de gastos
+// ── FACTURA (cola de pedidos Cashea aprobados, pendientes de facturar) ──
+async function cargarColaFacturacion(){
+  const list=document.getElementById('factura-list');
+  list.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>';
+  try{
+    const data=await scriptGETjson({action:'leerColaFacturacion'});
+    if(!data.ok) throw new Error(data.error||'Error');
+    const rows=data.rows||[];
+    if(!rows.length){
+      list.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:12px;"><div style="font-size:32px;margin-bottom:10px;">🧾</div><div style="font-size:15px;">No hay pedidos pendientes de facturar</div></div>';
+      return;
+    }
+    list.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${rows.length} pedido(s) en cola</div>`;
+    rows.forEach(r=>{
+      const v=i=>String(r[i]||'').trim();
+      const codigoS=v(0), codigoC=v(1);
+      const card=document.createElement('div');
+      card.style.cssText='background:var(--surface);border:1.5px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:14px;animation:slideUp .3s ease;';
+      card.innerHTML=`
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;">${v(3)}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;">
+              <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text);">${codigoS}</span>
+              <span style="background:#0f2b1a;border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--muted);">${codigoC}</span>
+              <span style="font-size:11px;color:var(--muted);">🕐 ${v(2)}</span>
+            </div>
+          </div>
+          <span style="background:#0a2a1a;border:1px solid var(--accent);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--accent);">🛒 CASHEA${v(18)?' · '+v(18)+'%':''}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:12px;">
+          <div><span style="color:var(--muted);">Correo:</span> ${v(4)}</div>
+          <div><span style="color:var(--muted);">Cédula:</span> ${v(5)}</div>
+          <div><span style="color:var(--muted);">Celular:</span> ${v(6)}</div>
+          <div><span style="color:var(--muted);">Agencia:</span> ${v(7)}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
+          <span style="color:var(--muted);">Retira:</span> ${v(8)}${v(9)?` · C.I: ${v(9)}`:''}${v(10)?` · Cel: ${v(10)}`:''}
+        </div>
+        <div style="background:var(--surface2);border:1px solid #0a2a1a;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:14px;">
+          <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px;">🛒 Pago Cashea</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent);">Bs ${v(16)||'—'}</b></div>
+            <div><span style="color:var(--muted);">% Cashea:</span> <b>${v(18)||'—'}%</b></div>
+            <div><span style="color:var(--muted);">Ref:</span> <b style="color:var(--warn);">${v(17)||'—'}</b></div>
+            <div><span style="color:var(--muted);">COD Cashea:</span> <b>${v(19)||'—'}</b></div>
+          </div>
+        </div>
+        <button onclick="confirmarProcesarFactura('${codigoS}')" style="width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:10px;color:#000;font-size:14px;font-weight:700;cursor:pointer;">✓ Marcar como Facturado</button>
+      `;
+      list.appendChild(card);
+    });
+  }catch(e){
+    list.innerHTML=`<div style="text-align:center;padding:30px;color:var(--danger);">Error: ${e.message}</div>`;
+  }
+}
+
+async function confirmarProcesarFactura(codigoS){
+  if(!confirm(`¿Confirmas que ya facturaste el pedido ${codigoS}? Se moverá al historial.`)) return;
+  const auth=prompt('Código de usuario para confirmar:');
+  if(!auth) return;
+  const authUp=auth.trim().toUpperCase();
+  if(!USUARIOS[authUp]){ alert('❌ Código incorrecto'); return; }
+  try{
+    const res=await scriptGETjson({action:'procesarFactura', codigo_s:codigoS, usuario:USUARIOS[authUp]||authUp, fecha_facturado:getFechaHora()});
+    if(res.ok){ cargarColaFacturacion(); }
+    else alert('Error: '+(res.error||'desconocido'));
+  }catch(e){ alert('Error de conexión: '+e.message); }
+}
+
 // ── PRECIOS ───────────────────────────────────────────────────
 const PRECIOS_BOTONES=[
   {nombre:'Mega Promo Comfy', codigo:'COMFY11', linea:'comfy'},
@@ -3559,12 +3637,12 @@ function confirmarVentasLock(){
 }
 
 function switchTab(tab){
-  ['tasa','precios','stock','etiquetas','aprobaciones','respaldo','gestion','taller','programacion','ventas','gastos'].forEach(t=>{
+  ['tasa','precios','stock','etiquetas','aprobaciones','factura','respaldo','gestion','taller','programacion','ventas','gastos'].forEach(t=>{
     const el=document.getElementById('tab-'+t);
     if(el) el.style.display=t===tab?'block':'none';
   });
   document.querySelectorAll('.main-tab').forEach((b,i)=>{
-    b.classList.toggle('active',['tasa','precios','stock','etiquetas','aprobaciones','respaldo','gestion','taller','programacion','ventas','gastos'][i]===tab);
+    b.classList.toggle('active',['tasa','precios','stock','etiquetas','aprobaciones','factura','respaldo','gestion','taller','programacion','ventas','gastos'][i]===tab);
   });
   ['product-area','msg-area','historial-list','solicitudes-list','cola-list',
    'rv-list','rv-historial-list','apro-msg','cola-msg'].forEach(id=>{
@@ -3584,6 +3662,7 @@ function switchTab(tab){
   }
   if(tab==='gastos') initGastos();
   if(tab==='precios') cargarPrecios();
+  if(tab==='factura') cargarColaFacturacion();
   if(tab!=='aprobaciones'){
     // Ocultar sección cashea al salir de aprobaciones
     const cashea=document.getElementById('aprosec-cashea');
