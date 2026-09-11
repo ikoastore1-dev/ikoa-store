@@ -716,7 +716,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
             <button onclick="cambiarSubcantidadModal('capucha',1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;">+</button>
           </div>
         </div>
-        <div>
+        <div id="precios-modal-plus-wrap">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">📏 Talla Plus</div>
           <div style="display:flex;align-items:center;gap:8px;">
             <button onclick="cambiarSubcantidadModal('plus',-1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;">−</button>
@@ -3097,23 +3097,23 @@ async function registrarGasto(){
 // Inicializar fecha de hoy en el formulario de gastos
 // ── PRECIOS ───────────────────────────────────────────────────
 const PRECIOS_BOTONES=[
-  {nombre:'Mega Promo Comfy', codigo:'COMFY11'},
-  {nombre:'Comfy Detal', codigo:'COMFY01'},
-  {nombre:'Promo Licra', codigo:'LICRA02'},
-  {nombre:'Licra Detal', codigo:'LICRA01'},
-  {nombre:'Cortaviento', codigo:'TiburonBallenaCortaviento'},
-  {nombre:'Short', codigo:'TiburonBallenaShort'},
-  {nombre:'Comfy Manga Corta', codigo:'COMFY06'},
-  {nombre:'Comfy Manga Cero', codigo:'COMFY07'},
-  {nombre:'Vestido Comfy', codigo:'COMFY04'}
+  {nombre:'Mega Promo Comfy', codigo:'COMFY11', linea:'comfy'},
+  {nombre:'Comfy Detal', codigo:'COMFY01', linea:'comfy', sinPlus:true},
+  {nombre:'Promo Licra', codigo:'LICRA02', linea:'licra'},
+  {nombre:'Licra Detal', codigo:'LICRA01', linea:'licra', sinPlus:true},
+  {nombre:'Cortaviento', codigo:'TiburonBallenaCortaviento', linea:'coleccion'},
+  {nombre:'Short', codigo:'TiburonBallenaShort', linea:'coleccion'},
+  {nombre:'Comfy Manga Corta', codigo:'COMFY06', linea:'comfy'},
+  {nombre:'Comfy Manga Cero', codigo:'COMFY07', linea:'comfy'},
+  {nombre:'Vestido Comfy', codigo:'COMFY04', linea:'comfy'}
 ];
-let preciosPP={}, preciosAgregados=[];
+let preciosPP={}, preciosCashea={}, preciosAgregados=[];
 
 async function cargarPrecios(){
   document.getElementById('precios-botones').innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);grid-column:1/-1;">Cargando precios...</div>';
   try{
     const data=await scriptGETjson({action:'leerTodosLosPrecios'});
-    if(data.ok) preciosPP=data.pack_precios||{};
+    if(data.ok){ preciosPP=data.pack_precios||{}; preciosCashea=data.cashea||{}; }
   }catch(e){ console.warn('Error al leer precios:', e); }
   renderBotonesPrecios();
 }
@@ -3124,11 +3124,23 @@ function renderBotonesPrecios(){
     const precio=preciosPP[b.codigo]||preciosPP[b.codigo.toUpperCase()]||preciosPP[b.codigo.toLowerCase()];
     const bs=precio?parseFloat(precio.bs)||0:0;
     const usd=precio?parseFloat(precio.usd)||0:0;
+    const cashCfg=preciosCashea[b.linea]||{cashea_pct:0,cashea_activo:false};
+    const casheaBs=cashCfg.cashea_activo?bs*(1+cashCfg.cashea_pct/100):bs;
     return `
-    <button onclick="tocarBotonPrecio(${i})" style="padding:20px 14px;background:linear-gradient(160deg,var(--surface),var(--surface2));border:1.5px solid var(--border);border-radius:14px;color:var(--text);cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:6px;">
-      <div style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.02em;">${b.nombre}</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:var(--accent);line-height:1;">Bs ${bs.toLocaleString('es-VE',{minimumFractionDigits:2})}</div>
-      <div style="font-size:15px;font-weight:600;color:var(--muted);">$${usd.toFixed(2)}</div>
+    <button onclick="tocarBotonPrecio(${i})" style="padding:20px 14px;background:linear-gradient(160deg,var(--surface),var(--surface2));border:1.5px solid var(--border);border-radius:14px;color:var(--text);cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:4px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.02em;margin-bottom:4px;">${b.nombre}</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;">
+        <span style="font-size:10px;color:var(--muted);">Bs</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--accent);">${bs.toLocaleString('es-VE',{minimumFractionDigits:2})}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;">
+        <span style="font-size:10px;color:var(--muted);">Divisa</span>
+        <span style="font-size:15px;font-weight:700;color:var(--text);">$${usd.toFixed(2)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:4px;border-top:1px solid var(--border);margin-top:2px;">
+        <span style="font-size:10px;color:#f0b429;">Cashea</span>
+        <span style="font-size:14px;font-weight:700;color:#f0b429;">Bs ${casheaBs.toLocaleString('es-VE',{minimumFractionDigits:2})}</span>
+      </div>
     </button>`;
   }).join('');
 }
@@ -3147,6 +3159,8 @@ function tocarBotonPrecio(idx){
   ['capucha','plus','logoPecho','logoEspalda','logoManga'].forEach(k=>{
     document.getElementById('precios-modal-'+k).textContent='0';
   });
+  const plusWrap=document.getElementById('precios-modal-plus-wrap');
+  if(plusWrap) plusWrap.style.display=b.sinPlus?'none':'block';
   document.getElementById('precios-modal-overlay').style.display='flex';
 }
 
@@ -3198,6 +3212,8 @@ function confirmarModalPrecio(){
 
   const subtotalBs=bs*cant+capuchaTotalBs+plusTotalBs+logoPechoTotalBs+logoEspaldaTotalBs+logoMangaTotalBs;
   const subtotalUsd=usd*cant+capuchaTotalUsd+plusTotalUsd+logoPechoTotalUsd+logoEspaldaTotalUsd+logoMangaTotalUsd;
+  const cashCfg=preciosCashea[b.linea]||{cashea_pct:0,cashea_activo:false};
+  const subtotalCasheaBs=cashCfg.cashea_activo?subtotalBs*(1+cashCfg.cashea_pct/100):subtotalBs;
 
   const detalles=[];
   if(nCap>0) detalles.push(nCap+' con capucha');
@@ -3209,7 +3225,7 @@ function confirmarModalPrecio(){
   preciosAgregados.push({
     nombre:b.nombre+(detalles.length?' ('+detalles.join(', ')+')':''), codigo:b.codigo, cantidad:cant,
     precioUnitBs:bs, precioUnitUsd:usd,
-    subtotalBs, subtotalUsd
+    subtotalBs, subtotalUsd, subtotalCasheaBs
   });
   cotItems.push({
     app:'precios_rapidos', nombreApp:b.nombre, codigo:b.codigo,
@@ -3234,12 +3250,16 @@ function renderPreciosAgregados(){
   if(!preciosAgregados.length){ wrap.style.display='none'; return; }
   wrap.style.display='block';
   list.innerHTML=preciosAgregados.map((it,i)=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;">
-      <div>
+    <div style="background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
         <b>${it.cantidad} × ${it.nombre}</b>
-        <div style="color:var(--muted);font-size:11px;">Bs ${it.subtotalBs.toLocaleString('es-VE',{minimumFractionDigits:2})} · $${it.subtotalUsd.toFixed(2)}</div>
+        <button onclick="quitarPrecioAgregado(${i})" style="padding:4px 8px;background:transparent;border:1px solid var(--danger);border-radius:6px;color:var(--danger);font-size:11px;cursor:pointer;flex-shrink:0;margin-left:8px;">✕</button>
       </div>
-      <button onclick="quitarPrecioAgregado(${i})" style="padding:5px 9px;background:transparent;border:1px solid var(--danger);border-radius:6px;color:var(--danger);font-size:12px;cursor:pointer;">✕</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:11px;">
+        <div><span style="color:var(--muted);">Bs:</span> <b style="color:var(--accent);">${it.subtotalBs.toLocaleString('es-VE',{minimumFractionDigits:2})}</b></div>
+        <div><span style="color:var(--muted);">Divisa:</span> <b>$${it.subtotalUsd.toFixed(2)}</b></div>
+        <div><span style="color:#f0b429;">Cashea:</span> <b style="color:#f0b429;">Bs ${it.subtotalCasheaBs.toLocaleString('es-VE',{minimumFractionDigits:2})}</b></div>
+      </div>
     </div>`).join('');
 }
 
