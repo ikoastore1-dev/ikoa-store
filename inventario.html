@@ -3133,17 +3133,19 @@ function renderBotonesPrecios(){
   }).join('');
 }
 
-let preciosModalIdx=null, preciosModalCantidad=1, preciosModalCapucha=0, preciosModalPlus=0, preciosModalLogoPecho=0, preciosModalLogoEspalda=0, preciosModalLogoManga=0;
+let preciosModalIdx=null, preciosModalCantidad=1;
+let preciosModalExtras={capucha:0, plus:0, logoPecho:0, logoEspalda:0, logoManga:0};
 
 function tocarBotonPrecio(idx){
   const b=PRECIOS_BOTONES[idx];
   const precio=preciosPP[b.codigo]||preciosPP[b.codigo.toUpperCase()]||preciosPP[b.codigo.toLowerCase()];
   if(!precio){ alert('No se encontró el precio de "'+b.nombre+'" (código '+b.codigo+'). Verifica tu hoja CODIGOS.'); return; }
-  preciosModalIdx=idx; preciosModalCantidad=1; preciosModalCapucha=0; preciosModalPlus=0;
-  preciosModalLogoPecho=0; preciosModalLogoEspalda=0; preciosModalLogoManga=0;
+  preciosModalIdx=idx; preciosModalCantidad=1;
+  preciosModalExtras={capucha:0, plus:0, logoPecho:0, logoEspalda:0, logoManga:0};
   document.getElementById('precios-modal-nombre').textContent=b.nombre;
-  ['cantidad','capucha','plus','logoPecho','logoEspalda','logoManga'].forEach(k=>{
-    document.getElementById('precios-modal-'+k).textContent=k==='cantidad'?'1':'0';
+  document.getElementById('precios-modal-cantidad').textContent='1';
+  ['capucha','plus','logoPecho','logoEspalda','logoManga'].forEach(k=>{
+    document.getElementById('precios-modal-'+k).textContent='0';
   });
   document.getElementById('precios-modal-overlay').style.display='flex';
 }
@@ -3152,18 +3154,16 @@ function cambiarCantidadModalPrecio(delta){
   preciosModalCantidad=Math.max(1,preciosModalCantidad+delta);
   document.getElementById('precios-modal-cantidad').textContent=preciosModalCantidad;
   ['capucha','plus','logoPecho','logoEspalda','logoManga'].forEach(k=>{
-    const varName='preciosModal'+k.charAt(0).toUpperCase()+k.slice(1);
-    if(window[varName]>preciosModalCantidad){
-      window[varName]=preciosModalCantidad;
+    if(preciosModalExtras[k]>preciosModalCantidad){
+      preciosModalExtras[k]=preciosModalCantidad;
       document.getElementById('precios-modal-'+k).textContent=preciosModalCantidad;
     }
   });
 }
 
 function cambiarSubcantidadModal(tipo,delta){
-  const varName='preciosModal'+tipo.charAt(0).toUpperCase()+tipo.slice(1);
-  window[varName]=Math.max(0,Math.min(preciosModalCantidad,window[varName]+delta));
-  document.getElementById('precios-modal-'+tipo).textContent=window[varName];
+  preciosModalExtras[tipo]=Math.max(0,Math.min(preciosModalCantidad,preciosModalExtras[tipo]+delta));
+  document.getElementById('precios-modal-'+tipo).textContent=preciosModalExtras[tipo];
 }
 
 function cerrarModalPrecio(){
@@ -3172,8 +3172,9 @@ function cerrarModalPrecio(){
 }
 
 function confirmarModalPrecio(){
-  const idx=preciosModalIdx, cant=preciosModalCantidad, nCap=preciosModalCapucha, nPlus=preciosModalPlus;
-  const nLogoPecho=preciosModalLogoPecho, nLogoEspalda=preciosModalLogoEspalda, nLogoManga=preciosModalLogoManga;
+  const idx=preciosModalIdx, cant=preciosModalCantidad;
+  const nCap=preciosModalExtras.capucha, nPlus=preciosModalExtras.plus;
+  const nLogoPecho=preciosModalExtras.logoPecho, nLogoEspalda=preciosModalExtras.logoEspalda, nLogoManga=preciosModalExtras.logoManga;
   if(idx===null) return;
   const b=PRECIOS_BOTONES[idx];
   const precio=preciosPP[b.codigo]||preciosPP[b.codigo.toUpperCase()]||preciosPP[b.codigo.toLowerCase()];
