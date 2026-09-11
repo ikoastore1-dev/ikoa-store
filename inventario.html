@@ -686,17 +686,15 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
   <!-- TAB PRECIOS -->
   <div id="tab-precios" style="display:none;padding:16px;">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;">💲 Precios</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">💲 Precios</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Toca un producto para agregarlo directo a la Cotización.</div>
 
-    <input type="text" id="precios-buscar" placeholder="🔍 Buscar producto o código..." oninput="filtrarPrecios()"
-      style="width:100%;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;margin-bottom:12px;">
+    <div id="precios-botones" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
 
-    <div id="precios-categorias" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px;"></div>
-
-    <div id="precios-resumen" style="font-size:12px;color:var(--muted);margin-bottom:12px;"></div>
-
-    <div id="precios-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;">
-      <div style="text-align:center;padding:30px;color:var(--muted);grid-column:1/-1;">Cargando precios...</div>
+    <div id="precios-agregados-wrap" style="margin-top:20px;display:none;">
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Agregados a la cotización:</div>
+      <div id="precios-agregados-list"></div>
+      <button onclick="switchTab('gestion');cotSetSubTab('nuevo')" style="width:100%;margin-top:10px;padding:12px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:10px;color:#000;font-size:14px;font-weight:700;cursor:pointer;">Ir a Cotización →</button>
     </div>
   </div>
 
@@ -3040,107 +3038,86 @@ async function registrarGasto(){
 
 // Inicializar fecha de hoy en el formulario de gastos
 // ── PRECIOS ───────────────────────────────────────────────────
-let preciosData=[], preciosCategoriaActiva='Todas';
+const PRECIOS_BOTONES=[
+  {nombre:'Mega Promo Comfy', codigo:'COMFY11'},
+  {nombre:'Comfy Detal', codigo:'COMFY01'},
+  {nombre:'Promo Licra', codigo:'LICRA02'},
+  {nombre:'Licra Detal', codigo:'LICRA01'},
+  {nombre:'Cortaviento', codigo:'TiburonBallenaCortaviento'},
+  {nombre:'Short', codigo:'TiburonBallenaShort'},
+  {nombre:'Comfy Manga Corta', codigo:'COMFY06'},
+  {nombre:'Comfy Manga Cero', codigo:'COMFY07'},
+  {nombre:'Vestido Comfy', codigo:'COMFY04'}
+];
+let preciosPP={}, preciosAgregados=[];
 
 async function cargarPrecios(){
-  const grid=document.getElementById('precios-grid');
-  grid.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);grid-column:1/-1;">Cargando precios...</div>';
+  renderBotonesPrecios();
   try{
-    const data=await scriptGETjson({action:'leerPreciosCompletos'});
-    if(!data.ok){ grid.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger);grid-column:1/-1;">Error al cargar precios.</div>'; return; }
-    preciosData=data.productos||[];
-    window._preciosTasaBCV=data.tasa_bcv||0;
-    renderCategoriasPrecios();
-    filtrarPrecios();
-  }catch(e){
-    grid.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger);grid-column:1/-1;">Error de conexión.</div>';
-  }
+    const data=await scriptGETjson({action:'leerTodosLosPrecios'});
+    if(data.ok) preciosPP=data.pack_precios||{};
+  }catch(e){ console.warn('Error al leer precios:', e); }
 }
 
-function renderCategoriasPrecios(){
-  const cont=document.getElementById('precios-categorias');
-  const categorias=['Todas', ...new Set(preciosData.map(p=>p.depto).filter(Boolean))];
-  cont.innerHTML=categorias.map(c=>`
-    <button onclick="seleccionarCategoriaPrecios('${c.replace(/'/g,"\\'")}')" id="precios-cat-${c.replace(/[^a-zA-Z0-9]/g,'')}"
-      style="flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid ${c===preciosCategoriaActiva?'var(--accent)':'var(--border)'};background:${c===preciosCategoriaActiva?'#0a2a1a':'var(--surface2)'};color:${c===preciosCategoriaActiva?'var(--accent)':'var(--muted)'};font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
-      ${c}
+function renderBotonesPrecios(){
+  const cont=document.getElementById('precios-botones');
+  cont.innerHTML=PRECIOS_BOTONES.map((b,i)=>`
+    <button onclick="tocarBotonPrecio(${i})" style="padding:18px 10px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;text-align:center;">
+      ${b.nombre}
     </button>`).join('');
 }
 
-function seleccionarCategoriaPrecios(cat){
-  preciosCategoriaActiva=cat;
-  renderCategoriasPrecios();
-  filtrarPrecios();
+function tocarBotonPrecio(idx){
+  const b=PRECIOS_BOTONES[idx];
+  const precio=preciosPP[b.codigo]||preciosPP[b.codigo.toUpperCase()]||preciosPP[b.codigo.toLowerCase()];
+  if(!precio){ alert('No se encontró el precio de "'+b.nombre+'" (código '+b.codigo+'). Verifica tu hoja CODIGOS.'); return; }
+  const cantTexto=prompt(`¿Cuántas unidades de "${b.nombre}"?`, '1');
+  if(!cantTexto) return;
+  const cant=parseInt(cantTexto);
+  if(!cant||cant<1){ alert('Ingresa una cantidad válida'); return; }
+  const bs=parseFloat(precio.bs)||0, usd=parseFloat(precio.usd)||0;
+  preciosAgregados.push({
+    nombre:b.nombre, codigo:b.codigo, cantidad:cant,
+    precioUnitBs:bs, precioUnitUsd:usd,
+    subtotalBs:bs*cant, subtotalUsd:usd*cant
+  });
+  // Reflejar también en cotItems para que "Ir a Cotización" ya lo tenga listo
+  cotItems.push({
+    app:'precios_rapidos', nombreApp:b.nombre, codigo:b.codigo,
+    pack:`${cant} ud${cant>1?'s':''}`,
+    manga:'', capucha:'', tela:'', vinil:'', tallas:new Array(cant).fill('—'), nPlus:0,
+    precioUnitUSD:usd, precioUnitBS:bs, recargaTotal:0, recargaTotalBs:0,
+    capuchaTotal:0, capuchaTotalBs:0,
+    logoEspalda:0, logoEspaldaBs:0, logoPecho:0, logoPechoBs:0, logoManga:0, logoMangaBs:0,
+    nLogoEsp:0, nLogoPec:0, nLogoMan:0, estampado:'', colorLibre:'',
+    subtotalUSD:usd*cant, subtotalBs:bs*cant, tasaBCV:0
+  });
+  cotRenderItems();
+  renderPreciosAgregados();
 }
 
-function filtrarPrecios(){
-  const q=(document.getElementById('precios-buscar').value||'').toUpperCase().trim();
-  let lista=preciosData;
-  if(preciosCategoriaActiva!=='Todas') lista=lista.filter(p=>p.depto===preciosCategoriaActiva);
-  if(q) lista=lista.filter(p=>p.nombre.toUpperCase().includes(q)||p.codigo.toUpperCase().includes(q));
-  renderPreciosGrid(lista);
-  document.getElementById('precios-resumen').textContent=`${lista.length} producto${lista.length!==1?'s':''}${preciosCategoriaActiva!=='Todas'?' en '+preciosCategoriaActiva:''}`;
-}
-
-function renderPreciosGrid(lista){
-  const grid=document.getElementById('precios-grid');
-  if(!lista.length){ grid.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);grid-column:1/-1;">No se encontraron productos.</div>'; return; }
-  grid.innerHTML=lista.map(p=>`
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;" id="precio-card-${p.fila}">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">${p.depto}</div>
-      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;">${p.nombre}</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">${p.codigo}</div>
-      <div id="precio-vista-${p.fila}">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">Bs ${p.bs.toLocaleString('es-VE',{minimumFractionDigits:2})}</div>
-            <div style="font-size:12px;color:var(--muted);">$${p.usd.toFixed(2)}</div>
-          </div>
-          <button onclick="editarPrecioCard(${p.fila})" style="padding:7px 12px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;">✏️ Editar</button>
-        </div>
+function renderPreciosAgregados(){
+  const wrap=document.getElementById('precios-agregados-wrap');
+  const list=document.getElementById('precios-agregados-list');
+  if(!preciosAgregados.length){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  list.innerHTML=preciosAgregados.map((it,i)=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;">
+      <div>
+        <b>${it.cantidad} × ${it.nombre}</b>
+        <div style="color:var(--muted);font-size:11px;">Bs ${it.subtotalBs.toLocaleString('es-VE',{minimumFractionDigits:2})} · $${it.subtotalUsd.toFixed(2)}</div>
       </div>
-      <div id="precio-edicion-${p.fila}" style="display:none;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-          <div>
-            <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">Bs</div>
-            <input type="number" step="0.01" id="precio-input-bs-${p.fila}" value="${p.bs}" style="width:100%;padding:7px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;">
-          </div>
-          <div>
-            <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">$</div>
-            <input type="number" step="0.01" id="precio-input-usd-${p.fila}" value="${p.usd}" style="width:100%;padding:7px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;">
-          </div>
-        </div>
-        <div style="display:flex;gap:6px;">
-          <button onclick="guardarPrecioCard(${p.fila})" style="flex:1;padding:8px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:12px;font-weight:700;cursor:pointer;">✓ Guardar</button>
-          <button onclick="cancelarEdicionPrecio(${p.fila})" style="padding:8px 12px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer;">✕</button>
-        </div>
-      </div>
-    </div>
-  `).join('');
+      <button onclick="quitarPrecioAgregado(${i})" style="padding:5px 9px;background:transparent;border:1px solid var(--danger);border-radius:6px;color:var(--danger);font-size:12px;cursor:pointer;">✕</button>
+    </div>`).join('');
 }
 
-function editarPrecioCard(fila){
-  document.getElementById('precio-vista-'+fila).style.display='none';
-  document.getElementById('precio-edicion-'+fila).style.display='block';
-}
-function cancelarEdicionPrecio(fila){
-  document.getElementById('precio-vista-'+fila).style.display='block';
-  document.getElementById('precio-edicion-'+fila).style.display='none';
-}
-
-async function guardarPrecioCard(fila){
-  const bs=document.getElementById('precio-input-bs-'+fila).value;
-  const usd=document.getElementById('precio-input-usd-'+fila).value;
-  try{
-    const res=await scriptGETjson({action:'actualizarPrecioCodigo', fila, bs, usd});
-    if(res.ok){
-      const item=preciosData.find(p=>p.fila===fila);
-      if(item){ item.bs=parseFloat(bs)||0; item.usd=parseFloat(usd)||0; }
-      filtrarPrecios();
-    } else {
-      alert('Error al guardar: '+(res.error||'desconocido'));
-    }
-  }catch(e){ alert('Error de conexión al guardar.'); }
+function quitarPrecioAgregado(idx){
+  const item=preciosAgregados[idx];
+  const cotIdx=cotItems.findIndex(ci=>ci.app==='precios_rapidos'&&ci.codigo===item.codigo&&ci.pack===`${item.cantidad} ud${item.cantidad>1?'s':''}`);
+  if(cotIdx>-1) cotItems.splice(cotIdx,1);
+  preciosAgregados.splice(idx,1);
+  cotRenderItems();
+  renderPreciosAgregados();
 }
 
 function initGastos(){
