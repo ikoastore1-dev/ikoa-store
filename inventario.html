@@ -692,9 +692,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div id="precios-botones" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
 
     <div id="precios-agregados-wrap" style="margin-top:20px;display:none;">
-      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Agregados a la cotización:</div>
-      <div id="precios-agregados-list"></div>
-      <div id="precios-ticket-total" style="background:linear-gradient(160deg,var(--surface),var(--surface2));border:2px solid var(--accent);border-radius:14px;padding:16px;margin-top:12px;"></div>
+      <div id="precios-ticket-total" style="background:#fff;border-radius:14px;padding:20px;color:#111;font-family:'Courier New',monospace;"></div>
     </div>
   </div>
 
@@ -3108,13 +3106,13 @@ const PRECIOS_BOTONES=[
   {nombre:'Comfy Manga Cero', codigo:'COMFY07', linea:'comfy'},
   {nombre:'Vestido Comfy', codigo:'COMFY04', linea:'comfy'}
 ];
-let preciosPP={}, preciosCashea={}, preciosAgregados=[];
+let preciosPP={}, preciosCashea={}, preciosAgregados=[], preciosTasaBCV=0;
 
 async function cargarPrecios(){
   document.getElementById('precios-botones').innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);grid-column:1/-1;">Cargando precios...</div>';
   try{
     const data=await scriptGETjson({action:'leerTodosLosPrecios'});
-    if(data.ok){ preciosPP=data.pack_precios||{}; preciosCashea=data.cashea||{}; }
+    if(data.ok){ preciosPP=data.pack_precios||{}; preciosCashea=data.cashea||{}; preciosTasaBCV=parseFloat(data.tasa_bcv)||0; }
   }catch(e){ console.warn('Error al leer precios:', e); }
   renderBotonesPrecios();
 }
@@ -3228,40 +3226,48 @@ function confirmarModalPrecio(){
 
 function renderPreciosAgregados(){
   const wrap=document.getElementById('precios-agregados-wrap');
-  const list=document.getElementById('precios-agregados-list');
   if(!preciosAgregados.length){ wrap.style.display='none'; return; }
   wrap.style.display='block';
-  list.innerHTML=preciosAgregados.map((it,i)=>`
-    <div style="background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
-        <b>${it.cantidad} × ${it.nombre}</b>
-        <button onclick="quitarPrecioAgregado(${i})" style="padding:4px 8px;background:transparent;border:1px solid var(--danger);border-radius:6px;color:var(--danger);font-size:11px;cursor:pointer;flex-shrink:0;margin-left:8px;">✕</button>
+
+  const lineasProductos=preciosAgregados.map((it,i)=>`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px dashed #ccc;">
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:700;">${it.cantidad} × ${it.nombre}</div>
+        <div style="font-size:11px;color:#666;margin-top:2px;">Bs ${it.subtotalBs.toLocaleString('es-VE',{minimumFractionDigits:2})} · $${it.subtotalUsd.toFixed(2)} · Cashea Bs ${it.subtotalCasheaBs.toLocaleString('es-VE',{minimumFractionDigits:2})}</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:11px;">
-        <div><span style="color:var(--muted);">Bs:</span> <b style="color:var(--accent);">${it.subtotalBs.toLocaleString('es-VE',{minimumFractionDigits:2})}</b></div>
-        <div><span style="color:var(--muted);">Divisa:</span> <b>$${it.subtotalUsd.toFixed(2)}</b></div>
-        <div><span style="color:#f0b429;">Cashea:</span> <b style="color:#f0b429;">Bs ${it.subtotalCasheaBs.toLocaleString('es-VE',{minimumFractionDigits:2})}</b></div>
-      </div>
+      <button onclick="quitarPrecioAgregado(${i})" style="padding:3px 7px;background:#fff;border:1px solid #c00;border-radius:5px;color:#c00;font-size:10px;cursor:pointer;flex-shrink:0;margin-left:8px;font-family:Arial,sans-serif;">✕</button>
     </div>`).join('');
 
   const totalBs=preciosAgregados.reduce((s,it)=>s+it.subtotalBs,0);
   const totalUsd=preciosAgregados.reduce((s,it)=>s+it.subtotalUsd,0);
   const totalCasheaBs=preciosAgregados.reduce((s,it)=>s+it.subtotalCasheaBs,0);
   const totalPiezas=preciosAgregados.reduce((s,it)=>s+it.cantidad,0);
+
   document.getElementById('precios-ticket-total').innerHTML=`
-    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;text-align:center;">🧾 Total (${totalPiezas} ${totalPiezas===1?'unidad':'unidades'})</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-      <span style="font-size:13px;color:var(--muted);">Bolívares</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--accent);">Bs ${totalBs.toLocaleString('es-VE',{minimumFractionDigits:2})}</span>
+    <div style="text-align:center;border-bottom:2px dashed #333;padding-bottom:14px;margin-bottom:14px;">
+      <div style="font-size:22px;font-weight:800;letter-spacing:.05em;">IKOA</div>
+      <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-top:2px;">Ikoa Brand Corp C.A.</div>
+      <div style="font-size:10px;color:#999;margin-top:4px;">${new Date().toLocaleDateString('es-VE',{day:'2-digit',month:'2-digit',year:'numeric'})} · ${new Date().toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit'})}</div>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-      <span style="font-size:13px;color:var(--muted);">Divisa</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--text);">$${totalUsd.toFixed(2)}</span>
+
+    <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Productos cargados (${totalPiezas} ${totalPiezas===1?'unidad':'unidades'})</div>
+    ${lineasProductos}
+
+    <div style="border-top:2px dashed #333;margin-top:14px;padding-top:14px;">
+      <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;">
+        <span>Bolívares</span>
+        <b style="font-size:18px;">Bs ${totalBs.toLocaleString('es-VE',{minimumFractionDigits:2})}</b>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;">
+        <span>Divisa</span>
+        <b style="font-size:16px;">$${totalUsd.toFixed(2)}</b>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;">
+        <span>Cashea</span>
+        <b style="font-size:16px;">Bs ${totalCasheaBs.toLocaleString('es-VE',{minimumFractionDigits:2})}${preciosTasaBCV>0?' <span style="font-size:11px;font-weight:400;color:#666;">(REF $'+(totalCasheaBs/preciosTasaBCV).toFixed(2)+')</span>':''}</b>
+      </div>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;">
-      <span style="font-size:13px;color:#f0b429;">Cashea</span>
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:#f0b429;">Bs ${totalCasheaBs.toLocaleString('es-VE',{minimumFractionDigits:2})}</span>
-    </div>
+    <div style="text-align:center;font-size:10px;color:#999;margin-top:14px;border-top:2px dashed #333;padding-top:10px;">¡Gracias por su preferencia! 💚</div>
   `;
 }
 
