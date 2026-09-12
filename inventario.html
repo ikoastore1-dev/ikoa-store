@@ -1244,6 +1244,29 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     </div>
   </div>
 
+  <!-- MODAL MODIFICAR FACTURA -->
+  <div id="factura-modal-editar-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;max-width:400px;width:100%;max-height:90vh;overflow-y:auto;">
+      <div style="font-size:16px;font-weight:700;color:var(--accent);margin-bottom:16px;">✏️ Modificar Pedido <span id="factura-editar-codigo" style="color:var(--muted);font-size:13px;"></span></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div><div class="field-label">Cliente</div><input class="field-input" id="fe-cliente"></div>
+        <div><div class="field-label">Correo</div><input class="field-input" id="fe-correo"></div>
+        <div><div class="field-label">Cédula</div><input class="field-input" id="fe-cedula"></div>
+        <div><div class="field-label">Celular</div><input class="field-input" id="fe-celular"></div>
+        <div><div class="field-label">Agencia</div><input class="field-input" id="fe-agencia"></div>
+        <div><div class="field-label">Retira (Nombre)</div><input class="field-input" id="fe-retira"></div>
+        <div><div class="field-label">Retira (Cédula)</div><input class="field-input" id="fe-retira-cedula"></div>
+        <div><div class="field-label">Retira (Celular)</div><input class="field-input" id="fe-retira-celular"></div>
+        <div><div class="field-label">Monto Bs (Cashea)</div><input class="field-input" id="fe-monto"></div>
+        <div><div class="field-label">Referencia</div><input class="field-input" id="fe-ref"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button onclick="cerrarModalModificarFactura()" style="flex:1;padding:13px;background:transparent;border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;">Cancelar</button>
+        <button onclick="guardarModificarFactura()" style="flex:1.5;padding:13px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:10px;color:#000;font-size:14px;font-weight:700;cursor:pointer;">✓ Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
   <!-- TAB RESPALDO VENTA -->
   <div id="tab-respaldo" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -3127,6 +3150,70 @@ async function registrarGasto(){
 
 // Inicializar fecha de hoy en el formulario de gastos
 // ── FACTURA (cola de pedidos Cashea aprobados, pendientes de facturar) ──
+let _facturaModalCodigoS=null;
+function abrirModalModificarFactura(codigoS, filaData){
+  _facturaModalCodigoS=codigoS;
+  const v=i=>String(filaData[i]||'').trim();
+  document.getElementById('factura-editar-codigo').textContent=codigoS;
+  document.getElementById('fe-cliente').value=v(3);
+  document.getElementById('fe-correo').value=v(4);
+  document.getElementById('fe-cedula').value=v(5);
+  document.getElementById('fe-celular').value=v(6);
+  document.getElementById('fe-agencia').value=v(7);
+  document.getElementById('fe-retira').value=v(8);
+  document.getElementById('fe-retira-cedula').value=v(9);
+  document.getElementById('fe-retira-celular').value=v(10);
+  document.getElementById('fe-monto').value=v(16);
+  document.getElementById('fe-ref').value=v(17);
+  document.getElementById('factura-modal-editar-overlay').style.display='flex';
+}
+
+function cerrarModalModificarFactura(){
+  document.getElementById('factura-modal-editar-overlay').style.display='none';
+  _facturaModalCodigoS=null;
+}
+
+async function guardarModificarFactura(){
+  if(!_facturaModalCodigoS) return;
+  const auth=prompt('Código del Director para autorizar esta modificación:');
+  if(!auth) return;
+  if(auth.trim()!=='271010'){ alert('❌ Solo el Director puede autorizar esta acción.'); return; }
+  try{
+    const res=await scriptGETjson({
+      action:'modificarFactura', codigo_s:_facturaModalCodigoS,
+      cliente:document.getElementById('fe-cliente').value,
+      correo:document.getElementById('fe-correo').value,
+      cedula:document.getElementById('fe-cedula').value,
+      celular:document.getElementById('fe-celular').value,
+      agencia:document.getElementById('fe-agencia').value,
+      retira:document.getElementById('fe-retira').value,
+      retira_cedula:document.getElementById('fe-retira-cedula').value,
+      retira_celular:document.getElementById('fe-retira-celular').value,
+      pago_monto:document.getElementById('fe-monto').value,
+      pago_ref:document.getElementById('fe-ref').value
+    });
+    if(res.ok){ cerrarModalModificarFactura(); cargarColaFacturacion(); }
+    else alert('Error: '+(res.error||'desconocido'));
+  }catch(e){ alert('Error de conexión: '+e.message); }
+}
+
+async function confirmarAnularFactura(codigos){
+  if(!Array.isArray(codigos)) codigos=[codigos];
+  const motivo=prompt(`¿Por qué se anula el pedido ${codigos[0].split('.')[0]}? (motivo obligatorio)`);
+  if(!motivo||!motivo.trim()){ alert('Debes ingresar un motivo para anular.'); return; }
+  const auth=prompt('Código del Director para autorizar esta anulación:');
+  if(!auth) return;
+  if(auth.trim()!=='271010'){ alert('❌ Solo el Director puede autorizar esta acción.'); return; }
+  if(!confirm(`¿Confirmas ANULAR ${codigos.length} pack(s) del pedido ${codigos[0].split('.')[0]}? Esta acción no se puede deshacer.`)) return;
+  try{
+    for(const cod of codigos){
+      const res=await scriptGETjson({action:'anularFactura', codigo_s:cod, usuario:'Director Johan', motivo:motivo.trim()});
+      if(!res.ok) throw new Error(res.error||'Error en '+cod);
+    }
+    cargarColaFacturacion();
+  }catch(e){ alert('Error: '+e.message); cargarColaFacturacion(); }
+}
+
 let facturaResumenPeriodo='semana';
 function setFacturaResumenPeriodo(periodo){
   facturaResumenPeriodo=periodo;
@@ -3312,7 +3399,12 @@ async function cargarColaFacturacion(){
         </div>`;
       });
       const codigosGrupo=packs.map(pk=>String(pk[0]||'').trim()).filter(Boolean);
-      html+=`<button onclick='confirmarProcesarFactura(${JSON.stringify(codigosGrupo)})' style="width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:10px;color:#000;font-size:14px;font-weight:700;cursor:pointer;">✓ Marcar como Facturado (${codigosGrupo.length} pack${codigosGrupo.length>1?'s':''})</button>`;
+      html+=`
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <button onclick='abrirModalModificarFactura(${JSON.stringify(base)}, ${JSON.stringify(r)})' style="flex:1;padding:11px;background:transparent;border:1.5px solid var(--warn);border-radius:8px;color:var(--warn);font-size:13px;font-weight:700;cursor:pointer;">✏️ Modificar</button>
+          <button onclick='confirmarAnularFactura(${JSON.stringify(codigosGrupo)})' style="flex:1;padding:11px;background:transparent;border:1.5px solid var(--danger);border-radius:8px;color:var(--danger);font-size:13px;font-weight:700;cursor:pointer;">✕ Anular</button>
+        </div>
+        <button onclick='confirmarProcesarFactura(${JSON.stringify(codigosGrupo)})' style="width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:10px;color:#000;font-size:14px;font-weight:700;cursor:pointer;">✓ Marcar como Facturado (${codigosGrupo.length} pack${codigosGrupo.length>1?'s':''})</button>`;
       card.innerHTML=html;
       list.appendChild(card);
     });
