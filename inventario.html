@@ -1225,6 +1225,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     </div>
 
     <div id="factura-sec-pendientes">
+      <div id="factura-apro-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
       <div id="factura-list"><div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div></div>
     </div>
 
@@ -1249,6 +1250,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;max-width:400px;width:100%;max-height:90vh;overflow-y:auto;">
       <div style="font-size:16px;font-weight:700;color:var(--accent);margin-bottom:16px;">✏️ Modificar Pedido <span id="factura-editar-codigo" style="color:var(--muted);font-size:13px;"></span></div>
       <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-top:6px;">Datos del cliente</div>
         <div><div class="field-label">Cliente</div><input class="field-input" id="fe-cliente"></div>
         <div><div class="field-label">Correo</div><input class="field-input" id="fe-correo"></div>
         <div><div class="field-label">Cédula</div><input class="field-input" id="fe-cedula"></div>
@@ -1257,12 +1259,42 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div><div class="field-label">Retira (Nombre)</div><input class="field-input" id="fe-retira"></div>
         <div><div class="field-label">Retira (Cédula)</div><input class="field-input" id="fe-retira-cedula"></div>
         <div><div class="field-label">Retira (Celular)</div><input class="field-input" id="fe-retira-celular"></div>
+
+        <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-top:10px;">Datos del producto</div>
+        <div><div class="field-label">Pack</div><input class="field-input" id="fe-pack"></div>
+        <div><div class="field-label">Tela</div><input class="field-input" id="fe-tela"></div>
+        <div><div class="field-label">Vinil</div><input class="field-input" id="fe-vinil"></div>
+        <div><div class="field-label">Piezas</div><textarea class="field-input" id="fe-piezas" rows="3" style="resize:vertical;"></textarea></div>
+
+        <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-top:10px;">Pago</div>
         <div><div class="field-label">Monto Bs (Cashea)</div><input class="field-input" id="fe-monto"></div>
         <div><div class="field-label">Referencia</div><input class="field-input" id="fe-ref"></div>
+
+        <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-top:10px;">Autorización</div>
+        <div><div class="field-label">Código del Director *</div><input class="field-input" type="password" id="fe-auth" placeholder="Código de autorización"></div>
+        <div id="fe-error" style="color:var(--danger);font-size:12px;min-height:16px;"></div>
       </div>
       <div style="display:flex;gap:10px;margin-top:20px;">
         <button onclick="cerrarModalModificarFactura()" style="flex:1;padding:13px;background:transparent;border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;">Cancelar</button>
         <button onclick="guardarModificarFactura()" style="flex:1.5;padding:13px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:10px;color:#000;font-size:14px;font-weight:700;cursor:pointer;">✓ Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ANULAR FACTURA -->
+  <div id="factura-modal-anular-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:var(--surface);border:1px solid var(--danger);border-radius:16px;padding:22px;max-width:380px;width:100%;">
+      <div style="font-size:16px;font-weight:700;color:var(--danger);margin-bottom:4px;">✕ Anular Pedido</div>
+      <div id="factura-anular-codigo" style="font-size:13px;color:var(--muted);margin-bottom:16px;"></div>
+      <div style="font-size:12px;color:var(--warn);background:#1a1005;border:1px solid var(--warn);border-radius:8px;padding:10px;margin-bottom:16px;">⚠️ Esta acción no se puede deshacer. El pedido saldrá de la cola de facturación por completo.</div>
+      <div class="field-label">Motivo de anulación *</div>
+      <textarea class="field-input" id="fa-motivo" rows="3" placeholder="Explica por qué se anula este pedido..." style="resize:vertical;margin-bottom:14px;"></textarea>
+      <div class="field-label">Código del Director *</div>
+      <input class="field-input" type="password" id="fa-auth" placeholder="Código de autorización" style="margin-bottom:6px;">
+      <div id="fa-error" style="color:var(--danger);font-size:12px;min-height:16px;margin-bottom:10px;"></div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="cerrarModalAnularFactura()" style="flex:1;padding:13px;background:transparent;border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;">Cancelar</button>
+        <button onclick="confirmarModalAnularFactura()" style="flex:1.5;padding:13px;background:var(--danger);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">✕ Anular Definitivamente</button>
       </div>
     </div>
   </div>
@@ -2292,7 +2324,7 @@ const TALLAS_ROPA = ['XS','S','M','L','XL','XXL','3XL'];
 const TALLAS_DAMA = ['Dama XS','Dama S','Dama M','Dama L','Dama XL','Dama XXL','Dama 3XL'];
 const TALLAS_CAB  = ['Caballero XS','Caballero S','Caballero M','Caballero L','Caballero XL','Caballero XXL','Caballero 3XL'];
 const TALLAS_ZAP  = ['30','30½','31','31½','32','32½','33','33½','34','34½','35','35½','36','36½','37','37½','38','38½','39','39½','40','40½','41','41½','42','42½','43','43½','44','44½','45'];
-const USUARIOS    = {'271010':'Director Johan','IKOA02':'Vendedor 1','IKOA03':'Vendedor 2','IKOA04':'Almacén','IKOA05':'Showroom'};
+const USUARIOS    = {'271010':'Director Johan'};
 const USUARIOS_RESPALDO = {'271010':'Director Johan','3006':'Gaby'};
 
 let PRODUCTOS=[], STOCK={}, TASAS={BCV:null,Shoes:null,IKOA:null,BeKate:null};
@@ -3163,8 +3195,14 @@ function abrirModalModificarFactura(codigoS, filaData){
   document.getElementById('fe-retira').value=v(8);
   document.getElementById('fe-retira-cedula').value=v(9);
   document.getElementById('fe-retira-celular').value=v(10);
+  document.getElementById('fe-pack').value=v(11);
+  document.getElementById('fe-tela').value=v(12);
+  document.getElementById('fe-vinil').value=v(13);
+  document.getElementById('fe-piezas').value=v(14);
   document.getElementById('fe-monto').value=v(16);
   document.getElementById('fe-ref').value=v(17);
+  document.getElementById('fe-auth').value='';
+  document.getElementById('fe-error').textContent='';
   document.getElementById('factura-modal-editar-overlay').style.display='flex';
 }
 
@@ -3175,9 +3213,12 @@ function cerrarModalModificarFactura(){
 
 async function guardarModificarFactura(){
   if(!_facturaModalCodigoS) return;
-  const auth=prompt('Código del Director para autorizar esta modificación:');
-  if(!auth) return;
-  if(auth.trim()!=='271010'){ alert('❌ Solo el Director puede autorizar esta acción.'); return; }
+  const auth=document.getElementById('fe-auth').value.trim();
+  const errEl=document.getElementById('fe-error');
+  if(auth!=='271010'){ errEl.textContent='❌ Solo el Director puede autorizar esta acción.'; return; }
+  errEl.textContent='';
+  const msgEl=document.getElementById('factura-apro-msg');
+  const setMsg=(bg,color,html)=>{ if(msgEl){ msgEl.style.display='block'; msgEl.style.background=bg; msgEl.style.color=color; msgEl.innerHTML=html; } };
   try{
     const res=await scriptGETjson({
       action:'modificarFactura', codigo_s:_facturaModalCodigoS,
@@ -3189,29 +3230,63 @@ async function guardarModificarFactura(){
       retira:document.getElementById('fe-retira').value,
       retira_cedula:document.getElementById('fe-retira-cedula').value,
       retira_celular:document.getElementById('fe-retira-celular').value,
+      pack:document.getElementById('fe-pack').value,
+      tela:document.getElementById('fe-tela').value,
+      vinil:document.getElementById('fe-vinil').value,
+      piezas:document.getElementById('fe-piezas').value,
       pago_monto:document.getElementById('fe-monto').value,
       pago_ref:document.getElementById('fe-ref').value
     });
-    if(res.ok){ cerrarModalModificarFactura(); cargarColaFacturacion(); }
-    else alert('Error: '+(res.error||'desconocido'));
-  }catch(e){ alert('Error de conexión: '+e.message); }
+    if(res.ok){
+      cerrarModalModificarFactura();
+      setMsg('#0a2a0a','var(--accent)',`✅ Pedido ${_facturaModalCodigoS} modificado correctamente`);
+      setTimeout(()=>{ if(msgEl) msgEl.style.display='none'; }, 4000);
+      cargarColaFacturacion();
+    } else {
+      errEl.textContent='Error: '+(res.error||'desconocido');
+    }
+  }catch(e){ errEl.textContent='Error de conexión: '+e.message; }
 }
 
-async function confirmarAnularFactura(codigos){
+let _facturaAnularCodigos=null;
+function confirmarAnularFactura(codigos){
   if(!Array.isArray(codigos)) codigos=[codigos];
-  const motivo=prompt(`¿Por qué se anula el pedido ${codigos[0].split('.')[0]}? (motivo obligatorio)`);
-  if(!motivo||!motivo.trim()){ alert('Debes ingresar un motivo para anular.'); return; }
-  const auth=prompt('Código del Director para autorizar esta anulación:');
-  if(!auth) return;
-  if(auth.trim()!=='271010'){ alert('❌ Solo el Director puede autorizar esta acción.'); return; }
-  if(!confirm(`¿Confirmas ANULAR ${codigos.length} pack(s) del pedido ${codigos[0].split('.')[0]}? Esta acción no se puede deshacer.`)) return;
+  _facturaAnularCodigos=codigos;
+  document.getElementById('factura-anular-codigo').textContent=`Pedido ${codigos[0].split('.')[0]} · ${codigos.length} pack${codigos.length>1?'s':''}`;
+  document.getElementById('fa-motivo').value='';
+  document.getElementById('fa-auth').value='';
+  document.getElementById('fa-error').textContent='';
+  document.getElementById('factura-modal-anular-overlay').style.display='flex';
+}
+
+function cerrarModalAnularFactura(){
+  document.getElementById('factura-modal-anular-overlay').style.display='none';
+  _facturaAnularCodigos=null;
+}
+
+async function confirmarModalAnularFactura(){
+  const motivo=document.getElementById('fa-motivo').value.trim();
+  const auth=document.getElementById('fa-auth').value.trim();
+  const errEl=document.getElementById('fa-error');
+  if(!motivo){ errEl.textContent='Ingresa el motivo de anulación.'; return; }
+  if(auth!=='271010'){ errEl.textContent='❌ Solo el Director puede autorizar esta acción.'; return; }
+  errEl.textContent='';
+  const msgEl=document.getElementById('factura-apro-msg');
+  const setMsg=(bg,color,html)=>{ if(msgEl){ msgEl.style.display='block'; msgEl.style.background=bg; msgEl.style.color=color; msgEl.innerHTML=html; } };
+  const codigos=_facturaAnularCodigos;
+  setMsg('var(--surface2)','var(--muted)',`<span class="spinner">↻</span> Anulando pedido (0/${codigos.length})...`);
   try{
-    for(const cod of codigos){
-      const res=await scriptGETjson({action:'anularFactura', codigo_s:cod, usuario:'Director Johan', motivo:motivo.trim()});
+    for(let idx=0; idx<codigos.length; idx++){
+      const cod=codigos[idx];
+      setMsg('var(--surface2)','var(--muted)',`<span class="spinner">↻</span> Anulando pedido (${idx+1}/${codigos.length})... ${cod}`);
+      const res=await scriptGETjson({action:'anularFactura', codigo_s:cod, usuario:'Director Johan', motivo:motivo});
       if(!res.ok) throw new Error(res.error||'Error en '+cod);
     }
+    cerrarModalAnularFactura();
+    setMsg('#2a1010','var(--danger)',`✕ Pedido ${codigos[0].split('.')[0]} anulado correctamente`);
+    setTimeout(()=>{ if(msgEl) msgEl.style.display='none'; }, 4000);
     cargarColaFacturacion();
-  }catch(e){ alert('Error: '+e.message); cargarColaFacturacion(); }
+  }catch(e){ errEl.textContent='Error: '+e.message; }
 }
 
 let facturaResumenPeriodo='semana';
@@ -3421,14 +3496,27 @@ async function confirmarProcesarFactura(codigos){
   const auth=prompt('Código de usuario para confirmar:');
   if(!auth) return;
   const authUp=auth.trim().toUpperCase();
-  if(!USUARIOS[authUp]){ alert('❌ Código incorrecto'); return; }
+  const usuarioNombre=USUARIOS[authUp]||USUARIOS_RESPALDO[auth.trim()];
+  if(!usuarioNombre){ alert('❌ Código incorrecto'); return; }
+
+  const msgEl=document.getElementById('factura-apro-msg');
+  const setMsg=(bg,color,html)=>{ if(msgEl){ msgEl.style.display='block'; msgEl.style.background=bg; msgEl.style.color=color; msgEl.innerHTML=html; } };
+  setMsg('var(--surface2)','var(--muted)',`<span class="spinner">↻</span> Procesando factura (0/${codigos.length})...`);
+
   try{
-    for(const cod of codigos){
-      const res=await scriptGETjson({action:'procesarFactura', codigo_s:cod, usuario:USUARIOS[authUp]||authUp, fecha_facturado:getFechaHora(), num_factura_valery:numFactura.trim()});
+    for(let idx=0; idx<codigos.length; idx++){
+      const cod=codigos[idx];
+      setMsg('var(--surface2)','var(--muted)',`<span class="spinner">↻</span> Procesando factura (${idx+1}/${codigos.length})... ${cod}`);
+      const res=await scriptGETjson({action:'procesarFactura', codigo_s:cod, usuario:usuarioNombre, fecha_facturado:getFechaHora(), num_factura_valery:numFactura.trim()});
       if(!res.ok) throw new Error(res.error||'Error en '+cod);
     }
+    setMsg('#0a2a0a','var(--accent)',`✅ Factura ${numFactura.trim()} registrada correctamente · ${codigos.length} pack(s)`);
+    setTimeout(()=>{ if(msgEl) msgEl.style.display='none'; }, 4000);
     cargarColaFacturacion();
-  }catch(e){ alert('Error: '+e.message); cargarColaFacturacion(); }
+  }catch(e){
+    setMsg('#2a1010','var(--danger)',`❌ Error al procesar la factura: ${e.message}`);
+    cargarColaFacturacion();
+  }
 }
 
 // ── PRECIOS ───────────────────────────────────────────────────
@@ -3908,7 +3996,7 @@ function switchTab(tab){
     const el=document.getElementById(id);
     if(el) el.innerHTML='';
   });
-  ['apro-msg','cola-msg'].forEach(id=>{
+  ['apro-msg','cola-msg','factura-apro-msg'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display='none';
   });
