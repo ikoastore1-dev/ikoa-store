@@ -754,7 +754,7 @@ async function intentarPaso45(){
   if(!validateStep(4)) return;
   // Recalcular el nombre justo antes de guardar, como respaldo — nunca depender
   // de un valor que pudo quedarse desactualizado de un pack anterior.
-  if(pedido.variante!=='Toalla' && !['Bikini','Enterizo','Bikini Manga Larga'].includes(pedido.variante)){
+  if(pedido.variante!=='Toalla' && pedido.variante!=='Traje de Baño'){
     pedido.nombreProducto=calcularNombreProducto();
   }
   // Guardar pack actual en lista de packs
@@ -863,7 +863,7 @@ function validateStep(n){
     for(let i=0; i<pedido.piezas.length; i++){
       const p=pedido.piezas[i];
       if(!p.genero||!p.talla){ alert(`Completa género y talla en el${pedido.variante==='Short'?' short':' la franela'} ${i+1}`); return false; }
-      if(pedido.variante!=='Short' && !p.sinNombre && !p.nombre){ const esTo=pedido.variante==='Toalla'; alert(esTo?`⚠️ La toalla ${i+1} no tiene personalización de nombre.\n\nEscribe el nombre o marca "Sin personalización de nombre".`:`⚠️ La franela ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
+      if(pedido.variante!=='Short' && pedido.variante!=='Traje de Baño' && !p.sinNombre && !p.nombre){ const esTo=pedido.variante==='Toalla'; alert(esTo?`⚠️ La toalla ${i+1} no tiene personalización de nombre.\n\nEscribe el nombre o marca "Sin personalización de nombre".`:`⚠️ La franela ${i+1} no tiene nombre en manga derecha.\n\nEscribe el nombre o marca "Sin nombre en manga derecha".`); return false; }
     }
     return true;
   }
@@ -1075,7 +1075,7 @@ function selectShortSerie(btn,color){
 
 function actualizarPaso3(){
   const v=pedido.variante;
-  if(selectedSerie && v!=='Toalla' && !['Bikini','Enterizo','Bikini Manga Larga'].includes(v)){
+  if(selectedSerie && v!=='Toalla' && v!=='Traje de Baño'){
     pedido.nombreProducto=calcularNombreProducto();
   }
   document.getElementById('capucha-wrap').style.display=(v==='Playera'||v==='Dress'||v==='Cortaviento'||v==='Chaqueta'||v==='ChaquetaReflectiva')?'block':'none';
@@ -1104,7 +1104,7 @@ function inicializarPiezas(){
   if(!pedido.pack||pedido.pack<1){ alert('Selecciona el producto primero'); goStep(2); return; }
   // Respaldo extra: recalcular el nombre justo aquí también, por si algún camino de
   // navegación no lo actualizó correctamente antes de llegar a este paso.
-  if(selectedSerie && pedido.variante!=='Toalla' && !['Bikini','Enterizo','Bikini Manga Larga'].includes(pedido.variante)){
+  if(selectedSerie && pedido.variante!=='Toalla' && pedido.variante!=='Traje de Baño'){
     pedido.nombreProducto=calcularNombreProducto();
   }
   const esShort=pedido.variante==='Short';
