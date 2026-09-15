@@ -6208,7 +6208,7 @@ async function cargarCola(){
             <div><span style="color:var(--muted);">Tela:</span> ${vp(15)}</div>
             <div><span style="color:var(--muted);">Vinil:</span> ${vp(16)}</div>
           </div>
-          ${vp(17)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${vp(11)||'COMFY MEGA PROMO'} ${vp(12)||''}<br>${vp(17).split(' | ').join('<br>')}</div>`:''}
+          ${vp(17)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${vp(11)?vp(11)+' '+(vp(12)||''):''}<br>${vp(17).split(' | ').join('<br>')}</div>`:''}
         </div>`;
       });
       if(filtroCola==='Pagado'){
