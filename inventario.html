@@ -1261,6 +1261,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div><div class="field-label">Retira (Celular)</div><input class="field-input" id="fe-retira-celular"></div>
 
         <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-top:10px;">Datos del producto</div>
+        <div><div class="field-label">Modelo</div><input class="field-input" id="fe-modelo"></div>
+        <div><div class="field-label">Manga</div><input class="field-input" id="fe-manga"></div>
         <div><div class="field-label">Pack</div><input class="field-input" id="fe-pack"></div>
         <div><div class="field-label">Tela</div><input class="field-input" id="fe-tela"></div>
         <div><div class="field-label">Vinil</div><input class="field-input" id="fe-vinil"></div>
@@ -3196,12 +3198,14 @@ function abrirModalModificarFactura(codigoS, filaData){
   document.getElementById('fe-retira').value=v(8);
   document.getElementById('fe-retira-cedula').value=v(9);
   document.getElementById('fe-retira-celular').value=v(10);
-  document.getElementById('fe-pack').value=v(11);
-  document.getElementById('fe-tela').value=v(12);
-  document.getElementById('fe-vinil').value=v(13);
-  document.getElementById('fe-piezas').value=v(14);
-  document.getElementById('fe-monto').value=v(16);
-  document.getElementById('fe-ref').value=v(17);
+  document.getElementById('fe-modelo').value=v(11);
+  document.getElementById('fe-manga').value=v(12);
+  document.getElementById('fe-pack').value=v(13);
+  document.getElementById('fe-tela').value=v(14);
+  document.getElementById('fe-vinil').value=v(15);
+  document.getElementById('fe-piezas').value=v(16);
+  document.getElementById('fe-monto').value=v(18);
+  document.getElementById('fe-ref').value=v(19);
   document.getElementById('fe-auth').value='';
   document.getElementById('fe-error').textContent='';
   document.getElementById('factura-modal-editar-overlay').style.display='flex';
@@ -3231,6 +3235,8 @@ async function guardarModificarFactura(){
       retira:document.getElementById('fe-retira').value,
       retira_cedula:document.getElementById('fe-retira-cedula').value,
       retira_celular:document.getElementById('fe-retira-celular').value,
+      modelo:document.getElementById('fe-modelo').value,
+      manga:document.getElementById('fe-manga').value,
       pack:document.getElementById('fe-pack').value,
       tela:document.getElementById('fe-tela').value,
       vinil:document.getElementById('fe-vinil').value,
@@ -3368,12 +3374,13 @@ function buscarFacturasProcesadas(){
               <div>
                 <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;">${v(3)}</div>
                 <div style="font-size:11px;color:var(--muted);margin-top:2px;">${v(0)} · Cédula: ${v(5)}</div>
+                ${v(11)?`<div style="font-size:12px;color:var(--text);margin-top:3px;">${v(11)}${v(12)?' '+v(12):''}</div>`:''}
               </div>
               <span style="background:#0a2a1a;border:1px solid var(--accent);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--accent);">🧾 ${numFactura||'—'}</span>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;">
-              <div><span style="color:var(--muted);">Monto:</span> Bs ${v(16)||'—'}</div>
-              <div><span style="color:var(--muted);">% Cashea:</span> ${v(18)||'—'}%</div>
+              <div><span style="color:var(--muted);">Monto:</span> Bs ${v(18)||'—'}</div>
+              <div><span style="color:var(--muted);">% Cashea:</span> ${v(20)||'—'}%</div>
               <div><span style="color:var(--muted);">Facturado:</span> ${fechaFacturado||'—'}</div>
               <div><span style="color:var(--muted);">Por:</span> ${usuarioFacturo||'—'}</div>
             </div>
@@ -3412,7 +3419,7 @@ async function cargarColaFacturacion(){
     Object.entries(grupos).forEach(([base, packs])=>{
       const r=packs[0];
       const v=i=>String(r[i]||'').trim();
-      const casheaPct=v(18);
+      const casheaPct=v(20);
       const card=document.createElement('div');
       card.style.cssText='background:var(--surface);border:1.5px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:14px;animation:slideUp .3s ease;';
       let html=`
@@ -3440,10 +3447,10 @@ async function cargarColaFacturacion(){
           <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px;">🛒 Pago Cashea</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
             <div><span style="color:var(--muted);">Moneda:</span> <b>Cashea</b></div>
-            <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent);">Bs ${v(16)||'—'}</b></div>
+            <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent);">Bs ${v(18)||'—'}</b></div>
             <div><span style="color:var(--muted);">% Cashea:</span> <b>${casheaPct||'—'}%</b></div>
-            <div><span style="color:var(--muted);">Ref:</span> <b style="color:var(--warn);">${v(17)||'—'}</b></div>
-            <div><span style="color:var(--muted);">COD Cashea:</span> <b>${v(19)||'—'}</b></div>
+            <div><span style="color:var(--muted);">Ref:</span> <b style="color:var(--warn);">${v(19)||'—'}</b></div>
+            <div><span style="color:var(--muted);">COD Cashea:</span> <b>${v(21)||'—'}</b></div>
           </div>
         </div>
         <div style="background:#0a2a1a;border:2px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:12px;">
@@ -3456,7 +3463,7 @@ async function cargarColaFacturacion(){
             <div>
               <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">💵 Monto USD (Tasa BCV)</div>
               <div style="font-size:18px;font-weight:700;color:#00ff88;font-family:'Barlow Condensed',sans-serif;">
-                ${tasaBCV>0 ? '$'+(Math.round((parseFloat(v(16)||0)/tasaBCV)*100)/100).toFixed(2) : '—'}
+                ${tasaBCV>0 ? '$'+(Math.round((parseFloat(v(18)||0)/tasaBCV)*100)/100).toFixed(2) : '—'}
               </div>
             </div>
           </div>
@@ -3465,13 +3472,13 @@ async function cargarColaFacturacion(){
       packs.forEach((pk,idx)=>{
         const vp=i=>String(pk[i]||'').trim();
         html+=`<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);">
-          <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Part ${idx+1} · ${vp(11)} · <span style="color:var(--muted);font-size:13px;">${vp(0)}</span></div>
+          <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Part ${idx+1} · ${vp(11)||'—'}${vp(12)?' '+vp(12):''} · <span style="color:var(--muted);font-size:13px;">${vp(0)}</span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:8px;">
-            <div><span style="color:var(--muted);">Pack:</span> ${vp(11)||'—'}</div>
-            <div><span style="color:var(--muted);">Tela:</span> ${vp(12)||'—'}</div>
-            <div><span style="color:var(--muted);">Vinil:</span> ${vp(13)||'—'}</div>
+            <div><span style="color:var(--muted);">Pack:</span> ${vp(13)||'—'}</div>
+            <div><span style="color:var(--muted);">Tela:</span> ${vp(14)||'—'}</div>
+            <div><span style="color:var(--muted);">Vinil:</span> ${vp(15)||'—'}</div>
           </div>
-          ${vp(14)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${vp(14).split(' | ').join('<br>')}</div>`:''}
+          ${vp(16)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${vp(16).split(' | ').join('<br>')}</div>`:''}
         </div>`;
       });
       const codigosGrupo=packs.map(pk=>String(pk[0]||'').trim()).filter(Boolean);
