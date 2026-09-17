@@ -258,14 +258,6 @@ window.addEventListener('load',function(){
         <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;color:var(--accent);" id="modelo-display">LICRA PROTECT</div>
         <div style="font-size:13px;color:var(--muted);margin-top:2px;" id="modelo-sub">Manga Larga</div>
       </div>
-      <!-- CAPUCHA - solo para licra -->
-      <div id="capucha-wrap">
-        <div class="card-title">¿Con o sin capucha?</div>
-        <div class="option-grid cols2">
-          <button class="opt-btn" id="btn-con-capucha" onclick="selectOpt(this,'capucha','Con Capucha')">CON CAPUCHA</button>
-          <button class="opt-btn" id="btn-sin-capucha" onclick="selectOpt(this,'capucha','Sin Capucha')">SIN CAPUCHA</button>
-        </div>
-      </div>
     </div>
     <div class="card">
       <div class="card-title">Color de Tela</div>
@@ -539,7 +531,6 @@ function intentarDesdeStep2(){
   // Configurar step 3 según tipo
   if(tipoProductoLicra==='toalla'){
     // Toalla: solo color tela, sin capucha ni vinil
-    document.getElementById('capucha-wrap').style.display='none';
     document.getElementById('vinil-wrap').style.display='none';
     document.getElementById('step3-title').textContent='Color de Tela';
     document.getElementById('modelo-display').textContent='TOALLA';
@@ -547,7 +538,6 @@ function intentarDesdeStep2(){
     // Cargar colores de toalla
     cargarColoresParaTipo('toalla');
   } else {
-    document.getElementById('capucha-wrap').style.display='block';
     document.getElementById('vinil-wrap').style.display='block';
     document.getElementById('step3-title').textContent='Modelo · Color de Tela · Vinil';
     document.getElementById('modelo-display').textContent='LICRA PROTECT';
@@ -929,7 +919,7 @@ function validateStep(n){
   if(n===3){
     if(!pedido.tela){ alert('Selecciona el color de tela'); return false; }
     if(tipoProductoLicra==='toalla') return true; // Toalla no necesita capucha ni vinil
-    if(!pedido.capucha){ alert('Selecciona si deseas capucha'); return false; }
+    // La capucha ahora se elige por pieza (Paso 4), ya no es requisito de pack aquí.
     if(!pedido.vinil){ alert('Selecciona el color del vinil'); return false; }
     return true;
   }
