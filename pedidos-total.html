@@ -2068,6 +2068,7 @@ async function guardarEnSheets(){
     try{
       const res=await scriptGETjson({
         action:'addSolicitud',
+        tasa:String(tasaBcvActual||''),
         fecha:new Date().toLocaleString('es-VE'),
         nombre:pedido.nombre,
         correo:pedido.correo,

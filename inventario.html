@@ -3420,6 +3420,7 @@ async function cargarColaFacturacion(){
       const r=packs[0];
       const v=i=>String(r[i]||'').trim();
       const casheaPct=v(20);
+      const tasaGuardada=parseFloat(v(26))||0;
       const card=document.createElement('div');
       card.style.cssText='background:var(--surface);border:1.5px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:14px;animation:slideUp .3s ease;';
       let html=`
@@ -3461,13 +3462,13 @@ async function cargarColaFacturacion(){
               <div style="font-size:18px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif;">${v(5)||'—'}</div>
             </div>
             <div>
-              <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">💵 Monto USD (Tasa BCV)</div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">💵 Monto USD (Tasa BCV del día de venta)</div>
               <div style="font-size:18px;font-weight:700;color:#00ff88;font-family:'Barlow Condensed',sans-serif;">
-                ${tasaBCV>0 ? '$'+(Math.round((parseFloat(v(18)||0)/tasaBCV)*100)/100).toFixed(2) : '—'}
+                ${tasaGuardada>0 ? '$'+(Math.round((parseFloat(v(18)||0)/tasaGuardada)*100)/100).toFixed(2) : '—'}
               </div>
             </div>
           </div>
-          <div style="font-size:10px;color:var(--muted);margin-top:8px;">💱 Tasa BCV: Bs ${tasaBCV.toFixed(2)}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:8px;">💱 Tasa BCV (día de venta): Bs ${tasaGuardada.toFixed(2)}</div>
         </div>`;
       packs.forEach((pk,idx)=>{
         const vp=i=>String(pk[i]||'').trim();
@@ -6250,6 +6251,7 @@ async function cargarCola(){
           casheaPct:v(33)||'',
           codCashea:v(23)||'',
           pctInicialCashea:v(34)||'',
+          tasa:v(36)||'',
           tela:allPacks[0]?.tela||'',
           vinil:allPacks[0]?.vinil||'',
           piezas:allPacks[0]?.piezas||''
@@ -6594,7 +6596,7 @@ async function confirmarPlanificacion(){
           // solo se registra en la primera fila para no sumarlo varias veces en Ventas.
           moneda:idx===0?(pendingCola.pagoMoneda||''):'',
           monto:idx===0?(pendingCola.pagoMonto||''):'',
-          tasa:idx===0?(TASAS.BCV||''):'',
+          tasa:idx===0?(pendingCola.tasa||TASAS.BCV||''):'',
           referencia:pendingCola.codpago||'',
           usuario:USUARIOS[unlock],
           fecha_apro:fechaProd,
@@ -7455,7 +7457,6 @@ document.getElementById('gestion-form').addEventListener('submit',async function
           urgente:formData.get('urgente')||'',
           moneda:formData.get('moneda')||'',
           monto:formData.get('monto')||'',
-          tasa:TASAS.BCV||'',
           banco:formData.get('banco')||'',
           tasa:tasaBcvGestion,
           fuente:'Gestión'

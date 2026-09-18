@@ -1487,6 +1487,7 @@ async function guardarEnSheets(){
     try{
       await scriptGETjson({
         action:'addSolicitud',
+        tasa:String(tasaBcvActual||''),
         fecha:new Date().toLocaleString('es-VE'),
         nombre:pedido.nombre, correo:pedido.correo, cedula:pedido.cedula, celular:pedido.celular,
         modelo:'TOALLA', manga:'', capucha:'', pack:'1',
@@ -1509,6 +1510,7 @@ async function guardarEnSheets(){
     try{
       const res=await scriptGETjson({
         action:'addSolicitud',
+        tasa:String(tasaBcvActual||''),
         fecha:new Date().toLocaleString('es-VE'),
         nombre:pedido.nombre,
         correo:pedido.correo,

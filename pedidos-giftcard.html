@@ -1513,6 +1513,7 @@ async function rGuardarPedido(){
   try{
     const res=await scriptGETjson({
       action:'addSolicitud',
+      tasa:String(tasaBCV||''),
       fecha:getFechaHora(),
       nombre, correo, cedula, celular,
       modelo:'GiftCard',
