@@ -1236,9 +1236,15 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     </div>
 
     <div id="factura-sec-resumen" style="display:none;">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
         <button onclick="setFacturaResumenPeriodo('semana')" id="fres-periodo-semana" class="fres-periodo-btn" style="padding:10px 6px;background:#0a2a0a;border:1.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;">Esta Semana</button>
         <button onclick="setFacturaResumenPeriodo('mes')" id="fres-periodo-mes" class="fres-periodo-btn" style="padding:10px 6px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">Este Mes</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <button onclick="setFacturaResumenPeriodo('quincena1')" id="fres-periodo-quincena1" class="fres-periodo-btn" style="padding:10px 6px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">Días 1-15 (mes actual)</button>
+        <button onclick="setFacturaResumenPeriodo('quincena2')" id="fres-periodo-quincena2" class="fres-periodo-btn" style="padding:10px 6px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">Días 16-31 (mes actual)</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:16px;">
         <button onclick="setFacturaResumenPeriodo('mesAnterior')" id="fres-periodo-mesAnterior" class="fres-periodo-btn" style="padding:10px 6px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">Mes Anterior</button>
       </div>
       <div id="factura-resumen-contenido"><div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div></div>
@@ -3314,7 +3320,7 @@ async function cargarFacturaResumen(){
   try{
     const data=await scriptGETjson({action:'resumenFacturacion', periodo:facturaResumenPeriodo});
     if(!data.ok) throw new Error(data.error||'Error');
-    const etiquetaPeriodo={semana:'Esta Semana', mes:'Este Mes', mesAnterior:'Mes Anterior'}[facturaResumenPeriodo];
+    const etiquetaPeriodo={semana:'Esta Semana', mes:'Este Mes', mesAnterior:'Mes Anterior', quincena1:'Días 1-15', quincena2:'Días 16-31'}[facturaResumenPeriodo];
     cont.innerHTML=`
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;text-align:center;">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Facturas procesadas · ${etiquetaPeriodo}</div>
