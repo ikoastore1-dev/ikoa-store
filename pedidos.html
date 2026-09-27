@@ -1614,7 +1614,7 @@ let precioComfy={bs:0,usd:0}, precioRecarga={bs:0,usd:0};
 let precioLogoPecho={bs:0,usd:0}, precioLogoEspalda={bs:0,usd:0}, precioLogoManga={bs:0,usd:0};
 let precioCapucha={bs:0,usd:0};
 let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
-let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
+let casheaPct=0, recargosCasheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
 
 const CUENTAS_BANCARIAS={
   empresa:{nombre:'Ikoa Brand Corp C.A.', cel:'04121574901', cedula:'J505031716'},
@@ -1656,6 +1656,7 @@ async function calcularPago(){
         document.getElementById('pago-tasa-bcv').textContent='Bs '+tasaBcvActual.toFixed(2);
       }
       casheaPct=parseFloat(data.cashea&&data.cashea.comfy?data.cashea.comfy.cashea_pct:data.cashea_pct)||0;
+      recargosCasheaPct=parseFloat(data.cashea&&data.cashea.recargos?data.cashea.recargos.cashea_pct:0)||0;
       const casheaActivo=data.cashea&&data.cashea.comfy?data.cashea.comfy.cashea_activo===true||data.cashea.comfy.cashea_activo==='true':data.cashea_activo===true||data.cashea_activo==='true';
       const btnCashea=document.getElementById('btn-pago-cashea');
       const gridPago=document.getElementById('pago-metodos-grid');
@@ -1672,7 +1673,7 @@ async function calcularPago(){
     'DAMA XL','DAMA XXL','DAMA 3XL','DAMA XXXL','DAMA 2XL',
     'CABALLERO XL','CABALLERO XXL','CABALLERO 3XL','CABALLERO XXXL','CABALLERO 2XL'];
   let totalLogosPecho=0, totalLogosEspalda=0, totalLogosManga=0, totalConCapucha=0, totalRecargas=0;
-  let sumaBs=0, sumaUsd=0;
+  let sumaBs=0, sumaUsd=0, recargaTotalBs=0, recargaTotalUsd=0;
   let desglose=[];
   const preciosPorCodigo=window._packPreciosComfy||{};
   pedido.packs.forEach((pk,i)=>{
@@ -1696,17 +1697,24 @@ async function calcularPago(){
     const etiquetaPack=(pk.mangaTipo==='short')?(franelas>1?'shorts':'short'):(pk.esDress?(franelas>1?'vestidos':'vestido'):(franelas>1?'franelas':'franela'));
     const logosTxt=[logosPecho>0?`${logosPecho} logo pecho`:'',logosEspalda>0?`${logosEspalda} logo espalda`:'',logosManga>0?`${logosManga} logo manga`:''].filter(Boolean).join(', ');
     desglose.push(`Pack ${i+1}: ${franelas} ${etiquetaPack}${recargas>0?` + ${recargas} recarga(s) talla grande`:''}${conCapucha>0?` + ${conCapucha} con capucha`:''}${logosTxt?` + ${logosTxt}`:''}`);
-    sumaBs+=recargas*precioRecarga.bs;
-    sumaUsd+=recargas*precioRecarga.usd;
+    recargaTotalBs+=recargas*precioRecarga.bs;
+    recargaTotalUsd+=recargas*precioRecarga.usd;
   });
 
   const totalLogosBs=totalLogosPecho*precioLogoPecho.bs+totalLogosEspalda*precioLogoEspalda.bs+totalLogosManga*precioLogoManga.bs;
   const totalLogosUsd=totalLogosPecho*precioLogoPecho.usd+totalLogosEspalda*precioLogoEspalda.usd+totalLogosManga*precioLogoManga.usd;
   const totalCapuchaBs=totalConCapucha*precioCapucha.bs;
   const totalCapuchaUsd=totalConCapucha*precioCapucha.usd;
-  pagoTotalBs=Math.round((sumaBs + totalLogosBs + totalCapuchaBs)*100)/100;
-  pagoTotalUsd=Math.round((sumaUsd + totalLogosUsd + totalCapuchaUsd)*100)/100;
-  pagoTotalCasheaBs=Math.round(pagoTotalBs*(1+casheaPct/100)*100)/100;
+  const totalRecargosVariosBs=recargaTotalBs + totalLogosBs + totalCapuchaBs; // talla plus + logos + capucha
+  const totalRecargosVariosUsd=recargaTotalUsd + totalLogosUsd + totalCapuchaUsd;
+  pagoTotalBs=Math.round((sumaBs + totalRecargosVariosBs)*100)/100;
+  pagoTotalUsd=Math.round((sumaUsd + totalRecargosVariosUsd)*100)/100;
+  // Cashea aplica el % de la línea SOLO al precio base de las franelas;
+  // capucha, talla plus y logos usan el % de "Recargos" (único, controlado
+  // desde Inventario) para que cruce limpio con Valery sin importar la línea.
+  const baseCasheaBs=Math.round(sumaBs*(1+casheaPct/100)*100)/100;
+  const recargosCasheaBs=Math.round(totalRecargosVariosBs*(1+recargosCasheaPct/100)*100)/100;
+  pagoTotalCasheaBs=Math.round((baseCasheaBs+recargosCasheaBs)*100)/100;
   pagoTotalCasheaUsd=tasaBcvActual>0?Math.round((pagoTotalCasheaBs/tasaBcvActual)*100)/100:0;
 
   document.getElementById('pago-desglose').innerHTML=

@@ -3630,10 +3630,17 @@ function confirmarModalPrecio(){
   const logoEspaldaTotalBs=logoEspaldaBs*nLogoEspalda, logoEspaldaTotalUsd=logoEspaldaUsd*nLogoEspalda;
   const logoMangaTotalBs=logoMangaBs*nLogoManga, logoMangaTotalUsd=logoMangaUsd*nLogoManga;
 
-  const subtotalBs=bs*cant+capuchaTotalBs+plusTotalBs+logoPechoTotalBs+logoEspaldaTotalBs+logoMangaTotalBs;
-  const subtotalUsd=usd*cant+capuchaTotalUsd+plusTotalUsd+logoPechoTotalUsd+logoEspaldaTotalUsd+logoMangaTotalUsd;
+  const subtotalRecargosBs=capuchaTotalBs+plusTotalBs+logoPechoTotalBs+logoEspaldaTotalBs+logoMangaTotalBs;
+  const subtotalRecargosUsd=capuchaTotalUsd+plusTotalUsd+logoPechoTotalUsd+logoEspaldaTotalUsd+logoMangaTotalUsd;
+  const subtotalBs=bs*cant+subtotalRecargosBs;
+  const subtotalUsd=usd*cant+subtotalRecargosUsd;
   const cashCfg=preciosCashea[b.linea]||{cashea_pct:0,cashea_activo:false};
-  const subtotalCasheaBs=cashCfg.cashea_activo?subtotalBs*(1+cashCfg.cashea_pct/100):subtotalBs;
+  const recargosCfg=preciosCashea.recargos||{cashea_pct:0,cashea_activo:false};
+  // El % de Cashea de la línea aplica solo al precio base; capucha/talla plus/logos
+  // usan el % único de "Recargos", igual que en las apps de venta.
+  const baseCasheaBs=cashCfg.cashea_activo?(bs*cant)*(1+cashCfg.cashea_pct/100):(bs*cant);
+  const recargosCasheaBs=recargosCfg.cashea_activo?subtotalRecargosBs*(1+recargosCfg.cashea_pct/100):subtotalRecargosBs;
+  const subtotalCasheaBs=baseCasheaBs+recargosCasheaBs;
 
   const detalles=[];
   if(nCap>0) detalles.push(nCap+' con capucha');
@@ -4152,6 +4159,7 @@ async function cargarCashea(){
       {key:'coleccion',   icon:'🎨', label:'Licra Colección'},
       {key:'giftcard',    icon:'🎁', label:'Gift Card'},
       {key:'empresarial', icon:'🏢', label:'Empresarial'},
+      {key:'recargos',    icon:'➕', label:'Recargos (Capucha/Talla Plus/Logos)'},
     ];
 
     const rows=lineas.map(l=>{
