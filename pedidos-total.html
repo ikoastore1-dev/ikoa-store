@@ -1969,7 +1969,7 @@ function copiarDato(texto, btnId){
 function buildResumen(){
   const retiraText=pedido.mismoEnvio?`${pedido.nombre} · ${pedido.cedula} · ${pedido.celular}`:`${pedido.eNombre} · ${pedido.eCi} · ${pedido.eCel}`;
   const packsHtml=pedido.packs.map((pk,i)=>{
-    const piezasHtml=pk.piezas.map((p,j)=>`<b>Franela ${j+1}:</b> ${p.genero} Talla ${p.talla} — ${p.nombre}`).join('<br>');
+    const piezasHtml=pk.piezas.map((p,j)=>`<b>Franela ${j+1}:</b> ${p.genero} Talla ${p.talla}${p.conCapucha?' 🧢 CON CAPUCHA':''}${p.tela?' · <b>Color: '+p.tela+'</b>':''}${p.nombre&&p.nombre!=='SIN NOMBRE EN MANGA'?' — '+p.nombre:''}`).join('<br>');
     return `<div class="resumen-label">📦 Pack ${i+1} · ${pk.pack}PACK</div>
       <div class="resumen-block"><b>Modelo:</b> ${pk.modelo} ${pk.manga} ${pk.capucha}<br><b>Tela:</b> ${pk.tela} · <b>Vinil:</b> ${pk.vinil}</div>
       <div class="resumen-label">📏 Franelas (${pk.piezas.length})</div>
@@ -1997,7 +1997,7 @@ function buildResumen(){
 function buildMensaje(){
   const retiraText=pedido.mismoEnvio?'Mismo titular':`${pedido.eNombre} | C.I: ${pedido.eCi} | Cel: ${pedido.eCel}`;
   const packsText=pedido.packs.map((pk,i)=>{
-    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conCapucha?' 🧢':''} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('\n');
+    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conCapucha?' 🧢':''}${p.tela?' · Color: '+p.tela:''} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('\n');
     const capuchas=pk.piezas.filter(p=>p.conCapucha).length;
     return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: ${pk.modelo||pedido.nombreProducto||'LICRA COLECCIÓN'} ${pk.manga||''}${capuchas>0?` · ${capuchas} con capucha`:' · Sin capucha'}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
   }).join('\n\n');
@@ -2028,7 +2028,7 @@ async function guardarEnSheets(){
       const esCortavientoOChaqueta=['Cortaviento','Chaqueta','ChaquetaReflectiva'].includes(pk.variante||pedido.variante);
       const capuchaTxtPieza=p.conCapucha?' CON CAPUCHA':(esCortavientoOChaqueta?' SIN CAPUCHA':'');
       const base=`${p.genero} ${p.talla}${capuchaTxtPieza}`;
-      const logosSuffix=`${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}`;
+      const logosSuffix=`${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}${p.tela?' | Tela: '+p.tela:''}`;
       if(esShort||esCotton||p.sinNombre||!p.nombre||p.nombre==='SIN NOMBRE EN MANGA') return base+logosSuffix;
       return `${base} - ${p.nombre}${logosSuffix}`;
     }).join(' | ');
