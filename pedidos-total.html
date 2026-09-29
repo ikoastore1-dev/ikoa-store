@@ -1550,11 +1550,11 @@ function addPieza(copiarDe=null){
   const esShort=pedido.variante==='Short';
   const esMangaCero=pedido.manga==='Manga Cero'||pedido.manga==='Manga Corta';
   const esChaqueta=pedido.variante==='Chaqueta'||pedido.variante==='ChaquetaReflectiva';
-  const seriesConLogo=['Camping','Nautica','Alpha'];
+  const seriesConLogo=['Camping','Nautica','Alpha','Unicolor','TiburonBallena'];
   const prendasConLogo=['Playera','Dress','Cortaviento'];
   const esSerieConLogo=seriesConLogo.includes(selectedSerie)&&prendasConLogo.includes(pedido.variante);
   const esComfyFamilia=['comfy','fullcomfy','licra'].includes(pedido.variante);
-  const esFullComfyOLicra=['fullcomfy','licra'].includes(pedido.variante);
+  const esFullComfyOLicra=['comfy','fullcomfy','licra'].includes(pedido.variante);
   const esEmpresarial=typeof pedido.variante==='string'&&pedido.variante.indexOf('empresarial_')===0;
   const mostrarLogos=esChaqueta||esSerieConLogo||esFullComfyOLicra||(esEmpresarial&&pedido._empresarialLogos);
   const ocultarCapuchaCheckbox=(esComfyFamilia||esEmpresarial)&&!pedido._modeloTieneCapucha;
@@ -1846,7 +1846,7 @@ async function calcularPago(){
     const v=pk.variante||pedido.variante;
     const serieDePack=pk.serie||selectedSerie;
     const esChaquetaPago=(v==='Chaqueta'||v==='ChaquetaReflectiva');
-    const esSerieConLogoPago=['Camping','Nautica','Alpha'].includes(serieDePack)&&['Playera','Dress','Cortaviento'].includes(v);
+    const esSerieConLogoPago=['Camping','Nautica','Alpha','Unicolor','TiburonBallena'].includes(serieDePack)&&['Playera','Dress','Cortaviento'].includes(v);
     const esComfyFamiliaPago=['comfy','fullcomfy','licra'].includes(v);
     const esFullComfyOLicraPago=['fullcomfy','licra'].includes(v);
     const esEmpresarialPago=typeof v==='string'&&v.indexOf('empresarial_')===0;
