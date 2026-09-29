@@ -983,10 +983,24 @@ function renderPacksResumen(){
   if(!el||!pedido.packs.length) return;
   el.innerHTML=`<div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Packs en este pedido:</div>`+
     pedido.packs.map((p,i)=>`
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;">
-        <b style="color:var(--accent)">Pack ${i+1}</b> · ${p.pack}PACK · ${p.modelo} · ${p.tela} / ${p.vinil}
-        <span style="color:var(--muted);font-size:12px;"> · ${p.piezas.length} franelas</span>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <div>
+          <b style="color:var(--accent)">Pack ${i+1}</b> · ${p.pack}PACK · ${p.modelo} · ${p.tela} / ${p.vinil}
+          <span style="color:var(--muted);font-size:12px;"> · ${p.piezas.length} franelas</span>
+        </div>
+        <button onclick="eliminarPackTotal(${i})" style="flex-shrink:0;padding:6px 10px;background:transparent;border:1px solid var(--danger);border-radius:6px;color:var(--danger);font-size:12px;cursor:pointer;">✕ Eliminar</button>
       </div>`).join('');
+}
+
+function eliminarPackTotal(idx){
+  if(!confirm(`¿Seguro que deseas eliminar el Pack ${idx+1}? Podrás pedir otro producto para corregirlo.`)) return;
+  pedido.packs.splice(idx,1);
+  if(pedido.packs.length===0){
+    alert('Se eliminaron todos los packs. Vamos a empezar de nuevo la selección de producto.');
+    agregarOtroPack();
+    return;
+  }
+  renderPacksResumen();
 }
 
 function agregarOtroPack(){
