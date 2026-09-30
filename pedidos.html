@@ -1349,6 +1349,12 @@ function validateStep(n){
     }
     return true;
   }
+  if(n===6){
+    if(!pagoMoneda){ alert('Selecciona un método de pago (Bs, Divisa o Cashea)'); return false; }
+    const montoValido=(pagoMoneda==='bs'&&pagoTotalBs>0)||(pagoMoneda==='divisa'&&pagoTotalUsd>0)||(pagoMoneda==='cashea'&&pagoTotalCasheaBs>0);
+    if(!montoValido){ alert('⚠️ No se pudo calcular el monto a pagar. Regresa e intenta de nuevo, o contacta al vendedor antes de continuar.'); return false; }
+    return true;
+  }
   return true;
 }
 
@@ -1399,7 +1405,8 @@ function addPieza(copiarDe=null){
   const esShort=mangaTipoActual==='short';
   const esMangaCero=mangaTipoActual==='cero'||mangaTipoActual==='dress-cero';
   const esDress=pedido.esDress;
-  const sinNombreEnManga=esShort||esMangaCero;
+  const sinNombreEnManga=esShort||esMangaCero; // controla logo manga (Manga Corta SÍ tiene manga)
+  const sinNombrePieza=esShort||esMangaCero||mangaTipoActual==='corta'; // controla el NOMBRE en manga
   const div=document.createElement('div');
   div.className='pieza-card'; div.id='pieza-'+id;
   const genCopy=copiarDe?document.getElementById('pz-genero-'+copiarDe)?.value:'';
@@ -1444,7 +1451,7 @@ function addPieza(copiarDe=null){
     <input type="hidden" id="pz-logo-espalda-${id}"><input type="hidden" id="pz-logo-espalda-txt-${id}" value="">
     <input type="hidden" id="pz-logo-manga-${id}"><input type="hidden" id="pz-logo-manga-txt-${id}" value="">
     ` : `
-    ${sinNombreEnManga?`
+    ${sinNombrePieza?`
     <input type="hidden" id="pz-sinombre-${id}" value="true">
     <input type="hidden" id="pz-nombre-${id}" value="">
     ` : `
@@ -1590,13 +1597,14 @@ function savePiezas(){
   pedido.piezas=[];
   const esShort=mangaTipoActual==='short';
   const esMangaCero=mangaTipoActual==='cero'||mangaTipoActual==='dress-cero';
+  const esMangaCorta=mangaTipoActual==='corta';
   document.querySelectorAll('.pieza-card').forEach(card=>{
     const id=card.id.replace('pieza-','');
     const g=document.getElementById('pz-genero-'+id)?.value||'';
     const t=document.getElementById('pz-talla-'+id)?.value||'';
     const largo=esShort?(document.getElementById('pz-largo-'+id)?.value||''):'';
-    const sinNombre=(esShort||esMangaCero)?true:(document.getElementById('pz-sinombre-'+id)?.checked||false);
-    const n=(esShort||esMangaCero)?'':(sinNombre?'SIN NOMBRE EN MANGA':(document.getElementById('pz-nombre-'+id)?.value.trim()||''));
+    const sinNombre=(esShort||esMangaCero||esMangaCorta)?true:(document.getElementById('pz-sinombre-'+id)?.checked||false);
+    const n=(esShort||esMangaCero||esMangaCorta)?'':(sinNombre?'SIN NOMBRE EN MANGA':(document.getElementById('pz-nombre-'+id)?.value.trim()||''));
     const rep=parseInt(document.getElementById('rep-count-'+id)?.textContent||'1');
     const logoPecho=esShort?'':(document.getElementById('pz-logo-pecho-'+id)?.checked?(document.getElementById('pz-logo-pecho-txt-'+id)?.value.trim()||'SI'):'');
     const logoEspalda=esShort?'':(document.getElementById('pz-logo-espalda-'+id)?.checked?(document.getElementById('pz-logo-espalda-txt-'+id)?.value.trim()||'SI'):'');
@@ -1614,7 +1622,7 @@ let precioComfy={bs:0,usd:0}, precioRecarga={bs:0,usd:0};
 let precioLogoPecho={bs:0,usd:0}, precioLogoEspalda={bs:0,usd:0}, precioLogoManga={bs:0,usd:0};
 let precioCapucha={bs:0,usd:0};
 let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
-let casheaPct=0, recargosCasheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
+let casheaPct=0, recargosCasheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0, precioCargadoOk=false;
 
 const CUENTAS_BANCARIAS={
   empresa:{nombre:'Ikoa Brand Corp C.A.', cel:'04121574901', cedula:'J505031716'},
@@ -1633,15 +1641,22 @@ async function aplicarCuentaActiva(){
 }
 
 async function calcularPago(){
+  // Bandera estricta: el botón "Siguiente" NUNCA se activa si esto no queda en true,
+  // y solo puede quedar en true cuando el precio se recibió y calculó con éxito.
+  precioCargadoOk=false;
   // Deshabilitar los botones de pago hasta que el precio real termine de cargar,
   // para que el cliente nunca pueda pagar con un monto viejo o en $0.
   const botonesPago=['btn-pago-bs','btn-pago-usd','btn-pago-cashea'].map(id=>document.getElementById(id)).filter(Boolean);
   botonesPago.forEach(b=>{ b.disabled=true; b.style.opacity='0.5'; b.style.cursor='wait'; });
+  const btnResumenInicial=document.getElementById('btn-ir-resumen');
+  if(btnResumenInicial){ btnResumenInicial.disabled=true; btnResumenInicial.style.opacity='0.4'; btnResumenInicial.style.cursor='not-allowed'; }
   const pagoLoadingMsg=document.getElementById('pago-desglose');
   if(pagoLoadingMsg) pagoLoadingMsg.innerHTML='<span class="spinner">↻</span> Calculando precio actualizado...';
+  let fetchOk=false;
   try{
     const data=await scriptGETjson({action:'leerTodosLosPrecios'});
     if(data.ok){
+      fetchOk=true;
       window._packPreciosComfy=data.pack_precios||{};
       const codActivo=pedido.mangaTipoCodigo||'COMFY11';
       precioComfy={bs:parseFloat(data.pack_precios&&data.pack_precios[codActivo]?data.pack_precios[codActivo].bs:data.comfy_bs)||0, usd:parseFloat(data.pack_precios&&data.pack_precios[codActivo]?data.pack_precios[codActivo].usd:data.comfy_usd)||0};
@@ -1665,7 +1680,18 @@ async function calcularPago(){
       if(gridPago) gridPago.classList.toggle('cols2',!casheaActivo);
       if(!casheaActivo&&pagoMoneda==='cashea'){ pagoMoneda=''; document.getElementById('pago-cashea-card').style.display='none'; }
     }
-  }catch(e){ console.error('Error leyendo precios:',e); }
+  }catch(e){ console.error('Error leyendo precios:',e); fetchOk=false; }
+
+  if(!fetchOk){
+    // REGLA ESTRICTA: si el precio no se recibió del servidor, el botón
+    // "Siguiente" se queda bloqueado sin excepción — no se calcula nada más.
+    if(pagoLoadingMsg) pagoLoadingMsg.innerHTML='<span style="color:var(--danger);">❌ No se pudo calcular el precio. Revisa tu conexión y espera — no podrás continuar hasta que esto cargue correctamente.</span>';
+    botonesPago.forEach(b=>{ b.disabled=true; b.style.opacity='0.5'; b.style.cursor='wait'; });
+    const btnResumenFalla=document.getElementById('btn-ir-resumen');
+    if(btnResumenFalla){ btnResumenFalla.disabled=true; btnResumenFalla.style.opacity='0.4'; btnResumenFalla.style.cursor='not-allowed'; }
+    setTimeout(calcularPago, 4000); // reintentar solo hasta que cargue con éxito
+    return;
+  }
 
   // Contar franelas totales y recargas — cada pack usa SU PROPIO código de precio,
   // ya que un pedido puede combinar Manga Larga + Corta + Short + Vestido, cada uno con precio distinto.
@@ -1730,8 +1756,19 @@ async function calcularPago(){
   document.getElementById('pm-monto-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
   document.getElementById('pm-monto-usd').textContent='$'+pagoTotalUsd.toFixed(2);
   document.getElementById('pm-monto-cashea').textContent='Bs '+pagoTotalCasheaBs.toFixed(2)+' ($'+pagoTotalCasheaUsd.toFixed(2)+')';
-  // Reactivar los botones de pago ahora que el precio ya está actualizado
+
+  // Solo aquí, con el precio confirmado y calculado con éxito, se permite continuar.
+  const totalGeneral=pagoTotalBs+pagoTotalUsd+pagoTotalCasheaBs;
+  if(totalGeneral<=0){
+    // El servidor respondió pero el monto calculado sigue en 0 (dato incompleto) — seguimos bloqueados.
+    precioCargadoOk=false;
+    if(pagoLoadingMsg) pagoLoadingMsg.innerHTML+='<br><span style="color:var(--danger);">❌ El precio calculado dio en 0. No continúes — contacta al vendedor.</span>';
+    return;
+  }
+  precioCargadoOk=true;
+  // Reactivar los botones de pago ahora que el precio ya está actualizado y confirmado
   botonesPago.forEach(b=>{ b.disabled=false; b.style.opacity=''; b.style.cursor=''; });
+  validarRef(); // re-evalúa el botón Siguiente con el precio ya confirmado
 }
 
 function seleccionarPago(tipo){
@@ -1750,9 +1787,10 @@ function seleccionarPago(tipo){
 function validarRef(){
   if(pagoMoneda==='cashea'){
     const btn=document.getElementById('btn-ir-resumen');
-    btn.disabled=false;
-    btn.style.opacity='1';
-    btn.style.cursor='pointer';
+    const montoOk=precioCargadoOk&&pagoTotalCasheaBs>0;
+    btn.disabled=!montoOk;
+    btn.style.opacity=montoOk?'1':'0.4';
+    btn.style.cursor=montoOk?'pointer':'not-allowed';
     pagoRef='CASHEA';
     pedido.pagoMoneda='Cashea';
     pedido.pagoRef='CASHEA';
@@ -1763,7 +1801,8 @@ function validarRef(){
     :pagoMoneda==='usd'?document.getElementById('pago-ref-usd')?.value.trim()
     :'';
   const btn=document.getElementById('btn-ir-resumen');
-  const ok=pagoMoneda&&ref&&ref.length>3;
+  const montoActual=(pagoMoneda==='bs')?pagoTotalBs:pagoTotalUsd;
+  const ok=precioCargadoOk&&pagoMoneda&&ref&&ref.length>3&&montoActual>0;
   btn.disabled=!ok;
   btn.style.opacity=ok?'1':'0.4';
   btn.style.cursor=ok?'pointer':'not-allowed';
@@ -1771,12 +1810,15 @@ function validarRef(){
     pagoRef=ref;
     pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
     pedido.pagoRef=ref;
-    pedido.pagoMonto=(pagoMoneda==='bs')?pagoTotalBs:pagoTotalUsd;
+    pedido.pagoMonto=montoActual;
   }
 }
 
 function irAlResumen(){
+  if(!precioCargadoOk){ alert('⚠️ El precio todavía no ha terminado de cargar. Espera un momento y vuelve a intentar.'); return; }
   if(!pagoMoneda){ alert('Selecciona el método de pago'); return; }
+  const montoValido=(pagoMoneda==='bs'&&pagoTotalBs>0)||(pagoMoneda==='usd'&&pagoTotalUsd>0)||(pagoMoneda==='cashea'&&pagoTotalCasheaBs>0);
+  if(!montoValido){ alert('⚠️ No se pudo calcular el monto a pagar (salió en 0). No continúes — regresa al inicio e intenta de nuevo, o contacta al vendedor antes de pagar.'); return; }
   if(pagoMoneda==='cashea'){
     pedido.pagoMoneda='Cashea';
     pedido.pagoRef='CASHEA';
@@ -1829,7 +1871,7 @@ function buildResumen(){
   const packsHtml=pedido.packs.map((pk,i)=>{
     const etiquetaResumen=(pk.mangaTipo==='short')?'Short':(pk.esDress?'Vestido':'Franela');
     const etiquetaResumenPlural=(pk.mangaTipo==='short')?'Shorts':(pk.esDress?'Vestidos':'Franelas');
-    const piezasHtml=pk.piezas.map((p,j)=>`<b>${etiquetaResumen} ${j+1}:</b> ${p.genero} Talla ${p.talla}${p.conCapucha?' 🧢 CON CAPUCHA':''} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('<br>');
+    const piezasHtml=pk.piezas.map((p,j)=>`<b>${etiquetaResumen} ${j+1}:</b> ${p.genero} Talla ${p.talla}${p.conCapucha?' 🧢 CON CAPUCHA':''}${p.nombre?' — '+p.nombre:''}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('<br>');
     return `<div class="resumen-label">📦 Pack ${i+1} · ${pk.pack}PACK</div>
       <div class="resumen-block"><b>Modelo:</b> ${pk.modelo} ${pk.manga} ${pk.capucha}<br><b>Tela:</b> ${pk.tela} · <b>Vinil:</b> ${pk.vinil}</div>
       <div class="resumen-label">📏 ${etiquetaResumenPlural} (${pk.piezas.length})</div>
@@ -1857,7 +1899,7 @@ function buildResumen(){
 function buildMensaje(){
   const retiraText=pedido.mismoEnvio?'Mismo titular':`${pedido.eNombre} | C.I: ${pedido.eCi} | Cel: ${pedido.eCel}`;
   const packsText=pedido.packs.map((pk,i)=>{
-    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla} — ${p.nombre}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('\n');
+    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.nombre?' — '+p.nombre:''}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('\n');
     return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: ${pk.modelo} ${pk.manga} ${pk.capucha}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
   }).join('\n\n');
   return `🛍️ *PEDIDO IKOA & BEKATE*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
