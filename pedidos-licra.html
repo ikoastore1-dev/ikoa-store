@@ -1201,7 +1201,7 @@ function savePiezas(){
 let precioComfy={bs:0,usd:0}, precioRecarga={bs:0,usd:0}, precioCapucha={bs:0,usd:0};
 let precioLogoPecho={bs:0,usd:0}, precioLogoEspalda={bs:0,usd:0}, precioLogoManga={bs:0,usd:0};
 let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
-let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0;
+let casheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0, precioCargadoOk=false;
 
 // Descompone N franelas en combinación óptima de packs 4+3+2
 function descomponerPacks(n){
@@ -1231,13 +1231,18 @@ async function aplicarCuentaActiva(){
 }
 
 async function calcularPago(){
+  precioCargadoOk=false;
   const botonesPago=['btn-pago-bs','btn-pago-usd','btn-pago-cashea'].map(id=>document.getElementById(id)).filter(Boolean);
   botonesPago.forEach(b=>{ b.disabled=true; b.style.opacity='0.5'; b.style.cursor='wait'; });
+  const btnResumenInicial=document.getElementById('btn-ir-resumen');
+  if(btnResumenInicial){ btnResumenInicial.disabled=true; btnResumenInicial.style.opacity='0.4'; btnResumenInicial.style.cursor='not-allowed'; }
   const pagoLoadingMsg=document.getElementById('pago-desglose');
   if(pagoLoadingMsg) pagoLoadingMsg.innerHTML='<span class="spinner">↻</span> Calculando precio actualizado...';
+    let fetchOk=false;
   try{
     const data=await scriptGETjson({action:'leerTodosLosPrecios'});
     if(data.ok){
+    fetchOk=true;
       precioRecarga={bs:parseFloat(data.recarga_bs)||0, usd:parseFloat(data.recarga_usd)||0};
       precioCapucha={bs:parseFloat(data.capucha_bs)||0, usd:parseFloat(data.capucha_usd)||0};
       const ppLogos=data.pack_precios||{};
@@ -1259,7 +1264,16 @@ async function calcularPago(){
       // precios por pack
       window._packPrecios=data.pack_precios||{};
     }
-  }catch(e){ console.error('Error leyendo precios:',e); }
+  }catch(e){ console.error('Error leyendo precios:',e); fetchOk=false; }
+
+  if(!fetchOk){
+    if(pagoLoadingMsg) pagoLoadingMsg.innerHTML='<span style="color:var(--danger);">❌ No se pudo calcular el precio. Revisa tu conexión y espera — no podrás continuar hasta que esto cargue correctamente.</span>';
+    botonesPago.forEach(b=>{ b.disabled=true; b.style.opacity='0.5'; b.style.cursor='wait'; });
+    const btnResumenFalla=document.getElementById('btn-ir-resumen');
+    if(btnResumenFalla){ btnResumenFalla.disabled=true; btnResumenFalla.style.opacity='0.4'; btnResumenFalla.style.cursor='not-allowed'; }
+    setTimeout(calcularPago, 4000);
+    return;
+  }
 
   const tallasGrandes=['XL','XXL','3XL','XXXL','2XL',
     'DAMA XL','DAMA XXL','DAMA 3XL','DAMA XXXL','DAMA 2XL',
@@ -1341,7 +1355,15 @@ async function calcularPago(){
   document.getElementById('pm-monto-usd').textContent='$'+pagoTotalUsd.toFixed(2);
   const elCashea=document.getElementById('pm-monto-cashea');
   if(elCashea) elCashea.textContent='Bs '+pagoTotalCasheaBs.toFixed(2)+' ($'+pagoTotalCasheaUsd.toFixed(2)+')';
+  const totalGeneral=pagoTotalBs+pagoTotalUsd+pagoTotalCasheaBs;
+  if(totalGeneral<=0){
+    precioCargadoOk=false;
+    if(pagoLoadingMsg) pagoLoadingMsg.innerHTML+='<br><span style="color:var(--danger);">❌ El precio calculado dio en 0. No continúes — contacta al vendedor.</span>';
+    return;
+  }
+  precioCargadoOk=true;
   botonesPago.forEach(b=>{ b.disabled=false; b.style.opacity=''; b.style.cursor=''; });
+  validarRef();
 }
 
 function seleccionarPago(tipo){
@@ -1358,25 +1380,30 @@ function seleccionarPago(tipo){
 function validarRef(){
   if(pagoMoneda==='cashea'){
     const btn=document.getElementById('btn-ir-resumen');
-    btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer';
+    const montoOk=precioCargadoOk&&pagoTotalCasheaBs>0;
+    btn.disabled=!montoOk; btn.style.opacity=montoOk?'1':'0.4'; btn.style.cursor=montoOk?'pointer':'not-allowed';
     pagoRef='CASHEA';
     pedido.pagoMoneda='Cashea'; pedido.pagoRef='CASHEA'; pedido.pagoMonto=pagoTotalCasheaBs;
     return;
   }
   const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim():document.getElementById('pago-ref-usd')?.value.trim();
   const btn=document.getElementById('btn-ir-resumen');
-  const ok=pagoMoneda&&ref&&ref.length>3;
+  const montoActual=(pagoMoneda==='bs')?pagoTotalBs:pagoTotalUsd;
+  const ok=precioCargadoOk&&pagoMoneda&&ref&&ref.length>3&&montoActual>0;
   btn.disabled=!ok; btn.style.opacity=ok?'1':'0.4'; btn.style.cursor=ok?'pointer':'not-allowed';
   if(ok){
     pagoRef=ref;
     pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
     pedido.pagoRef=ref;
-    pedido.pagoMonto=(pagoMoneda==='bs')?pagoTotalBs:pagoTotalUsd;
+    pedido.pagoMonto=montoActual;
   }
 }
 
 function irAlResumen(){
+  if(!precioCargadoOk){ alert('⚠️ El precio todavía no ha terminado de cargar. Espera un momento y vuelve a intentar.'); return; }
   if(!pagoMoneda){ alert('Selecciona el método de pago'); return; }
+  const montoValido=(pagoMoneda==='bs'&&pagoTotalBs>0)||(pagoMoneda==='usd'&&pagoTotalUsd>0)||(pagoMoneda==='cashea'&&pagoTotalCasheaBs>0);
+  if(!montoValido){ alert('⚠️ No se pudo calcular el monto a pagar (salió en 0). No continúes — regresa al inicio e intenta de nuevo, o contacta al vendedor antes de pagar.'); return; }
   if(pagoMoneda==='cashea'){
     pedido.pagoMoneda='Cashea'; pedido.pagoRef='CASHEA'; pedido.pagoMonto=pagoTotalCasheaBs;
   } else {

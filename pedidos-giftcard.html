@@ -658,7 +658,7 @@ const WEBHOOK_NOTIFY='https://hook.us2.make.com/f3mbneb3oliah6tv4ut64rb6x1pamiwa
 const TOTAL_STEPS=7;
 
 let tokenActual='';
-let tasaBCV=0, casheaPctGC=0;
+let tasaBCV=0, casheaPctGC=0, precioCargadoOk=false;
 let gc={
   nombre:'',cedula:'',celular:'',correo:'',
   ocasion:'',
@@ -717,12 +717,33 @@ window.addEventListener('DOMContentLoaded',async()=>{
           const gridGC=document.getElementById('pago-gc-grid');
           if(btnGCCashea) btnGCCashea.style.display=casheaActivo?'':'none';
           if(gridGC){ gridGC.classList.toggle('cols3',casheaActivo); gridGC.classList.toggle('cols2',!casheaActivo); }
+          precioCargadoOk=tasaBCV>0;
         }
-      }catch(e){}
+      }catch(e){ precioCargadoOk=false; }
+      if(!precioCargadoOk){
+        // REGLA ESTRICTA: sin tasa BCV confirmada no se puede continuar a pagar.
+        // Reintenta en segundo plano hasta que cargue con éxito.
+        setTimeout(recargarPrecioGC, 4000);
+      }
       cargarProductosGC();
     }catch(e){ showBloq('Error al verificar el link.'); }
   }, 1950);
 });
+
+async function recargarPrecioGC(){
+  try{
+    const pd=await scriptGETjson({action:'leerTodosLosPrecios'});
+    if(pd.ok && pd.tasa_bcv>0){
+      tasaBCV=pd.tasa_bcv;
+      casheaPctGC=parseFloat(pd.cashea&&pd.cashea.giftcard?pd.cashea.giftcard.cashea_pct:pd.cashea_pct)||0;
+      precioCargadoOk=true;
+      renderCarrito(); // recalcula totales ya con la tasa disponible
+      return;
+    }
+  }catch(e){}
+  precioCargadoOk=false;
+  setTimeout(recargarPrecioGC, 4000);
+}
 
 function showBloq(msg){
   document.getElementById('splash').style.display='none';
@@ -1004,7 +1025,10 @@ function selectPagoGC(tipo){
 }
 
 function validarStep6(){
+  if(!precioCargadoOk){ alert('⚠️ El precio todavía no ha terminado de cargar. Espera un momento y vuelve a intentar.'); return; }
   if(!pagoSeleccionado){ alert('Selecciona el método de pago'); return; }
+  const montoValido=(pagoSeleccionado==='bs'&&gc.totalBs>0)||(pagoSeleccionado==='usd'&&gc.totalUsd>0)||(pagoSeleccionado==='cashea'&&gc.totalBs>0);
+  if(!montoValido){ alert('⚠️ No se pudo calcular el monto a pagar (salió en 0). No continúes — regresa al inicio e intenta de nuevo, o contacta al vendedor antes de pagar.'); return; }
   if(pagoSeleccionado==='cashea'){
     const totalCasheaBs=Math.round(gc.totalBs*(1+casheaPctGC/100)*100)/100;
     gc.pagoMoneda='Cashea'; gc.pagoRef='CASHEA'; gc.pagoMonto=totalCasheaBs;
