@@ -1359,6 +1359,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
                 <option value="TEALCA">TEALCA</option>
                 <option value="TIENDA MCY">TIENDA MCY</option>
                 <option value="DELIVERY MARACAY">DELIVERY MARACAY</option>
+                <option value="SHOWROOM VALENCIA">SHOWROOM VALENCIA</option>
+                <option value="DELIVERY VALENCIA">DELIVERY VALENCIA</option>
                 <option value="Otro">Otro</option>
               </select>
               <input class="field-input" type="text" id="rv-agencia-otro" placeholder="Escribe la agencia..." style="display:none;margin-top:8px;">
@@ -1657,6 +1659,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
                 <option value="SHOWROOM CARACAS">SHOWROOM CARACAS</option>
                 <option value="DELIVERY CARACAS">DELIVERY CARACAS</option>
                 <option value="DELIVERY MARACAY">DELIVERY MARACAY</option>
+                <option value="SHOWROOM VALENCIA">SHOWROOM VALENCIA</option>
+                <option value="DELIVERY VALENCIA">DELIVERY VALENCIA</option>
                 <option value="Otro">Otro</option>
               </select>
             </div>
@@ -7302,13 +7306,15 @@ async function buscarCOD(){
   }
 }
 
-const SIN_GUIA=['TIENDA MCY','SHOWROOM CARACAS','DELIVERY CARACAS','DELIVERY MARACAY'];
+const SIN_GUIA=['TIENDA MCY','SHOWROOM CARACAS','DELIVERY CARACAS','DELIVERY MARACAY','SHOWROOM VALENCIA','DELIVERY VALENCIA'];
 
 const DIRECCIONES_AUTO={
   'TIENDA MCY':        'SU PAQUETE SE RETIRA POR TIENDA MARACAY — C.C. HIPER JUMBO LOCAL PB 39. TIENDA IKOA.',
   'DELIVERY MARACAY':  'SE EJECUTA DESDE C.C. HIPER JUMBO LOCAL PB 39. TIENDA IKOA.',
   'SHOWROOM CARACAS':  'RETIRAR EN SHOWROOM CARACAS — LAS MERCEDES, CARACAS.',
-  'DELIVERY CARACAS':  'SE EJECUTA DESDE LAS MERCEDES, CARACAS.'
+  'DELIVERY CARACAS':  'SE EJECUTA DESDE LAS MERCEDES, CARACAS.',
+  'SHOWROOM VALENCIA': 'RETIRAR EN SHOWROOM VALENCIA | URB. LA VIÑA — CASA EGEO.',
+  'DELIVERY VALENCIA': 'SE EJECUTA DESDE SHOWROOM VALENCIA | URB. LA VIÑA — CASA EGEO.'
 };
 
 function toggleDireccion(){
