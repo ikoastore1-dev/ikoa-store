@@ -63,8 +63,14 @@
   .fabric-section, .fabric-cta { padding: 34px 6%; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
-.combiner { margin-top: 30px; display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,1fr); gap: 50px; align-items: center; }
-.combiner-shirt { position: relative; isolation: isolate; container-type: inline-size; max-width: 460px; margin: 0 auto; aspect-ratio: 671 / 827; }
+.combiner { margin-top: 30px; display: grid; grid-template-columns: minmax(0,1fr); gap: 32px; justify-items: center; }
+.combiner-stage { width: 100%; max-width: 620px; margin: 0; }
+.combiner-controls { width: 100%; max-width: 620px; justify-items: center; text-align: center; }
+.combiner-swatches { justify-content: center; }
+.combiner-word { display: grid; justify-items: center; }
+@media (max-width: 900px) { .combiner-shirt { width: 100%; } .combiner-controls { gap: 24px; } .combiner-swatches { gap: 12px; } .combiner-swatches button { width: 38px; height: 38px; } }
+
+.combiner-shirt { position: relative; isolation: isolate; container-type: inline-size; width: min(100%, 620px); max-width: 620px; margin: 0 auto; aspect-ratio: 671 / 827; }
 .combiner-fabric { position: absolute; inset: 0; background: var(--tela); mask: var(--shirt-mask) center / contain no-repeat; }
 .combiner-shirt img { position: relative; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
 .combiner-shirt img.is-photo { mix-blend-mode: normal; }
@@ -117,11 +123,11 @@
 .size-finder-lines button { background: transparent; border: 1px solid var(--border); color: var(--muted-foreground); padding: 10px 18px; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; cursor: pointer; transition: color .2s ease, border-color .2s ease; }
 .size-finder-lines button.is-active { border-color: var(--foreground); color: var(--foreground); }
 .size-finder-body { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 40px; align-items: center; margin-top: 30px; }
-.size-finder-stage { position: relative; margin: 0; width: min(100%, 560px); padding: 6% 18%; container-type: inline-size; }
+.size-finder-stage { position: relative; margin: 0; width: min(100%, 560px); padding: 0; container-type: inline-size; }
 .size-finder-shirt { position: relative; }
 .size-finder-fit { position: relative; }
 .size-finder-fit img { display: block; width: 100%; mix-blend-mode: multiply; }
-.size-finder-legend { position: absolute; inset: 0; pointer-events: none; }
+.size-finder-legend { position: static; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 24px; pointer-events: none; }
 .size-line--sleeve { left: 16%; top: 11%; height: 81.4%; width: var(--line-w); background: repeating-linear-gradient(to bottom, var(--measure-ink) 0 var(--dash), transparent var(--dash) var(--gap)) left top / var(--line-w) 100% no-repeat; transform: rotate(5.6deg); transform-origin: top center; }
 .size-line--sleeve::before, .size-line--sleeve::after { content: ""; position: absolute; left: -6px; width: 14px; height: var(--line-w); background: var(--measure-ink); box-shadow: 0 0 0 var(--line-halo) var(--measure-halo); }
 .size-line--sleeve::before { top: 0; }
@@ -130,12 +136,12 @@
 .size-mark--chest { left: 50%; top: 34%; transform: translate(-50%, -50%); }
 .size-mark--length { left: 61%; top: 55%; transform: translate(-50%, -50%); }
 .size-mark--sleeve { left: 11%; top: 51.5%; transform: translate(-50%, -50%); }
-.size-val { position: absolute; display: grid; justify-items: center; gap: .1em; font-size: clamp(9px, 3.2cqi, 11.5px); color: var(--measure-ink); background: var(--measure-halo); border: 1px solid var(--measure-ink); padding: .45em .7em; white-space: nowrap; box-shadow: 0 1px 4px var(--measure-shadow); }
-.size-val b { font-size: .82em; font-weight: 700; letter-spacing: .12em; }
+.size-val { position: static; display: grid; justify-items: center; gap: 6px; font-size: 12px; min-width: 0; color: var(--measure-ink); background: var(--measure-halo); border: 1px solid var(--measure-ink); padding: .45em .7em; white-space: nowrap; box-shadow: 0 1px 4px var(--measure-shadow); }
+.size-val b { font-size: 10px; font-weight: 700; letter-spacing: 0; }
 .size-val i { font-size: 1.15em; font-style: normal; font-weight: 700; }
-.size-val--chest { right: -28%; top: 34%; transform: translateY(-50%); }
-.size-val--length { left: -28%; top: 66%; transform: translateY(-50%); }
-.size-val--sleeve { left: -28%; top: 26%; transform: translateY(-50%); }
+.size-val--chest { order: 1; }
+.size-val--length { order: 2; }
+.size-val--sleeve { order: 3; }
 .size-finder-chips .size-chip { cursor: pointer; background: transparent; color: var(--foreground); font-family: inherit; transition: background .2s ease, color .2s ease, border-color .2s ease; }
 .size-finder-chips .size-chip.is-active { border-color: var(--foreground); background: var(--foreground); color: var(--background); }
 .size-finder-hint { font-size: 12px; color: var(--muted-foreground); }
@@ -155,7 +161,7 @@
   .size-chip { min-width: 32px; height: 36px; padding: 0 7px; font-size: 11px; }
   .size-finder-body { grid-template-columns: minmax(0,1fr); gap: 26px; }
   .size-finder-stage { width: min(100%, 420px); padding: 0; margin-inline: auto; }
-  .size-finder-legend { position: static; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 22px; }
+  .size-finder-legend { margin-top: 24px; }
   .size-val { position: static; transform: none; }
   .size-mark { width: 19px; height: 19px; font-size: 10px; }
 }
