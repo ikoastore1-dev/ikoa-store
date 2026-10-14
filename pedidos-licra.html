@@ -39,7 +39,7 @@ select.field-input option{background:var(--surface2);color:var(--text);}
 .option-grid{display:grid;gap:10px;margin-bottom:14px;}
 .option-grid.cols2{grid-template-columns:1fr 1fr;}.option-grid.cols3{grid-template-columns:1fr 1fr 1fr;}
 .opt-btn{padding:14px 10px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;letter-spacing:.03em;width:100%;}
-.opt-btn:hover{border-color:var(--accent);}.opt-btn.selected{border-color:var(--accent);background:#0f2b1a;color:var(--accent);}
+.opt-btn:hover{border-color:var(--accent);}.opt-btn.selected{border-color:var(--accent);background:var(--selected);color:var(--accent);}
 .opt-btn .sub{font-size:11px;font-weight:400;color:var(--muted);margin-top:3px;display:block;font-family:'Barlow',sans-serif;}
 .opt-btn.selected .sub{color:var(--accent);opacity:.7;}
 .pieza-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;position:relative;}
@@ -354,7 +354,7 @@ window.addEventListener('load',function(){
         <input class="field-input" type="number" id="pack-custom" placeholder="Ej: 8, 10, 12..." min="1" max="50" oninput="setCustomPack(this.value)">
       </div>
     </div>
-    <div id="pack-seleccionado" style="display:none;background:#0f2b1a;border:1px solid var(--accent);border-radius:10px;padding:12px 16px;text-align:center;margin-bottom:12px;">
+    <div id="pack-seleccionado" style="display:none;background:var(--selected);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;text-align:center;margin-bottom:12px;">
       <span style="font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="pack-label">—</span>
     </div>
     <div class="nav-row">
@@ -382,7 +382,7 @@ window.addEventListener('load',function(){
       <!-- Vinil - solo para licra -->
       <div id="vinil-wrap">
         <div class="card-title" style="margin-top:4px;">Color de Vinil</div>
-        <div id="vinil-warn" style="display:none;background:#1a1a10;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--warn);margin-bottom:8px;">⚠️ Este color de vinil puede no contrastar bien con la tela seleccionada.</div>
+        <div id="vinil-warn" style="display:none;background:var(--surface2);border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--warn);margin-bottom:8px;">⚠️ Este color de vinil puede no contrastar bien con la tela seleccionada.</div>
         <div class="option-grid cols2" id="vinil-opts">
           <div style="color:var(--muted);font-size:13px;padding:8px;">⏳ Cargando colores...</div>
         </div>
@@ -415,7 +415,7 @@ window.addEventListener('load',function(){
       <!-- RESUMEN PACKS AGREGADOS -->
       <div id="packs-resumen" style="margin-bottom:16px;"></div>
       <div class="option-grid cols2">
-        <button class="opt-btn" style="border-color:var(--accent);color:var(--accent);background:#0f2b1a;" onclick="agregarOtroPack()">✅ SÍ, agregar otro pack</button>
+        <button class="opt-btn" style="border-color:var(--accent);color:var(--accent);background:var(--selected);" onclick="agregarOtroPack()">✅ SÍ, agregar otro pack</button>
         <button class="opt-btn" onclick="goStep(5)">➡️ NO, continuar con entrega</button>
       </div>
     </div>
@@ -894,7 +894,7 @@ function seleccionarModeloLicra(modelo, manga, cod){
   });
   const btnActivo = modelo==='Licra Protect Manga Larga' ? 'btn-modelo-ll' : modelo==='Licra Protect Manga Corta' ? 'btn-modelo-lmc' : 'btn-modelo-toalla';
   const elActivo = document.getElementById(btnActivo);
-  if(elActivo){ elActivo.style.borderColor='var(--accent)'; elActivo.style.background='#0a2a1a'; }
+  if(elActivo){ elActivo.style.borderColor='var(--accent)'; elActivo.style.background='var(--selected)'; }
   // Actualizar info de modelo en step3
   const modeloInfoEl = document.getElementById('modelo-display');
   const mangaInfoEl = document.getElementById('modelo-sub');
@@ -1764,6 +1764,10 @@ function marthaConfirmar(){
 #ikoa-tabbar button.is-active{color:#222;border-bottom-color:#222}
 body{padding-top:44px}
 .ikoa-view{position:fixed;inset:44px 0 0 0;z-index:10001;overflow-y:auto;display:none;--background: oklch(1 0 0);--foreground: oklch(0.205 0 0);--muted-foreground: oklch(0.556 0 0);--border: oklch(0.9 0 0);--fabric-blanco: oklch(0.9756110 0.0080053 293.91273);--fabric-negro: oklch(0.1580469 0.0338564 256.00451);--fabric-azul-rey: oklch(0.4308863 0.2978557 264.13484);--fabric-azul-marino: oklch(0.1755587 0.0781155 270.54889);--fabric-menta: oklch(0.8089913 0.0996414 193.74614);--fabric-azul-bebe: oklch(0.9103688 0.0422983 217.18332);--fabric-beige: oklch(0.8026321 0.0222753 98.18529);--fabric-gris: oklch(0.6699638 0.0143366 251.61716);--fabric-rojo: oklch(0.4763461 0.1582704 27.41094);--fabric-rosa-bebe: oklch(0.8527975 0.0452444 5.94740);--fabric-rosa-vieja: oklch(0.7526113 0.0616579 6.88937);--fabric-verde-militar: oklch(0.4360781 0.0500834 109.79177);--fabric-naranja-neon: oklch(0.7117848 0.1551346 53.44493);--fabric-lila: oklch(0.7909361 0.1400096 317.89178);--fabric-marron: oklch(0.2761888 0.0305632 42.13366);--fabric-label-ink: oklch(1 0 0);--measure-ink: oklch(0 0 0);--measure-halo: oklch(1 0 0);--measure-shadow: oklch(0 0 0 / 0.2);--vinyl-blanco:#f4f5fa;--vinyl-negro:#060d1a;--vinyl-azul-rey:#0f04b0;--vinyl-azul-marino:#060b2f;--vinyl-turquesa:#65bbb2;--vinyl-beige:#c7c4b6;--vinyl-verde-neon:#72f460;--vinyl-amarillo-neon:#e2f353;--vinyl-amarillo-cat:#eaaf41;--vinyl-rojo:#ad3d40;--vinyl-coral-neon:#d73958;--vinyl-vino-tinto:#5a201b;--vinyl-fucsia:#ce58b0;--vinyl-lila:#d7a4ec;--vinyl-morado:#6233de;--vinyl-azul-indigo:#508cea;--vinyl-gris: oklch(0.7027673 0.0111377 247.98593);--vinyl-naranja: oklch(0.6923998 0.1812448 46.21295);--vinyl-dorado: oklch(0.7273516 0.1260936 86.91223);--vinyl-plateado: oklch(0.8163127 0.0077386 260.73151);--vinyl-amarillo: oklch(0.8675768 0.1749777 95.36503);--vinyl-rosado: oklch(0.7872567 0.1127869 352.92223);--vinyl-verde: oklch(0.5623296 0.1532010 147.22489);cursor:pointer}
+.ikoa-view.is-open{display:block}
+.ikoa-view *,.ikoa-view *::before,.ikoa-view *::after{box-sizing:border-box}
+.ikoa-view h1,.ikoa-view h2,.ikoa-view h3,.ikoa-view h4,.ikoa-view p,.ikoa-view figure{margin:0}
+.ikoa-view a{text-decoration:none;cursor:pointer}
 .ikoa-view .fabric-header img{display:block;width:105px;height:30px;object-fit:contain;object-position:left center}
 .fabric-page { background: var(--background); color: var(--foreground); min-height: 100dvh; font-family: "Lemon Milk", "Montserrat", sans-serif; }
 .fabric-page :is(h1,h2,h3,h4,p,a,span,figcaption,input,button) { font-family: "Lemon Milk", "Montserrat", sans-serif; }
