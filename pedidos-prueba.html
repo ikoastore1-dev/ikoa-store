@@ -256,6 +256,8 @@ button[style*="background:linear-gradient"] { background: var(--accent) !importa
 </style>
 <style id="ikoa-perchero-fix-css">
 #ikoa-perchero .showroom-otras{display:block;margin:6px auto 0;padding:6px 10px;background:none;border:0;font:inherit;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-foreground);text-decoration:underline;cursor:pointer}
+#ikoa-perchero .showroom-cta[disabled]{opacity:.4;cursor:not-allowed}
+#ikoa-perchero .showroom-aviso{font-size:10px;letter-spacing:.08em;color:var(--warn);max-width:420px;text-align:center}
 #ikoa-perchero .showroom-nota{font-size:10px;letter-spacing:.1em;color:var(--muted-foreground);text-transform:uppercase}
 </style>
 </head>
@@ -2593,8 +2595,8 @@ raiz.innerHTML='<div class="showroom"><header class="showroom-head"><p>IKOA \u00
 document.body.appendChild(raiz);
 var rack=document.getElementById('ikoa-rack'), acciones=document.getElementById('ikoa-acciones');
 var paso=document.getElementById('step-manga-tipo');
-var activa=null, combo={}, pendiente=null, elegido={}, omitir=false;
-function reiniciar(){PRENDAS.forEach(function(p){combo[p.id]={tela:p.tela,vinil:p.vinil};elegido[p.id]={tela:false,vinil:false};});activa=null;pendiente=null;}
+var activa=null, combo={}, pendiente=null, elegido={}, omitir=false, colorListo=false, saltando=false;
+function reiniciar(){PRENDAS.forEach(function(p){combo[p.id]={tela:p.tela,vinil:p.vinil};elegido[p.id]={tela:false,vinil:false};});activa=null;pendiente=null;colorListo=false;}
 reiniciar();
 
 function telas(){return lista('tela-opts');}
@@ -2641,7 +2643,9 @@ function pintar(){
     vs.forEach(function(v){h+='<button type="button" title="'+v+'" aria-label="Vinil '+v+'" aria-pressed="'+(el.vinil&&v===c.vinil)+'" style="--c:'+tonoVinil(v)+'" data-k="vinil" data-v="'+v+'"></button>';});
     h+='</div>';
   }
-  h+='<button type="button" class="showroom-cta" id="ikoa-continuar">Continuar con este modelo \u2192</button>';
+  var listo=!!(el.tela&&el.vinil);
+  if(listo){var av=avisoColores(c.tela,c.vinil);if(av)h+='<p class="showroom-aviso">'+av+'</p>';}
+  h+='<button type="button" class="showroom-cta" id="ikoa-continuar"'+(listo?'':' disabled')+'>'+(listo?'Continuar con este modelo \u2192':'Elige tela y vinil para continuar')+'</button>';
   acciones.innerHTML=h;
   [].slice.call(acciones.querySelectorAll('.showroom-colors button')).forEach(function(b){
     b.onclick=function(){combo[p.id][b.getAttribute('data-k')]=b.getAttribute('data-v');elegido[p.id][b.getAttribute('data-k')]=true;pintar();};
@@ -2649,7 +2653,8 @@ function pintar(){
   var ct=document.getElementById('ikoa-continuar');
   if(ct) ct.onclick=function(){
     var d=combo[p.id],e=elegido[p.id];
-    pendiente=(e.tela||e.vinil)?{tela:e.tela?d.tela:null,vinil:e.vinil?d.vinil:null}:null;
+    if(!(e.tela&&e.vinil))return;
+    pendiente={tela:d.tela,vinil:d.vinil};colorListo=true;rotular();
     if(typeof seleccionarPrendaComfy!=='function'){cerrar();return;}
     try{seleccionarPrendaComfy(p.prenda);}catch(e){}
     if(p.manga&&typeof seleccionarMangaTipo==='function'){try{seleccionarMangaTipo(p.manga);}catch(e){}}
@@ -2662,13 +2667,54 @@ function abrir(){if(!raiz.classList.contains('is-open'))reiniciar();raiz.classLi
 function cerrar(){raiz.classList.remove('is-open');raiz.setAttribute('aria-hidden','true');if(paso)paso.removeAttribute('inert');}
 
 var otras=document.getElementById('ikoa-otras');
-if(otras)otras.onclick=function(){omitir=true;pendiente=null;activa=null;pintar();cerrar();window.scrollTo({top:0,behavior:'smooth'});};
+if(otras)otras.onclick=function(){omitir=true;pendiente=null;colorListo=false;rotular();activa=null;pintar();cerrar();window.scrollTo({top:0,behavior:'smooth'});};
 montar();
 function revisar(){if(paso.classList.contains('active')){if(omitir)cerrar();else abrir();}else{omitir=false;cerrar();}}
 if(paso)new MutationObserver(revisar).observe(paso,{attributes:true,attributeFilter:['class']});
 ['tela-opts','vinil-opts'].forEach(function(id){var el=document.getElementById(id);if(el)new MutationObserver(function(){if(raiz.classList.contains('is-open'))pintar();}).observe(el,{childList:true});});
-alAbrir('step3',function(){if(!pendiente)return;var okT=pendiente.tela?aplicar('tela-opts',pendiente.tela):true,okV=pendiente.vinil?aplicar('vinil-opts',pendiente.vinil):true;if(okT&&okV)pendiente=null;});
+alAbrir('step3',function(){
+  if(pendiente){var okT=pendiente.tela?aplicar('tela-opts',pendiente.tela):true,okV=pendiente.vinil?aplicar('vinil-opts',pendiente.vinil):true;if(okT&&okV)pendiente=null;}
+  var esB=(typeof modalidadComfy!=='undefined'&&modalidadComfy==='B');
+  if(colorListo&&!saltando&&!esB&&typeof pedido!=='undefined'&&pedido.tela&&pedido.vinil&&typeof intentarPaso4==='function'){
+    saltando=true;
+    Promise.resolve().then(function(){return intentarPaso4();}).then(function(){saltando=false;},function(){saltando=false;});
+  }
+});
 alAbrir('step3b',function(){if(!pendiente)return;var okV=pendiente.vinil?aplicar('vinil-opts-b',pendiente.vinil):true,okT=pendiente.tela?aplicar('tela-opts-b0',pendiente.tela):true;if(okV&&okT)pendiente=null;});
+
+function avisoColores(t,v){
+  if(typeof sonColoresSimilares==='function'&&sonColoresSimilares(t,v))return '\u26a0\ufe0f Elegiste el mismo color de tela y de vinil: el nombre y el logo no se ver\u00edan.';
+  var malas=[['negro','turquesa'],['azul rey','turquesa'],['azul marino','turquesa']];
+  for(var i=0;i<malas.length;i++){if(norm(t)===malas[i][0]&&norm(v)===malas[i][1])return '\u26a0\ufe0f Este color de vinil puede no contrastar bien con la tela seleccionada.';}
+  return '';
+}
+function rotular(){
+  var saltar=colorListo&&!(typeof modalidadComfy!=='undefined'&&modalidadComfy==='B');
+  [].forEach.call(document.querySelectorAll('.step-num,#ikoa-perchero .showroom-head p'),function(e){
+    var t=e.textContent,m=t.match(/Paso\s+(\d+)\s+de\s+(\d+)/i);if(!m)return;
+    if(!e.getAttribute('data-n0')){e.setAttribute('data-n0',m[1]);e.setAttribute('data-m0',m[2]);}
+    var n0=+e.getAttribute('data-n0'),m0=+e.getAttribute('data-m0');
+    var n=(saltar&&n0>=5)?n0-1:n0,tot=saltar?m0-1:m0;
+    var nt=t.replace(/(Paso\s+)\d+(\s+de\s+)\d+/i,'$1'+n+'$2'+tot);
+    if(nt!==t)e.textContent=nt;
+  });
+  var pd=document.getElementById('pd3');
+  if(pd)pd.style.display=(saltar&&!(typeof currentStep!=='undefined'&&currentStep===3))?'none':'';
+}
+function volverSaltandoColor(){
+  var s4=document.getElementById('step4');if(s4)s4.classList.remove('active');
+  var o=(typeof origenStep3!=='undefined'&&origenStep3)||'step2';
+  var oe=document.getElementById(o)||document.getElementById('step2');
+  if(oe)oe.classList.add('active');
+  currentStep=(o==='step-manga-tipo')?'manga-tipo':(o==='step1'?1:2);
+  if(typeof updateProgress==='function')updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+if(typeof goStep==='function'){var _go=window.goStep;window.goStep=function(n){
+  if(n===3&&colorListo&&typeof currentStep!=='undefined'&&currentStep===4&&!(typeof modalidadComfy!=='undefined'&&modalidadComfy==='B')){volverSaltandoColor();return;}
+  return _go.apply(this,arguments);};}
+if(typeof seleccionarModalidad==='function'){var _sm=window.seleccionarModalidad;window.seleccionarModalidad=function(){var r=_sm.apply(this,arguments);rotular();return r;};}
+[].forEach.call(document.querySelectorAll('.step'),function(s){new MutationObserver(rotular).observe(s,{attributes:true,attributeFilter:['class']});});
 if(paso&&paso.classList.contains('active'))abrir();
 })();
 </script>
