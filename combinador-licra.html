@@ -1,3 +1,8 @@
+<style id="ikoa-cb-sync-css">
+.combiner-swatches button.cb-pill{width:auto;height:auto;border-radius:999px;padding:8px 12px;font:inherit;font-size:11px;letter-spacing:.06em;color:var(--foreground,#111);background:var(--muted,#eee);border:1px solid var(--border,#ddd)}
+.cb-loading{font-size:12px;color:var(--muted-foreground,#777)}
+.combiner-swatches button.cb-retry{width:auto;height:auto;border-radius:999px;padding:6px 12px;margin-left:8px;font:inherit;font-size:11px;background:var(--muted,#eee);color:var(--foreground,#111);border:1px solid var(--border,#ddd);cursor:pointer}
+</style>
 <style>#ikoa-tabbar,#ikoa-tallas{display:none!important}#ikoa-tela{display:block!important}#ikoa-tela>*{display:none!important}#ikoa-tela>section:has(#ikoa-combiner){display:block!important}</style><style id="ikoa-mobile-tallas">
 .size-finder-legend .size-val{padding:12px 6px}
 .size-finder-legend .size-val b{font-size:11px}
@@ -289,23 +294,77 @@
     document.getElementById('ikoa-traits').appendChild(el('article','fabric-trait','<span class="fabric-trait-num">'+t[0]+'</span><div><h3>'+t[1]+'</h3><p>'+t[2]+'</p></div>'));
   });
 
-  // Combinador tela + vinil
-  var TELAS=[["Blanco", "#f1f7fa", 1, null], ["Negro", "#020b1b", 2, "oklch(0.26 0.012 70)"], ["Azul Rey", "#0301fa", 3, "oklch(0.50 0.27 265)"], ["Azul Marino", "#020b31", 4, "oklch(0.30 0.075 270)"], ["Menta", "#3edfd2", 5, null], ["Azul BB", "#beeff5", 6, null], ["Beige", "#c9c7b6", 7, null], ["Gris", "#8d99a2", 8, null], ["Amarillo BB", "#fdfac4", 9, null], ["Amarillo Neon", "#e8fe05", 10, null], ["Naranja", "#ef632e", 11, null], ["Rojo", "#b61a23", 12, null], ["Vino Tinto", "#5a0703", 13, "oklch(0.36 0.12 25)"], ["Fucsia", "#f451c8", 14, null], ["Rosa Bebe", "#f3c4cd", 15, null], ["Rosa Vieja", "#dea0b0", 16, null], ["Verde Militar", "#53572f", 17, null], ["Morado", "#8952fb", 18, null], ["Naranja Neon", "#f78110", 19, null], ["Lila", "#eaa5fc", 20, null]];
-  var VINILES=["Blanco","Negro","Azul Marino","Turquesa","Beige","Verde Neon","Amarillo Neon","Amarillo Cat","Rojo","Vino Tinto","Fucsia","Lila","Morado","Azul Indigo","Gris"];
-  var cb=document.getElementById('ikoa-combiner'), st={t:1,v:"Blanco"};
-  function slug(n){return n.toLowerCase().replace(/ /g,'-')}
+  // Combinador tela + vinil · los colores salen de la base de datos (hoja COLORES.LICRA)
+  var TELA_SW={"blanco": "#f1f7fa", "negro": "#020b1b", "azul-rey": "#0301fa", "azul-marino": "#020b31", "menta": "#3edfd2", "azul-bb": "#beeff5", "beige": "#c9c7b6", "gris": "#8d99a2", "amarillo-bb": "#fdfac4", "amarillo-neon": "#e8fe05", "naranja": "#ef632e", "rojo": "#b61a23", "vino-tinto": "#5a0703", "fucsia": "#f451c8", "rosa-bb": "#f3c4cd", "rosa-vieja": "#dea0b0", "verde-militar": "#53572f", "morado": "#8952fb", "naranja-neon": "#f78110", "lila": "#eaa5fc"}, TELA_ST={"negro": "oklch(0.26 0.012 70)", "azul-rey": "oklch(0.50 0.27 265)", "azul-marino": "oklch(0.30 0.075 270)", "vino-tinto": "oklch(0.36 0.12 25)"}, VIN_VAR={"blanco": "blanco", "negro": "negro", "azul-rey": "azul-rey", "azul-marino": "azul-marino", "turquesa": "turquesa", "beige": "beige", "verde-neon": "verde-neon", "amarillo-neon": "amarillo-neon", "amarillo-cat": "amarillo-cat", "rojo": "rojo", "coral-neon": "coral-neon", "vino-tinto": "vino-tinto", "fucsia": "fucsia", "lila": "lila", "morado": "morado", "azul-indigo": "azul-indigo", "gris": "gris", "naranja": "naranja", "dorado": "dorado", "plateado": "plateado", "amarillo": "amarillo", "rosa": "rosado", "verde": "verde"}, NUM={"blanco": 1, "negro": 2, "azul-rey": 3, "azul-marino": 4, "menta": 5, "azul-bb": 6, "beige": 7, "gris": 8, "rojo": 12, "rosa-bb": 15, "rosa-vieja": 16, "verde-militar": 17, "naranja-neon": 19, "lila": 20, "marron": 21, "amarillo-bb": 9, "amarillo-neon": 10, "naranja": 11, "vino-tinto": 13, "fucsia": 14, "morado": 18};
+  var HOJA='COLORES.LICRA', URL_GS='https://script.google.com/macros/s/AKfycbw39K95bn14-yZcvd8kXuKnyD2BAqLjOg6rFNIBkuZRHQP7z_s1FFOV3P2EOyNtqz9ikw/exec', LAZY=false;
+  var NEUTRO_T='oklch(.93 0 0)', NEUTRO_V='oklch(.72 0 0)';
+  var cb=document.getElementById('ikoa-combiner'), TELAS=[], VINILES=[], st={t:-1,v:-1}, cargado=false, iniciado=false;
+  var wt=document.getElementById('cb-telas'), wv=document.getElementById('cb-viniles');
+  function canon(s){return s.replace(/-bebe(?=-|$)/g,'-bb').replace(/^rosado(?=-|$)/,'rosa').replace(/^vinotinto$/,'vino-tinto')}
+  function slug(n){return canon(String(n).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''))}
+  function tonoSw(s){return TELA_SW[s]||null}
+  function tonoSt(s){return TELA_ST[s]||TELA_SW[s]||null}
+  function tonoV(s){return VIN_VAR[s]?'var(--vinyl-'+VIN_VAR[s]+')':null}
+  function idx(L,n){var s=slug(n);for(var i=0;i<L.length;i++)if(L[i].s===s)return i;return -1}
   function paint(){
-    var t=TELAS[st.t]; cb.style.setProperty('--tela',t[3]||t[1]);
-    var vc='var(--vinyl-'+slug(st.v)+')'; cb.style.setProperty('--vinil-pecho',vc); cb.style.setProperty('--vinil-manga',vc);
-    document.getElementById('cb-tela').textContent='TELA · '+t[0]; document.getElementById('cb-vinil').textContent='VINIL · '+st.v;
-    document.querySelectorAll('#cb-telas button').forEach(function(b,i){b.classList.toggle('is-active',i===st.t)});
-    document.querySelectorAll('#cb-viniles button').forEach(function(b){b.classList.toggle('is-active',b.title===st.v)});
+    var t=TELAS[st.t], v=VINILES[st.v];
+    cb.style.setProperty('--tela',(t&&tonoSt(t.s))||NEUTRO_T);
+    var vc=(v&&tonoV(v.s))||NEUTRO_V; cb.style.setProperty('--vinil-pecho',vc); cb.style.setProperty('--vinil-manga',vc);
+    document.getElementById('cb-tela').textContent='TELA \u00b7 '+(t?t.n:'\u2014'); document.getElementById('cb-vinil').textContent='VINIL \u00b7 '+(v?v.n:'\u2014');
+    [].forEach.call(wt.querySelectorAll('button.cb-c'),function(b,i){b.classList.toggle('is-active',i===st.t)});
+    [].forEach.call(wv.querySelectorAll('button.cb-c'),function(b,i){b.classList.toggle('is-active',i===st.v)});
   }
-  TELAS.forEach(function(t,i){var b=el('button');b.type='button';b.title=t[2]+' · '+t[0];b.setAttribute('aria-label','Tela '+t[0]);b.style.setProperty('--swatch',t[1]);b.onclick=function(){st.t=i;paint()};document.getElementById('cb-telas').appendChild(b)});
-  VINILES.forEach(function(v){var b=el('button');b.type='button';b.title=v;b.setAttribute('aria-label','Vinil '+v);b.style.setProperty('--swatch','var(--vinyl-'+slug(v)+')');b.onclick=function(){st.v=v;paint()};document.getElementById('cb-viniles').appendChild(b)});
+  function boton(tipo,it,i){
+    var b=el('button','cb-c'); b.type='button';
+    var tono=tipo==='t'?tonoSw(it.s):tonoV(it.s);
+    b.setAttribute('aria-label',(tipo==='t'?'Tela ':'Vinil ')+it.n);
+    b.title=(tipo==='t'&&NUM[it.s]?NUM[it.s]+' \u00b7 ':'')+it.n;
+    if(tono){b.style.setProperty('--swatch',tono);}else{b.className='cb-c cb-pill';b.textContent=it.n;}
+    b.onclick=function(){if(tipo==='t')st.t=i;else st.v=i;paint()};
+    return b;
+  }
+  function construir(tn,vn){
+    var selT=TELAS[st.t]?TELAS[st.t].n:'Negro', selV=VINILES[st.v]?VINILES[st.v].n:'Blanco';
+    TELAS=tn.map(function(n){return{n:n,s:slug(n)}}); VINILES=vn.map(function(n){return{n:n,s:slug(n)}});
+    st.t=idx(TELAS,selT); if(st.t<0)st.t=TELAS.length?0:-1;
+    st.v=idx(VINILES,selV); if(st.v<0)st.v=VINILES.length?0:-1;
+    wt.innerHTML=''; wv.innerHTML='';
+    TELAS.forEach(function(it,i){wt.appendChild(boton('t',it,i))}); VINILES.forEach(function(it,i){wv.appendChild(boton('v',it,i))});
+    cargado=true; paint();
+  }
+  function mensaje(t,reintentar){
+    wt.innerHTML=''; wv.innerHTML=''; wt.appendChild(el('span','cb-loading',t));
+    if(reintentar){var r=el('button','cb-retry','Reintentar');r.type='button';r.onclick=function(){iniciado=false;iniciar()};wt.appendChild(r);}
+    st.t=-1; st.v=-1; paint();
+  }
+  function pedir(ok,fail){
+    var nombre='_ikoa_'+Date.now()+Math.random().toString(36).slice(2,6), s=document.createElement('script'), fin=false;
+    function limpiar(){fin=true;try{delete window[nombre]}catch(e){window[nombre]=undefined}if(s.parentNode)s.parentNode.removeChild(s)}
+    window[nombre]=function(d){if(fin)return;limpiar();ok(d)};
+    s.onerror=function(){if(fin)return;limpiar();fail()};
+    s.src=URL_GS+'?action=leerColores&hoja='+encodeURIComponent(HOJA)+'&callback='+nombre;
+    document.head.appendChild(s);
+    setTimeout(function(){if(fin)return;limpiar();fail()},12000);
+  }
+  function leerCache(){try{var j=JSON.parse(localStorage.getItem('ikoa_col_'+HOJA)||'null');return j&&j.t&&j.v?j:null}catch(e){return null}}
+  function guardar(d){try{localStorage.setItem('ikoa_col_'+HOJA,JSON.stringify({t:d.telas,v:d.viniles}))}catch(e){}}
+  function iniciar(){
+    if(iniciado)return; iniciado=true;
+    var c=leerCache(); if(c)construir(c.t,c.v); else mensaje('Cargando colores\u2026');
+    function fallo(){if(!cargado)mensaje('No se pudieron cargar los colores.',true)}
+    pedir(function(d){
+      if(d&&d.ok&&d.telas&&d.viniles){ if(!c||JSON.stringify([c.t,c.v])!==JSON.stringify([d.telas,d.viniles]))construir(d.telas,d.viniles); guardar(d); }
+      else fallo();
+    },fallo);
+  }
   var inp=document.getElementById('cb-input');
   inp.oninput=function(){inp.value=inp.value.toUpperCase();document.getElementById('cb-word').textContent=inp.value};
   paint();
+  if(LAZY){
+    var vista=document.getElementById('ikoa-tela');
+    if(vista&&window.MutationObserver){var ir=function(){if(vista.classList.contains('is-open'))iniciar()};new MutationObserver(ir).observe(vista,{attributes:true,attributeFilter:['class']});ir();}
+    else iniciar();
+  } else iniciar();
 
   // Consulta de tallas
   var M={caballero:{XS:[51,69,55],S:[53,72,57],M:[56,75,60],L:[58,77,64],XL:[60,79,66],"2XL":[62,81,68],"3XL":[64,83,70]},
