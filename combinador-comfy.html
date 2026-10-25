@@ -289,7 +289,7 @@
   var NEUTRO_T='oklch(.93 0 0)', NEUTRO_V='oklch(.72 0 0)';
   var cb=document.getElementById('ikoa-combiner'), TELAS=[], VINILES=[], st={t:-1,v:-1}, cargado=false, iniciado=false;
   var wt=document.getElementById('cb-telas'), wv=document.getElementById('cb-viniles');
-  function canon(s){return s.replace(/-bebe(?=-|$)/g,'-bb').replace(/^rosado(?=-|$)/,'rosa').replace(/^vinotinto$/,'vino-tinto')}
+  function canon(s){return s.replace(/-bebe(?=-|$)/g,'-bb').replace(/^(rosado|rosada)(?=-|$)/,'rosa').replace(/^rosa-viejo$/,'rosa-vieja').replace(/^vinotinto$/,'vino-tinto').replace(/^amarillo-cat[a-z]*$/,'amarillo-cat')}
   function slug(n){return canon(String(n).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''))}
   function tonoSw(s){return TELA_SW[s]||null}
   function tonoSt(s){return TELA_ST[s]||TELA_SW[s]||null}
