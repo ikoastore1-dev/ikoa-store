@@ -1623,7 +1623,7 @@ function addPieza(copiarDe=null){
           <option value="">Seleccionar</option>
           <option value="Kids"${genCopy==='Kids'?' selected':''}>Kids</option>
           ${esShort?'':`<option value="Dama"${genCopy==='Dama'?' selected':''}>Dama</option>`}
-          <option value="Caballero"${genCopy==='Caballero'?' selected':''}>Caballero</option>
+          ${esDress?'':`<option value="Caballero"${genCopy==='Caballero'?' selected':''}>Caballero</option>`}
         </select>
       </div>
       <div class="field-group">
