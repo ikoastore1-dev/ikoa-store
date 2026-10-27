@@ -1505,7 +1505,7 @@ function isValidCel(c){ return c.replace(/\D/g,'').length>=7; }
 
 function validateStep(n){
   if(n==='manga-tipo'||n==='1b') return true; // pasos sin validación propia, no deben bloquear la navegación
-  if(n===2){ const minReq=(mangaTipoActual==='ikoayou')?2:((mangaTipoActual!=='larga')?1:(modalidadComfy==='B'?3:2)); if(!pedido.pack||pedido.pack<minReq){ alert('Selecciona la cantidad de franelas (mínimo '+minReq+')'); return false; } return true; }
+  if(n===2){ const minReq=(mangaTipoActual!=='larga')?1:(modalidadComfy==='B'?3:2); if(!pedido.pack||pedido.pack<minReq){ alert('Selecciona la cantidad de franelas (mínimo '+minReq+')'); return false; } return true; }
   if(n===3){
     if(!pedido.modelo){ alert('Selecciona el modelo'); return false; }
     if(mangaTipoActual!=='short' && !pedido.manga){ alert('Selecciona el tipo de manga'); return false; }
@@ -1900,7 +1900,7 @@ async function calcularPago(){
     'CABALLERO XL','CABALLERO XXL','CABALLERO 3XL','CABALLERO XXXL','CABALLERO 2XL'];
   let totalLogosPecho=0, totalLogosEspalda=0, totalLogosManga=0, totalConCapucha=0, totalRecargas=0;
   let sumaBs=0, sumaUsd=0, recargaTotalBs=0, recargaTotalUsd=0;
-  let hayYou=false, faltaCodigoYou=false, faltaMinYou=false, youExtraTotBs=0, youExtraTotUsd=0;
+  let hayYou=false, faltaCodigoYou=false, youExtraTotBs=0, youExtraTotUsd=0;
   let desglose=[];
   const preciosPorCodigo=window._packPreciosComfy||{};
   pedido.packs.forEach((pk,i)=>{
@@ -1912,9 +1912,9 @@ async function calcularPago(){
     if(yo){
       const pc=c=>preciosPorCodigo[c], vl=x=>!!x&&(parseFloat(x.bs)||0)>0&&(parseFloat(x.usd)||0)>0;
       const zk={m:'IKOAYOU.M',e:'IKOAYOU.E',a:'IKOAYOU.A'}[yo.zona];
-      const cB=pc('IKOAYOU'), cZ=zk?pc(zk):null, cP=yo.pecho?pc('IKOAYOU.P'):null;
-      if(franelas<2){ faltaMinYou=true; }
-      else if(vl(cB)&&(!zk||vl(cZ))&&(!yo.pecho||vl(cP))){
+      // 2 o más del mismo color: base IKOAYOU (promo) · 1 sola franela: base COMFY01 (precio normal)
+      const cB=pc(franelas>=2?'IKOAYOU':'COMFY01'), cZ=zk?pc(zk):null, cP=yo.pecho?pc('IKOAYOU.P'):null;
+      if(vl(cB)&&(!zk||vl(cZ))&&(!yo.pecho||vl(cP))){
         esYou=true; yoBaseBs=parseFloat(cB.bs); yoBaseUsd=parseFloat(cB.usd);
         yoExBs=(cZ?parseFloat(cZ.bs):0)+(cP?parseFloat(cP.bs):0); yoExUsd=(cZ?parseFloat(cZ.usd):0)+(cP?parseFloat(cP.usd):0);
       } else { faltaCodigoYou=true; }
@@ -1937,7 +1937,7 @@ async function calcularPago(){
     sumaUsd+=franelas*precioPackUsd;
     const etiquetaPack=(pk.mangaTipo==='short')?(franelas>1?'shorts':'short'):(pk.esDress?(franelas>1?'vestidos':'vestido'):(franelas>1?'franelas':'franela'));
     const logosTxt=[logosPecho>0?`${logosPecho} logo pecho`:'',logosEspalda>0?`${logosEspalda} logo espalda`:'',logosManga>0?`${logosManga} logo manga`:''].filter(Boolean).join(', ');
-    desglose.push(`Pack ${i+1}: ${franelas} ${etiquetaPack}${esYou?' · diseño Ikoa You':''}${recargas>0?` + ${recargas} recarga(s) talla grande`:''}${conCapucha>0?` + ${conCapucha} con capucha`:''}${logosTxt?` + ${logosTxt}`:''}`);
+    desglose.push(`Pack ${i+1}: ${franelas} ${etiquetaPack}${esYou?(franelas>=2?' · diseño Ikoa You (promo 2+ unds)':' · diseño Ikoa You (1 unidad, precio base normal)'):''}${recargas>0?` + ${recargas} recarga(s) talla grande`:''}${conCapucha>0?` + ${conCapucha} con capucha`:''}${logosTxt?` + ${logosTxt}`:''}`);
     recargaTotalBs+=recargas*precioRecarga.bs;
     recargaTotalUsd+=recargas*precioRecarga.usd;
   });
@@ -1975,10 +1975,10 @@ async function calcularPago(){
 
   // Solo aquí, con el precio confirmado y calculado con éxito, se permite continuar.
   const totalGeneral=pagoTotalBs+pagoTotalUsd+pagoTotalCasheaBs;
-  if(totalGeneral<=0 || faltaCodigoYou || faltaMinYou){
+  if(totalGeneral<=0 || faltaCodigoYou){
     // El servidor respondió pero el monto calculado sigue en 0 (dato incompleto) o falta un código de precio de Ikoa You — seguimos bloqueados.
     precioCargadoOk=false;
-    if(pagoLoadingMsg) pagoLoadingMsg.innerHTML+=faltaMinYou?'<br><span style="color:var(--danger);">❌ Ikoa You requiere mínimo 2 unidades del mismo color para entrar en la promo. Vuelve y ajusta la cantidad.</span>':faltaCodigoYou?'<br><span style="color:var(--danger);">❌ No se encontró el precio de Ikoa You en el sistema. No continúes — contacta al vendedor.</span>':'<br><span style="color:var(--danger);">❌ El precio calculado dio en 0. No continúes — contacta al vendedor.</span>';
+    if(pagoLoadingMsg) pagoLoadingMsg.innerHTML+=faltaCodigoYou?'<br><span style="color:var(--danger);">❌ No se encontró el precio de Ikoa You en el sistema. No continúes — contacta al vendedor.</span>':'<br><span style="color:var(--danger);">❌ El precio calculado dio en 0. No continúes — contacta al vendedor.</span>';
     return;
   }
   precioCargadoOk=true;
@@ -2902,7 +2902,8 @@ function aFormulario(){
   [].forEach.call(document.querySelectorAll('#pack-grid .opt-btn'),function(b){b.classList.remove('selected')});
   var pcu=document.getElementById('pack-custom');if(pcu)pcu.value='';
   var psel=document.getElementById('pack-seleccionado');if(psel)psel.style.display='none';
-  if(typeof ajustarPackGridMinimo==='function')ajustarPackGridMinimo(2);
+  if(typeof ajustarPackGridMinimo==='function')ajustarPackGridMinimo(1);
+  var mlb=document.getElementById('pack-minimo-label');if(mlb)mlb.textContent='Desde 2 unidades del mismo color entras en la promo. 1 sola franela: precio base normal.';
   updateProgress();window.scrollTo({top:0,behavior:'smooth'});
 }
 window.abrirIkoaYou=function(){
@@ -2931,11 +2932,10 @@ if(s4)new MutationObserver(function(){
 var _p45=window.intentarPaso45;
 if(typeof _p45==='function')window.intentarPaso45=async function(){
   var antes=pedido.packs.length,esYou=cfgYou&&pedido.modelo==='Ikoa You',diseno=cfgYou;
-  if(esYou&&(parseInt(pedido.pack)||0)<2){alert('Ikoa You: m\u00ednimo 2 unidades del mismo color para entrar en la promo.');return;}
   var r=await _p45.apply(this,arguments);
   if(esYou&&pedido.packs.length>antes){
     var pk=pedido.packs[pedido.packs.length-1];
-    pk.modelo='Ikoa You';pk.codigoPrecio='IKOAYOU';pk.ikoaYou=diseno;
+    pk.modelo='Ikoa You';pk.codigoPrecio=(pk.piezas.length>=2?'IKOAYOU':'COMFY01');pk.ikoaYou=diseno;
     pk.vinil=diseno.vinilA+(diseno.vinilB&&diseno.vinilB!==diseno.vinilA?' + '+diseno.vinilB:'');
     pk.piezas.forEach(function(p){
       p.logoPecho=diseno.pecho;p.logoManga=diseno.manga;p.logoEspalda=diseno.espalda;p.conCapucha=false;
