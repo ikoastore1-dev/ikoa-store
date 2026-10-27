@@ -1913,8 +1913,8 @@ async function calcularPago(){
       const pc=c=>preciosPorCodigo[c], vl=x=>!!x&&(parseFloat(x.bs)||0)>0&&(parseFloat(x.usd)||0)>0;
       const zk={m:'IKOAYOU.M',e:'IKOAYOU.E',a:'IKOAYOU.A'}[yo.zona];
       // 2 o más del mismo color: base IKOAYOU (promo) · 1 sola franela: base COMFY01 (precio normal)
-      const cB=pc(franelas>=2?'IKOAYOU':'COMFY01'), cZ=zk?pc(zk):null, cP=yo.pecho?pc('IKOAYOU.P'):null;
-      if(vl(cB)&&(!zk||vl(cZ))&&(!yo.pecho||vl(cP))){
+      const cB=pc(franelas>=2?'IKOAYOU':'COMFY01'), cZ=zk?pc(zk):null, cP=yo.conPecho?pc('IKOAYOU.P'):null;
+      if(vl(cB)&&(!zk||vl(cZ))&&(!yo.conPecho||vl(cP))){
         esYou=true; yoBaseBs=parseFloat(cB.bs); yoBaseUsd=parseFloat(cB.usd);
         yoExBs=(cZ?parseFloat(cZ.bs):0)+(cP?parseFloat(cP.bs):0); yoExUsd=(cZ?parseFloat(cZ.usd):0)+(cP?parseFloat(cP.usd):0);
       } else { faltaCodigoYou=true; }
@@ -2081,15 +2081,35 @@ function copiarDato(texto, btnId){
   }).catch(()=>{ alert('No se pudo copiar. Copia manualmente: '+texto); });
 }
 
+// ── IKOA YOU: el diseño se muestra una sola vez por pack (igual en todas las franelas) ──
+function ikoaStickersLinea(arr){ return (arr||[]).map(s=>`${s.n}) ${s.c} (${s.v})`).join(' · '); }
+function ikoaDisenoLineas(pk){
+  const d=pk.ikoaYou; if(!d) return [];
+  const l=[];
+  if(d.pechoL) l.push(['Pecho',`${d.pechoL.c} (${d.pechoL.v})`]); else if(typeof d.pecho==='string'&&d.pecho) l.push(['Pecho',d.pecho]);
+  if(d.mangaL&&d.mangaL.length) l.push(['Manga',ikoaStickersLinea(d.mangaL)]); else if(d.manga) l.push(['Manga',d.manga]);
+  if(d.espaldaL&&d.espaldaL.length) l.push(['Espalda',ikoaStickersLinea(d.espaldaL)]); else if(d.espalda) l.push(['Espalda',d.espalda]);
+  return l;
+}
+function ikoaIgualEn(pk){ return pk.piezas.length===1?'la franela':'las '+pk.piezas.length+' franelas'; }
+function ikoaDisenoHtml(pk){
+  const l=ikoaDisenoLineas(pk); if(!l.length) return '';
+  return `<div class="resumen-label">🎨 Diseño Ikoa You · igual en ${ikoaIgualEn(pk)}</div><div class="resumen-block">${l.map(x=>`<b>${x[0]}:</b> ${x[1]}`).join('<br>')}</div>`;
+}
+function ikoaDisenoTexto(pk){
+  const l=ikoaDisenoLineas(pk); if(!l.length) return '';
+  return `\n🎨 *Diseño Ikoa You* (igual en ${ikoaIgualEn(pk)}):\n`+l.map(x=>`  • ${x[0]}: ${x[1]}`).join('\n');
+}
+
 // ── RESUMEN ───────────────────────────────────────────────────
 function buildResumen(){
   const retiraText=pedido.mismoEnvio?`${pedido.nombre} · ${pedido.cedula} · ${pedido.celular}`:`${pedido.eNombre} · ${pedido.eCi} · ${pedido.eCel}`;
   const packsHtml=pedido.packs.map((pk,i)=>{
     const etiquetaResumen=(pk.mangaTipo==='short')?'Short':(pk.esDress?'Vestido':'Franela');
     const etiquetaResumenPlural=(pk.mangaTipo==='short')?'Shorts':(pk.esDress?'Vestidos':'Franelas');
-    const piezasHtml=pk.piezas.map((p,j)=>`<b>${etiquetaResumen} ${j+1}:</b> ${p.genero} Talla ${p.talla}${p.conCapucha?' 🧢 CON CAPUCHA':''}${p.nombre?' — '+p.nombre:''}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('<br>');
+    const piezasHtml=pk.piezas.map((p,j)=>`<b>${etiquetaResumen} ${j+1}:</b> ${p.genero} Talla ${p.talla}${p.conCapucha?' 🧢 CON CAPUCHA':''}${p.nombre?' — '+p.nombre:''}${pk.ikoaYou?'':`${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`}`).join('<br>');
     return `<div class="resumen-label">📦 Pack ${i+1} · ${pk.pack}PACK</div>
-      <div class="resumen-block"><b>Modelo:</b> ${pk.modelo} ${pk.manga} ${pk.capucha}<br><b>Tela:</b> ${pk.tela} · <b>Vinil:</b> ${pk.vinil}</div>
+      <div class="resumen-block"><b>Modelo:</b> ${pk.modelo} ${pk.manga} ${pk.capucha}<br><b>Tela:</b> ${pk.tela} · <b>Vinil:</b> ${pk.vinil}</div>${pk.ikoaYou?ikoaDisenoHtml(pk):''}
       <div class="resumen-label">📏 ${etiquetaResumenPlural} (${pk.piezas.length})</div>
       <div class="resumen-block">${piezasHtml}</div>`;
   }).join('');
@@ -2115,8 +2135,8 @@ function buildResumen(){
 function buildMensaje(){
   const retiraText=pedido.mismoEnvio?'Mismo titular':`${pedido.eNombre} | C.I: ${pedido.eCi} | Cel: ${pedido.eCel}`;
   const packsText=pedido.packs.map((pk,i)=>{
-    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.nombre?' — '+p.nombre:''}${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`).join('\n');
-    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: ${pk.modelo} ${pk.manga} ${pk.capucha}\nTela: ${pk.tela} · Vinil: ${pk.vinil}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
+    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.nombre?' — '+p.nombre:''}${pk.ikoaYou?'':`${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`}`).join('\n');
+    return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: ${pk.modelo} ${pk.manga} ${pk.capucha}\nTela: ${pk.tela} · Vinil: ${pk.vinil}${pk.ikoaYou?ikoaDisenoTexto(pk):''}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
   }).join('\n\n');
   return `🛍️ *PEDIDO IKOA & BEKATE*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
 }
@@ -2872,13 +2892,16 @@ function siguiente(w){
   cfgYou={
     tela:telaF,vinilA:vinF,vinilB:vB,
     nombre:(S.name||'').trim(),nombreColor:S.nameC==='A'?vA:vB,
-    pecho:S.chest==='s'?('Sticker '+S.chestS+' vinil '+(S.chestC==='A'?vA:vB)):'',
+    pecho:S.chest==='s'?(S.chestS+' vinil '+(S.chestC==='A'?vA:vB)):'',
     manga:(S.place==='m'||S.place==='a')?('Stickers '+lista(S.m)):'',
     espalda:(S.place==='e'||S.place==='a')?('Stickers '+lista(S.e)):'',
     precio:w.price(),
     base:(typeof w.priceParts==='function'?w.priceParts().base:0),
     zona:(S.place==='m'||S.place==='e'||S.place==='a')?S.place:'',
-    pecho:S.chest==='s'
+    conPecho:S.chest==='s',
+    pechoL:S.chest==='s'?{c:S.chestS,v:(S.chestC==='A'?vA:vB)}:null,
+    mangaL:(S.place==='m'||S.place==='a')?S.m.map(function(o,i){return{n:i+1,c:o.c,v:(o.k==='A'?vA:vB)};}):[],
+    espaldaL:(S.place==='e'||S.place==='a')?S.e.map(function(o,i){return{n:i+1,c:o.c,v:(o.k==='A'?vA:vB)};}):[]
   };
   cfgYou.extra=Math.max(0,cfgYou.precio-cfgYou.base);
   capa.classList.remove('is-open');

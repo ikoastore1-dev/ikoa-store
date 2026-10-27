@@ -131,7 +131,7 @@ function list(a){return a.map(function(o,i){return (i+1)+') '+(o?o.c+' · '+VIN[
 function capture(){var v=S.view,out=document.createElement('canvas');out.width=1240;out.height=857;var o=out.getContext('2d');o.fillStyle='#fff';o.fillRect(0,0,1240,857);
  S.view='f';draw();o.drawImage(cv,0,60);S.view='b';draw();o.drawImage(cv,620,60);o.fillStyle='#14161f';o.font='800 30px system-ui';o.fillText('IKOA YOU · '+money(price()),30,40);S.view=v;draw();return out}
 $('wa').onclick=function(){var t='*IKOA YOU – Mi diseño*\nTela: '+TELAS[S.t][0]+'\nVinil A: '+VIN[S.A][0]+' · Vinil B: '+VIN[S.B][0]+
- '\nNombre (manga derecha): '+(S.name||'—')+' · color '+S.nameC+'\nPecho: '+(S.chest=='w'?'Alitas IKOA · color '+S.chestC:'Sticker '+(S.chestS||'—')+' · color '+S.chestC+' (+'+money(PRECIOS.p)+')');
+ '\nNombre (manga derecha): '+(S.name||'—')+' · color '+S.nameC+'\nPecho: '+(S.chest=='w'?'Alitas IKOA · color '+S.chestC:(S.chestS||'—')+' · color '+S.chestC+' (+'+money(PRECIOS.p)+')');
  if(S.place=='m'||S.place=='a')t+='\nManga izquierda'+(S.place=='m'?' (+'+money(PRECIOS.m)+')':'')+':\n'+list(S.m);if(S.place=='e'||S.place=='a')t+='\nEspalda'+(S.place=='e'?' (+'+money(PRECIOS.e)+')':'')+':\n'+list(S.e);
  t+='\n*Total por franela (desde 2 unds del mismo color): '+money(price())+'*\n_1 sola franela: '+money(price1())+'_';var out=capture();
  out.toBlob(function(bl){var f=new File([bl],'ikoa-you.png',{type:'image/png'});
