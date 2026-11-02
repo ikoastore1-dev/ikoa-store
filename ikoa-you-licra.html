@@ -28,6 +28,7 @@ input[type=text]{width:100%;padding:12px;border:1px solid var(--line);border-rad
 .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-height:300px;overflow:auto;padding:2px}
 .st{background:#e0ddd5 center/78% no-repeat;aspect-ratio:1;border-radius:8px;border:1px solid var(--line);cursor:pointer;position:relative}
 .st span{position:absolute;bottom:1px;right:3px;font-size:9px;color:var(--mut)}
+body.cols-cargando #telas,body.cols-cargando #vA,body.cols-cargando #vB{opacity:.3;pointer-events:none}
 .bar{flex-wrap:wrap;gap:8px;position:fixed;left:0;right:0;bottom:0;background:var(--ink);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px;justify-content:center;z-index:9}
 .bar .tot{font-size:22px;font-weight:800}.bar small{display:block;opacity:.7;font-size:11px}
 .bar button{background:#25d366;color:#fff;border:0;border-radius:12px;padding:12px 16px;font-weight:700;font-size:15px;cursor:pointer}
@@ -109,6 +110,28 @@ function priceParts(){var z=0;if(S.place=='m')z=PRECIOS.m;if(S.place=='e')z=PREC
 function price(){var q=priceParts();return q.base+q.zonas+q.pecho}
 function price1(){var q=priceParts();return PRECIOS.b1+q.zonas+q.pecho}
 window.preciosDeHoja=function(){return DE_HOJA};
+// ── Colores de tela y vinil: salen de la hoja de la base de la prenda (COLORES.COMFY o COLORES.LICRA) ──
+var HOJA_COLORES=ISL?'COLORES.LICRA':'COLORES.COMFY', COLORES_OK=false;
+function kc(s){var k=String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');return ({rosadobebe:'rosabebe',rosadabebe:'rosabebe',amarillocaterpillar:'amarillocat',azulbb:'azulbebe'})[k]||k}
+function tc(s){s=String(s||'').trim().toLowerCase();return s.replace(/(^|\s)(\S)/g,function(m,a,b){return a+b.toUpperCase()})}
+var EXTRA_TELA={amarilloneon:'#e8fe05'}, EXTRA_VIN={naranja:'oklch(0.6924 0.1812 46.2)',dorado:'oklch(0.7274 0.1261 86.9)'};   // colores de la hoja que la paleta del diseñador no traía (mismos tonos que la app)
+window.setColores=function(telasDB,vinDB){
+  function armar(paleta,dbLista,extra,otraPaleta){
+    var res=[],usados={};
+    paleta.forEach(function(p){if(dbLista.some(function(n){return kc(n)===kc(p[0])})){res.push(p);usados[kc(p[0])]=1}});
+    dbLista.forEach(function(n){var k=kc(n);if(usados[k])return;var tono=extra[k];if(!tono){for(var i=0;i<otraPaleta.length;i++)if(kc(otraPaleta[i][0])===k){tono=otraPaleta[i][1];break}}
+      if(tono){res.push([tc(n),tono]);usados[k]=1}else if(window.console)console.warn('Color sin tono en el diseñador:',n)});
+    return res;
+  }
+  if(!telasDB||!telasDB.length||!vinDB||!vinDB.length)return false;
+  var nT=armar(TELAS,telasDB,EXTRA_TELA,VIN), nV=armar(VIN,vinDB,EXTRA_VIN,TELAS);
+  if(!nT.length||!nV.length)return false;
+  var at=TELAS[S.t]?TELAS[S.t][0]:'', aa=VIN[S.A]?VIN[S.A][0]:'', ab=VIN[S.B]?VIN[S.B][0]:'';
+  var ix=function(L,n,d){for(var i=0;i<L.length;i++)if(kc(L[i][0])===kc(n))return i;return d};
+  TELAS=nT;VIN=nV;S.t=ix(TELAS,at,0);S.A=ix(VIN,aa,0);S.B=ix(VIN,ab,Math.min(1,VIN.length-1));
+  COLORES_OK=true;document.body.classList.remove('cols-cargando');S.thumbDirty=1;try{ui()}catch(e){}return true;
+};
+
 function rotulosPrecios(){}   // las etiquetas ya no muestran precio
 window.setPrecios=function(pp){
   var u=function(c){var x=pp&&pp[c]?parseFloat(pp[c].usd):NaN;return x>0?x:null};
@@ -170,4 +193,22 @@ gridUI();ui();
   window.reintentarPrecios=function(){window.__iyPrecioError=false;intento=0;try{ui()}catch(e){}pedir()};
   pedir();
 })();
-</script><script>if(true){var e=document.getElementById("subt");if(e)e.textContent="Arma tu Licra Protect manga ranglan con tus stickers. Se actualiza mientras eliges.";}</script></body></html>
+</script><script>if(true){var e=document.getElementById("subt");if(e)e.textContent="Arma tu Licra Protect manga ranglan con tus stickers. Se actualiza mientras eliges.";}</script><script id="iy-colores">
+(function(){
+  var URL_GS='https://script.google.com/macros/s/AKfycbw39K95bn14-yZcvd8kXuKnyD2BAqLjOg6rFNIBkuZRHQP7z_s1FFOV3P2EOyNtqz9ikw/exec', intento=0;
+  document.body.classList.add('cols-cargando');
+  function pedir(){
+    intento++;
+    var nombre='_iyc_'+Date.now()+Math.random().toString(36).slice(2,6), s=document.createElement('script'), fin=false;
+    function limpiar(){fin=true;try{delete window[nombre]}catch(e){window[nombre]=undefined}if(s.parentNode)s.parentNode.removeChild(s)}
+    function reintentar(){if(COLORES_OK)return;if(intento<3)setTimeout(pedir,intento*4000);else document.body.classList.remove('cols-cargando')}   // si la hoja no responde, no se bloquea el diseñador (la app valida los colores al continuar)
+    window[nombre]=function(d){if(fin)return;limpiar();if(d&&d.ok&&window.setColores(d.telas,d.viniles))return;reintentar()};
+    s.onerror=function(){if(fin)return;limpiar();reintentar()};
+    s.src=URL_GS+'?action=leerColores&hoja='+encodeURIComponent(HOJA_COLORES)+'&callback='+nombre;
+    document.head.appendChild(s);
+    setTimeout(function(){if(fin)return;limpiar();reintentar()},15000);
+  }
+  pedir();
+})();
+</script>
+</body></html>
