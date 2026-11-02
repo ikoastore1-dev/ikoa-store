@@ -100,7 +100,7 @@ function draw(){x.clearRect(0,0,620,777);var back=S.view=='b';shirt(back);
   if(sl)column(S.m,sleevePts(1),ISL?[52,57,57,57]:[56,68,68,68]);
   if(S.name){x.save();if(ISL){x.translate(60,622);x.rotate(-76*Math.PI/180)}else{x.translate(48,636);x.rotate(-78*Math.PI/180)};x.fillStyle=col(S.nameC);x.font='700 30px "Lemon Milk",Montserrat,system-ui,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(S.name,0,0);x.restore()}
  }else{
-  if(bk)column(S.e,[[310,230],[310,348],[310,466],[310,584]],110);
+  if(bk)column(S.e,[[310,230],[310,348],[310,466],[310,584]],70.4);
  }
 }
 function price(){var p=14;if(S.place=='m'||S.place=='e')p+=5;if(S.place=='a')p+=10;if(S.chest=='s')p+=3.5;return p}

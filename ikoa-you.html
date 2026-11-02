@@ -91,7 +91,7 @@ var LICRA="data:image/webp;base64,UklGRk5PAABXRUJQVlA4WAoAAAAQAAAA5wIAgQMAQUxQSD
 function shirt(back){var i=img(back?BACK:(ISL?LICRA:SHIRT));if(!i.complete||!i.naturalWidth)return;sc.width=620;sc.height=777;var t=sc.getContext('2d');var R=(ISL&&!back)?[0,14.5,620,748]:[0,0,620,777];
  t.clearRect(0,0,620,777);t.save();t.drawImage(i,R[0],R[1],R[2],R[3]);t.globalCompositeOperation='source-in';t.fillStyle=TELAS[S.t][1];t.fillRect(0,0,620,777);
  t.globalCompositeOperation='multiply';t.drawImage(i,R[0],R[1],R[2],R[3]);t.globalCompositeOperation='destination-in';t.drawImage(i,R[0],R[1],R[2],R[3]);t.restore();x.drawImage(sc,0,0)}
-function sleevePts(side){var P=ISL?[[535,681],[556,589],[570,494],[573,398]]:[[545,700],[560,565],[558,430],[537,295]];return P.map(function(p){return[side>0?p[0]:620-p[0],p[1]]})}
+function sleevePts(side){var P=ISL?[[535,678],[553,568],[565,458],[569,348]]:[[545,700],[560,565],[558,430],[537,295]];return P.map(function(p){return[side>0?p[0]:620-p[0],p[1]]})}
 function column(arr,pts,sz){for(var i=0;i<4;i++){var o=arr[i];if(o){var src=stSrc(o.c),size=Array.isArray(sz)?sz[i]:sz;if(src)tinted(src,col(o.k),pts[i][0],pts[i][1],size,size)}}}
 function draw(){x.clearRect(0,0,620,777);var back=S.view=='b';shirt(back);
  var sl=S.place=='m'||S.place=='a',bk=S.place=='e'||S.place=='a';
@@ -100,7 +100,7 @@ function draw(){x.clearRect(0,0,620,777);var back=S.view=='b';shirt(back);
   if(sl)column(S.m,sleevePts(1),ISL?[52,57,57,57]:[56,68,68,68]);
   if(S.name){x.save();if(ISL){x.translate(60,622);x.rotate(-76*Math.PI/180)}else{x.translate(48,636);x.rotate(-78*Math.PI/180)};x.fillStyle=col(S.nameC);x.font='700 30px "Lemon Milk",Montserrat,system-ui,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(S.name,0,0);x.restore()}
  }else{
-  if(bk)column(S.e,[[310,230],[310,348],[310,466],[310,584]],110);
+  if(bk)column(S.e,[[310,230],[310,348],[310,466],[310,584]],70.4);
  }
 }
 function price(){var p=14;if(S.place=='m'||S.place=='e')p+=5;if(S.place=='a')p+=10;if(S.chest=='s')p+=3.5;return p}
