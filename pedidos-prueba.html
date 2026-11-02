@@ -1974,6 +1974,7 @@ async function calcularPago(){
   let sumaBs=0, sumaUsd=0, recargaTotalBs=0, recargaTotalUsd=0;
   let hayYou=false, faltaCodigoYou=false, youExtraTotBs=0, youExtraTotUsd=0;
   let sumaBsLicra=0, faltaCodigoLicra=false, hayComfy=false;
+  const basesMostrar=[]; // precio base real de cada producto del pedido (para el desglose)
   let desglose=[];
   const preciosPorCodigo=window._packPreciosComfy||{};
   pedido.packs.forEach((pk,i)=>{
@@ -2012,6 +2013,10 @@ async function calcularPago(){
     const precioPackBs=esYou?yoBaseBs:(licraCod?(parseFloat(licraPP&&licraPP.bs)||0):(parseFloat(preciosPorCodigo[codPack]?.bs)||precioComfy.bs));
     const precioPackUsd=esYou?yoBaseUsd:(licraCod?(parseFloat(licraPP&&licraPP.usd)||0):(parseFloat(preciosPorCodigo[codPack]?.usd)||precioComfy.usd));
     if(licraCod) sumaBsLicra+=franelas*precioPackBs;
+    { const unid=(pk.mangaTipo==='short')?'short':(pk.esDress?'vestido':'franela');
+      const nomBase=(((pk.modelo||'')+' '+(pk.manga||'')).trim())+((esYou&&pk.linea==='licra')?' + Ikoa You':'');
+      const clave=nomBase+'|'+precioPackBs;
+      if(!basesMostrar.some(x=>x.clave===clave)) basesMostrar.push({clave,unid,nom:nomBase,bs:precioPackBs,usd:precioPackUsd}); }
     if(esYou){ hayYou=true; youExtraTotUsd+=franelas*yoExUsd; youExtraTotBs+=franelas*yoExBs; }
     sumaBs+=franelas*precioPackBs;
     sumaUsd+=franelas*precioPackUsd;
@@ -2040,7 +2045,7 @@ async function calcularPago(){
 
   document.getElementById('pago-desglose').innerHTML=
     desglose.join('<br>')+
-    (hayComfy?`<br><span style="color:var(--muted);">• Precio/franela:</span> Bs ${precioComfy.bs.toFixed(2)} / $${precioComfy.usd.toFixed(2)}`:'')+
+    basesMostrar.map(b=>`<br><span style="color:var(--muted);">• Precio/${b.unid} · ${b.nom}:</span> Bs ${b.bs.toFixed(2)} / $${b.usd.toFixed(2)}`).join('')+
     (totalRecargas>0?`<br><span style="color:var(--muted);">• Recarga talla grande:</span> Bs ${precioRecarga.bs.toFixed(2)} / $${precioRecarga.usd.toFixed(2)}`:'')+
     (totalConCapucha>0?`<br><span style="color:var(--muted);">• Con Capucha (${totalConCapucha}):</span> Bs ${precioCapucha.bs.toFixed(2)} / $${precioCapucha.usd.toFixed(2)} c/u`:'')+
     (totalLogosPecho>0?`<br><span style="color:var(--muted);">• Logo Pecho (${totalLogosPecho}):</span> Bs ${precioLogoPecho.bs.toFixed(2)} / $${precioLogoPecho.usd.toFixed(2)} c/u`:'')+
