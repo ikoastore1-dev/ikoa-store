@@ -82,7 +82,9 @@ function draw(){x.clearRect(0,0,620,777);var back=S.view=='b';shirt(back);
   if(bk)column(S.e,[[305,240],[305,298],[305,356],[305,414]],48);
  }
 }
-var PRECIOS={base:14,b1:20,m:5,e:5,a:10,p:3.5}, DE_HOJA=false;   // respaldo hasta que lleguen los de la hoja CODIGOS
+var BASE_LICRA=/[?&]base=licra\b/.test(location.search);   // Ikoa You sobre franela Licra Protect: solo cambia el precio base
+var PRECIOS=BASE_LICRA?{base:25,b1:35,m:5,e:5,a:10,p:3.5}:{base:14,b1:20,m:5,e:5,a:10,p:3.5}, DE_HOJA=false;
+(function(){ if(!BASE_LICRA) return; function ap(){ var s=document.querySelector('.bar small'); if(s) s.textContent='Por franela Licra Protect · desde 2 unds del mismo color'; document.title='Ikoa You Licra · Diseña tu franela'; } if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',ap); else ap(); })();   // respaldo hasta que lleguen los de la hoja CODIGOS
 function priceParts(){var z=0;if(S.place=='m')z=PRECIOS.m;if(S.place=='e')z=PRECIOS.e;if(S.place=='a')z=PRECIOS.a;return{base:PRECIOS.base,zonas:z,pecho:(S.chest=='s'?PRECIOS.p:0)}}
 function price(){var q=priceParts();return q.base+q.zonas+q.pecho}
 function price1(){var q=priceParts();return PRECIOS.b1+q.zonas+q.pecho}
@@ -98,7 +100,7 @@ function rotulosPrecios(){
 }
 window.setPrecios=function(pp){
   var u=function(c){var x=pp&&pp[c]?parseFloat(pp[c].usd):NaN;return x>0?x:null};
-  var n={base:u('IKOAYOU'),b1:u('COMFY01'),m:u('IKOAYOU.M'),e:u('IKOAYOU.E'),a:u('IKOAYOU.A'),p:u('IKOAYOU.P')};
+  var n={base:u(BASE_LICRA?'LICRA02':'IKOAYOU'),b1:u(BASE_LICRA?'LICRA01':'COMFY01'),m:u('IKOAYOU.M'),e:u('IKOAYOU.E'),a:u('IKOAYOU.A'),p:u('IKOAYOU.P')};
   if(!(n.base&&n.b1&&n.m&&n.e&&n.a&&n.p))return false;     // faltan códigos en la hoja: se queda con los de respaldo
   PRECIOS=n;DE_HOJA=true;rotulosPrecios();try{ui()}catch(e){}return true;
 };

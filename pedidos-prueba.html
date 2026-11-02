@@ -1493,7 +1493,7 @@ function renderPacksResumen(){
     pedido.packs.map((p,i)=>`
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
         <div>
-          <b style="color:var(--accent)">Pack ${i+1}</b> · ${p.pack}PACK · ${p.modelo}${p.linea==='licra'?' '+p.manga:''} · ${p.tela} / ${p.vinil}
+          <b style="color:var(--accent)">Pack ${i+1}</b> · ${p.pack}PACK · ${p.modelo}${p.linea==='licra'?' '+p.manga:''}${p.ikoaYou&&p.linea==='licra'?' · Ikoa You':''} · ${p.tela} / ${p.vinil}
           <span style="color:var(--muted);font-size:12px;"> · ${p.piezas.length} franelas</span>
         </div>
         <button onclick="eliminarPack(${i})" style="flex-shrink:0;padding:6px 10px;background:transparent;border:1.5px solid var(--danger);border-radius:6px;color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;">✕ Eliminar</button>
@@ -1986,8 +1986,8 @@ async function calcularPago(){
     if(yo){
       const pc=c=>preciosPorCodigo[c], vl=x=>!!x&&(parseFloat(x.bs)||0)>0&&(parseFloat(x.usd)||0)>0;
       const zk={m:'IKOAYOU.M',e:'IKOAYOU.E',a:'IKOAYOU.A'}[yo.zona];
-      // 2 o más del mismo color: base IKOAYOU (promo) · 1 sola franela: base COMFY01 (precio normal)
-      const cB=pc(franelas>=2?'IKOAYOU':'COMFY01'), cZ=zk?pc(zk):null, cP=yo.conPecho?pc('IKOAYOU.P'):null;
+      // 2 o más del mismo color: base IKOAYOU (promo) · 1 sola franela: base COMFY01 (precio normal) · sobre franela Licra Protect: base LICRA02 (2+) / LICRA01 (1)
+      const cB=pc(pk.linea==='licra'?licraCodigoPrecio(pk,franelas):(franelas>=2?'IKOAYOU':'COMFY01')), cZ=zk?pc(zk):null, cP=yo.conPecho?pc('IKOAYOU.P'):null;
       if(vl(cB)&&(!zk||vl(cZ))&&(!yo.conPecho||vl(cP))){
         esYou=true; yoBaseBs=parseFloat(cB.bs); yoBaseUsd=parseFloat(cB.usd);
         yoExBs=(cZ?parseFloat(cZ.bs):0)+(cP?parseFloat(cP.bs):0); yoExUsd=(cZ?parseFloat(cZ.usd):0)+(cP?parseFloat(cP.usd):0);
@@ -2249,7 +2249,7 @@ async function guardarEnSheets(){
         correo:pedido.correo,
         cedula:pedido.cedula,
         celular:pedido.celular,
-        modelo:(pk.linea==='licra'?(pk.modelo+' '+pk.manga):pk.ikoaYou?'COMFY MEGA PROMO (IKOA YOU)':((pk.esDress?'COMFY DRESS MEGA PROMO':'COMFY MEGA PROMO') + (pasoPorOpcionAB?(' '+(modalidadComfy==='B'?'(Opción B)':'(Opción A)')):''))),
+        modelo:(pk.linea==='licra'?(pk.modelo+' '+pk.manga+(pk.ikoaYou?' (IKOA YOU)':'')):pk.ikoaYou?'COMFY MEGA PROMO (IKOA YOU)':((pk.esDress?'COMFY DRESS MEGA PROMO':'COMFY MEGA PROMO') + (pasoPorOpcionAB?(' '+(modalidadComfy==='B'?'(Opción B)':'(Opción A)')):''))),
         manga:pk.manga,
         capucha:pk.piezas.some(p=>p.conCapucha)?'Con Capucha':'Sin Capucha',
         pack:`${pk.pack}PACK`,
@@ -2759,7 +2759,8 @@ var PRENDAS=[
  {id:'licra',grupo:'licra',nombre:'Licra Protect Manga Larga',img:IMG.licra,ratio:'744 / 898',tela:'Azul Rey',vinil:'Blanco',logo:{x:60.8,y:29.6,w:3.5},prenda:'licra',manga:'larga',sleeve:{x:9.6,y:80,r:-76,s:3.6},linea:'licra',licraKey:'larga'},
  {id:'licra-corta',grupo:'licra',nombre:'Licra Protect Manga Corta',img:IMG.corta,ratio:'671 / 827',tela:'Rojo',vinil:'Blanco',logo:{x:59.5,y:26.1,w:3.5},prenda:'licra',manga:'corta',linea:'licra',licraKey:'corta'},
  {id:'licra-dress',grupo:'licra',nombre:'Licra Dress Manga Larga',img:IMG.dress,ratio:'620 / 969',tela:'Verde Militar',vinil:'Blanco',logo:{x:58,y:22,w:4},prenda:'licra',manga:'larga',sleeve:{x:9.6,y:70,r:-81,s:3.8},linea:'licra',licraKey:'dress'},
- {id:'licra-dress-cero',grupo:'licra',nombre:'Licra Dress Manga Cero',img:IMG.dress,ratio:'620 / 969',tela:'Negro',vinil:'Amarillo Neon',logo:{x:58,y:22,w:4},prenda:'licra',manga:'cero',linea:'licra',licraKey:'dress-cero'}
+ {id:'licra-dress-cero',grupo:'licra',nombre:'Licra Dress Manga Cero',img:IMG.dress,ratio:'620 / 969',tela:'Negro',vinil:'Amarillo Neon',logo:{x:58,y:22,w:4},prenda:'licra',manga:'cero',linea:'licra',licraKey:'dress-cero'},
+ {id:'you-licra',grupo:'licra',nombre:'Ikoa You Licra',img:IMG.licra,ratio:'744 / 898',tela:'Menta',vinil:'Fucsia',logo:{x:60.8,y:29.6,w:3.5},prenda:'playera',manga:'larga',sleeve:{x:9.6,y:80,r:-76,s:3.6},you:true,base:'licra'}
 ];
 var grupo='comfy';
 var ALIAS_TELA={'rosado bebe':'rosa bebe','rosada bebe':'rosa bebe','rosa viejo':'rosa vieja'};
@@ -2931,7 +2932,7 @@ if(p){['focusin','input'].forEach(function(ev){p.addEventListener(ev,pedir);});}
 })();</script>
 <script id="ikoa-you-bridge">(function(){
 "use strict";
-var cfgYou=null, frame=null, capa=null;
+var cfgYou=null, frame=null, capa=null, yaYou=false;
 function norm(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase().replace(/\s+/g,' ');}
 var ALIAS={'rosa bebe':['rosado bebe','rosada bebe'],'rosado bebe':['rosa bebe'],'amarillo cat':['amarillo caterpillar'],'verde neon':['verde neon'],'azul bebe':['azul bb']};
 function nombreDe(b){var m=(b.getAttribute('onclick')||'').match(/'([^']*)'\s*\)\s*$/);return m?m[1]:b.textContent.trim();}
@@ -2949,7 +2950,8 @@ css.textContent='#ikoa-you-capa{position:fixed;inset:0;z-index:9999;background:v
 '#ikoa-you-capa .iy-cargando{position:absolute;left:0;right:0;top:48px;bottom:0;display:flex;align-items:center;justify-content:center;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--text,#111);pointer-events:none}';
 document.head.appendChild(css);
 var baseYou='comfy';
-function crear(){
+function crear(b){
+  baseYou=(b==='licra')?'licra':'comfy';
   capa=document.createElement('div');capa.id='ikoa-you-capa';
   capa.innerHTML='<div class="iy-top"><button type="button" id="iy-volver">\u2190 Perchero</button><span>Ikoa You \u00b7 Diseña tu franela</span><span></span></div>';
   frame=document.createElement('iframe');frame.title='Configurador Ikoa You';
@@ -2957,7 +2959,7 @@ function crear(){
   document.getElementById('iy-volver').onclick=function(){capa.classList.remove('is-open');if(window.__ikoaPerchero)window.__ikoaPerchero.abrir();};
   var cg=document.createElement('div');cg.className='iy-cargando';cg.textContent='Cargando diseñador\u2026';capa.appendChild(cg);
   frame.addEventListener('load',adaptar);
-  frame.src='ikoa-you.html';
+  frame.src=(b==='licra')?'ikoa-you.html?base=licra':'ikoa-you.html';
 }
 function fallo(){
   alert('No se pudo cargar el dise\u00f1ador Ikoa You. Revisa tu conexi\u00f3n e int\u00e9ntalo de nuevo.');
@@ -2980,6 +2982,7 @@ function siguiente(w){
   for(var z=0;z<zonas.length;z++){var arr=S[zonas[z][0]];for(var i=0;i<4;i++){if(!arr[i]){alert('Completa los 4 stickers de '+zonas[z][1]+' (falta el '+(i+1)+').');return;}}}
   if(S.chest==='s'&&!S.chestS){alert('Elige el sticker del pecho.');return;}
   var tela=w.TELAS[S.t][0],vA=etiquetaVinil(w,'A'),vB=etiquetaVinil(w,'B');
+  if(window.pintarColoresLinea)window.pintarColoresLinea(baseYou==='licra'?'licra':'comfy');
   var telaF=resolver('tela-opts',tela),vinF=resolver('vinil-opts',vA);
   if(!telaF){alert('La tela '+tela+' no está disponible en este momento. Elige otro color de tela.');return;}
   if(!vinF){alert('El vinil '+vA+' no está disponible en este momento. Elige otro color para el vinil A.');return;}
@@ -3011,10 +3014,11 @@ function aFormulario(){
   try{seleccionarPrendaComfy('playera');seleccionarMangaTipo('larga');}catch(e){}
   pasoPorOpcionAB=false;
   document.getElementById('step-manga-tipo').classList.remove('active');
-  mangaTipoActual='ikoayou';
-  pedido.linea='comfy';pedido.modelo='Ikoa You';pedido.manga='Manga Larga';pedido.mangaTipoCodigo='IKOAYOU';pedido.esDress=false;pedido.capucha='Sin Capucha';
+  mangaTipoActual='ikoayou';yaYou=true;
+  var lic=(baseYou==='licra');
+  pedido.linea=lic?'licra':'comfy';pedido.modelo=lic?'Licra Protect':'Ikoa You';pedido.manga='Manga Larga';pedido.mangaTipoCodigo=lic?'LICRA02':'IKOAYOU';pedido.esDress=false;pedido.capucha='Sin Capucha';
   var infoEl=document.getElementById('modelo-info-comfy');if(infoEl)infoEl.textContent='IKOA YOU';
-  var subEl=document.getElementById('modelo-info-comfy-sub');if(subEl)subEl.textContent='Manga Larga \u00b7 diseño personalizado';
+  var subEl=document.getElementById('modelo-info-comfy-sub');if(subEl)subEl.textContent=(baseYou==='licra'?'Licra Protect · ':'')+'Manga Larga \u00b7 diseño personalizado';
   var capWrap=document.getElementById('capucha-wrap-comfy');if(capWrap)capWrap.style.display='none';
   modalidadComfy='A';pedido.modalidad='A';
   origenStep2='step-manga-tipo';currentStep=2;
@@ -3028,19 +3032,21 @@ function aFormulario(){
   updateProgress();window.scrollTo({top:0,behavior:'smooth'});
 }
 window.abrirIkoaYou=function(b){
-  if(!capa)crear();
+  if(!capa)crear(b);
   var u=b==='licra'?'ikoa-you.html?base=licra':'ikoa-you.html';if(frame.getAttribute('src')!==u){baseYou=b||'comfy';frame.src=u;}
   if(window.__ikoaPerchero)window.__ikoaPerchero.cerrar();
   capa.classList.add('is-open');
 };
 // Si el cliente elige otra prenda del perchero, el diseño Ikoa You deja de aplicar
 var _cont=window.continuarTrasMangaTipo;
-if(typeof _cont==='function')window.continuarTrasMangaTipo=function(){cfgYou=null;return _cont.apply(this,arguments);};
+if(typeof _cont==='function')window.continuarTrasMangaTipo=function(){cfgYou=null;yaYou=false;return _cont.apply(this,arguments);};
+var _contL=window.continuarTrasLicra;
+if(typeof _contL==='function')window.continuarTrasLicra=function(){cfgYou=null;yaYou=false;return _contL.apply(this,arguments);};
 // Prellenar el nombre del diseño en cada franela del paso de tallas
 var s4=document.getElementById('step4');
 if(s4)new MutationObserver(function(){
   var nn=document.getElementById('iy-nota');
-  if(!cfgYou||pedido.modelo!=='Ikoa You'){if(nn)nn.remove();return;}
+  if(!cfgYou||!yaYou){if(nn)nn.remove();return;}
   if(!s4.classList.contains('active'))return;
   [].forEach.call(s4.querySelectorAll('[id^="pz-nombre-"]'),function(inp){if(!inp.value&&cfgYou.nombre)inp.value=cfgYou.nombre;});
   [].forEach.call(s4.querySelectorAll('input[type=checkbox][id^="pz-capucha-"]'),function(el){if(el.parentNode.style.display!=='none'){el.checked=false;el.parentNode.style.display='none';}});
@@ -3053,11 +3059,11 @@ if(s4)new MutationObserver(function(){
 // Al guardar el pack, se adjunta el diseño completo a cada franela
 var _p45=window.intentarPaso45;
 if(typeof _p45==='function')window.intentarPaso45=async function(){
-  var antes=pedido.packs.length,esYou=cfgYou&&pedido.modelo==='Ikoa You',diseno=cfgYou;
+  var antes=pedido.packs.length,esYou=cfgYou&&yaYou,diseno=cfgYou;
   var r=await _p45.apply(this,arguments);
   if(esYou&&pedido.packs.length>antes){
     var pk=pedido.packs[pedido.packs.length-1];
-    pk.modelo='Ikoa You';pk.codigoPrecio=(pk.piezas.length>=2?'IKOAYOU':'COMFY01');pk.ikoaYou=diseno;
+    var lic=(pk.linea==='licra');if(!lic)pk.modelo='Ikoa You';pk.codigoPrecio=lic?(pk.piezas.length>=2?'LICRA02':'LICRA01'):(pk.piezas.length>=2?'IKOAYOU':'COMFY01');pk.ikoaYou=diseno;
     pk.vinil=diseno.vinilA+(diseno.vinilB&&diseno.vinilB!==diseno.vinilA?' + '+diseno.vinilB:'');
     pk.piezas.forEach(function(p){
       p.logoPecho=diseno.pecho;p.logoManga=diseno.manga;p.logoEspalda=diseno.espalda;p.conCapucha=false;
@@ -3065,7 +3071,7 @@ if(typeof _p45==='function')window.intentarPaso45=async function(){
       if(p.nombre&&p.nombre!=='SIN NOMBRE EN MANGA')p.nombre=p.nombre+' (vinil '+diseno.nombreColor+')';
     });
     if(typeof renderPacksResumen==='function')renderPacksResumen();
-    cfgYou=null;
+    cfgYou=null;yaYou=false;
   }
   return r;
 };
