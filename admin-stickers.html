@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ikoa · Cargar stickers</title>
+<meta name="description" content="Panel privado para cargar stickers de vinil y DTF al catálogo de Ikoa You.">
+<meta name="theme-color" content="#111111"><meta name="robots" content="noindex">
+<style>
+:root{--bg:#f4f1ec;--card:#fff;--ink:#141414;--muted:#6b6b6b;--line:#e3ded6;--acc:#e5007e;--ok:#1f8a4c;--err:#b3261e}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--ink);color:var(--bg);padding:16px 18px;font-weight:700;letter-spacing:.04em}
+main{max-width:520px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+h2{font-size:15px;margin:0 0 10px}label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:var(--card);color:var(--ink)}
+.seg{display:flex;gap:8px}.seg button{flex:1;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:15px;color:var(--ink)}
+.seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn{width:100%;padding:14px;border:0;border-radius:12px;background:var(--acc);color:var(--card);font-size:16px;font-weight:700;margin-top:16px}
+.btn:disabled{opacity:.5}.link{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:13px;margin-top:8px}
+.code{font-size:34px;font-weight:800;text-align:center;padding:10px;border:2px dashed var(--line);border-radius:12px}
+.prev{display:flex;justify-content:center;margin-top:10px}.prev img{max-height:160px;background:repeating-conic-gradient(var(--line) 0 25%,var(--card) 0 50%) 0/16px 16px;border-radius:8px}
+.msg{font-size:14px;margin-top:10px}.ok{color:var(--ok)}.err{color:var(--err)}.hide{display:none}
+</style></head><body>
+<header>IKOA · Cargar stickers</header>
+<main>
+<section class="card" id="cfg">
+ <h2>Conexión con GitHub</h2>
+ <label>Repositorio</label><input id="repo" value="ikoastore1-dev/ikoa-store">
+ <label>Rama</label><input id="branch" value="main">
+ <label>Token personal de GitHub (solo se guarda en este teléfono)</label><input id="token" type="password" placeholder="github_pat_...">
+ <button class="btn" id="save">Guardar y conectar</button>
+ <div class="msg" id="cfgMsg"></div>
+</section>
+
+<section class="card hide" id="up">
+ <h2>Nuevo sticker</h2>
+ <label>Técnica</label>
+ <div class="seg" id="tec"><button data-v="vinil" class="on">Vinil (cambia color)</button><button data-v="dtf">DTF (full color)</button></div>
+ <label>Catálogo</label>
+ <select id="cat"><option value="V">Varón</option><option value="N">Niña</option><option value="A">Adulto</option></select>
+ <label>Temática</label>
+ <select id="theme"><option>Animales</option><option>Naturaleza y lugares</option><option>Espacio</option><option>Vehículos</option><option>Deportes</option><option>Personajes y fantasía</option><option>Videojuegos</option><option>Música y redes</option><option>Símbolos y accesorios</option><option>Frases</option></select>
+ <label>Nombre (opcional)</label><input id="nombre" placeholder="Ej: León">
+ <label id="webLbl">Imagen PNG transparente (la que ve el cliente)</label><input id="web" type="file" accept="image/png">
+ <div class="prev"><img id="pv" class="hide" alt="Vista previa del sticker"></div>
+ <label id="prodLbl">Archivo de corte para Silhouette (SVG/DXF/studio3, opcional)</label><input id="prod" type="file">
+ <label>Código asignado</label><div class="code" id="code">—</div>
+ <button class="btn" id="send">Subir sticker</button>
+ <div class="msg" id="msg"></div>
+ <button class="link" id="logout">Cambiar token</button>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id),API="https://api.github.com";
+const S={tec:"vinil",catalog:null,sha:null};
+const conf=()=>({repo:$("repo").value.trim(),branch:$("branch").value.trim()||"main",token:localStorage.getItem("ikoaGhToken")||""});
+["repo","branch"].forEach(k=>{const v=localStorage.getItem("ikoaGh_"+k);if(v)$(k).value=v});
+function gh(path,opt={}){const c=conf();return fetch(`${API}/repos/${c.repo}/${path}`,{...opt,headers:{Accept:"application/vnd.github+json",Authorization:`Bearer ${c.token}`,...(opt.headers||{})}})}
+const b64=s=>btoa(unescape(encodeURIComponent(s)));
+const fileB64=f=>new Promise((r,j)=>{const fr=new FileReader();fr.onload=()=>r(fr.result.split(",")[1]);fr.onerror=j;fr.readAsDataURL(f)});
+async function loadCatalog(){
+ const c=conf(),res=await gh(`contents/stickers/catalog.json?ref=${c.branch}`);
+ if(res.status===404){S.catalog={stickers:[]};S.sha=null;return}
+ if(!res.ok)throw new Error(`GitHub respondió ${res.status}`);
+ const j=await res.json();S.sha=j.sha;S.catalog=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,"")))));
+}
+function nextCode(){
+ const pre=S.tec==="dtf"?"DTF.":`S.${$("cat").value}.`;
+ const nums=S.catalog.stickers.filter(s=>s.codigo.startsWith(pre)).map(s=>+s.codigo.slice(pre.length)||0);
+ const base=S.tec==="vinil"?({V:85,N:83,A:0}[$("cat").value]||0):0;
+ return pre+(Math.max(base,...nums)+1);
+}
+const refresh=()=>{if(S.catalog)$("code").textContent=nextCode()};
+async function connect(){
+ $("cfgMsg").textContent="Conectando…";$("cfgMsg").className="msg";
+ try{const r=await gh("");if(!r.ok)throw new Error(r.status===401?"Token inválido":`No se encontró el repositorio (${r.status})`);
+  await loadCatalog();$("cfg").classList.add("hide");$("up").classList.remove("hide");refresh();
+ }catch(e){$("cfgMsg").textContent=e.message;$("cfgMsg").className="msg err"}
+}
+$("save").onclick=()=>{if($("token").value)localStorage.setItem("ikoaGhToken",$("token").value.trim());
+ localStorage.setItem("ikoaGh_repo",$("repo").value.trim());localStorage.setItem("ikoaGh_branch",$("branch").value.trim());connect()};
+$("logout").onclick=()=>{localStorage.removeItem("ikoaGhToken");$("up").classList.add("hide");$("cfg").classList.remove("hide")};
+$("tec").onclick=e=>{const b=e.target.closest("button");if(!b)return;S.tec=b.dataset.v;
+ [...$("tec").children].forEach(x=>x.classList.toggle("on",x===b));
+ $("prodLbl").textContent=S.tec==="dtf"?"PNG alta resolución 300 DPI para imprimir (opcional)":"Archivo de corte para Silhouette (SVG/DXF/studio3, opcional)";
+ $("webLbl").textContent=S.tec==="dtf"?"Imagen PNG full color (la que ve el cliente)":"Imagen PNG transparente (la que ve el cliente)";refresh()};
+$("cat").onchange=refresh;
+$("web").onchange=()=>{const f=$("web").files[0];if(f){$("pv").src=URL.createObjectURL(f);$("pv").classList.remove("hide")}};
+async function put(path,content,msg,sha){const c=conf();
+ const r=await gh(`contents/${path}`,{method:"PUT",body:JSON.stringify({message:msg,content,branch:c.branch,...(sha?{sha}:{})})});
+ if(!r.ok)throw new Error(`Error al guardar ${path}: ${r.status} ${(await r.json()).message||""}`);return r.json()}
+$("send").onclick=async()=>{
+ const web=$("web").files[0],prod=$("prod").files[0];
+ if(!web){$("msg").textContent="Elige la imagen PNG del sticker.";$("msg").className="msg err";return}
+ $("send").disabled=true;$("msg").className="msg";$("msg").textContent="Subiendo…";
+ try{await loadCatalog();const codigo=nextCode(),dir=`stickers/${S.tec}`;
+  const item={codigo,tecnica:S.tec,catalogo:S.tec==="dtf"?null:$("cat").value,tematica:$("theme").value,nombre:$("nombre").value.trim()||null,web:`${dir}/web/${codigo}.png`,fecha:new Date().toISOString().slice(0,10)};
+  await put(item.web,await fileB64(web),`Sticker ${codigo} (web)`);
+  if(prod){const ext=prod.name.split(".").pop().toLowerCase(),sub=S.tec==="dtf"?"print":"corte";
+   item.produccion=`${dir}/${sub}/${codigo}.${ext}`;await put(item.produccion,await fileB64(prod),`Sticker ${codigo} (${sub})`)}
+  S.catalog.stickers.push(item);
+  await put("stickers/catalog.json",b64(JSON.stringify(S.catalog,null,2)),`Catálogo: agrega ${codigo}`,S.sha);
+  await loadCatalog();$("msg").textContent=`✓ ${codigo} cargado. Aparecerá en Ikoa You en 1–2 minutos.`;$("msg").className="msg ok";
+  $("web").value="";$("prod").value="";$("nombre").value="";$("pv").classList.add("hide");refresh();
+ }catch(e){$("msg").textContent=e.message;$("msg").className="msg err"}
+ $("send").disabled=false};
+if(localStorage.getItem("ikoaGhToken"))connect();
+</script></body></html>
