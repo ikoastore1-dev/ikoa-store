@@ -2172,7 +2172,7 @@ function ikoaDisenoLineas(pk){
   const d=pk.ikoaYou; if(!d) return [];
   const l=[];
   if(d.pechoL) l.push(['Pecho',`${d.pechoL.c} (${d.pechoL.v})`]); else if(typeof d.pecho==='string'&&d.pecho) l.push(['Pecho',d.pecho]);
-  if(d.mangaL&&d.mangaL.length) l.push(['Manga',ikoaStickersLinea(d.mangaL)]); else if(d.manga) l.push(['Manga',d.manga]);
+  if(d.mangaL&&d.mangaL.length) l.push(['Manga',ikoaStickersLinea(d.mangaL)+(d.mangaSinCosto?' · sin costo adicional':'')]); else if(d.manga) l.push(['Manga',d.manga]);
   if(d.espaldaL&&d.espaldaL.length) l.push(['Espalda',ikoaStickersLinea(d.espaldaL)]); else if(d.espalda) l.push(['Espalda',d.espalda]);
   return l;
 }
@@ -2982,7 +2982,8 @@ function siguiente(w){
   var S=w.S;
   if(!(typeof w.preciosDeHoja==='function'&&w.preciosDeHoja())){alert('Los precios de Ikoa You no est\u00e1n disponibles en este momento. Int\u00e9ntalo de nuevo en unos minutos.');return;}
   var zonas=[];if(S.place==='m'||S.place==='a')zonas.push(['m','Manga izq.']);if(S.place==='e'||S.place==='a')zonas.push(['e','Espalda']);
-  for(var z=0;z<zonas.length;z++){var arr=S[zonas[z][0]];for(var i=0;i<4;i++){if(!arr[i]){alert('Completa los 4 stickers de '+zonas[z][1]+' (falta el '+(i+1)+').');return;}}}
+  var nSt=0;for(var z=0;z<zonas.length;z++){var arr=S[zonas[z][0]];for(var i=0;i<4;i++){if(arr[i])nSt++;}}
+  if(zonas.length&&nSt===0&&!(S.chest==='s'&&S.chestS)){alert('Elige al menos un sticker (en la manga o en la espalda), o marca "Sin stickers".');return;}
   if(S.chest==='s'&&!S.chestS){alert('Elige el sticker del pecho.');return;}
   var tela=w.TELAS[S.t][0],vA=etiquetaVinil(w,'A'),vB=etiquetaVinil(w,'B');
   if(window.pintarColoresLinea)window.pintarColoresLinea(baseYou==='licra'?'licra':'comfy');
@@ -2992,21 +2993,23 @@ function siguiente(w){
   var vinBF=resolver('vinil-opts',vB);
   if(!vinBF){alert('El vinil '+vB+' no está disponible en este momento. Elige otro color para el vinil B.');return;}
   vA=vinF;vB=vinBF;
-  function lista(arr){return arr.map(function(o,i){return (i+1)+') '+o.c+' vinil '+(o.k==='A'?vA:vB);}).join(', ');}
+  function lista(arr){return arr.map(function(o,i){return o?((i+1)+') '+o.c+' vinil '+(o.k==='A'?vA:vB)):null;}).filter(Boolean).join(', ');}
+  function posiciones(arr){return arr.map(function(o,i){return o?{n:i+1,c:o.c,v:(o.k==='A'?vA:vB)}:null;}).filter(Boolean);}
   cfgYou={
     tela:telaF,baseTipo:baseYou==='licra'?'Licra Protect manga ranglan':'Comfy',vinilA:vinF,vinilB:vB,
     nombre:(S.name||'').trim(),nombreColor:S.nameC==='A'?vA:vB,
     pecho:S.chest==='s'?(S.chestS+' vinil '+(S.chestC==='A'?vA:vB)):'',
-    manga:(S.place==='m'||S.place==='a')?('Stickers '+lista(S.m)):'',
-    espalda:(S.place==='e'||S.place==='a')?('Stickers '+lista(S.e)):'',
+    manga:((S.place==='m'||S.place==='a')&&lista(S.m))?('Stickers '+lista(S.m)):'',
+    espalda:((S.place==='e'||S.place==='a')&&lista(S.e))?('Stickers '+lista(S.e)):'',
     precio:w.price(),
     base:(typeof w.priceParts==='function'?w.priceParts().base:0),
-    zona:(S.place==='m'||S.place==='e'||S.place==='a')?S.place:'',
+    zona:(typeof w.zonaCobro==='function'?w.zonaCobro():((S.place==='m'||S.place==='e'||S.place==='a')?S.place:'')),
     conPecho:S.chest==='s',
     pechoL:S.chest==='s'?{c:S.chestS,v:(S.chestC==='A'?vA:vB)}:null,
-    mangaL:(S.place==='m'||S.place==='a')?S.m.map(function(o,i){return{n:i+1,c:o.c,v:(o.k==='A'?vA:vB)};}):[],
-    espaldaL:(S.place==='e'||S.place==='a')?S.e.map(function(o,i){return{n:i+1,c:o.c,v:(o.k==='A'?vA:vB)};}):[]
+    mangaL:(S.place==='m'||S.place==='a')?posiciones(S.m):[],
+    espaldaL:(S.place==='e'||S.place==='a')?posiciones(S.e):[]
   };
+  cfgYou.mangaSinCosto=(cfgYou.zona==='e'&&cfgYou.mangaL.length>0);   // 1 sola en manga + espalda: la manga no se cobra
   cfgYou.extra=Math.max(0,cfgYou.precio-cfgYou.base);
   capa.classList.remove('is-open');
   aFormulario();
