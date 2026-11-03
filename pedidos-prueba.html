@@ -1034,6 +1034,14 @@ function volverDesdeStep2(){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
+// Capucha y cuello alto son excluyentes en una misma franela (valen lo mismo: el precio de la capucha)
+function exclusivoExtra(id,cual){const cap=document.getElementById('pz-capucha-'+id),cu=document.getElementById('pz-cuello-'+id);
+  if(cual==='capucha'&&cap&&cap.checked&&cu)cu.checked=false; if(cual==='cuello'&&cu&&cu.checked&&cap)cap.checked=false;}
+function exclusivoExtraB(i,cual){const cap=document.getElementById('capucha-check-b'+i),cu=document.getElementById('cuello-check-b'+i);
+  if(cual==='capucha'&&cap&&cap.checked&&cu)cu.checked=false; if(cual==='cuello'&&cu&&cu.checked&&cap)cap.checked=false;}
+// Texto de capucha / cuello alto a nivel de pack (si el pack es mixto no se indica: el detalle por pieza lo aclara)
+function textoCapuchaPack(pz){const n=pz.length,c=pz.filter(x=>x.conCapucha).length,u=pz.filter(x=>x.conCuelloAlto).length;
+  if(c===n)return 'Con Capucha'; if(u===n)return 'Con Cuello Alto'; if(c===0&&u===0)return 'Sin Capucha'; return '';}
 function seleccionarCapuchaComfy(c){
   pedido.capucha=c;
   document.getElementById('btn-cap-sin').style.borderColor=c==='Sin Capucha'?'var(--accent)':'var(--border)';
@@ -1307,8 +1315,12 @@ function renderFranelasB(){
         </button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
-        <input type="checkbox" id="capucha-check-b${i}" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+        <input type="checkbox" id="capucha-check-b${i}" onchange="exclusivoExtraB(${i},'capucha')" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
         <label for="capucha-check-b${i}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🧢 Con Capucha (esta franela)</label>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+        <input type="checkbox" id="cuello-check-b${i}" onchange="exclusivoExtraB(${i},'cuello')" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+        <label for="cuello-check-b${i}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🧣 Con Cuello alto (esta franela)</label>
       </div>
       <div style="margin-top:12px;">
         <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Logos (opcional)</div>
@@ -1368,14 +1380,15 @@ function intentarPaso4B(){
     const logoEspalda=document.getElementById(`logo-espalda-check-b${i}`)?.checked?(document.getElementById(`logo-espalda-txt-b${i}`).value.trim()||'Sí'):'';
     const logoManga=document.getElementById(`logo-manga-check-b${i}`)?.checked?(document.getElementById(`logo-manga-txt-b${i}`).value.trim()||'Sí'):'';
     const conCapucha=document.getElementById(`capucha-check-b${i}`)?.checked||false;
-    franelasB[i]={tela, talla, nombre, logoPecho, logoEspalda, logoManga, conCapucha};
+    const conCuelloAlto=conCapucha?false:(document.getElementById(`cuello-check-b${i}`)?.checked||false);
+    franelasB[i]={tela, talla, nombre, logoPecho, logoEspalda, logoManga, conCapucha, conCuelloAlto};
   }
   pedido.vinil = vinilB;
   pedido.tela = franelasB.map(f=>f.tela).join(' / ');
-  pedido.piezas = franelasB.map(f=>({talla:f.talla, nombre:f.nombre, genero: document.getElementById(`genero-b${franelasB.indexOf(f)}`)?.value||'Dama', logoPecho:f.logoPecho||'', logoEspalda:f.logoEspalda||'', logoManga:f.logoManga||'', tela:f.tela||'', conCapucha:f.conCapucha||false}));
+  pedido.piezas = franelasB.map(f=>({talla:f.talla, nombre:f.nombre, genero: document.getElementById(`genero-b${franelasB.indexOf(f)}`)?.value||'Dama', logoPecho:f.logoPecho||'', logoEspalda:f.logoEspalda||'', logoManga:f.logoManga||'', tela:f.tela||'', conCapucha:f.conCapucha||false, conCuelloAlto:f.conCuelloAlto||false}));
   pedido.packs.push({
     pack:franelasB.length, modelo:'COMFY MEGA PROMO (Opción B)',
-    manga:'Manga Larga', capucha:pedido.piezas.every(p=>p.conCapucha)?'Con Capucha':(pedido.piezas.some(p=>p.conCapucha)?'':'Sin Capucha'),
+    manga:'Manga Larga', capucha:textoCapuchaPack(pedido.piezas),
     tela: pedido.tela, vinil: vinilB, esDress:false, mangaTipo:'larga', codigoPrecio:'COMFY11',
     piezas: JSON.parse(JSON.stringify(pedido.piezas))
   });
@@ -1468,7 +1481,7 @@ async function intentarPaso45(){
     pack: pedido.pack,
     modelo: pedido.modelo,
     manga: pedido.manga,
-    capucha: pedido.piezas.every(p=>p.conCapucha)?'Con Capucha':(pedido.piezas.some(p=>p.conCapucha)?'':'Sin Capucha'), // mixto: no se indica aquí, la Observación por pieza ya lo aclara
+    capucha: textoCapuchaPack(pedido.piezas), // mixto: no se indica aquí, la Observación por pieza ya lo aclara
     tela: pedido.tela,
     vinil: pedido.vinil,
     esDress: pedido.esDress,
@@ -1717,7 +1730,7 @@ function addPieza(copiarDe=null){
     </div>
     <input type="hidden" id="pz-sinombre-${id}" value="true">
     <input type="hidden" id="pz-nombre-${id}" value="">
-    <input type="hidden" id="pz-capucha-${id}">
+    <input type="hidden" id="pz-capucha-${id}"><input type="hidden" id="pz-cuello-${id}">
     <input type="hidden" id="pz-logo-pecho-${id}"><input type="hidden" id="pz-logo-pecho-txt-${id}" value="">
     <input type="hidden" id="pz-logo-espalda-${id}"><input type="hidden" id="pz-logo-espalda-txt-${id}" value="">
     <input type="hidden" id="pz-logo-manga-${id}"><input type="hidden" id="pz-logo-manga-txt-${id}" value="">
@@ -1738,8 +1751,12 @@ function addPieza(copiarDe=null){
     </div>
     `}
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-      <input type="checkbox" id="pz-capucha-${id}" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+      <input type="checkbox" id="pz-capucha-${id}" onchange="exclusivoExtra(${id},'capucha')" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
       <label for="pz-capucha-${id}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🧢 Con Capucha (esta franela)</label>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <input type="checkbox" id="pz-cuello-${id}" onchange="exclusivoExtra(${id},'cuello')" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+      <label for="pz-cuello-${id}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🧣 Con Cuello alto (esta franela)</label>
     </div>
     <div style="margin-top:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;">
       <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Logos (opcional, con costo adicional):</div>
@@ -1881,9 +1898,10 @@ function savePiezas(){
     const logoEspalda=esShort?'':(document.getElementById('pz-logo-espalda-'+id)?.checked?(document.getElementById('pz-logo-espalda-txt-'+id)?.value.trim()||'SI'):'');
     const logoManga=(esShort||esMangaCero)?'':(document.getElementById('pz-logo-manga-'+id)?.checked?(document.getElementById('pz-logo-manga-txt-'+id)?.value.trim()||'SI'):'');
     const conCapucha=esShort?false:(document.getElementById('pz-capucha-'+id)?.checked||false);
+    const conCuelloAlto=(esShort||conCapucha)?false:(document.getElementById('pz-cuello-'+id)?.checked||false);   // capucha y cuello alto no van juntos
     // Expandir repeticiones
     for(let i=0;i<rep;i++){
-      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre,logoPecho,logoEspalda,logoManga,conCapucha,largo});
+      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre,logoPecho,logoEspalda,logoManga,conCapucha,conCuelloAlto,largo});
     }
   });
 }
@@ -1970,7 +1988,7 @@ async function calcularPago(){
   const tallasGrandes=['XL','XXL','3XL','XXXL','2XL',
     'DAMA XL','DAMA XXL','DAMA 3XL','DAMA XXXL','DAMA 2XL',
     'CABALLERO XL','CABALLERO XXL','CABALLERO 3XL','CABALLERO XXXL','CABALLERO 2XL'];
-  let totalLogosPecho=0, totalLogosEspalda=0, totalLogosManga=0, totalConCapucha=0, totalRecargas=0;
+  let totalLogosPecho=0, totalLogosEspalda=0, totalLogosManga=0, totalConCapucha=0, totalCuelloAlto=0, totalRecargas=0;
   let sumaBs=0, sumaUsd=0, recargaTotalBs=0, recargaTotalUsd=0;
   let hayYou=false, faltaCodigoYou=false, youExtraTotBs=0, youExtraTotUsd=0;
   let sumaBsLicra=0, faltaCodigoLicra=false, hayComfy=false;
@@ -1998,10 +2016,12 @@ async function calcularPago(){
     const logosEspalda=esYou?0:pk.piezas.filter(p=>p.logoEspalda).length;
     const logosManga=esYou?0:pk.piezas.filter(p=>p.logoManga).length;
     const conCapucha=pk.piezas.filter(p=>p.conCapucha).length;
+    const conCuelloAlto=pk.piezas.filter(p=>p.conCuelloAlto).length;
     totalLogosPecho+=logosPecho;
     totalLogosEspalda+=logosEspalda;
     totalLogosManga+=logosManga;
     totalConCapucha+=conCapucha;
+    totalCuelloAlto+=conCuelloAlto;
     totalRecargas+=recargas;
     // Precio específico de ESTE pack (no el global de la selección actual)
     const codPack=pk.codigoPrecio||pedido.mangaTipoCodigo||'COMFY11';
@@ -2022,15 +2042,15 @@ async function calcularPago(){
     sumaUsd+=franelas*precioPackUsd;
     const etiquetaPack=(pk.mangaTipo==='short')?(franelas>1?'shorts':'short'):(pk.esDress?(franelas>1?'vestidos':'vestido'):(franelas>1?'franelas':'franela'));
     const logosTxt=[logosPecho>0?`${logosPecho} logo pecho`:'',logosEspalda>0?`${logosEspalda} logo espalda`:'',logosManga>0?`${logosManga} logo manga`:''].filter(Boolean).join(', ');
-    desglose.push(`Pack ${i+1}: ${franelas} ${etiquetaPack}${pk.linea==='licra'?(' · '+pk.modelo+' '+pk.manga):''}${esYou?(franelas>=2?' · diseño Ikoa You (promo 2+ unds)':' · diseño Ikoa You (1 unidad, precio base normal)'):''}${recargas>0?` + ${recargas} recarga(s) talla grande`:''}${conCapucha>0?` + ${conCapucha} con capucha`:''}${logosTxt?` + ${logosTxt}`:''}`);
+    desglose.push(`Pack ${i+1}: ${franelas} ${etiquetaPack}${pk.linea==='licra'?(' · '+pk.modelo+' '+pk.manga):''}${esYou?(franelas>=2?' · diseño Ikoa You (promo 2+ unds)':' · diseño Ikoa You (1 unidad, precio base normal)'):''}${recargas>0?` + ${recargas} recarga(s) talla grande`:''}${conCapucha>0?` + ${conCapucha} con capucha`:''}${conCuelloAlto>0?` + ${conCuelloAlto} con cuello alto`:''}${logosTxt?` + ${logosTxt}`:''}`);
     recargaTotalBs+=recargas*precioRecarga.bs;
     recargaTotalUsd+=recargas*precioRecarga.usd;
   });
 
   const totalLogosBs=totalLogosPecho*precioLogoPecho.bs+totalLogosEspalda*precioLogoEspalda.bs+totalLogosManga*precioLogoManga.bs;
   const totalLogosUsd=totalLogosPecho*precioLogoPecho.usd+totalLogosEspalda*precioLogoEspalda.usd+totalLogosManga*precioLogoManga.usd;
-  const totalCapuchaBs=totalConCapucha*precioCapucha.bs;
-  const totalCapuchaUsd=totalConCapucha*precioCapucha.usd;
+  const totalCapuchaBs=(totalConCapucha+totalCuelloAlto)*precioCapucha.bs;     // cuello alto = mismo precio que la capucha
+  const totalCapuchaUsd=(totalConCapucha+totalCuelloAlto)*precioCapucha.usd;
   const totalRecargosVariosBs=recargaTotalBs + totalLogosBs + totalCapuchaBs + youExtraTotBs; // talla plus + logos + capucha + diseño Ikoa You
   const totalRecargosVariosUsd=recargaTotalUsd + totalLogosUsd + totalCapuchaUsd + youExtraTotUsd;
   pagoTotalBs=Math.round((sumaBs + totalRecargosVariosBs)*100)/100;
@@ -2048,6 +2068,7 @@ async function calcularPago(){
     basesMostrar.map(b=>`<br><span style="color:var(--muted);">• Precio/${b.unid} · ${b.nom}:</span> Bs ${b.bs.toFixed(2)} / $${b.usd.toFixed(2)}`).join('')+
     (totalRecargas>0?`<br><span style="color:var(--muted);">• Recarga talla grande:</span> Bs ${precioRecarga.bs.toFixed(2)} / $${precioRecarga.usd.toFixed(2)}`:'')+
     (totalConCapucha>0?`<br><span style="color:var(--muted);">• Con Capucha (${totalConCapucha}):</span> Bs ${precioCapucha.bs.toFixed(2)} / $${precioCapucha.usd.toFixed(2)} c/u`:'')+
+     (totalCuelloAlto>0?`<br><span style="color:var(--muted);">• Con Cuello alto (${totalCuelloAlto}):</span> Bs ${precioCapucha.bs.toFixed(2)} / $${precioCapucha.usd.toFixed(2)} c/u`:'')+
     (totalLogosPecho>0?`<br><span style="color:var(--muted);">• Logo Pecho (${totalLogosPecho}):</span> Bs ${precioLogoPecho.bs.toFixed(2)} / $${precioLogoPecho.usd.toFixed(2)} c/u`:'')+
     (totalLogosEspalda>0?`<br><span style="color:var(--muted);">• Logo Espalda (${totalLogosEspalda}):</span> Bs ${precioLogoEspalda.bs.toFixed(2)} / $${precioLogoEspalda.usd.toFixed(2)} c/u`:'')+
     (totalLogosManga>0?`<br><span style="color:var(--muted);">• Logo Manga (${totalLogosManga}):</span> Bs ${precioLogoManga.bs.toFixed(2)} / $${precioLogoManga.usd.toFixed(2)} c/u`:'')+
@@ -2192,7 +2213,7 @@ function buildResumen(){
   const packsHtml=pedido.packs.map((pk,i)=>{
     const etiquetaResumen=(pk.mangaTipo==='short')?'Short':(pk.esDress?'Vestido':'Franela');
     const etiquetaResumenPlural=(pk.mangaTipo==='short')?'Shorts':(pk.esDress?'Vestidos':'Franelas');
-    const piezasHtml=pk.piezas.map((p,j)=>`<b>${etiquetaResumen} ${j+1}:</b> ${p.genero} Talla ${p.talla}${p.conCapucha?' 🧢 CON CAPUCHA':''}${p.nombre?' — '+p.nombre:''}${pk.ikoaYou?'':`${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`}`).join('<br>');
+    const piezasHtml=pk.piezas.map((p,j)=>`<b>${etiquetaResumen} ${j+1}:</b> ${p.genero} Talla ${p.talla}${p.conCapucha?' 🧢 CON CAPUCHA':''}${p.conCuelloAlto?' 🧣 CON CUELLO ALTO':''}${p.nombre?' — '+p.nombre:''}${pk.ikoaYou?'':`${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`}`).join('<br>');
     return `<div class="resumen-label">📦 Pack ${i+1} · ${pk.pack}PACK</div>
       <div class="resumen-block"><b>Modelo:</b> ${pk.modelo} ${pk.manga} ${pk.capucha}<br><b>Tela:</b> ${pk.tela} · <b>Vinil:</b> ${pk.vinil}</div>${pk.ikoaYou?ikoaDisenoHtml(pk):''}
       <div class="resumen-label">📏 ${etiquetaResumenPlural} (${pk.piezas.length})</div>
@@ -2220,7 +2241,7 @@ function buildResumen(){
 function buildMensaje(){
   const retiraText=pedido.mismoEnvio?'Mismo titular':`${pedido.eNombre} | C.I: ${pedido.eCi} | Cel: ${pedido.eCel}`;
   const packsText=pedido.packs.map((pk,i)=>{
-    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.nombre?' — '+p.nombre:''}${pk.ikoaYou?'':`${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`}`).join('\n');
+    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${(p.conCapucha&&pk.piezas.some(x=>x.conCuelloAlto))?' 🧢 con capucha':''}${p.conCuelloAlto?' 🧣 con cuello alto':''}${p.nombre?' — '+p.nombre:''}${pk.ikoaYou?'':`${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`}`).join('\n');
     return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: ${pk.modelo} ${pk.manga} ${pk.capucha}\nTela: ${pk.tela} · Vinil: ${pk.vinil}${pk.ikoaYou?ikoaDisenoTexto(pk):''}\nFranelas (${pk.piezas.length}):\n${piezasText}`;
   }).join('\n\n');
   return `🛍️ *PEDIDO IKOA & BEKATE*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
@@ -2244,7 +2265,7 @@ async function guardarEnSheets(){
   let codigoPrincipal='';
   for(let i=0; i<pedido.packs.length; i++){
     const pk=pedido.packs[i];
-    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''}${p.nombre?' - '+p.nombre:''}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}${p.tela?' | Tela: '+p.tela:''}${p.largo?' | Largo: '+p.largo:''}`).join(' | ');
+    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''}${p.conCuelloAlto?' CON CUELLO ALTO':''}${p.nombre?' - '+p.nombre:''}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}${p.tela?' | Tela: '+p.tela:''}${p.largo?' | Largo: '+p.largo:''}`).join(' | ');
     try{
       const res=await scriptGETjson({
         action:'addSolicitud',
@@ -2256,7 +2277,7 @@ async function guardarEnSheets(){
         celular:pedido.celular,
         modelo:(pk.linea==='licra'?(pk.modelo+' '+pk.manga+(pk.ikoaYou?' (IKOA YOU)':'')):pk.ikoaYou?'COMFY MEGA PROMO (IKOA YOU)':((pk.esDress?'COMFY DRESS MEGA PROMO':'COMFY MEGA PROMO') + (pasoPorOpcionAB?(' '+(modalidadComfy==='B'?'(Opción B)':'(Opción A)')):''))),
         manga:pk.manga,
-        capucha:pk.piezas.some(p=>p.conCapucha)?'Con Capucha':'Sin Capucha',
+        capucha:pk.piezas.some(p=>p.conCapucha)?'Con Capucha':(pk.piezas.some(p=>p.conCuelloAlto)?'Con Cuello Alto':'Sin Capucha'),
         pack:`${pk.pack}PACK`,
         tela:pk.tela,
         vinil:pk.vinil,
@@ -2993,19 +3014,20 @@ function siguiente(w){
   var vinBF=resolver('vinil-opts',vB);
   if(!vinBF){alert('El vinil '+vB+' no está disponible en este momento. Elige otro color para el vinil B.');return;}
   vA=vinF;vB=vinBF;
-  function lista(arr){return arr.map(function(o,i){return o?((i+1)+') '+o.c+' vinil '+(o.k==='A'?vA:vB)):null;}).filter(Boolean).join(', ');}
-  function posiciones(arr){return arr.map(function(o,i){return o?{n:i+1,c:o.c,v:(o.k==='A'?vA:vB)}:null;}).filter(Boolean);}
+  var dtf=function(c){return typeof w.esDTF==='function'&&w.esDTF(c);};   // sticker DTF: se imprime a todo color (no lleva vinilo)
+  function lista(arr){return arr.map(function(o,i){return o?((i+1)+') '+o.c+(dtf(o.c)?' (DTF a todo color)':' vinil '+(o.k==='A'?vA:vB))):null;}).filter(Boolean).join(', ');}
+  function posiciones(arr){return arr.map(function(o,i){return o?{n:i+1,c:o.c,v:(dtf(o.c)?'DTF':(o.k==='A'?vA:vB))}:null;}).filter(Boolean);}
   cfgYou={
     tela:telaF,baseTipo:baseYou==='licra'?'Licra Protect manga ranglan':'Comfy',vinilA:vinF,vinilB:vB,
     nombre:(S.name||'').trim(),nombreColor:S.nameC==='A'?vA:vB,
-    pecho:S.chest==='s'?(S.chestS+' vinil '+(S.chestC==='A'?vA:vB)):'',
+    pecho:S.chest==='s'?(S.chestS+(dtf(S.chestS)?' (DTF a todo color)':' vinil '+(S.chestC==='A'?vA:vB))):'',
     manga:((S.place==='m'||S.place==='a')&&lista(S.m))?('Stickers '+lista(S.m)):'',
     espalda:((S.place==='e'||S.place==='a')&&lista(S.e))?('Stickers '+lista(S.e)):'',
-    precio:w.price(),
+    precio:w.price(),unidades:Math.max(1,parseInt(S.q)||1),
     base:(typeof w.priceParts==='function'?w.priceParts().base:0),
     zona:(typeof w.zonaCobro==='function'?w.zonaCobro():((S.place==='m'||S.place==='e'||S.place==='a')?S.place:'')),
     conPecho:S.chest==='s',
-    pechoL:S.chest==='s'?{c:S.chestS,v:(S.chestC==='A'?vA:vB)}:null,
+    pechoL:S.chest==='s'?{c:S.chestS,v:(dtf(S.chestS)?'DTF':(S.chestC==='A'?vA:vB))}:null,
     mangaL:(S.place==='m'||S.place==='a')?posiciones(S.m):[],
     espaldaL:(S.place==='e'||S.place==='a')?posiciones(S.e):[]
   };
@@ -3035,6 +3057,8 @@ function aFormulario(){
   var psel=document.getElementById('pack-seleccionado');if(psel)psel.style.display='none';
   if(typeof ajustarPackGridMinimo==='function')ajustarPackGridMinimo(1);
   var mlb=document.getElementById('pack-minimo-label');if(mlb)mlb.textContent='Desde 2 unidades del mismo color entras en la promo. 1 sola franela: precio base normal.';
+  (function(q){if(!(q>=1))return;var bq=[].slice.call(document.querySelectorAll('#pack-grid .opt-btn')).filter(function(x){return (x.getAttribute('onclick')||'').indexOf('selectPack(this,'+q+')')>=0})[0];
+    if(bq){bq.click();}else if(typeof setCustomPack==='function'){var ce=document.getElementById('pack-custom');if(ce){ce.value=q;setCustomPack(q);}}})(cfgYou&&cfgYou.unidades);   // la cantidad elegida en el diseñador llega preseleccionada
   updateProgress();window.scrollTo({top:0,behavior:'smooth'});
 }
 window.abrirIkoaYou=function(b){
@@ -3055,7 +3079,6 @@ if(s4)new MutationObserver(function(){
   if(!cfgYou||!yaYou){if(nn)nn.remove();return;}
   if(!s4.classList.contains('active'))return;
   [].forEach.call(s4.querySelectorAll('[id^="pz-nombre-"]'),function(inp){if(!inp.value&&cfgYou.nombre)inp.value=cfgYou.nombre;});
-  [].forEach.call(s4.querySelectorAll('input[type=checkbox][id^="pz-capucha-"]'),function(el){if(el.parentNode.style.display!=='none'){el.checked=false;el.parentNode.style.display='none';}});
   [].forEach.call(s4.querySelectorAll('input[type=checkbox][id^="pz-logo-pecho-"]'),function(el){var box=el.closest('label');box=box&&box.parentNode&&box.parentNode.parentNode;if(box&&box.style.display!=='none')box.style.display='none';});
   var n=document.getElementById('iy-nota');
   if(!n){n=document.createElement('div');n.id='iy-nota';n.className='card';var h=s4.querySelector('.step-header');if(h&&h.nextSibling)h.parentNode.insertBefore(n,h.nextSibling);else s4.insertBefore(n,s4.firstChild);}
@@ -3072,7 +3095,7 @@ if(typeof _p45==='function')window.intentarPaso45=async function(){
     var lic=(pk.linea==='licra');if(!lic)pk.modelo='Ikoa You';pk.codigoPrecio=lic?(pk.piezas.length>=2?'LICRA02':'LICRA01'):(pk.piezas.length>=2?'IKOAYOU':'COMFY01');pk.ikoaYou=diseno;
     pk.vinil=diseno.vinilA+(diseno.vinilB&&diseno.vinilB!==diseno.vinilA?' + '+diseno.vinilB:'');
     pk.piezas.forEach(function(p){
-      p.logoPecho=diseno.pecho;p.logoManga=diseno.manga;p.logoEspalda=diseno.espalda;p.conCapucha=false;
+      p.logoPecho=diseno.pecho;p.logoManga=diseno.manga;p.logoEspalda=diseno.espalda;
       if(!p.nombre||p.nombre==='SIN NOMBRE EN MANGA'){p.nombre=diseno.nombre?diseno.nombre:p.nombre;}
       if(p.nombre&&p.nombre!=='SIN NOMBRE EN MANGA')p.nombre=p.nombre+' (vinil '+diseno.nombreColor+')';
     });
