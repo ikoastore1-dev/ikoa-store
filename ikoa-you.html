@@ -24,7 +24,8 @@ input[type=text]{width:100%;padding:12px;border:1px solid var(--line);border-rad
 .ab button.on{outline:2px solid var(--ink);outline-offset:1px}
 .slots{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
 .slot{aspect-ratio:1;border:2px dashed var(--line);border-radius:10px;background:#e0ddd5 center/70% no-repeat;cursor:pointer;position:relative;font-size:11px;color:var(--mut)}
-.slot.on{border:2px solid var(--acc)}.slot i{position:absolute;left:4px;top:2px;font-style:normal}
+.slot.on{border:2px solid var(--acc)}
+.slot .x{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border:0;border-radius:50%;background:#14161f;color:#fff;font-size:14px;line-height:22px;padding:0;cursor:pointer;z-index:3}.slot i{position:absolute;left:4px;top:2px;font-style:normal}
 .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-height:300px;overflow:auto;padding:2px}
 .st{background:#e0ddd5 center/78% no-repeat;aspect-ratio:1;border-radius:8px;border:1px solid var(--line);cursor:pointer;position:relative}
 .st span{position:absolute;bottom:1px;right:3px;font-size:9px;color:var(--mut)}
@@ -49,7 +50,7 @@ body.cols-cargando #telas,body.cols-cargando #vA,body.cols-cargando #vB{opacity:
 <p class="note" id="chestNote" hidden>Toca abajo el sticker que quieres en el pecho.</p></div>
 <div class="sec"><h2>5. ¿Dónde van tus stickers?</h2>
 <div class="row"><button class="pill" data-p="0">Sin stickers</button><button class="pill on" data-p="m">Manga izq.</button><button class="pill" data-p="e">Espalda</button><button class="pill" data-p="a">Ambos</button></div>
-<p class="note">Siempre 4 stickers en columna por zona.</p></div>
+<p class="note">Puedes poner de 1 a 4 stickers por zona. Toca una posición para elegirla y la × para quitar el sticker.</p></div>
 <div class="sec" id="slotSec"><h2>6. Elige tus stickers</h2>
 <div id="slotWrap"></div>
 <div class="row" style="margin:6px 0 8px"><button class="pill on" data-g="V">Niño</button><button class="pill" data-g="N">Niña</button><button class="pill" disabled title="Próximamente">Adulto · pronto</button></div>
@@ -106,7 +107,12 @@ function draw(){x.clearRect(0,0,620,777);var back=S.view=='b';shirt(back);
 }
 var PRECIOS={base:0,b1:0,m:0,e:0,a:0,p:0}, DE_HOJA=false;   // sin precios escritos a mano: todo sale de la hoja CODIGOS, por su código
 (function(){ if(!ISL) return; function ap(){ var s=document.querySelector('.bar small'); if(s) s.textContent='Por franela Licra Protect · desde 2 unds del mismo color'; document.title='Ikoa You Licra · Diseña tu franela'; } if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',ap); else ap(); })();   // respaldo hasta que lleguen los de la hoja CODIGOS
-function priceParts(){var z=0;if(S.place=='m')z=PRECIOS.m;if(S.place=='e')z=PRECIOS.e;if(S.place=='a')z=PRECIOS.a;return{base:PRECIOS.base,zonas:z,pecho:(S.chest=='s'?PRECIOS.p:0)}}
+function cuentaZona(z){var n=0,a=S[z]||[];for(var i=0;i<4;i++)if(a[i])n++;return n}
+// Regla de cobro de stickers: solo manga (1 a 4) → precio de manga · solo espalda (1 a 4) → precio de espalda
+// · manga + espalda: la manga se cobra únicamente si lleva 2 o más stickers (con 1 sola en la manga se cobra solo la espalda)
+function zonaCobro(){var m=(S.place=='m'||S.place=='a')?cuentaZona('m'):0,e=(S.place=='e'||S.place=='a')?cuentaZona('e'):0;if(e>0&&m>=2)return 'a';if(e>0)return 'e';if(m>0)return 'm';return ''}
+window.zonaCobro=zonaCobro;window.cuentaZona=cuentaZona;
+function priceParts(){var k=zonaCobro(),z=k?PRECIOS[k]:0;return{base:PRECIOS.base,zonas:z,pecho:(S.chest=='s'?PRECIOS.p:0)}}
 function price(){var q=priceParts();return q.base+q.zonas+q.pecho}
 function price1(){var q=priceParts();return PRECIOS.b1+q.zonas+q.pecho}
 window.preciosDeHoja=function(){return DE_HOJA};
@@ -147,7 +153,9 @@ function slotsUI(){var w=$('slotWrap');w.innerHTML='';var zones=[];if(S.place=='
  zones.forEach(function(z){var h=document.createElement('p');h.className='note';h.innerHTML='<b>'+z[1]+'</b>';w.appendChild(h);var d=document.createElement('div');d.className='slots';
   var n=z[0]=='c'?1:4;for(var i=0;i<n;i++){(function(i){var id=z[0]+i,o=z[0]=='c'?(S.chestS?{c:S.chestS,k:S.chestC}:null):S[z[0]][i];var s=document.createElement('div');s.className='slot'+(S.sel==id?' on':'');s.innerHTML='<i>'+(z[0]=='c'?'':i+1)+'</i>';
    if(o){var tu=tintURL(stSrc(o.c),col(o.k));s.style.backgroundImage='url('+(tu||stSrc(o.c))+')';var ab=document.createElement('span');ab.className='ab';ab.style.cssText='position:absolute;bottom:2px;left:50%;transform:translateX(-50%);margin:0';abButtons(ab,function(){return o.k},function(k){if(z[0]=='c')S.chestC=k;else S[z[0]][i].k=k;S.thumbDirty=1});ab.querySelectorAll('button').forEach(function(b){b.style.width=b.style.height='20px';b.style.fontSize='9px'});s.appendChild(ab)}
-   s.onclick=function(){S.sel=id;if(z[0]!='c')S.view=z[0]=='e'?'b':S.view;S.thumbDirty=1;ui()};d.appendChild(s)})(i)}w.appendChild(d)});
+   s.onclick=function(){S.sel=id;if(z[0]!='c')S.view=z[0]=='e'?'b':S.view;S.thumbDirty=1;ui()};
+   if(o){var xb=document.createElement('button');xb.type='button';xb.className='x';xb.setAttribute('aria-label','Quitar sticker');xb.textContent='\u00d7';xb.onclick=function(ev){ev.stopPropagation();if(z[0]=='c'){S.chestS=null}else{S[z[0]][i]=null}S.thumbDirty=1;ui()};s.appendChild(xb)}
+   d.appendChild(s)})(i)}w.appendChild(d)});
  if(!zones.some(function(z){return S.sel[0]==z[0]})&&zones.length)S.sel=zones[0][0]+'0'}
 function gridUI(){var g=$('grid');g.innerHTML='';categoriesUI();var filtered=filterStickers(DATA.cat[S.g],S.g,S.theme);$('catalogCount').textContent=filtered.length+' stickers';if(!filtered.length){var empty=document.createElement('p');empty.className='catalog-empty';empty.textContent='No hay stickers de esta temática en este catálogo.';g.appendChild(empty)}var z=S.sel[0],si=+S.sel.slice(1),kk=z=='c'?(S.chestS?S.chestC:null):(S[z]&&S[z][si]?S[z][si].k:null),cc=col(kk||'A');filtered.forEach(function(it){var code='S.'+S.g+'.'+it[0];var b=document.createElement('button');b.type='button';b.className='st';b.title=code;b.setAttribute('aria-label','Seleccionar '+code);b.style.backgroundImage='url('+(tintURL(it[1],cc)||it[1])+')';b.innerHTML='<span>'+code+'</span>';
  b.onclick=function(){var z=S.sel[0],i=+S.sel.slice(1);if(z=='c'){S.chestS=code}else{S[z][i]={c:code,k:S[z][i]?S[z][i].k:'A'};if(i<3)S.sel=z+(i+1);S.view=z=='e'?'b':(S.view)}ui()};g.appendChild(b)})}
@@ -165,9 +173,9 @@ document.querySelectorAll('[data-p]').forEach(function(b){b.onclick=function(){S
 document.querySelectorAll('[data-g]').forEach(function(b){b.onclick=function(){S.g=b.dataset.g;gridUI();ui()}});
 $('category').onchange=function(){S.theme=this.value;gridUI()};
 $('name').oninput=function(){this.value=this.value.toUpperCase();S.name=this.value;draw()};
-function list(a){return a.map(function(o,i){return (i+1)+') '+(o?o.c+' · '+VIN[S[o.k]][0]:'— sin elegir')}).join('\n')}
+function list(a){var r=[];a.forEach(function(o,i){if(o)r.push((i+1)+') '+o.c+' · '+VIN[S[o.k]][0])});return r.length?r.join('\n'):'— ninguno'}
 function capture(){var v=S.view,out=document.createElement('canvas');out.width=1240;out.height=857;var o=out.getContext('2d');o.fillStyle='#fff';o.fillRect(0,0,1240,857);
- S.view='f';draw();o.drawImage(cv,0,60);S.view='b';draw();o.drawImage(cv,620,60);o.fillStyle='#14161f';o.font='800 30px system-ui';o.fillText('IKOA YOU · '+money(price()),30,40);S.view=v;draw();return out}
+ S.view='f';draw();o.drawImage(cv,0,60);S.view='b';draw();o.drawImage(cv,620,60);o.fillStyle='#14161f';o.font='800 30px system-ui';o.fillText('IKOA YOU',30,40);S.view=v;draw();return out}
 $('wa').onclick=function(){var t=(ISL?'*IKOA YOU LICRA – Mi diseño*\nPrenda: Licra Protect manga ranglan\n':'*IKOA YOU – Mi diseño*\n')+'Tela: '+TELAS[S.t][0]+'\nVinil A: '+VIN[S.A][0]+' · Vinil B: '+VIN[S.B][0]+
  '\nNombre (manga derecha): '+(S.name||'—')+' · color '+S.nameC+'\nPecho: '+(S.chest=='w'?'Alitas IKOA · color '+S.chestC:(S.chestS||'—')+' · color '+S.chestC);
  if(S.place=='m'||S.place=='a')t+='\nManga izquierda:\n'+list(S.m);if(S.place=='e'||S.place=='a')t+='\nEspalda:\n'+list(S.e);
