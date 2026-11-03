@@ -20,7 +20,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
 .prev{display:flex;justify-content:center;margin-top:10px}.prev img{max-height:160px;background:repeating-conic-gradient(var(--line) 0 25%,var(--card) 0 50%) 0/16px 16px;border-radius:8px}
 .msg{font-size:14px;margin-top:10px}.ok{color:var(--ok)}.err{color:var(--err)}.hide{display:none}
 </style></head><body>
-<header>IKOA · Cargar stickers <small style="opacity:.6;font-weight:400">v4</small></header>
+<header>IKOA · Cargar stickers <small style="opacity:.6;font-weight:400">v5</small></header>
 <main>
 <section class="card" id="cfg">
  <h2>Conexión con GitHub</h2>
@@ -76,7 +76,7 @@ const refresh=()=>{if(S.catalog){themesUI();$("code").textContent=nextCode()}};
 async function connect(){
  $("cfgMsg").textContent="Conectando…";$("cfgMsg").className="msg";
  try{const r=await gh("");if(!r.ok)throw new Error(r.status===401?"Token inválido":`No se encontró el repositorio (${r.status})`);
-  await loadCatalog();$("cfg").classList.add("hide");$("up").classList.remove("hide");refresh();$("theme").value=tema;
+  await loadCatalog();$("cfg").classList.add("hide");$("up").classList.remove("hide");refresh();
  }catch(e){$("cfgMsg").textContent=e.message;$("cfgMsg").className="msg err"}
 }
 $("save").onclick=()=>{if($("token").value)localStorage.setItem("ikoaGhToken",$("token").value.trim());
@@ -109,7 +109,7 @@ $("send").onclick=async()=>{
   S.catalog.stickers.push(item);S.catalog.tematicas=S.catalog.tematicas||[];if(!S.catalog.tematicas.some(n=>n.toLowerCase()===tema.toLowerCase()))S.catalog.tematicas.push(tema);
   await put("stickers/catalog.json",b64(JSON.stringify(S.catalog,null,2)),`Catálogo: agrega ${codigo}`,S.sha);
   await loadCatalog();$("msg").textContent=`✓ ${codigo} cargado. Aparecerá en Ikoa You en 1–2 minutos.`;$("msg").className="msg ok";
-  $("web").value="";$("prod").value="";$("nombre").value="";$("newTheme").value="";$("newTheme").classList.add("hide");$("pv").classList.add("hide");refresh();
+  $("web").value="";$("prod").value="";$("nombre").value="";$("newTheme").value="";$("newTheme").classList.add("hide");$("pv").classList.add("hide");refresh();$("theme").value=tema;
  }catch(e){$("msg").textContent=e.message;$("msg").className="msg err"}
  $("send").disabled=false};
 if(localStorage.getItem("ikoaGhToken"))connect();
