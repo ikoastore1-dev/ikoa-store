@@ -8636,6 +8636,48 @@ ${bloques}
 </body></html>`;
 }
 
+// ── REPORTE DE VINIL: nombres agrupados por color del vinil ─────────────────
+// Devuelve [{color, nombres:[{n, t}]}] ordenado por cantidad de NOMBRES (no de pedidos), de mayor a menor.
+// "t" es la talla de niño (KIDS 4…) para que el operador sepa que ese nombre va más pequeño; en adultos va vacía.
+function tallerClaveColorVinil(c){ return String(c||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+function tallerAgruparNombresVinil(codigos){
+  const mapa={}, orden=[];
+  codigos.forEach(cod=>{
+    const g=tallerGrupos[cod]; if(!g) return;
+    g.packs.forEach(p=>{
+      const colorPack=String(p.vinil||'').replace(/\s+/g,' ').trim().toUpperCase();
+      tallerParsearPiezas(p.piezas).forEach(pz=>{
+        let nombre=String(pz.nombre||'').trim(); if(!nombre||/sin nombre en manga/i.test(nombre)) return;
+        let color=colorPack;
+        // Ikoa You: el pack trae dos vinilos ("NEGRO + FUCSIA"); el color del nombre viene dentro del propio nombre: "ANA (vinil NEGRO)"
+        const mc=nombre.match(/\s*\(\s*vinil\s+([^)]+?)\s*\)\s*$/i);
+        if(mc){ color=mc[1].replace(/\s+/g,' ').trim().toUpperCase(); nombre=nombre.slice(0,mc.index).trim(); }
+        if(!nombre) return;
+        const tag=(!pz.raw&&/^kids$/i.test(String(pz.genero||'').trim()))?('KIDS '+String(pz.talla||'').trim().toUpperCase()).trim():'';
+        const clave=tallerClaveColorVinil(color)||'__SIN__';
+        if(!mapa[clave]){ mapa[clave]={color:clave==='__SIN__'?'':color, nombres:[], primero:orden.length}; orden.push(clave); }
+        mapa[clave].nombres.push({n:nombre.toUpperCase(), t:tag});
+      });
+    });
+  });
+  const lista=Object.values(mapa);
+  lista.sort((a,b)=>{
+    if(!a.color!==!b.color) return a.color?-1:1;                    // "color no indicado" siempre al final
+    if(b.nombres.length!==a.nombres.length) return b.nombres.length-a.nombres.length;   // más nombres primero
+    return a.primero-b.primero;                                     // empate: el que apareció primero en los pedidos
+  });
+  return lista.map(g=>({color:g.color, nombres:g.nombres}));
+}
+async function tallerEnviarDXFVinil(grupos, nombres, filename){
+  // POST (JSON): la lista con colores y tallas puede ser larga para una URL. Se envían también los nombres planos, en el mismo orden (compatibilidad).
+  const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),45000);
+  try{
+    return await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},signal:ctrl.signal,
+      body:JSON.stringify({action:'generarDXFCombinado', grupos, nombres, filename})}).then(r=>r.json());
+  }catch(e){ return {ok:false,error:'Error de red'}; }
+  finally{ clearTimeout(t); }
+}
+
 async function generarReportesTaller(){
   const codigos=[...tallerSeleccionados].sort((a,b)=>(parseInt(a)||0)-(parseInt(b)||0));
   if(!codigos.length) return;
@@ -8655,24 +8697,16 @@ async function generarReportesTaller(){
     const infoEstampador=await cotGenerarPDFViaAppsScript(htmlEstampador, 'Taller_Estampador_'+Date.now());
 
     btn.textContent='⏳ Generando DXF de Vinil...';
-    let dxfLinkHtml='';
+    let dxfLinkHtml='', dxfResumenHtml='';
     try{
-      const nombresVinil=[];
-      codigos.forEach(cod=>{
-        const g=tallerGrupos[cod];
-        if(!g) return;
-        g.packs.forEach(p=>{
-          const piezas=tallerParsearPiezas(p.piezas);
-          piezas.forEach(pz=>{
-            if(pz.raw){ if(pz.nombre) nombresVinil.push(pz.nombre); return; }
-            if(pz.nombre) nombresVinil.push(pz.nombre);
-          });
-        });
-      });
+      // Nombres agrupados por COLOR DEL VINIL: primero el color con más nombres. Los niños llevan su talla después del nombre.
+      const gruposVinil=tallerAgruparNombresVinil(codigos);
+      const nombresVinil=[]; gruposVinil.forEach(g=>g.nombres.forEach(x=>nombresVinil.push(x.n)));
       if(nombresVinil.length){
-        const infoDxf=await scriptGETjson({action:'generarDXFCombinado', nombres:nombresVinil, filename:'Taller_Vinil_'+Date.now()}, 30000);
+        const infoDxf=await tallerEnviarDXFVinil(gruposVinil, nombresVinil, 'Taller_Vinil_'+Date.now());
         if(infoDxf.ok){
-          dxfLinkHtml=`<a href="${infoDxf.drive_url}" target="_blank" style="flex:1;min-width:180px;text-align:center;padding:12px;background:var(--accent);border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-weight:700;text-decoration:none;">🧵 Descargar DXF Vinil (${infoDxf.nombres_count})</a>`;
+          dxfLinkHtml=`<a href="${infoDxf.drive_url}" target="_blank" style="flex:1;min-width:180px;text-align:center;padding:12px;background:var(--accent);border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-weight:700;text-decoration:none;">🧵 Descargar DXF Vinil (${nombresVinil.length} ${nombresVinil.length===1?'nombre':'nombres'} · ${gruposVinil.length} ${gruposVinil.length===1?'color':'colores'})</a>`;
+          dxfResumenHtml=`<div style="flex-basis:100%;font-size:12px;color:var(--muted);">🧵 ${gruposVinil.map(g=>(g.color||'COLOR NO INDICADO')+' ('+g.nombres.length+')').join(' · ')}</div>`;
         } else {
           console.warn('DXF combinado error:', infoDxf.error);
         }
@@ -8683,6 +8717,7 @@ async function generarReportesTaller(){
       <a href="${infoCortador.pdf_url}" target="_blank" style="flex:1;min-width:180px;text-align:center;padding:12px;background:var(--accent);border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-weight:700;text-decoration:none;">✂️ Descargar Cortador</a>
       <a href="${infoEstampador.pdf_url}" target="_blank" style="flex:1;min-width:180px;text-align:center;padding:12px;background:var(--accent);border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-weight:700;text-decoration:none;">🖨️ Descargar Estampador</a>
       ${dxfLinkHtml}
+      ${dxfResumenHtml}
     `;
     resWrap.style.display='block';
   }catch(e){
