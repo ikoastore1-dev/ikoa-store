@@ -8,6 +8,15 @@
       "nombre": "Saltar Cuerda",
       "web": "stickers/vinil/web/S.A.1.png",
       "fecha": "2026-11-03"
+    },
+    {
+      "codigo": "S.A.2",
+      "tecnica": "vinil",
+      "catalogo": "A",
+      "tematica": "Deportes",
+      "nombre": "Levantar pesa",
+      "web": "stickers/vinil/web/S.A.2.png",
+      "fecha": "2026-11-03"
     }
   ]
 }
