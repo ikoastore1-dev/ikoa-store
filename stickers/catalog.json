@@ -1,0 +1,13 @@
+{
+  "stickers": [
+    {
+      "codigo": "S.A.1",
+      "tecnica": "vinil",
+      "catalogo": "A",
+      "tematica": "Deportes",
+      "nombre": "Saltar Cuerda",
+      "web": "stickers/vinil/web/S.A.1.png",
+      "fecha": "2026-11-03"
+    }
+  ]
+}
