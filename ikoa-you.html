@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!doctype html><html lang="es"><head><meta charset="utf-8"><script>(function(){var e;try{e=window.self!==window.top}catch(x){e=true}window.__ikoaEmbed=e;if(e)document.documentElement.classList.add("embebido")})();</script><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ikoa You · Diseña tu franela</title>
 <meta name="description" content="Diseña tu Comfy Ikoa You con colores de tela, vinil y stickers por temática.">
 <meta property="og:title" content="Ikoa You · Diseña tu franela">
@@ -25,6 +25,7 @@ input[type=text]{width:100%;padding:12px;border:1px solid var(--line);border-rad
 .slots{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
 .slot{aspect-ratio:1;border:2px dashed var(--line);border-radius:10px;background:#e0ddd5 center/70% no-repeat;cursor:pointer;position:relative;font-size:11px;color:var(--mut)}
 .slot.on{border:2px solid var(--acc)}
+.embebido #precioSec{display:none!important}.embebido .bar>div{display:none!important}   /* dentro de la app de pedidos NO se muestra precio ni cantidad: la app los presenta al final */
 .qrow{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px}.qty{display:flex;align-items:center;gap:12px}.qty button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:22px;font-weight:700;cursor:pointer;line-height:1}.qty b{min-width:34px;text-align:center;font-size:22px}
 .pdet{margin:10px 0 4px;font-size:13px}.pdet>div{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px dashed var(--line);padding:7px 0}.pdet .am{text-align:right;white-space:nowrap}.pdet .am b{font-size:14px}.pdet .am small{display:block;color:var(--mut);font-size:12px}
 .ptot{display:block;margin-top:10px}.ptot>div{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#f2efe8;border-radius:12px;padding:10px 12px;margin-top:6px}.ptot small{color:var(--mut);font-size:12px}.ptot b{font-size:17px;white-space:nowrap}.ptot .am{text-align:right}.ptot .am span{display:block;font-size:11px;color:var(--mut)}
@@ -206,12 +207,12 @@ function slotsUI(){var w=$('slotWrap');w.innerHTML='';var zones=[];if(S.place=='
  $('slotSec').hidden=!zones.length;
  zones.forEach(function(z){var h=document.createElement('p');h.className='note';h.innerHTML='<b>'+z[1]+'</b>';w.appendChild(h);var d=document.createElement('div');d.className='slots';
   var n=z[0]=='c'?1:4;for(var i=0;i<n;i++){(function(i){var id=z[0]+i,o=z[0]=='c'?(S.chestS?{c:S.chestS,k:S.chestC}:null):S[z[0]][i];var s=document.createElement('div');s.className='slot'+(S.sel==id?' on':'');s.innerHTML='<i>'+(z[0]=='c'?'':i+1)+'</i>';
-   if(o){var tu=tintURL(stSrc(o.c),col(o.k));s.style.backgroundImage='url('+(tu||stSrc(o.c))+')';var ab=document.createElement('span');ab.className='ab';ab.style.cssText='position:absolute;bottom:2px;left:50%;transform:translateX(-50%);margin:0';abButtons(ab,function(){return o.k},function(k){if(z[0]=='c')S.chestC=k;else S[z[0]][i].k=k;S.thumbDirty=1});ab.querySelectorAll('button').forEach(function(b){b.style.width=b.style.height='20px';b.style.fontSize='9px'});s.appendChild(ab)}
+   if(o){var tu=tintURL(stSrc(o.c),col(o.k));s.style.backgroundImage='url('+(tu||stSrc(o.c))+')';var ab=document.createElement('span');ab.className='ab';ab.style.cssText='position:absolute;bottom:2px;left:50%;transform:translateX(-50%);margin:0';abButtons(ab,function(){return o.k},function(k){if(z[0]=='c')S.chestC=k;else S[z[0]][i].k=k;S.thumbDirty=1});ab.querySelectorAll('button').forEach(function(b){b.style.width=b.style.height='20px';b.style.fontSize='9px'});if(!FIXED[stSrc(o.c)])s.appendChild(ab)}
    s.onclick=function(){S.sel=id;if(z[0]!='c')S.view=z[0]=='e'?'b':S.view;S.thumbDirty=1;ui()};
    if(o){var xb=document.createElement('button');xb.type='button';xb.className='x';xb.setAttribute('aria-label','Quitar sticker');xb.textContent='\u00d7';xb.onclick=function(ev){ev.stopPropagation();if(z[0]=='c'){S.chestS=null}else{S[z[0]][i]=null}S.thumbDirty=1;ui()};s.appendChild(xb)}
    d.appendChild(s)})(i)}w.appendChild(d)});
  if(!zones.some(function(z){return S.sel[0]==z[0]})&&zones.length)S.sel=zones[0][0]+'0'}
-function gridUI(){var g=$('grid');g.innerHTML='';categoriesUI();var filtered=filterStickers(DATA.cat[S.g],S.g,S.theme);$('catalogCount').textContent=filtered.length+' stickers';if(!filtered.length){var empty=document.createElement('p');empty.className='catalog-empty';empty.textContent='No hay stickers de esta temática en este catálogo.';g.appendChild(empty)}var z=S.sel[0],si=+S.sel.slice(1),kk=z=='c'?(S.chestS?S.chestC:null):(S[z]&&S[z][si]?S[z][si].k:null),cc=col(kk||'A');filtered.forEach(function(it){var code='S.'+S.g+'.'+it[0];var b=document.createElement('button');b.type='button';b.className='st';b.title=code;b.setAttribute('aria-label','Seleccionar '+code);b.style.backgroundImage='url('+(tintURL(it[1],cc)||it[1])+')';b.innerHTML='<span>'+code+'</span>';
+function gridUI(){var g=$('grid');g.innerHTML='';categoriesUI();var filtered=filterStickers(DATA.cat[S.g],S.g,S.theme);$('catalogCount').textContent=filtered.length+' stickers';if(!filtered.length){var empty=document.createElement('p');empty.className='catalog-empty';empty.textContent='No hay stickers de esta temática en este catálogo.';g.appendChild(empty)}var z=S.sel[0],si=+S.sel.slice(1),kk=z=='c'?(S.chestS?S.chestC:null):(S[z]&&S[z][si]?S[z][si].k:null),cc=col(kk||'A');filtered.forEach(function(it){var code='S.'+S.g+'.'+it[0];var b=document.createElement('button');b.type='button';b.className='st';b.title=code;b.setAttribute('aria-label','Seleccionar '+code);b.style.backgroundImage='url('+(tintURL(it[1],cc)||it[1])+')';var sp_=document.createElement('span');sp_.textContent=code;b.appendChild(sp_);
  b.onclick=function(){var z=S.sel[0],i=+S.sel.slice(1);if(z=='c'){S.chestS=code}else{S[z][i]={c:code,k:S[z][i]?S[z][i].k:'A'};if(i<3)S.sel=z+(i+1);S.view=z=='e'?'b':(S.view)}ui()};g.appendChild(b)})}
 function sw(id,list,key){var c=$(id);c.innerHTML='';list.forEach(function(v,i){var b=document.createElement('button');b.type='button';b.title=v[0];b.style.background=v[1];if(S[key]==i)b.className='on';b.onclick=function(){if(S[key]!=i){S[key]=i;if(key=='A'||key=='B')S.thumbDirty=1}ui()};c.appendChild(b)})}
 function ui(){if(S.thumbDirty){S.thumbDirty=0;gridUI()}sw('telas',TELAS,'t');sw('vA',VIN,'A');sw('vB',VIN,'B');$('nA').textContent=VIN[S.A][0];$('nB').textContent=VIN[S.B][0];
@@ -227,11 +228,13 @@ document.querySelectorAll('[data-p]').forEach(function(b){b.onclick=function(){S
 document.querySelectorAll('[data-g]').forEach(function(b){b.onclick=function(){S.g=b.dataset.g;gridUI();ui()}});
 $('category').onchange=function(){S.theme=this.value;gridUI()};
 $('name').oninput=function(){this.value=this.value.toUpperCase();S.name=this.value;draw()};
-function list(a){var r=[];a.forEach(function(o,i){if(o)r.push((i+1)+') '+o.c+' · '+VIN[S[o.k]][0])});return r.length?r.join('\n'):'— ninguno'}
+function esDTF(c){var s=c&&stSrc(c);return !!(s&&FIXED[s])}
+window.esDTF=esDTF;
+function list(a){var r=[];a.forEach(function(o,i){if(o)r.push((i+1)+') '+o.c+' · '+(esDTF(o.c)?'DTF a todo color':VIN[S[o.k]][0]))});return r.length?r.join('\n'):'— ninguno'}
 function capture(){var v=S.view,out=document.createElement('canvas');out.width=1240;out.height=857;var o=out.getContext('2d');o.fillStyle='#fff';o.fillRect(0,0,1240,857);
  S.view='f';draw();o.drawImage(cv,0,60);S.view='b';draw();o.drawImage(cv,620,60);o.fillStyle='#14161f';o.font='800 30px system-ui';o.fillText('IKOA YOU'+(DE_HOJA?' · '+S.q+(S.q==1?' unidad · ':' unidades · ')+usd2(calcPrecio().totUsd):''),30,40);S.view=v;draw();return out}
 $('wa').onclick=function(){var t=(ISL?'*IKOA YOU LICRA – Mi diseño*\nPrenda: Licra Protect manga ranglan\n':'*IKOA YOU – Mi diseño*\n')+'Tela: '+TELAS[S.t][0]+'\nVinil A: '+VIN[S.A][0]+' · Vinil B: '+VIN[S.B][0]+
- '\nNombre (manga derecha): '+(S.name||'—')+' · color '+S.nameC+'\nPecho: '+(S.chest=='w'?'Alitas IKOA · color '+S.chestC:(S.chestS||'—')+' · color '+S.chestC);
+ '\nNombre (manga derecha): '+(S.name||'—')+' · color '+S.nameC+'\nPecho: '+(S.chest=='w'?'Alitas IKOA · color '+S.chestC:(S.chestS||'—')+(esDTF(S.chestS)?' · DTF a todo color':' · color '+S.chestC));
  if(S.place=='m'||S.place=='a')t+='\nManga izquierda:\n'+list(S.m);if(S.place=='e'||S.place=='a')t+='\nEspalda:\n'+list(S.e);
  if(DE_HOJA){var P_=calcPrecio();t+='\nUnidades: '+P_.q+'\n*Total: '+usd2(P_.totUsd)+' · '+bs2(P_.totBs)+'*';if(P_.cashea.on)t+='\nCon Cashea: '+bs2(P_.cashea.bs)+(P_.cashea.usd>0?' (≈ '+usd2(P_.cashea.usd)+')':'');}
  var out=capture();
@@ -276,15 +279,22 @@ gridUI();ui();
 </script>
 <script id="iy-catalogo">
 (function(){if(!DATA.cat.A)DATA.cat.A=[];var BASE='https://ikoastore1-dev.github.io/ikoa-store/';
+ // Cada entrada del catálogo se VALIDA con un formato estricto antes de usarla (el catálogo es un archivo editable: no se confía en su contenido)
+ var RE_COD=/^S\.(V|N|A)\.(D?[0-9]{1,4})$/, RE_WEB=/^stickers\/(vinil|dtf)\/web\/[A-Za-z0-9._-]{1,80}\.png$/, MAX=3000;
  fetch(BASE+'stickers/catalog.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){
-  if(!j||!j.stickers)return;
-  j.stickers.forEach(function(s){var p=String(s.codigo||'').split('.');if(p.length<3||p[0]!=='S')return;var g=p[1],n=p[2];
-   if(!DATA.cat[g])DATA.cat[g]=[];var L=DATA.cat[g];if(L.some(function(it){return String(it[0])===n}))return;
-   var src=BASE+s.web;if(s.tecnica==='dtf')FIXED[src]=true;L.push([isNaN(+n)?n:+n,src]);
-   var lab=String(s.tematica||'').trim();if(!lab)return;
+  if(!j||!Array.isArray(j.stickers))return;
+  j.stickers.slice(0,MAX).forEach(function(s){
+   if(!s||typeof s!=='object')return;
+   var cod=String(s.codigo||''),web=String(s.web||''),tec=s.tecnica==='dtf'?'dtf':'vinil',m=RE_COD.exec(cod);
+   if(!m||!RE_WEB.test(web)||web.indexOf('..')>=0)return;
+   var g=m[1],n=m[2],esD=n.charAt(0)==='D';
+   if(esD!==(tec==='dtf')||web.indexOf('/'+tec+'/')<0)return;           // un código D… solo puede ser DTF (y al revés), y su imagen debe estar en su carpeta
+   var L=DATA.cat[g];if(!L||L.some(function(it){return String(it[0])===n}))return;
+   var src=BASE+web;if(tec==='dtf')FIXED[src]=true;var num=esD?n:+n;L.push([num,src]);
+   var lab=String(s.tematica||'').replace(/\s+/g,' ').trim().slice(0,40);if(!lab)return;
    var th=STICKER_THEMES.find(function(x){return x.label.toLowerCase()===lab.toLowerCase()});
    if(!th){th={id:'x-'+lab.toLowerCase().replace(/[^a-z0-9]+/g,'-'),label:lab,V:[],N:[]};STICKER_THEMES.push(th)}
-   if(!th[g])th[g]=[];th[g].push(isNaN(+n)?n:+n)});
+   if(!th[g])th[g]=[];th[g].push(num)});
   try{gridUI();slotsUI();draw()}catch(e){}
  }).catch(function(){});
 })();

@@ -1993,6 +1993,7 @@ async function calcularPago(){
   let hayYou=false, faltaCodigoYou=false, youExtraTotBs=0, youExtraTotUsd=0;
   let sumaBsLicra=0, faltaCodigoLicra=false, hayComfy=false;
   const basesMostrar=[]; // precio base real de cada producto del pedido (para el desglose)
+  const youLineas=[];    // diseño Ikoa You de cada pack (para el desglose)
   let desglose=[];
   const preciosPorCodigo=window._packPreciosComfy||{};
   pedido.packs.forEach((pk,i)=>{
@@ -2036,8 +2037,8 @@ async function calcularPago(){
     { const unid=(pk.mangaTipo==='short')?'short':(pk.esDress?'vestido':'franela');
       const nomBase=(((pk.modelo||'')+' '+(pk.manga||'')).trim())+((esYou&&pk.linea==='licra')?' + Ikoa You':'');
       const clave=nomBase+'|'+precioPackBs;
-      if(!basesMostrar.some(x=>x.clave===clave)) basesMostrar.push({clave,unid,nom:nomBase,bs:precioPackBs,usd:precioPackUsd}); }
-    if(esYou){ hayYou=true; youExtraTotUsd+=franelas*yoExUsd; youExtraTotBs+=franelas*yoExBs; }
+      const ex=basesMostrar.find(x=>x.clave===clave); if(ex) ex.n+=franelas; else basesMostrar.push({clave,unid,nom:nomBase,bs:precioPackBs,usd:precioPackUsd,n:franelas}); }
+    if(esYou){ hayYou=true; youExtraTotUsd+=franelas*yoExUsd; youExtraTotBs+=franelas*yoExBs; if(yoExUsd>0||yoExBs>0) youLineas.push({pack:i+1,n:franelas,bs:yoExBs,usd:yoExUsd}); }
     sumaBs+=franelas*precioPackBs;
     sumaUsd+=franelas*precioPackUsd;
     const etiquetaPack=(pk.mangaTipo==='short')?(franelas>1?'shorts':'short'):(pk.esDress?(franelas>1?'vestidos':'vestido'):(franelas>1?'franelas':'franela'));
@@ -2065,14 +2066,14 @@ async function calcularPago(){
 
   document.getElementById('pago-desglose').innerHTML=
     desglose.join('<br>')+
-    basesMostrar.map(b=>`<br><span style="color:var(--muted);">• Precio/${b.unid} · ${b.nom}:</span> Bs ${b.bs.toFixed(2)} / $${b.usd.toFixed(2)}`).join('')+
-    (totalRecargas>0?`<br><span style="color:var(--muted);">• Recarga talla grande:</span> Bs ${precioRecarga.bs.toFixed(2)} / $${precioRecarga.usd.toFixed(2)}`:'')+
+    basesMostrar.map(b=>`<br><span style="color:var(--muted);">• Precio/${b.unid} · ${b.nom} (${b.n}):</span> Bs ${b.bs.toFixed(2)} / $${b.usd.toFixed(2)} c/u`).join('')+
+    (totalRecargas>0?`<br><span style="color:var(--muted);">• Recarga talla grande (${totalRecargas}):</span> Bs ${precioRecarga.bs.toFixed(2)} / $${precioRecarga.usd.toFixed(2)} c/u`:'')+
     (totalConCapucha>0?`<br><span style="color:var(--muted);">• Con Capucha (${totalConCapucha}):</span> Bs ${precioCapucha.bs.toFixed(2)} / $${precioCapucha.usd.toFixed(2)} c/u`:'')+
      (totalCuelloAlto>0?`<br><span style="color:var(--muted);">• Con Cuello alto (${totalCuelloAlto}):</span> Bs ${precioCapucha.bs.toFixed(2)} / $${precioCapucha.usd.toFixed(2)} c/u`:'')+
     (totalLogosPecho>0?`<br><span style="color:var(--muted);">• Logo Pecho (${totalLogosPecho}):</span> Bs ${precioLogoPecho.bs.toFixed(2)} / $${precioLogoPecho.usd.toFixed(2)} c/u`:'')+
     (totalLogosEspalda>0?`<br><span style="color:var(--muted);">• Logo Espalda (${totalLogosEspalda}):</span> Bs ${precioLogoEspalda.bs.toFixed(2)} / $${precioLogoEspalda.usd.toFixed(2)} c/u`:'')+
     (totalLogosManga>0?`<br><span style="color:var(--muted);">• Logo Manga (${totalLogosManga}):</span> Bs ${precioLogoManga.bs.toFixed(2)} / $${precioLogoManga.usd.toFixed(2)} c/u`:'')+
-    (hayYou?`<br><span style="color:var(--muted);">• Diseño Ikoa You (stickers):</span> Bs ${youExtraTotBs.toFixed(2)} / $${youExtraTotUsd.toFixed(2)} en total`:'');
+    youLineas.map(y=>`<br><span style="color:var(--muted);">• Diseño Ikoa You (stickers)${youLineas.length>1?' · Pack '+y.pack:''} (${y.n}):</span> Bs ${y.bs.toFixed(2)} / $${y.usd.toFixed(2)} c/u`).join('');
   document.getElementById('pago-total-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
   document.getElementById('pago-total-usd').textContent='$'+pagoTotalUsd.toFixed(2);
   document.getElementById('pm-monto-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
@@ -2994,6 +2995,7 @@ function adaptar(){
   var w=frame.contentWindow,d=frame.contentDocument;
   var cg=capa&&capa.querySelector('.iy-cargando');if(cg)cg.parentNode.removeChild(cg);
   if(!d||!w||!w.S||typeof w.price!=='function'||!d.getElementById('wa')){fallo();return;}
+  try{d.documentElement.classList.add('embebido');w.__ikoaEmbed=true;}catch(e){}   // dentro de la app: sin precio ni cantidad (la app los presenta en su paso de pago)
   var wa=d.getElementById('wa');try{var S=w.S,ix=function(L,n){for(var i=0;i<L.length;i++)if(L[i][0].toLowerCase()===n)return i;return -1};var t=ix(w.TELAS,'naranja neon'),a=ix(w.VIN,'negro'),f=ix(w.VIN,'fucsia');if(t>=0)S.t=t;if(a>=0)S.A=a;if(f>=0)S.B=f;S.nameC='A';S.chestC='A';S.place='m';S.m=(baseYou==='licra'?[42,43,44,45]:[1,2,3,4]).map(function(n){return{c:'S.V.'+n,k:'B'}});S.thumbDirty=1;w.ui();}catch(e){}
   var nb=wa.cloneNode(true);nb.textContent='Siguiente \u2192';wa.parentNode.replaceChild(nb,wa);
   nb.onclick=function(){siguiente(w);};
@@ -3023,7 +3025,8 @@ function siguiente(w){
     pecho:S.chest==='s'?(S.chestS+(dtf(S.chestS)?' (DTF a todo color)':' vinil '+(S.chestC==='A'?vA:vB))):'',
     manga:((S.place==='m'||S.place==='a')&&lista(S.m))?('Stickers '+lista(S.m)):'',
     espalda:((S.place==='e'||S.place==='a')&&lista(S.e))?('Stickers '+lista(S.e)):'',
-    precio:w.price(),unidades:Math.max(1,parseInt(S.q)||1),
+    precio:w.price(),unidades:(w.__ikoaEmbed?0:Math.max(1,parseInt(S.q)||1)),   // en la app la cantidad se elige en su propio paso: no se preselecciona
+    
     base:(typeof w.priceParts==='function'?w.priceParts().base:0),
     zona:(typeof w.zonaCobro==='function'?w.zonaCobro():((S.place==='m'||S.place==='e'||S.place==='a')?S.place:'')),
     conPecho:S.chest==='s',
