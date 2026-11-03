@@ -35,6 +35,15 @@
       "nombre": "Pesa",
       "web": "stickers/vinil/web/S.A.4.png",
       "fecha": "2026-11-03"
+    },
+    {
+      "codigo": "S.A.5",
+      "tecnica": "vinil",
+      "catalogo": "A",
+      "tematica": "Deportes",
+      "nombre": "Pesa",
+      "web": "stickers/vinil/web/S.A.5.png",
+      "fecha": "2026-11-03"
     }
   ]
 }
