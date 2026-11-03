@@ -76,7 +76,7 @@ async function connect(){
   await loadCatalog();$("cfg").classList.add("hide");$("up").classList.remove("hide");refresh();
  }catch(e){$("cfgMsg").textContent=e.message;$("cfgMsg").className="msg err"}
 }
-$("save").onclick=()=>{if($("token").value)localStorage.setItem("ikoaGhToken",$("token").value.trim());
+$("save").onclick=()=>{if($("token").value)localStorage.setItem("ikoaGhToken",$("token").value.replace(/\s+/g,""));
  localStorage.setItem("ikoaGh_repo",$("repo").value.trim());localStorage.setItem("ikoaGh_branch",$("branch").value.trim());connect()};
 $("logout").onclick=()=>{localStorage.removeItem("ikoaGhToken");$("up").classList.add("hide");$("cfg").classList.remove("hide")};
 $("tec").onclick=e=>{const b=e.target.closest("button");if(!b)return;S.tec=b.dataset.v;
