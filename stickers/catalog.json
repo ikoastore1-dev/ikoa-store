@@ -17,6 +17,15 @@
       "nombre": "Levantar pesa",
       "web": "stickers/vinil/web/S.A.2.png",
       "fecha": "2026-11-03"
+    },
+    {
+      "codigo": "S.A.3",
+      "tecnica": "vinil",
+      "catalogo": "A",
+      "tematica": "Deportes",
+      "nombre": "Parado de Manos",
+      "web": "stickers/vinil/web/S.A.3.png",
+      "fecha": "2026-11-03"
     }
   ]
 }
