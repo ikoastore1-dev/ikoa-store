@@ -20,7 +20,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
 .prev{display:flex;justify-content:center;margin-top:10px}.prev img{max-height:160px;background:repeating-conic-gradient(var(--line) 0 25%,var(--card) 0 50%) 0/16px 16px;border-radius:8px}
 .msg{font-size:14px;margin-top:10px}.ok{color:var(--ok)}.err{color:var(--err)}.hide{display:none}
 </style></head><body>
-<header>IKOA · Cargar stickers</header>
+<header>IKOA · Cargar stickers <small style="opacity:.6;font-weight:400">v3</small></header>
 <main>
 <section class="card" id="cfg">
  <h2>Conexión con GitHub</h2>
@@ -54,7 +54,9 @@ const $=id=>document.getElementById(id),API="https://api.github.com";
 const S={tec:"vinil",catalog:null,sha:null};
 const conf=()=>({repo:$("repo").value.trim(),branch:$("branch").value.trim()||"main",token:localStorage.getItem("ikoaGhToken")||""});
 ["repo","branch"].forEach(k=>{const v=localStorage.getItem("ikoaGh_"+k);if(v)$(k).value=v});
-function gh(path,opt={}){const c=conf();return fetch(`${API}/repos/${c.repo}/${path}`,{...opt,headers:{Accept:"application/vnd.github+json",Authorization:`Bearer ${c.token}`,...(opt.headers||{})}})}
+async function gh(path,opt={}){const c=conf(),tk=c.token.replace(/\s+/g,""),url=`${API}/repos/${c.repo}`+(path?`/${path}`:"");
+ try{return await fetch(url+(url.includes("?")?"&":"?")+"t="+Date.now(),{...opt,headers:{Accept:"application/vnd.github+json",Authorization:`Bearer ${tk}`,...(opt.headers||{})}})}
+ catch(e){throw new Error("No hay conexión con GitHub. Revisa tu internet e inténtalo de nuevo.")}}
 const b64=s=>btoa(unescape(encodeURIComponent(s)));
 const fileB64=f=>new Promise((r,j)=>{const fr=new FileReader();fr.onload=()=>r(fr.result.split(",")[1]);fr.onerror=j;fr.readAsDataURL(f)});
 async function loadCatalog(){
@@ -76,7 +78,7 @@ async function connect(){
   await loadCatalog();$("cfg").classList.add("hide");$("up").classList.remove("hide");refresh();
  }catch(e){$("cfgMsg").textContent=e.message;$("cfgMsg").className="msg err"}
 }
-$("save").onclick=()=>{if($("token").value)localStorage.setItem("ikoaGhToken",$("token").value.replace(/\s+/g,""));
+$("save").onclick=()=>{if($("token").value)localStorage.setItem("ikoaGhToken",$("token").value.trim());
  localStorage.setItem("ikoaGh_repo",$("repo").value.trim());localStorage.setItem("ikoaGh_branch",$("branch").value.trim());connect()};
 $("logout").onclick=()=>{localStorage.removeItem("ikoaGhToken");$("up").classList.add("hide");$("cfg").classList.remove("hide")};
 $("tec").onclick=e=>{const b=e.target.closest("button");if(!b)return;S.tec=b.dataset.v;
