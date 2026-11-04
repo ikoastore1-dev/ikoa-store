@@ -8797,6 +8797,109 @@ async function tallerPrepararFormas(grupos){
   }
   return formas;
 }
+
+// ── HOJA DTF: stickers DTF (a todo color) a TAMAÑO REAL, en un PNG listo para imprimir ───────────────────────
+// ⚠️ PROVISIONALES (confirmar con producción): medidas por zona (las mismas que las formas de vinil), ancho de la hoja y alto máximo por hoja.
+const TALLER_DTF_CM={m:6,e:7,p:7};      // lado mayor del sticker, en cm, según la zona de la franela (m=manga, e=espalda, p=pecho)
+const TALLER_DTF_ANCHO_CM=29;           // ancho de la hoja
+const TALLER_DTF_ALTO_MAX_CM=60;        // alto máximo por hoja; si hace falta más, se arma otra hoja
+const TALLER_DTF_SEP_CM=1;              // separación entre stickers
+const TALLER_DTF_DPI=300;               // resolución de la hoja (queda escrita dentro del PNG)
+const TALLER_DTF_DPI_MIN=250;           // si la imagen no da para esto a tamaño real, se avisa
+let tallerDTFUrls=[];
+function tallerStickersDTFPorZona(codigos){
+  const cuenta={};
+  codigos.forEach(cod=>{ const g=tallerGrupos[cod]; if(!g) return;
+    g.packs.forEach(p=>tallerParsearPiezas(p.piezas).forEach(pz=>{
+      if(pz.raw) return;
+      [['p',pz.logoPecho],['e',pz.logoEspalda],['m',pz.logoManga]].forEach(([z,t])=>{
+        const re=/\b(S\.[VNA]\.D\d{1,4})\b/gi; const s=String(t||''); let m;
+        while((m=re.exec(s))){ const k=m[1].toUpperCase()+'|'+z; cuenta[k]=(cuenta[k]||0)+1; }
+      });
+    })); });
+  const ZO={m:0,e:1,p:2};
+  return Object.keys(cuenta).map(k=>{ const [c,z]=k.split('|'); return {c,z,n:cuenta[k]}; })
+    .sort((a,b)=>b.n-a.n||a.c.localeCompare(b.c,'es',{numeric:true})||ZO[a.z]-ZO[b.z]);
+}
+async function tallerCatalogoDTF(){
+  try{
+    const r=await fetch(TALLER_STICKERS_BASE+'stickers/catalog.json?t='+Date.now(),{cache:'no-store'}); if(!r.ok) return {};
+    const j=await r.json(), out={}, RE_COD=/^S\.(V|N|A)\.D\d{1,4}$/, RE_WEB=/^stickers\/dtf\/web\/[A-Za-z0-9._-]{1,80}\.png$/, RE_PRN=/^stickers\/dtf\/print\/[A-Za-z0-9._-]{1,80}\.(png|jpe?g|webp)$/i;
+    (Array.isArray(j.stickers)?j.stickers:[]).slice(0,3000).forEach(s=>{
+      if(!s||s.tecnica!=='dtf') return; const cod=String(s.codigo||''), web=String(s.web||''), prn=String(s.produccion||'');
+      if(!RE_COD.test(cod)||!RE_WEB.test(web)||web.indexOf('..')>=0) return;
+      out[cod]={web:TALLER_STICKERS_BASE+web, print:(RE_PRN.test(prn)&&prn.indexOf('..')<0)?TALLER_STICKERS_BASE+prn:null};   // "print" = archivo de impresión (300 DPI) si se subió
+    });
+    return out;
+  }catch(e){ return {}; }
+}
+// Carga la imagen y la recorta a su parte visible (así "tamaño" = el del dibujo, sin márgenes transparentes).
+async function tallerCargarImagenDTF(url){
+  const im=await new Promise((res,rej)=>{ const i=new Image(); i.crossOrigin='anonymous'; i.onload=()=>res(i); i.onerror=()=>rej(new Error('imagen no disponible')); i.src=url; });
+  const w=im.naturalWidth, h=im.naturalHeight, cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+  const cx=cv.getContext('2d',{willReadFrequently:true}); cx.drawImage(im,0,0);
+  const d=cx.getImageData(0,0,w,h).data; let x0=w,y0=h,x1=-1,y1=-1;
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++) if(d[(y*w+x)*4+3]>8){ if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; }
+  if(x1<0) throw new Error('imagen vacía');
+  const cw=x1-x0+1, ch=y1-y0+1, out=document.createElement('canvas'); out.width=cw; out.height=ch; out.getContext('2d').drawImage(cv,x0,y0,cw,ch,0,0,cw,ch);
+  return {cv:out,w:cw,h:ch};
+}
+function tallerEscalarCanvas(src,w,h){      // reduce por mitades para no perder nitidez
+  let cv=src;
+  while(cv.width/2>=w&&cv.height/2>=h){ const t=document.createElement('canvas'); t.width=Math.max(1,Math.floor(cv.width/2)); t.height=Math.max(1,Math.floor(cv.height/2)); const c=t.getContext('2d'); c.imageSmoothingEnabled=true; c.imageSmoothingQuality='high'; c.drawImage(cv,0,0,t.width,t.height); cv=t; }
+  return cv;
+}
+function tallerCrc32(buf){
+  if(!tallerCrc32.t){ const t=[]; for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c>>>0; } tallerCrc32.t=t; }
+  let crc=0xFFFFFFFF; for(let i=0;i<buf.length;i++) crc=tallerCrc32.t[(crc^buf[i])&255]^(crc>>>8); return (crc^0xFFFFFFFF)>>>0;
+}
+// Escribe la resolución dentro del PNG (chunk pHYs): sin esto, el programa de impresión lo abre a la medida que él suponga, no a la real.
+function tallerPngConDpi(bytes,dpi){
+  const ppm=Math.round(dpi/0.0254), dv=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength), partes=[bytes.slice(0,8)]; let pos=8, hecho=false;
+  while(pos<bytes.length){
+    const len=dv.getUint32(pos), tipo=String.fromCharCode(bytes[pos+4],bytes[pos+5],bytes[pos+6],bytes[pos+7]), total=12+len;
+    if(tipo==='pHYs'){ pos+=total; continue; }
+    partes.push(bytes.slice(pos,pos+total)); pos+=total;
+    if(tipo==='IHDR'&&!hecho){ const d=new Uint8Array(21), v=new DataView(d.buffer); v.setUint32(0,9); d.set([0x70,0x48,0x59,0x73],4); v.setUint32(8,ppm); v.setUint32(12,ppm); d[16]=1; v.setUint32(17,tallerCrc32(d.subarray(4,17))); partes.push(d); hecho=true; }
+  }
+  let n=0; partes.forEach(p=>n+=p.length); const out=new Uint8Array(n); let o=0; partes.forEach(p=>{ out.set(p,o); o+=p.length; }); return out;
+}
+// items: [{c,z,n}] → {hojas:[{nombre,url,copias,alto_cm}], sinArchivo:[{c,z,n}], bajaRes:[{c,z,dpi}], usados:[{c,z,n,cm,origen}]}
+async function tallerArmarHojasDTF(items){
+  tallerDTFUrls.forEach(u=>{ try{ URL.revokeObjectURL(u); }catch(e){} }); tallerDTFUrls=[];
+  const cat=await tallerCatalogoDTF(), pxcm=TALLER_DTF_DPI/2.54, imgs={}, sinArchivo=[], bajaRes=[], usados=[], copias=[];
+  for(const it of items){
+    const e=cat[it.c]; if(!e){ sinArchivo.push(it); continue; }
+    if(!imgs[it.c]){
+      try{
+        if(e.print){ try{ imgs[it.c]=await tallerCargarImagenDTF(e.print); imgs[it.c].origen='impresión'; }catch(x){ imgs[it.c]=null; } }
+        if(!imgs[it.c]){ imgs[it.c]=await tallerCargarImagenDTF(e.web); imgs[it.c].origen='imagen web'; }
+      }catch(x){ imgs[it.c]=null; }
+    }
+    const img=imgs[it.c]; if(!img){ sinArchivo.push(it); continue; }
+    const cm=TALLER_DTF_CM[it.z]||TALLER_DTF_CM.m, esc=cm*pxcm/Math.max(img.w,img.h);
+    const dpiEf=Math.round(Math.max(img.w,img.h)/(cm/2.54)); if(dpiEf<TALLER_DTF_DPI_MIN) bajaRes.push({c:it.c,z:it.z,dpi:dpiEf});
+    usados.push({c:it.c,z:it.z,n:it.n,cm:cm,origen:img.origen});
+    for(let i=0;i<it.n;i++) copias.push({img:img,w:Math.round(img.w*esc),h:Math.round(img.h*esc)});
+  }
+  const anchoPx=Math.round(TALLER_DTF_ANCHO_CM*pxcm), altoMaxPx=Math.round(TALLER_DTF_ALTO_MAX_CM*pxcm), sepPx=Math.round(TALLER_DTF_SEP_CM*pxcm);
+  const paginas=[{pos:[],alto:0}]; let cx=0, y=0, rowH=0, pg=paginas[0];
+  copias.forEach(cp=>{
+    if(cx>0&&cx+cp.w>anchoPx){ y+=rowH+sepPx; cx=0; rowH=0; }                                  // fila nueva
+    if(y>0&&y+cp.h>altoMaxPx){ pg.alto=y-sepPx; pg={pos:[],alto:0}; paginas.push(pg); y=0; cx=0; rowH=0; }   // hoja nueva
+    pg.pos.push({x:cx,y:y,w:cp.w,h:cp.h,img:cp.img}); rowH=Math.max(rowH,cp.h); cx+=cp.w+sepPx; pg.alto=y+rowH;
+  });
+  const hojas=[], marca=Date.now();
+  for(let k=0;k<paginas.length;k++){
+    const P=paginas[k]; if(!P.pos.length) continue;
+    const cv=document.createElement('canvas'); cv.width=anchoPx; cv.height=Math.max(1,Math.ceil(P.alto)); const c=cv.getContext('2d'); c.imageSmoothingEnabled=true; c.imageSmoothingQuality='high';
+    P.pos.forEach(q=>c.drawImage(tallerEscalarCanvas(q.img.cv,q.w,q.h),q.x,q.y,q.w,q.h));
+    const blob0=await new Promise(res=>cv.toBlob(res,'image/png')); if(!blob0) throw new Error('la hoja es demasiado grande para el navegador');
+    const bytes=new Uint8Array(await blob0.arrayBuffer()), blob=new Blob([tallerPngConDpi(bytes,TALLER_DTF_DPI)],{type:'image/png'}), url=URL.createObjectURL(blob);
+    tallerDTFUrls.push(url); hojas.push({nombre:'Taller_DTF_'+marca+(paginas.length>1?'_'+(k+1):'')+'.png', url:url, copias:P.pos.length, alto_cm:+(cv.height/pxcm).toFixed(1)});
+  }
+  return {hojas:hojas, sinArchivo:sinArchivo, bajaRes:bajaRes, usados:usados};
+}
 async function tallerEnviarDXFVinil(grupos, nombres, filename, formas){
   // POST (JSON): la lista con colores y tallas puede ser larga para una URL. Se envían también los nombres planos, en el mismo orden (compatibilidad).
   const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),45000);
@@ -8826,7 +8929,7 @@ async function generarReportesTaller(){
     const infoEstampador=await cotGenerarPDFViaAppsScript(htmlEstampador, 'Taller_Estampador_'+Date.now());
 
     btn.textContent='⏳ Generando DXF de Vinil...';
-    let dxfLinkHtml='', dxfResumenHtml='';
+    let dxfLinkHtml='', dxfResumenHtml='', dtfLinkHtml='', dtfResumenHtml='';
     try{
       // Nombres agrupados por COLOR DEL VINIL: primero el color con más nombres. Los niños llevan su talla después del nombre.
       const gruposVinil=tallerAgruparNombresVinil(codigos);
@@ -8851,14 +8954,35 @@ async function generarReportesTaller(){
           console.warn('DXF combinado error:', infoDxf.error);
         }
       }
-      dxfResumenHtml+=dtfHtml;
+      dtfResumenHtml=dtfHtml;                      // aviso simple de los DTF (se reemplaza si se arma la hoja)
     }catch(e){ console.warn('Error generando DXF combinado:', e); }
+    // Hoja PNG con los stickers DTF a tamaño real, lista para imprimir
+    try{
+      const dtfItems=tallerStickersDTFPorZona(codigos);
+      if(dtfItems.length){
+        btn.textContent='⏳ Armando hoja DTF...';
+        const rd=await tallerArmarHojasDTF(dtfItems);
+        if(rd.hojas.length){
+          const estilo="flex:1;min-width:180px;text-align:center;padding:12px;background:var(--accent);border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-weight:700;text-decoration:none;";
+          const tot=rd.usados.reduce((a,x)=>a+x.n,0);
+          dtfLinkHtml=rd.hojas.map((h,i)=>`<a href="${h.url}" download="${h.nombre}" style="${estilo}">🖼️ Descargar hoja DTF${rd.hojas.length>1?' '+(i+1)+'/'+rd.hojas.length:''} (${h.copias} ${h.copias===1?'sticker':'stickers'} · ${TALLER_DTF_ANCHO_CM}×${h.alto_cm} cm · ${TALLER_DTF_DPI} DPI)</a>`).join('');
+          const gris='flex-basis:100%;font-size:12px;color:var(--muted);';
+          dtfResumenHtml=`<div style="${gris}">🖨️ DTF a tamaño real: ${rd.usados.map(x=>x.c+' ×'+x.n+' ('+x.cm+' cm)').join(' · ')}</div>`
+            +(rd.bajaRes.length?`<div style="${gris}">⚠️ Resolución baja para ese tamaño (menos de ${TALLER_DTF_DPI_MIN} DPI): ${rd.bajaRes.map(x=>x.c+' (~'+x.dpi+' DPI)').join(' · ')}</div>`:'')
+            +(rd.sinArchivo.length?`<div style="${gris}">⚠️ Sin imagen en el catálogo (no entran a la hoja): ${rd.sinArchivo.map(x=>x.c+' ×'+x.n).join(' · ')}</div>`:'');
+        } else if(rd.sinArchivo.length){
+          dtfResumenHtml+=`<div style="flex-basis:100%;font-size:12px;color:var(--muted);">⚠️ DTF sin imagen en el catálogo (no se pudo armar la hoja): ${rd.sinArchivo.map(x=>x.c+' ×'+x.n).join(' · ')}</div>`;
+        }
+      }
+    }catch(e){ console.warn('Error armando hoja DTF:', e); }
 
     resLinks.innerHTML=`
       <a href="${infoCortador.pdf_url}" target="_blank" style="flex:1;min-width:180px;text-align:center;padding:12px;background:var(--accent);border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-weight:700;text-decoration:none;">✂️ Descargar Cortador</a>
       <a href="${infoEstampador.pdf_url}" target="_blank" style="flex:1;min-width:180px;text-align:center;padding:12px;background:var(--accent);border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-weight:700;text-decoration:none;">🖨️ Descargar Estampador</a>
       ${dxfLinkHtml}
+      ${dtfLinkHtml}
       ${dxfResumenHtml}
+      ${dtfResumenHtml}
     `;
     resWrap.style.display='block';
   }catch(e){
