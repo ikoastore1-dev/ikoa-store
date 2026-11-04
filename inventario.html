@@ -8640,40 +8640,169 @@ ${bloques}
 // Devuelve [{color, nombres:[{n, t}]}] ordenado por cantidad de NOMBRES (no de pedidos), de mayor a menor.
 // "t" es la talla de niño (KIDS 4…) para que el operador sepa que ese nombre va más pequeño; en adultos va vacía.
 function tallerClaveColorVinil(c){ return String(c||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+// Stickers de VINIL de una pieza (manga, espalda y pecho). Así los escribe la app: "Stickers 1) S.V.86 vinil Fucsia, 2) S.V.10 vinil Negro" / "S.V.5 vinil Fucsia".
+// Los DTF ("S.V.D1 (DTF a todo color)") no llevan vinil: se imprimen, no entran al reporte del vinil.
+function tallerStickersVinilDePieza(pz){
+  const out=[];
+  [['p',pz.logoPecho],['e',pz.logoEspalda],['m',pz.logoManga]].forEach(([z,t])=>{
+    const re=/\b(S\.[VNA]\.\d{1,4})\s+vinil\s+(.+?)(?=\s*,\s*\d+\)|\s*$)/gi; const s=String(t||''); let m;
+    while((m=re.exec(s))) out.push({c:m[1].toUpperCase(), z, color:m[2].replace(/\s+/g,' ').trim().toUpperCase()});
+  });
+  return out;
+}
+function tallerContarStickersDTF(codigos){
+  const cuenta={};
+  codigos.forEach(cod=>{ const g=tallerGrupos[cod]; if(!g) return;
+    g.packs.forEach(p=>tallerParsearPiezas(p.piezas).forEach(pz=>{
+      if(pz.raw) return;
+      [pz.logoPecho,pz.logoEspalda,pz.logoManga].forEach(t=>{ const re=/\b(S\.[VNA]\.D\d{1,4})\b/gi; const s=String(t||''); let m; while((m=re.exec(s))){ const c=m[1].toUpperCase(); cuenta[c]=(cuenta[c]||0)+1; } });
+    })); });
+  return Object.keys(cuenta).sort((a,b)=>cuenta[b]-cuenta[a]||a.localeCompare(b,'es',{numeric:true})).map(c=>({c,n:cuenta[c]}));
+}
+// Devuelve [{color, nombres:[{n,t}], stickers:[{c,n}]}]. Orden: primero el color con MÁS ELEMENTOS A CORTAR (nombres + stickers); empate: el que aparece antes.
+// "t" es la talla de niño (KIDS 4…): el nombre va más pequeño; en adultos va vacía.
 function tallerAgruparNombresVinil(codigos){
   const mapa={}, orden=[];
+  const grupoDe=(color)=>{ const clave=tallerClaveColorVinil(color)||'__SIN__';
+    if(!mapa[clave]){ mapa[clave]={color:clave==='__SIN__'?'':color, nombres:[], stk:{}, stkz:{}, primero:orden.length}; orden.push(clave); }
+    return mapa[clave]; };
   codigos.forEach(cod=>{
     const g=tallerGrupos[cod]; if(!g) return;
     g.packs.forEach(p=>{
       const colorPack=String(p.vinil||'').replace(/\s+/g,' ').trim().toUpperCase();
       tallerParsearPiezas(p.piezas).forEach(pz=>{
-        let nombre=String(pz.nombre||'').trim(); if(!nombre||/sin nombre en manga/i.test(nombre)) return;
-        let color=colorPack;
-        // Ikoa You: el pack trae dos vinilos ("NEGRO + FUCSIA"); el color del nombre viene dentro del propio nombre: "ANA (vinil NEGRO)"
-        const mc=nombre.match(/\s*\(\s*vinil\s+([^)]+?)\s*\)\s*$/i);
-        if(mc){ color=mc[1].replace(/\s+/g,' ').trim().toUpperCase(); nombre=nombre.slice(0,mc.index).trim(); }
-        if(!nombre) return;
-        const tag=(!pz.raw&&/^kids$/i.test(String(pz.genero||'').trim()))?('KIDS '+String(pz.talla||'').trim().toUpperCase()).trim():'';
-        const clave=tallerClaveColorVinil(color)||'__SIN__';
-        if(!mapa[clave]){ mapa[clave]={color:clave==='__SIN__'?'':color, nombres:[], primero:orden.length}; orden.push(clave); }
-        mapa[clave].nombres.push({n:nombre.toUpperCase(), t:tag});
+        // 1) el nombre (primero, como se lee en el pedido)
+        let nombre=String(pz.nombre||'').trim();
+        if(nombre&&!/sin nombre en manga/i.test(nombre)){
+          let color=colorPack;
+          // Ikoa You: el pack trae dos vinilos ("NEGRO + FUCSIA"); el color del nombre viene dentro del propio nombre: "ANA (vinil NEGRO)"
+          const mc=nombre.match(/\s*\(\s*vinil\s+([^)]+?)\s*\)\s*$/i);
+          if(mc){ color=mc[1].replace(/\s+/g,' ').trim().toUpperCase(); nombre=nombre.slice(0,mc.index).trim(); }
+          if(nombre){
+            const tag=(!pz.raw&&/^kids$/i.test(String(pz.genero||'').trim()))?('KIDS '+String(pz.talla||'').trim().toUpperCase()).trim():'';
+            grupoDe(color).nombres.push({n:nombre.toUpperCase(), t:tag});
+          }
+        }
+        // 2) los stickers de vinil de la pieza: cada uno va al grupo de SU color (aunque la pieza no lleve nombre)
+        if(!pz.raw) tallerStickersVinilDePieza(pz).forEach(s=>{ const gr=grupoDe(s.color); gr.stk[s.c]=(gr.stk[s.c]||0)+1; const kz=s.c+'|'+s.z; gr.stkz[kz]=(gr.stkz[kz]||0)+1; });
       });
     });
   });
+  const total=(g)=>g.nombres.length+Object.values(g.stk).reduce((a,b)=>a+b,0);
   const lista=Object.values(mapa);
   lista.sort((a,b)=>{
     if(!a.color!==!b.color) return a.color?-1:1;                    // "color no indicado" siempre al final
-    if(b.nombres.length!==a.nombres.length) return b.nombres.length-a.nombres.length;   // más nombres primero
+    if(total(b)!==total(a)) return total(b)-total(a);               // más elementos a cortar primero
     return a.primero-b.primero;                                     // empate: el que apareció primero en los pedidos
   });
-  return lista.map(g=>({color:g.color, nombres:g.nombres}));
+  return lista.map(g=>({color:g.color, nombres:g.nombres,
+    stickers:Object.keys(g.stk).sort((x,y)=>g.stk[y]-g.stk[x]||x.localeCompare(y,'es',{numeric:true})).map(c=>({c,n:g.stk[c]})),
+    // lo mismo, separado por zona (m=manga, e=espalda, p=pecho): cada zona se corta a su medida
+    formas:Object.keys(g.stkz).sort((x,y)=>g.stkz[y]-g.stkz[x]||x.localeCompare(y,'es',{numeric:true})).map(k=>{const [c,z]=k.split('|'); return {c,z,n:g.stkz[k]};})}));
 }
-async function tallerEnviarDXFVinil(grupos, nombres, filename){
+
+// ── FORMA DE CORTE de los stickers de la BASE DE DATOS (catálogo en GitHub) ─────────────────────────────
+// Los stickers de siempre van incrustados en el diseñador (S.V.1–85, S.N.1–83): de esos solo se escribe código y cantidad.
+// Los NUEVOS (S.V.86…, S.N.84…, S.A.n) vienen del catálogo: se baja su imagen y se calcula su contorno de corte aquí, en el navegador
+// (Apps Script no puede leer imágenes). El backend los coloca en el DXF, ya bajo el color de vinilo que les corresponde.
+const TALLER_STICKERS_BASE='https://ikoastore1-dev.github.io/ikoa-store/';
+const TALLER_STICKERS_EMBEBIDOS={V:85,N:83,A:0};
+const tallerFormasCache={};
+function tallerEsStickerDeBD(cod){ const m=/^S\.([VNA])\.(\d{1,4})$/.exec(cod); return !!m&&(+m[2])>TALLER_STICKERS_EMBEBIDOS[m[1]]; }
+async function tallerCatalogoStickers(){
+  try{
+    const r=await fetch(TALLER_STICKERS_BASE+'stickers/catalog.json?t='+Date.now(),{cache:'no-store'}); if(!r.ok) return {};
+    const j=await r.json(), out={}, RE_COD=/^S\.(V|N|A)\.(\d{1,4})$/, RE_WEB=/^stickers\/vinil\/web\/[A-Za-z0-9._-]{1,80}\.png$/;
+    (Array.isArray(j.stickers)?j.stickers:[]).slice(0,3000).forEach(s=>{
+      if(!s||s.tecnica==='dtf') return; const cod=String(s.codigo||''), web=String(s.web||'');
+      if(RE_COD.test(cod)&&RE_WEB.test(web)&&web.indexOf('..')<0) out[cod]=TALLER_STICKERS_BASE+web;     // solo los de vinil, con ruta válida
+    });
+    return out;
+  }catch(e){ return {}; }
+}
+// Contornos a partir del canal alfa (marching squares con interpolación → bordes suaves). a: Float32Array W×H (0..1) con borde de ceros.
+function tallerContornosDeAlfa(a,W,H){
+  const lv=0.5, pts=new Map(), adj=new Map();
+  const P=(k,x,y)=>{ if(!pts.has(k)) pts.set(k,[x,y]); return k; };
+  const lerp=(v0,v1)=>{ const d=v1-v0; return d===0?0.5:(lv-v0)/d; };
+  const seg=(k1,k2)=>{ if(!adj.has(k1)) adj.set(k1,[]); if(!adj.has(k2)) adj.set(k2,[]); adj.get(k1).push(k2); adj.get(k2).push(k1); };
+  const S={1:[[3,2]],2:[[2,1]],3:[[3,1]],4:[[0,1]],6:[[0,2]],7:[[0,3]],8:[[0,3]],9:[[0,2]],11:[[0,1]],12:[[3,1]],13:[[1,2]],14:[[2,3]]};
+  for(let j=0;j<H-1;j++) for(let i=0;i<W-1;i++){
+    const tl=a[j*W+i], tr=a[j*W+i+1], br=a[(j+1)*W+i+1], bl=a[(j+1)*W+i];
+    const idx=(tl>=lv?8:0)|(tr>=lv?4:0)|(br>=lv?2:0)|(bl>=lv?1:0);
+    if(idx===0||idx===15) continue;
+    const E=[ ()=>P('h'+i+','+j, i+lerp(tl,tr), j), ()=>P('v'+(i+1)+','+j, i+1, j+lerp(tr,br)), ()=>P('h'+i+','+(j+1), i+lerp(bl,br), j+1), ()=>P('v'+i+','+j, i, j+lerp(tl,bl)) ];
+    let segs;
+    if(idx===5||idx===10){ const c=(tl+tr+br+bl)/4>=lv; segs=idx===5?(c?[[0,3],[2,1]]:[[0,1],[3,2]]):(c?[[0,1],[3,2]]:[[0,3],[2,1]]); }
+    else segs=S[idx];
+    segs.forEach(([e1,e2])=>seg(E[e1](),E[e2]()));
+  }
+  const visit=new Set(), lazos=[];
+  for(const k0 of adj.keys()){
+    if(visit.has(k0)) continue;
+    const lazo=[]; let prev=null, cur=k0;
+    while(cur!==undefined&&!visit.has(cur)){
+      visit.add(cur); lazo.push(pts.get(cur)); let nxt;
+      for(const c of adj.get(cur)){ if(c!==prev&&!visit.has(c)){ nxt=c; break; } }
+      prev=cur; cur=nxt;
+    }
+    if(lazo.length>=3) lazos.push(lazo);
+  }
+  return lazos;
+}
+function tallerDP(P,eps){
+  const keep=new Uint8Array(P.length); keep[0]=keep[P.length-1]=1; const st=[[0,P.length-1]];
+  while(st.length){
+    const [s,e]=st.pop(); let md=0,mi=-1; const A=P[s],B=P[e], dx=B[0]-A[0], dy=B[1]-A[1], L2=dx*dx+dy*dy;
+    for(let i=s+1;i<e;i++){
+      let d; if(L2===0) d=Math.hypot(P[i][0]-A[0],P[i][1]-A[1]);
+      else { const t=Math.max(0,Math.min(1,((P[i][0]-A[0])*dx+(P[i][1]-A[1])*dy)/L2)); d=Math.hypot(P[i][0]-(A[0]+t*dx),P[i][1]-(A[1]+t*dy)); }
+      if(d>md){ md=d; mi=i; }
+    }
+    if(md>eps&&mi>=0){ keep[mi]=1; st.push([s,mi],[mi,e]); }
+  }
+  return P.filter((_,i)=>keep[i]);
+}
+function tallerSimplificarLazo(L,eps){
+  const n=L.length; if(n<=4) return L;
+  let f=0,md=-1; for(let i=1;i<n;i++){ const d=(L[i][0]-L[0][0])**2+(L[i][1]-L[0][1])**2; if(d>md){ md=d; f=i; } }
+  const a=tallerDP(L.slice(0,f+1),eps), b=tallerDP(L.slice(f).concat([L[0]]),eps);
+  return a.concat(b.slice(1,-1));
+}
+// Devuelve {ar, c:[[ [x,y],… ],…]} con coordenadas normalizadas (lado mayor = 1, y hacia abajo). Lanza error si la imagen no se puede leer.
+async function tallerTrazarSticker(url){
+  const im=await new Promise((res,rej)=>{ const i=new Image(); i.crossOrigin='anonymous'; i.onload=()=>res(i); i.onerror=()=>rej(new Error('imagen no disponible')); i.src=url; });
+  const esc=Math.min(1,480/Math.max(im.naturalWidth,im.naturalHeight)), w=Math.max(2,Math.round(im.naturalWidth*esc)), h=Math.max(2,Math.round(im.naturalHeight*esc));
+  const cv=document.createElement('canvas'); cv.width=w; cv.height=h; const cx=cv.getContext('2d',{willReadFrequently:true}); cx.drawImage(im,0,0,w,h);
+  const d=cx.getImageData(0,0,w,h).data, W=w+2, H=h+2, a=new Float32Array(W*H);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++) a[(y+1)*W+(x+1)]=d[(y*w+x)*4+3]/255;
+  const area=L=>{ let s=0; for(let i=0;i<L.length;i++){ const p=L[i], q=L[(i+1)%L.length]; s+=p[0]*q[1]-q[0]*p[1]; } return Math.abs(s)/2; };
+  const lazos=tallerContornosDeAlfa(a,W,H).filter(L=>area(L)>=Math.max(4,0.00002*w*h));      // descarta motas
+  if(!lazos.length) throw new Error('sin contorno');
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; lazos.forEach(L=>L.forEach(p=>{ x0=Math.min(x0,p[0]); y0=Math.min(y0,p[1]); x1=Math.max(x1,p[0]); y1=Math.max(y1,p[1]); }));
+  const s=Math.max(x1-x0,y1-y0);
+  const c=lazos.map(L=>tallerSimplificarLazo(L.map(p=>[(p[0]-x0)/s,(p[1]-y0)/s]),0.0012)).filter(L=>L.length>=3).map(L=>L.map(p=>[+p[0].toFixed(4),+p[1].toFixed(4)]));
+  return {ar:+((x1-x0)/(y1-y0)).toFixed(4), c};
+}
+// Formas de los stickers de BD que se pidieron (por código). Si algo falla con uno, ese solo queda con su código y cantidad.
+async function tallerPrepararFormas(grupos){
+  const formas={}, pedidos=new Set();
+  grupos.forEach(g=>(g.formas||[]).forEach(f=>{ if(tallerEsStickerDeBD(f.c)) pedidos.add(f.c); }));
+  if(!pedidos.size) return formas;
+  const cat=await tallerCatalogoStickers();
+  for(const cod of pedidos){
+    const url=cat[cod]; if(!url) continue;
+    try{ if(!tallerFormasCache[cod]) tallerFormasCache[cod]=await tallerTrazarSticker(url); formas[cod]=tallerFormasCache[cod]; }
+    catch(e){ console.warn('Forma no disponible para',cod,e&&e.message); }
+  }
+  return formas;
+}
+async function tallerEnviarDXFVinil(grupos, nombres, filename, formas){
   // POST (JSON): la lista con colores y tallas puede ser larga para una URL. Se envían también los nombres planos, en el mismo orden (compatibilidad).
   const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),45000);
   try{
     return await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},signal:ctrl.signal,
-      body:JSON.stringify({action:'generarDXFCombinado', grupos, nombres, filename})}).then(r=>r.json());
+      body:JSON.stringify({action:'generarDXFCombinado', grupos, nombres, filename, formas:formas||{}})}).then(r=>r.json());
   }catch(e){ return {ok:false,error:'Error de red'}; }
   finally{ clearTimeout(t); }
 }
@@ -8701,16 +8830,28 @@ async function generarReportesTaller(){
     try{
       // Nombres agrupados por COLOR DEL VINIL: primero el color con más nombres. Los niños llevan su talla después del nombre.
       const gruposVinil=tallerAgruparNombresVinil(codigos);
-      const nombresVinil=[]; gruposVinil.forEach(g=>g.nombres.forEach(x=>nombresVinil.push(x.n)));
-      if(nombresVinil.length){
-        const infoDxf=await tallerEnviarDXFVinil(gruposVinil, nombresVinil, 'Taller_Vinil_'+Date.now());
+      const nombresVinil=[]; let totalStickers=0;
+      gruposVinil.forEach(g=>{ g.nombres.forEach(x=>nombresVinil.push(x.n)); g.stickers.forEach(x=>{ totalStickers+=x.n; }); });
+      const dtf=tallerContarStickersDTF(codigos);
+      const dtfHtml=dtf.length?`<div style="flex-basis:100%;font-size:12px;color:var(--muted);">🖨️ DTF (se imprime, no va en vinil): ${dtf.map(x=>x.c+' ×'+x.n).join(' · ')}</div>`:'';
+      if(nombresVinil.length||totalStickers){
+        const formas=await tallerPrepararFormas(gruposVinil);                      // stickers de la base de datos → su forma de corte
+        const infoDxf=await tallerEnviarDXFVinil(gruposVinil, nombresVinil, 'Taller_Vinil_'+Date.now(), formas);
         if(infoDxf.ok){
-          dxfLinkHtml=`<a href="${infoDxf.drive_url}" target="_blank" style="flex:1;min-width:180px;text-align:center;padding:12px;background:var(--accent);border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-weight:700;text-decoration:none;">🧵 Descargar DXF Vinil (${nombresVinil.length} ${nombresVinil.length===1?'nombre':'nombres'} · ${gruposVinil.length} ${gruposVinil.length===1?'color':'colores'})</a>`;
-          dxfResumenHtml=`<div style="flex-basis:100%;font-size:12px;color:var(--muted);">🧵 ${gruposVinil.map(g=>(g.color||'COLOR NO INDICADO')+' ('+g.nombres.length+')').join(' · ')}</div>`;
+          const partes=[];
+          if(nombresVinil.length) partes.push(nombresVinil.length+' '+(nombresVinil.length===1?'nombre':'nombres'));
+          if(totalStickers) partes.push(totalStickers+' '+(totalStickers===1?'sticker':'stickers'));
+          partes.push(gruposVinil.length+' '+(gruposVinil.length===1?'color':'colores'));
+          const conForma={}; let copiasForma=0; gruposVinil.forEach(g=>(g.formas||[]).forEach(f=>{ if(formas[f.c]){ conForma[f.c]=(conForma[f.c]||0)+f.n; copiasForma+=f.n; } }));
+          if(copiasForma) partes.push(copiasForma+' '+(copiasForma===1?'forma':'formas'));
+          dxfLinkHtml=`<a href="${infoDxf.drive_url}" target="_blank" style="flex:1;min-width:180px;text-align:center;padding:12px;background:var(--accent);border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-weight:700;text-decoration:none;">🧵 Descargar DXF Vinil (${partes.join(' · ')})</a>`;
+          const formasHtml=copiasForma?`<div style="flex-basis:100%;font-size:12px;color:var(--muted);">🧩 Con forma de corte en el DXF: ${Object.keys(conForma).map(c=>c+' ×'+conForma[c]).join(' · ')} (los demás van con código y cantidad)</div>`:'';
+          dxfResumenHtml=formasHtml+`<div style="flex-basis:100%;font-size:12px;color:var(--muted);">🧵 ${gruposVinil.map(g=>{const st=g.stickers.reduce((a,x)=>a+x.n,0); return (g.color||'COLOR NO INDICADO')+' ('+(st?g.nombres.length+' '+(g.nombres.length===1?'nombre':'nombres')+' · '+st+' '+(st===1?'sticker':'stickers'):g.nombres.length)+')';}).join(' · ')}</div>`;
         } else {
           console.warn('DXF combinado error:', infoDxf.error);
         }
       }
+      dxfResumenHtml+=dtfHtml;
     }catch(e){ console.warn('Error generando DXF combinado:', e); }
 
     resLinks.innerHTML=`
