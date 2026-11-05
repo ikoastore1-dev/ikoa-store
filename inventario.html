@@ -8566,7 +8566,105 @@ function tallerConstruirCortadorHTML(codigos){
 }
 
 // ── Construcción HTML: REPORTE ESTAMPADOR (una sección por COD) ──
-function tallerConstruirEstampadorHTML(codigos){
+
+// ── ESTAMPADOR: las figuritas de Ikoa You, en el color de vinilo que pidieron y con el color escrito ─────────
+// Los stickers de siempre van incrustados en el HTML del diseñador (se leen de ahí); los de la base de datos, del catálogo.
+// Cada figurita se tiñe con el tono de su vinilo (paleta del diseñador). Si algo no está disponible, el reporte sale con texto y un cuadro de color.
+const TALLER_VIN_RESPALDO=[["Blanco","#f4f5fa"],["Negro","#060d1a"],["Azul Marino","#060b2f"],["Turquesa","#65bbb2"],["Beige","#c7c4b6"],["Verde Neon","#72f460"],["Amarillo Neon","#e2f353"],["Amarillo Cat","#eaaf41"],["Rojo","#ad3d40"],["Vino Tinto","#5a201b"],["Fucsia","#ce58b0"],["Lila","#d7a4ec"],["Morado","#6233de"],["Azul Indigo","#508cea"],["Gris","#9aa0a6"]];
+let tallerDisenadorCache=null;
+const tallerEscHtml=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function tallerClaveColor(n){ return String(n||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+function tallerExtraerJSON(txt,ini){      // desde la "{" en ini hasta su "}" de cierre (consciente de las comillas)
+  let prof=0, enStr=false, esc=false;
+  for(let i=ini;i<txt.length;i++){
+    const ch=txt.charCodeAt(i);
+    if(enStr){ if(esc) esc=false; else if(ch===92) esc=true; else if(ch===34) enStr=false; continue; }
+    if(ch===34){ enStr=true; continue; }
+    if(ch===123) prof++; else if(ch===125){ prof--; if(prof===0) return txt.slice(ini,i+1); }
+  }
+  return null;
+}
+// Imágenes de los stickers incrustados + paleta de vinilos, leídas del HTML del diseñador. Devuelve {img:{'S.V.11':dataURI}, vin:{clave:'#hex'}} o null.
+async function tallerCargarDisenador(){
+  if(!tallerDisenadorCache){
+    tallerDisenadorCache=(async()=>{
+      try{
+        const r=await fetch(TALLER_STICKERS_BASE+'ikoa-you.html'); if(!r.ok) return null; const t=await r.text(), out={img:{},vin:{}};
+        const resp={}; TALLER_VIN_RESPALDO.forEach(([n,h])=>{ resp[tallerClaveColor(n)]=h; });
+        const i=t.indexOf('DATA={"cat":');
+        if(i>=0){ const js=tallerExtraerJSON(t,i+5); if(js){ const D=JSON.parse(js);
+          ['V','N'].forEach(g=>((D.cat||{})[g]||[]).forEach(([n,uri])=>{ if(typeof uri==='string'&&uri.indexOf('data:image/')===0&&/^\d{1,4}$/.test(String(n))) out.img['S.'+g+'.'+n]=uri; })); } }
+        const m=/var VIN=(\[\[[\s\S]*?\]\]);/.exec(t);
+        if(m) JSON.parse(m[1]).forEach(([nom,hex])=>{ const k=tallerClaveColor(nom); out.vin[k]=/^#[0-9a-f]{6}$/i.test(hex)?hex:(resp[k]||null); });
+        Object.keys(resp).forEach(k=>{ if(!out.vin[k]) out.vin[k]=resp[k]; });
+        return out;
+      }catch(e){ return null; }
+    })();
+  }
+  const r=await tallerDisenadorCache; if(!r) tallerDisenadorCache=null; return r;
+}
+// Stickers de una pieza, por zona (m=manga, e=espalda, p=pecho): [{n (posición), c (código), color, dtf}] + si la zona es SOLO stickers.
+function tallerEntradasStickers(pz){
+  const out={m:[],e:[],p:[],solo:{m:false,e:false,p:false}};
+  [['p',pz.logoPecho],['e',pz.logoEspalda],['m',pz.logoManga]].forEach(([z,t])=>{
+    const s=String(t||''), re=/(?:(\d+)\)\s*)?(S\.[VNA]\.D?\d{1,4})\s*(?:vinil\s+(.+?)(?=\s*,\s*\d+\)|\s*$)|\(DTF a todo color\))/gi; let m;
+    while((m=re.exec(s))){ const dtf=/\.D\d/i.test(m[2]); out[z].push({n:m[1]?+m[1]:null,c:m[2].toUpperCase(),color:dtf?'':String(m[3]||'').replace(/\s+/g,' ').trim(),dtf}); }
+    out.solo[z]=out[z].length>0&&s.replace(re,'').replace(/Stickers/gi,'').replace(/[\s,]/g,'')==='';
+  });
+  return out;
+}
+function tallerLuminancia(hex){ const v=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(c=>c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4)); return 0.2126*v[0]+0.7152*v[1]+0.0722*v[2]; }
+async function tallerTenirMiniatura(src,hex){      // → data URI PNG (fondo blanco) con el sticker en su color; sin hex, a todo color (DTF)
+  const im=await new Promise((res,rej)=>{ const i=new Image(); if(/^https?:/i.test(src)) i.crossOrigin='anonymous'; i.onload=()=>res(i); i.onerror=()=>rej(new Error('imagen no disponible')); i.src=src; });
+  const esc=Math.min(1,140/Math.max(im.naturalWidth,im.naturalHeight)), w=Math.max(2,Math.round(im.naturalWidth*esc)), h=Math.max(2,Math.round(im.naturalHeight*esc));
+  const contorno=!!hex&&tallerLuminancia(hex)>0.30, r=contorno?Math.max(2,Math.round(Math.max(w,h)/70)):0, W=w+2*r, H=h+2*r;   // colores claros (blanco, amarillo neón…) llevan contorno oscuro para que se vean sobre el papel
+  const sil=(color)=>{ const t=document.createElement('canvas'); t.width=W; t.height=H; const c=t.getContext('2d'); c.imageSmoothingQuality='high'; c.drawImage(im,r,r,w,h); if(color){ c.globalCompositeOperation='source-in'; c.fillStyle=color; c.fillRect(0,0,W,H); } return t; };
+  const o=document.createElement('canvas'); o.width=W; o.height=H; const oc=o.getContext('2d'); oc.fillStyle='#ffffff'; oc.fillRect(0,0,W,H);
+  if(contorno){ const k=sil('#1a1a1a'), d=r*0.75; [[-r,0],[r,0],[0,-r],[0,r],[-d,-d],[d,-d],[-d,d],[d,d]].forEach(([dx,dy])=>oc.drawImage(k,dx,dy)); }
+  oc.drawImage(sil(hex||null),0,0);
+  return o.toDataURL('image/png');
+}
+// Prepara las figuritas de todos los pedidos seleccionados: {img:{'S.V.11|fucsia':uri}, hex:{clave:'#hex'}} o null si no hay stickers.
+async function tallerPrepararVisualesEstampador(codigos){
+  const nec=new Map();
+  codigos.forEach(cod=>{ const g=tallerGrupos[cod]; if(!g) return;
+    g.packs.forEach(p=>tallerParsearPiezas(p.piezas).forEach(pz=>{ if(pz.raw) return; const e=tallerEntradasStickers(pz);
+      ['m','e','p'].forEach(z=>e[z].forEach(x=>{ const k=x.c+'|'+(x.dtf?'':tallerClaveColor(x.color)); if(!nec.has(k)) nec.set(k,x); })); })); });
+  if(!nec.size) return null;
+  const dis=await tallerCargarDisenador(), hex={}; 
+  TALLER_VIN_RESPALDO.forEach(([n,h])=>{ hex[tallerClaveColor(n)]=h; }); if(dis) Object.keys(dis.vin).forEach(k=>{ hex[k]=dis.vin[k]; });
+  const necBD=[...nec.values()].some(x=>!x.dtf?(!dis||!dis.img[x.c]):true);
+  const cat=necBD?await tallerCatalogoStickers():{}, catD=[...nec.values()].some(x=>x.dtf)?await tallerCatalogoDTF():{}, img={};
+  for(const [k,x] of nec){
+    let fuente=null;
+    if(x.dtf) fuente=catD[x.c]?catD[x.c].web:null;
+    else fuente=(dis&&dis.img[x.c])||cat[x.c]||null;
+    const h=x.dtf?null:hex[tallerClaveColor(x.color)]; if(!fuente||(!x.dtf&&!h)) continue;
+    try{ img[k]=await tallerTenirMiniatura(fuente,h); }catch(e){ console.warn('Figurita no disponible',x.c,e&&e.message); }
+  }
+  return {img:img, hex:hex};
+}
+// HTML de las figuritas de un grupo de piezas (solo tablas, para que el PDF de Google Docs las respete). cub = zonas ya cubiertas por las figuritas.
+function tallerHtmlStickersEstampador(gr,rec){
+  const vacio={html:'',cub:{}}; if(!rec) return vacio;
+  const e=tallerEntradasStickers(gr), cub={}; let html='';
+  const ZN={p:'PECHO',e:'ESPALDA (EN GRANDE)',m:'MANGA'};
+  ['p','e','m'].forEach(z=>{
+    if(!e[z].length||!e.solo[z]) return;
+    const celdas=e[z].map(x=>{
+      const k=x.c+'|'+(x.dtf?'':tallerClaveColor(x.color)), uri=rec.img&&rec.img[k], hx=(rec.hex&&rec.hex[tallerClaveColor(x.color)])||'#cccccc';
+      const grafico=uri?`<img src="${uri}" style="width:46px;display:block;margin:0 auto;" alt="${tallerEscHtml(x.c)}"/>`
+        :(x.dtf?'':`<table cellpadding="0" cellspacing="0" width="46" height="46" bgcolor="${hx}" style="margin:0 auto;"><tr><td>&nbsp;</td></tr></table>`);
+      const etq=(x.n?x.n+' · ':'')+x.c, col=x.dtf?'DTF · A TODO COLOR':'COLOR: '+x.color.toUpperCase();
+      return `<td align="center" valign="top" style="font-size:9px;padding:2px 8px 2px 0;">${grafico}<span style="font-weight:700;">${tallerEscHtml(etq)}</span><br><span style="font-weight:700;">${tallerEscHtml(col)}</span></td>`;
+    }).join('');
+    html+=`<table cellpadding="2" cellspacing="0" style="margin:3px 0 3px 0;"><tr><td valign="middle" style="font-size:10px;font-weight:700;color:#a00;padding-right:8px;">${ZN[z]}:</td>${celdas}</tr></table>`;
+    cub[z]=true;
+  });
+  return {html:html,cub:cub};
+}
+
+function tallerConstruirEstampadorHTML(codigos, rec){
   const fecha=tallerFechaHoy();
   let bloques='';
   codigos.forEach((cod,idx)=>{
@@ -8592,19 +8690,22 @@ function tallerConstruirEstampadorHTML(codigos){
           logoPecho:pz.logoPecho||'', logoEspalda:pz.logoEspalda||'', logoManga:pz.logoManga||'', unds:0};
         grupos[key].unds++;
       });
+      let hayVisual=false;
       const lineasTalla=Object.values(grupos).map(gr=>{
         if(gr.raw) return `${tallerReformatearTexto(gr.texto)} <span style="color:#888;">(texto original del pedido — sin desglose exacto por talla)</span>`;
+        const vis=tallerHtmlStickersEstampador(gr,rec);                 // Ikoa You: figuritas en su color (si hay recursos)
+        if(vis.html) hayVisual=true;
         const logosPieza=[];
-        if(gr.logoPecho)   logosPieza.push('PECHO: '+gr.logoPecho.toUpperCase());
-        if(gr.logoEspalda) logosPieza.push('ESPALDA: '+gr.logoEspalda.toUpperCase()+' (EN GRANDE)');
-        if(gr.logoManga)   logosPieza.push('MANGA: '+gr.logoManga.toUpperCase());
-        const logosTxt=logosPieza.length?`<br><span style="font-weight:700;color:#a00;">${logosPieza.join(' · ')}</span>`:'';
+        if(gr.logoPecho&&!vis.cub.p)   logosPieza.push('PECHO: '+gr.logoPecho.toUpperCase());
+        if(gr.logoEspalda&&!vis.cub.e) logosPieza.push('ESPALDA: '+gr.logoEspalda.toUpperCase()+' (EN GRANDE)');
+        if(gr.logoManga&&!vis.cub.m)   logosPieza.push('MANGA: '+gr.logoManga.toUpperCase());
+        const logosTxt=(logosPieza.length?`<br><span style="font-weight:700;color:#a00;">${logosPieza.join(' · ')}</span>`:'')+vis.html;
         return `${gr.tela?'<span style="color:#555;">COLOR: '+gr.tela.toUpperCase()+'</span><br>':''}${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()} (${gr.capucha?'CON CAPUCHA':(gr.cuelloAlto?'CON CUELLO ALTO':'SIN CAPUCHA')})${gr.nombre?' - <span style="font-weight:700;font-size:15px;">'+gr.nombre.toUpperCase()+'</span>':''} (${gr.unds} UNDS)${logosTxt}`;
       }).join('<br><br>');
       packsHtml+=`
         <p style="font-size:11px;font-weight:700;margin:10px 0 2px 0;">${desc}</p>
         <p style="font-size:10.5px;margin:0 0 4px 0;">TELA ${(p.tela||'—').toUpperCase()} - VINIL ${(p.vinil||'—').toUpperCase()}</p>
-        <p style="font-size:10.5px;margin:0 0 4px 0;">${lineasTalla}</p>
+        ${hayVisual?`<div style="font-size:10.5px;margin:0 0 4px 0;">${lineasTalla}</div>`:`<p style="font-size:10.5px;margin:0 0 4px 0;">${lineasTalla}</p>`}
       `;
     });
     bloques+=`
@@ -8925,7 +9026,9 @@ async function generarReportesTaller(){
     const infoCortador=await cotGenerarPDFViaAppsScript(htmlCortador, 'Taller_Cortador_'+Date.now());
 
     btn.textContent='⏳ Generando Estampador...';
-    const htmlEstampador=tallerConstruirEstampadorHTML(codigos);
+    let recursosEst=null;
+    try{ recursosEst=await tallerPrepararVisualesEstampador(codigos); }catch(e){ console.warn('Figuritas del Estampador no disponibles:', e); }   // si falla, el reporte sale como siempre
+    const htmlEstampador=tallerConstruirEstampadorHTML(codigos, recursosEst);
     const infoEstampador=await cotGenerarPDFViaAppsScript(htmlEstampador, 'Taller_Estampador_'+Date.now());
 
     btn.textContent='⏳ Generando DXF de Vinil...';
