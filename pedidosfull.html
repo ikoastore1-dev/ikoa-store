@@ -270,7 +270,13 @@ button[style*="background:linear-gradient"] { background: var(--accent) !importa
 .cb-loading{font-size:12px;color:var(--muted-foreground,#777)}
 .combiner-swatches button.cb-retry{width:auto;height:auto;border-radius:999px;padding:6px 12px;margin-left:8px;font:inherit;font-size:11px;background:var(--muted,#eee);color:var(--foreground,#111);border:1px solid var(--border,#ddd);cursor:pointer}
 </style>
-<style>#ikoa-perchero .showroom-tag{display:none!important}#ikoa-perchero .showroom-tabs--bajo{margin-top:40px!important}#ikoa-perchero .showroom-item--licra-dress-cero .showroom-garment{width:calc(36.8dvh * 620 / 1408)!important}#ikoa-perchero .showroom-item:is([class*=bikini],[class*=enterizo]){container-type:inline-size}#ikoa-perchero .showroom-item:is([class*=bikini],[class*=enterizo]) .showroom-garment{height:min(40dvh,calc(min(100cqw,30dvh) * 560 / 313))!important;width:auto!important;max-width:none!important;max-height:none!important}@media (max-width:560px){#ikoa-tabbar{padding-left:44px!important}#ikoa-marca b{display:none}}@media (max-width:359px){#ikoa-marca{display:none!important}#ikoa-tabbar{padding-left:0!important}}#ikoa-marca{position:absolute;top:50%;transform:translateY(-50%);left:12px;z-index:2147483000;display:flex;align-items:center;gap:7px;pointer-events:none}#ikoa-marca span{width:24px;aspect-ratio:362/311;background:#000;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}#ikoa-marca b{font-family:"Lemon Milk","Montserrat",sans-serif;font-size:14px;letter-spacing:.06em;color:#000}</style></head>
+<style>#ikoa-perchero .showroom-tag{display:none!important}#ikoa-perchero .showroom-tabs--bajo{margin-top:40px!important}#ikoa-perchero .showroom-item--licra-dress-cero .showroom-garment{width:calc(36.8dvh * 620 / 1408)!important}#ikoa-perchero .showroom-item:is([class*=bikini],[class*=enterizo]){container-type:inline-size}#ikoa-perchero .showroom-item:is([class*=bikini],[class*=enterizo]) .showroom-garment{height:min(40dvh,calc(min(100cqw,30dvh) * 560 / 313))!important;width:auto!important;max-width:none!important;max-height:none!important}@media (max-width:560px){#ikoa-tabbar{padding-left:44px!important}#ikoa-marca b{display:none}}@media (max-width:359px){#ikoa-marca{display:none!important}#ikoa-tabbar{padding-left:0!important}}#ikoa-marca{position:absolute;top:50%;transform:translateY(-50%);left:12px;z-index:2147483000;display:flex;align-items:center;gap:7px;pointer-events:none}#ikoa-marca span{width:24px;aspect-ratio:362/311;background:#000;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}#ikoa-marca b{font-family:"Lemon Milk","Montserrat",sans-serif;font-size:14px;letter-spacing:.06em;color:#000}</style><style id="ikoa-tamano-uniforme">
+/* Tamaño único en el showroom: el de la serie Tiburón Ballena (8 prendas por fila), sin importar cuántas prendas tenga la pestaña */
+@media (min-width:641px){#ikoa-perchero .showroom-item{flex:0 0 10.75%}
+#ikoa-perchero .showroom-item--licra-dress-cero .showroom-garment{width:min(100%,calc(36.8dvh * 620 / 1408))!important}}   /* el vestido largo no debe pasar del ancho de su mosaico */
+#ikoa-perchero .showroom-ajustada .showroom-foto img{object-fit:contain}   /* solo las prendas cuya caja se igualó a la de Tiburón; las de Tiburón no se tocan */
+</style>
+</head>
 <body>
 <!-- SPLASH SCREEN -->
 <div id="splash" style="position:fixed;inset:0;background:#0a0a0f;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s ease;">
@@ -2909,11 +2915,25 @@ function vinilesDe(p){return listaLinea(p.grupo,'viniles');}
 function telas(){return telasDe({grupo:grupo});}
 function viniles(){return vinilesDe({grupo:grupo});}
 
+// Caja estándar por tipo de prenda = la de la serie Tiburón Ballena (ancho / alto de su foto)
+var REF_RATIO={playera:[520,560],dress:[368,560],cortaviento:[510,640],short:[420,393],bikini:[287,560],enterizo:[313,560],bikiniml:[423,560],toalla:[291,560]};
+function tipoDe(m){ m=String(m||''); return /^Bikini Manga Larga/i.test(m)?'bikiniml':/^Bikini/i.test(m)?'bikini':/^Enterizo/i.test(m)?'enterizo':/^Dress/i.test(m)?'dress':/^Cortaviento/i.test(m)?'cortaviento':/^Short/i.test(m)?'short':/^Toalla/i.test(m)?'toalla':/^Playera/i.test(m)?'playera':null; }
+function uniformar(p){
+  if(p._u||!p.foto||!p.tb) return; p._u=1;
+  var R=REF_RATIO[tipoDe(p.tb.modelo)]; if(!R) return;
+  var m=String(p.ratio).match(/([\d.]+)\s*\/\s*([\d.]+)/); if(!m) return;
+  var r0=m[1]/m[2], r1=R[0]/R[1]; if(Math.abs(r0-r1)<0.003) return;
+  var fx=1, fy=1, ox=0, oy=0; if(r0>r1){ fy=r1/r0; oy=(1-fy)/2; } else { fx=r0/r1; ox=(1-fx)/2; }   // la foto se ajusta (contain) dentro de la caja estándar
+  p.ratio=R[0]+' / '+R[1]; p._aj=1;
+  if(p.logo&&p.logo.w) p.logo=Object.assign({},p.logo,{x:ox*100+p.logo.x*fx, y:oy*100+p.logo.y*fy, w:p.logo.w*fx});
+  if(p.sleeve) p.sleeve=Object.assign({},p.sleeve,{x:ox*100+p.sleeve.x*fx, y:oy*100+p.sleeve.y*fy, s:p.sleeve.s*fx});
+}
 function montar(){
   rack.innerHTML='';
   PRENDAS.forEach(function(p,i){
+    uniformar(p);
     var b=document.createElement('button');
-    b.type='button';b.className='showroom-item showroom-item--'+p.id;b.setAttribute('data-i',i);
+    b.type='button';b.className='showroom-item showroom-item--'+p.id+(p._aj?' showroom-ajustada':'');b.setAttribute('data-i',i);
     b.style.setProperty('--i',i);
     b.innerHTML=p.foto?'<span class="showroom-hook"></span><span class="showroom-garment showroom-foto" style="position:relative;aspect-ratio:'+p.ratio+';--logo-mask:url('+IMG.alas+')"><img src="'+p.img+'" alt="">'+(p.logo.w?'<span class="showroom-logo" style="left:'+p.logo.x+'%;top:'+p.logo.y+'%;width:'+p.logo.w+'%;transform:translate(-50%,-50%)"></span>':'')+'</span><span class="showroom-tag">'+p.nombre+'</span>':'<span class="showroom-hook"></span><span class="showroom-garment" style="aspect-ratio:'+p.ratio+';--shirt-mask:url('+p.img+');--logo-mask:url('+IMG.alas+')"><span class="showroom-fabric"></span><img class="is-tinted" src="'+p.img+'" alt=""><span class="showroom-logo" style="left:'+p.logo.x+'%;top:'+p.logo.y+'%;width:'+p.logo.w+'%"></span></span><span class="showroom-tag">'+p.nombre+'</span>';
     b.onclick=function(){if(p.you&&window.abrirIkoaYou){activa=null;pintar();window.abrirIkoaYou(p.base||'comfy');return;}activa=(activa===i?null:i);pintar();};

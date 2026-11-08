@@ -269,6 +269,10 @@ button[style*="background:linear-gradient"] { background: var(--accent) !importa
 .cb-loading{font-size:12px;color:var(--muted-foreground,#777)}
 .combiner-swatches button.cb-retry{width:auto;height:auto;border-radius:999px;padding:6px 12px;margin-left:8px;font:inherit;font-size:11px;background:var(--muted,#eee);color:var(--foreground,#111);border:1px solid var(--border,#ddd);cursor:pointer}
 </style>
+<style id="ikoa-tamano-uniforme">
+/* Tamaño único en el showroom (el mismo que pedidosfull.html: 8 prendas por fila), sin importar cuántas prendas tenga la pestaña */
+@media (min-width:641px){#ikoa-perchero .showroom-item{flex:0 0 10.75%}}
+</style>
 </head>
 <body>
 <!-- SPLASH SCREEN -->
