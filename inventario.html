@@ -7901,8 +7901,8 @@ function scriptPOSTjson(params){
 // ── TOKEN GENERATOR ───────────────────────────────────────────
 const BASE_URLS={
   comfy:    'https://ikoastore1-dev.github.io/ikoa-store/pedidos.html',
-  licra:    'https://ikoastore1-dev.github.io/ikoa-store/pedidos-licra.html',
-  coleccion:'https://ikoastore1-dev.github.io/ikoa-store/pedidos-coleccion.html',
+  licra:    'https://ikoastore1-dev.github.io/ikoa-store/pedidos.html',
+  coleccion:'https://ikoastore1-dev.github.io/ikoa-store/pedidosfull.html',
   giftcard: 'https://ikoastore1-dev.github.io/ikoa-store/pedidos-giftcard.html',
   total:    'https://ikoastore1-dev.github.io/ikoa-store/pedidos-total.html'
 };
@@ -8397,7 +8397,7 @@ function tallerParsearPiezas(piezasStr){
   if(!piezasStr) return [];
   const tokens=piezasStr.split('|').map(t=>t.trim()).filter(Boolean);
   const piezas=[];
-  const GENEROS=['Dama','Caballero','Kids'];
+  const GENEROS=['Dama','Caballero','Kids','Toalla']; // 'Toalla' = pieza de talla única de la serie Tiburón Ballena ("Toalla Única")
   const generoRegex=new RegExp('^('+GENEROS.join('|')+')\\b','i');
   tokens.forEach(tok=>{
     if(!tok) return;
