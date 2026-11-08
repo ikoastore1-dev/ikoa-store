@@ -815,7 +815,7 @@ async function verificarToken(){
   if(!token){ mostrarBloqueo('🚫','Link inválido','Solicita uno nuevo a IKOA & BEKATE.'); return; }
   try{
     const data=await scriptGETjson({action:'verificarToken',token});
-    if(data && data.ok){ tokenActual=token; bl.style.display='none'; cargarAgencias(); cargarColoresApp(); }
+    if(data && data.ok){ tokenActual=token; bl.style.display='none'; cargarAgencias(); cargarColoresApp(); if(data.producto){ try{ if(window.__ikoaPerchero&&window.__ikoaPerchero.abrirProducto) window.__ikoaPerchero.abrirProducto(String(data.producto)); }catch(e){} } }
     else if(data){
       const m={'usado':['✅','Link ya utilizado','Este link ya fue usado.'],'expirado':['⏰','Link expirado','Venció (4h). Solicita uno nuevo.'],'invalido':['🚫','Link inválido','No es válido.']};
       const [i,t,x]=m[data.error]||m['invalido'];
@@ -3009,7 +3009,18 @@ function pintar(){
 function abrir(){if(!raiz.classList.contains('is-open'))reiniciar();raiz.classList.add('is-open');raiz.setAttribute('aria-hidden','false');if(paso)paso.setAttribute('inert','');pintar();}
 function cerrar(){raiz.classList.remove('is-open');raiz.setAttribute('aria-hidden','true');if(paso)paso.removeAttribute('inert');}
 
-window.__ikoaPerchero={fijar:function(t,v){pendiente={tela:t,vinil:v};colorListo=true;rotular();},cerrar:function(){cerrar();},abrir:function(){abrir();},refrescar:function(){if(raiz.classList.contains('is-open'))pintar();}};
+// Abre el perchero en una prenda concreta (link de compra desde la tienda): pestaña, colección y prenda activa. Si el id no existe, no hace nada.
+function abrirProducto(id){
+  var i=-1; PRENDAS.forEach(function(p,k){ if(p.id===id) i=k; }); if(i<0) return false;
+  var p=PRENDAS[i]; grupo=p.grupo;
+  [].forEach.call(raiz.querySelectorAll('.showroom-tabs button'),function(x){x.setAttribute('aria-selected',x.getAttribute('data-g')===grupo?'true':'false');});
+  colsel.hidden=(grupo!=='col');
+  if(p.col){ colActual=p.col; [].forEach.call(colsel.querySelectorAll('button'),function(x){x.setAttribute('aria-pressed',x.getAttribute('data-c')===colActual?'true':'false');}); }
+  activa=i; pintar();
+  var el=rack.querySelector('.showroom-item[data-i="'+i+'"]'); if(el&&el.scrollIntoView) el.scrollIntoView({inline:'center',block:'nearest'});
+  return true;
+}
+window.__ikoaPerchero={fijar:function(t,v){pendiente={tela:t,vinil:v};colorListo=true;rotular();},cerrar:function(){cerrar();},abrir:function(){abrir();},refrescar:function(){if(raiz.classList.contains('is-open'))pintar();},abrirProducto:function(id){return abrirProducto(id);}};
 montar();
 var colsel=document.getElementById('ikoa-colsel');colsel.innerHTML=COLECCIONES.map(function(c){return '<button type="button" data-c="'+c[0]+'" aria-pressed="'+(c[0]===colActual)+'">'+c[1]+'</button>';}).join('');[].forEach.call(colsel.querySelectorAll('button'),function(b){b.onclick=function(){colActual=b.getAttribute('data-c');activa=null;[].forEach.call(colsel.querySelectorAll('button'),function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});pintar();};});
 [].forEach.call(raiz.querySelectorAll('.showroom-tabs button'),function(t){t.onclick=function(){grupo=t.getAttribute('data-g');activa=null;colsel.hidden=(grupo!=='col');[].forEach.call(raiz.querySelectorAll('.showroom-tabs button'),function(x){x.setAttribute('aria-selected',x===t?'true':'false');});pintar();};});
