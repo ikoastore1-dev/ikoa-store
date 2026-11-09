@@ -815,7 +815,7 @@ async function verificarToken(){
   if(!token){ mostrarBloqueo('🚫','Link inválido','Solicita uno nuevo a IKOA & BEKATE.'); return; }
   try{
     const data=await scriptGETjson({action:'verificarToken',token});
-    if(data && data.ok){ tokenActual=token; bl.style.display='none'; cargarAgencias(); cargarColoresApp(); if(data.producto){ try{ if(window.__ikoaPerchero&&window.__ikoaPerchero.abrirProducto) window.__ikoaPerchero.abrirProducto(String(data.producto)); }catch(e){} } }
+    if(data && data.ok){ tokenActual=token; bl.style.display='none'; cargarAgencias(); cargarColoresApp(); if(data.producto){ window.__ikoaProductoPendiente=String(data.producto); try{ if(window.__ikoaPerchero&&window.__ikoaPerchero.abrirProducto){ window.__ikoaPerchero.abrirProducto(window.__ikoaProductoPendiente); window.__ikoaProductoPendiente=''; } }catch(e){} } }
     else if(data){
       const m={'usado':['✅','Link ya utilizado','Este link ya fue usado.'],'expirado':['⏰','Link expirado','Venció (4h). Solicita uno nuevo.'],'invalido':['🚫','Link inválido','No es válido.']};
       const [i,t,x]=m[data.error]||m['invalido'];
@@ -3072,6 +3072,8 @@ if(typeof goStep==='function'){var _go=window.goStep;window.goStep=function(n){
 if(typeof seleccionarModalidad==='function'){var _sm=window.seleccionarModalidad;window.seleccionarModalidad=function(){var r=_sm.apply(this,arguments);rotular();return r;};}
 [].forEach.call(document.querySelectorAll('.step'),function(s){new MutationObserver(rotular).observe(s,{attributes:true,attributeFilter:['class']});});
 if(paso&&paso.classList.contains('active'))abrir();
+// Si la verificación del token llegó ANTES de que el perchero estuviera listo (el archivo es grande y tarda en bajar), se abre ahora el producto que quedó pendiente.
+if(window.__ikoaProductoPendiente){ var _pp=window.__ikoaProductoPendiente; window.__ikoaProductoPendiente=''; try{ abrirProducto(_pp); }catch(e){} }
 })();
 </script>
 <script id="ikoa-precarga-colores">(function(){
