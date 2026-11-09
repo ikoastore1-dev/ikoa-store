@@ -2333,7 +2333,7 @@ async function guardarEnSheets(){
         correo:pedido.correo,
         cedula:pedido.cedula,
         celular:pedido.celular,
-        modelo:(pk.linea==='licra'?(pk.modelo+' '+pk.manga+(pk.ikoaYou?' (IKOA YOU)':'')):pk.ikoaYou?'COMFY MEGA PROMO (IKOA YOU)':((pk.esDress?'COMFY DRESS MEGA PROMO':'COMFY MEGA PROMO') + (pasoPorOpcionAB?(' '+(modalidadComfy==='B'?'(Opción B)':'(Opción A)')):''))),
+        modelo:(pk.linea==='licra'?(pk.modelo+' '+pk.manga+(pk.ikoaYou?' (IKOA YOU)':'')):pk.ikoaYou?'COMFY MEGA PROMO (IKOA YOU)':((pk.esDress?'COMFY DRESS MEGA PROMO':(pk.mangaTipo==='short'?'COMFY SHORT MEGA PROMO':'COMFY MEGA PROMO')) + (pasoPorOpcionAB?(' '+(modalidadComfy==='B'?'(Opción B)':'(Opción A)')):''))),
         manga:pk.manga,
         capucha:pk.piezas.some(p=>p.conCapucha)?'Con Capucha':(pk.piezas.some(p=>p.conCuelloAlto)?'Con Cuello Alto':'Sin Capucha'),
         pack:`${pk.pack}PACK`,
