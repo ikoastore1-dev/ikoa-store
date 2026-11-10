@@ -7934,7 +7934,7 @@ async function confirmarModeloLink(modelo){
       try{
         const waBody=new FormData();
         waBody.append('celular','584149450742');
-        waBody.append('nombre','Johan');
+        waBody.append('nombre','APP Inventario');
         waBody.append('mensaje',`Link de venta ${nombresModelo[modelo]||modelo.toUpperCase()}`);
         await fetch('https://hook.us2.make.com/dnr1w1wd8vaf9k8uym9p6taaf6icb30r',{method:'POST',body:waBody,mode:'no-cors'});
       }catch(waErr){ console.warn('WhatsApp notify error:',waErr); }
