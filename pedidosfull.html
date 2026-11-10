@@ -2917,7 +2917,7 @@ function viniles(){return vinilesDe({grupo:grupo});}
 
 // Caja estándar por tipo de prenda = la de la serie Tiburón Ballena (ancho / alto de su foto)
 // Marca (alitas) en vinilo según el tipo de prenda, en % de la foto: trajes de baño → pantaleta · cortavientos → pecho · toallas → alitas + palabra IKOA abajo, centradas
-var MARCA_TIPO={bikini:{x:68,y:65,w:7}, enterizo:{x:50,y:69,w:9}, bikiniml:{x:50,y:62,w:9}, cortaviento:{x:66,y:37,w:5}, toalla:{x:50,y:88.2,w:36,ikoa:1}};
+var MARCA_TIPO={bikini:{x:68,y:65,w:7}, enterizo:{x:68,y:69,w:7}, bikiniml:{x:68,y:62,w:7}, cortaviento:{x:66,y:37,w:5}, toalla:{x:50,y:88.2,w:36,ikoa:1}};
 var REF_RATIO={playera:[520,560],dress:[368,560],cortaviento:[510,640],short:[420,393],bikini:[287,560],enterizo:[313,560],bikiniml:[423,560],toalla:[291,560]};
 function tipoDe(m){ m=String(m||''); return /^Bikini Manga Larga/i.test(m)?'bikiniml':/^Bikini/i.test(m)?'bikini':/^Enterizo/i.test(m)?'enterizo':/^Dress/i.test(m)?'dress':/^Cortaviento/i.test(m)?'cortaviento':/^Short/i.test(m)?'short':/^Toalla/i.test(m)?'toalla':/^Playera/i.test(m)?'playera':null; }
 function uniformar(p){
