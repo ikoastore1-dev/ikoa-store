@@ -6536,7 +6536,11 @@ async function confirmarPlanificacion(){
     makeBody.append('usuario',USUARIOS[unlock]||'');
     makeBody.append('fecha',fechaProd);
 
-    const response=await fetch(WEBHOOK_URL,{method:'POST',body:makeBody,mode:'no-cors'});
+    const procR=await enviarAProceso(makeBody,'COD');
+ if(!procR.ok) throw new Error('No se pudo enviar el pedido a producción: '+(procR.error||'sin detalle'));
+ if(procR.codigo) codMake=String(procR.codigo);
+ if(procR.avisos&&procR.avisos.length) console.warn('Avisos del proceso COD:',procR.avisos);
+ const response={ok:true,type:'proceso'};   // el código de abajo (mensaje de éxito) lee response.ok
 
     // 3. Guardar en Sheets — igual que COD (DESPUÉS del fetch)
     let lastCodigoP='';
@@ -7428,7 +7432,15 @@ document.getElementById('gestion-form').addEventListener('submit',async function
     if(codMake) formData.append('cod_make', codMake);
 
     // Enviar al webhook de Make
-    const response=await fetch(WEBHOOK_URL,{method:'POST',body:formData,mode:'no-cors'});
+    let response={ok:true,type:'proceso'};   // el código de abajo (mensaje de éxito) lee response.ok
+ if(tipo==='COD'||tipo==='Enviado'){
+ const procR=await enviarAProceso(formData,tipo);
+ if(!procR.ok) throw new Error('No se pudo procesar el '+tipo+': '+(procR.error||'sin detalle'));
+ if(tipo==='COD'&&procR.codigo) codMake=String(procR.codigo);
+ if(procR.avisos&&procR.avisos.length) console.warn('Avisos del proceso '+tipo+':',procR.avisos);
+ } else {
+ response=await fetch(WEBHOOK_URL,{method:'POST',body:formData,mode:'no-cors'});
+ }
 
     // Guardar en Google Sheets PEDIDOS
     if(tipo==='COD'||tipo==='Enviado'){
@@ -7850,8 +7862,9 @@ async function confirmarEnvioSeleccion(){
     makeBody.append('nombre_arte','');
     makeBody.append('usuario',USUARIOS[unlock]);
     makeBody.append('fecha',fecha);
-    const makeResponse=await fetch(WEBHOOK_URL,{method:'POST',body:makeBody,mode:'no-cors'});
-    console.log('Make status:',makeResponse.status);
+    const procR=await enviarAProceso(makeBody,'Enviado');
+ if(!procR.ok) throw new Error('No se pudo enviar la guía: '+(procR.error||'sin detalle'));
+ if(procR.avisos&&procR.avisos.length) console.warn('Avisos del proceso de envío:',procR.avisos);
     msgEl.style.background='var(--surface2)';
     msgEl.style.border='1px solid #1a4a2a';
     msgEl.style.color='var(--accent)';
@@ -7896,6 +7909,25 @@ function scriptPOSTjson(params){
   return fetch(SCRIPT_URL,{method:'POST',body:form})
     .then(r=>r.json())
     .catch(()=>({ok:false,error:'Error de red'}));
+}
+
+// ── PEDIDO A PRODUCCIÓN / ENVÍO: lo procesa Apps Script (procesarCOD / procesarEnvio). Antes lo hacía el escenario de Make "IKOA EMAIL REGISTRO". ──
+const PROCESO_COD_APPS_SCRIPT=true;      // true = Apps Script · false = vuelve al webhook de Make como antes
+let PROCESO_TIMEOUT_MS=120000;
+async function enviarAProceso(formData,tipo){
+  if(!PROCESO_COD_APPS_SCRIPT){
+    try{ await fetch(WEBHOOK_URL,{method:'POST',body:formData,mode:'no-cors'}); return {ok:true,via:'make'}; }
+    catch(e){ return {ok:false,error:'No se pudo contactar a Make'}; }
+  }
+  const form=new FormData();
+  formData.forEach((v,k)=>{ if(typeof v==='string') form.append(k,v); });
+  const st=String(tipo||formData.get('status')||'COD');
+  form.append('action',st==='Enviado'?'procesarEnvio':'procesarCOD');
+  form.append('id_solicitud','S'+Date.now().toString(36)+Math.random().toString(36).slice(2,8));   // evita duplicar si se repite la misma solicitud
+  const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),PROCESO_TIMEOUT_MS);
+  try{ const r=await fetch(SCRIPT_URL,{method:'POST',body:form,signal:ctrl.signal}); return await r.json(); }
+  catch(e){ return {ok:false,error:(e&&e.name==='AbortError')?'La respuesta tardó demasiado: el correo pudo haberse enviado, revisa antes de reintentar':'Error de red al contactar el servidor'}; }
+  finally{ clearTimeout(t); }
 }
 
 // ── TOKEN GENERATOR ───────────────────────────────────────────
