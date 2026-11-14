@@ -364,6 +364,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <input class="modal-cod-input" type="password" id="plan-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarPlanificacion()">
     <div class="modal-error" id="plan-error"></div>
     <div class="modal-btns">
+      <button class="modal-cancel" onclick="vistaPreviaCOD()" style="flex:none;padding:13px 14px;">👁 Vista previa</button>
       <button class="modal-cancel" onclick="document.getElementById('modal-planificacion').classList.add('hidden')">Cancelar</button>
       <button class="modal-confirm" onclick="confirmarPlanificacion()">🚀 ENVIAR</button>
     </div>
@@ -4091,6 +4092,34 @@ function waIcono(num,msg){
   else if(t.length<10) return '';
   return ' <a href="https://wa.me/'+t+(msg?'?text='+encodeURIComponent(msg):'')+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Abrir WhatsApp" style="display:inline-flex;vertical-align:middle;margin-left:4px;text-decoration:none;"><svg viewBox="0 0 32 32" width="18" height="18" style="background:#25D366;border-radius:50%;padding:3px;fill:#fff"><path d="M16.003 3C9.374 3 4 8.373 4 15c0 2.116.553 4.18 1.6 6L4 29l8.16-1.57A11.93 11.93 0 0 0 16 27c6.627 0 12-5.373 12-12S22.63 3 16.003 3zm5.38 14.46c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.79-1.47-1.76-1.64-2.06-.17-.3-.02-.46.13-.6.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.23 1.36.2 1.87.12.57-.09 1.75-.72 2-1.41.25-.69.25-1.28.17-1.41-.07-.13-.27-.2-.57-.35z"/></svg></a>';
 }
+
+/* ===== Ticket de envío (impresora de tickets 80 mm) — se imprime con el diálogo del navegador ===== */
+function ikoaTicketDatos(cod,agenciaTxt,nombre,ci,cel,retira,retiraCi,retiraCel){
+  var ag=String(agenciaTxt||'').split('—'), dif=!!(retira&&String(retira).trim()&&String(retira).trim()!==String(nombre||'').trim());
+  return {cod:cod,agencia:(ag[0]||'').trim(),direccion:(ag.length>1?ag.slice(1).join('—').trim():''),
+    nombre:dif?retira:(nombre||''),ci:dif?(retiraCi||''):(ci||''),cel:dif?(retiraCel||''):(cel||'')};
+}
+function ikoaTicketHTML(t){
+  var e=function(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+  return '<!doctype html><html><head><meta charset="utf-8"><title>Ticket COD '+e(t.cod)+'</title><style>@page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{margin:0;width:74mm;font-family:Arial,Helvetica,sans-serif;color:#000}'+
+   '.b{background:#000;color:#fff;text-align:center;font-weight:900;font-size:19px;letter-spacing:.08em;padding:6px 0;white-space:nowrap}.s{font-size:11px;font-weight:700;margin-top:5px;display:flex;justify-content:space-between}'+
+   'hr{border:0;border-top:1px solid #000;margin:6px 0}.c{font-size:20px;font-weight:900;margin:4px 0}.l{font-size:13px;font-weight:700;line-height:1.35;margin:2px 0;word-break:break-word}.u{text-decoration:underline;margin-top:12px}.f{text-align:center;font-size:9px;font-weight:700;margin-top:12px}</style></head><body>'+
+   '<div class="b">IKOA IKOA IKOA</div><div class="s"><span>ENVIA: IKOA BRAND CORP C.A.</span></div><div class="s"><span>RIF: J-505031716</span><span>CEL: 0414-9450742</span></div><hr>'+
+   '<div class="c">COD - '+e(t.cod)+'</div><div class="l">AGENCIA: '+e(t.agencia)+'</div><div class="l">DIRECCIÓN: '+e(t.direccion)+'</div>'+
+   '<div class="l u">ENVIAR A:</div><div class="l">CLIENTE: '+e(t.nombre)+'</div><div class="l">C.I: '+e(t.ci)+'</div><div class="l">CEL: '+e(t.cel)+'</div><hr>'+
+   '<div class="f">LOS QUE CONFÍAN EN DIOS LEVANTARÁN SUS ALAS COMO LAS ÁGUILAS<br>Isaías 40:31</div></body></html>';
+}
+function ikoaImprimirTicket(t){
+  var fr=document.createElement('iframe'); fr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+  document.body.appendChild(fr);
+  var d=fr.contentWindow.document; d.open(); d.write(ikoaTicketHTML(t)); d.close();
+  setTimeout(function(){try{fr.contentWindow.focus();fr.contentWindow.print()}catch(x){alert('No se pudo abrir la impresión: '+x.message)}
+    setTimeout(function(){try{document.body.removeChild(fr)}catch(x){}},60000)},300);
+}
+function tallerImprimirTicket(cod){
+  var g=tallerGrupos[cod]; if(!g){alert('Pedido no encontrado');return}
+  ikoaImprimirTicket(ikoaTicketDatos(g.cod,g.agencia,g.nombre,g.cedula,g.celular,g.retira,g.retiraCi,g.retiraCel));
+}
 function confirmarVentasLock(){
   const unlock=document.getElementById('ventas-lock-unlock').value.trim();
   const errEl=document.getElementById('ventas-lock-error');
@@ -6557,6 +6586,232 @@ function abrirModalPlanificacion(data){
   setTimeout(()=>document.getElementById('plan-unlock').focus(),100);
 }
 
+/* ===== COD PDF v8 (se arma en el navegador de inventario y se envía a Apps Script) ===== */
+/* ===== COD PDF v8 (se arma en el navegador de inventario y se envía a Apps Script) ===== */
+(function(){
+var BASE='cod-mockups/', K_TELA={"blanco": "#f7f6fc", "negro": "#040d1b", "azul-rey": "#0101ef", "azul-marino": "#060a32", "menta": "#69d5d3", "azul-bb": "#c3e9f4", "beige": "#c2bfaf", "gris": "#8f969e", "rojo": "#a32a25", "rosa-bb": "#eac3ca", "rosa-vieja": "#d29fa8", "verde-militar": "#535433", "naranja-neon": "#eb8335", "lila": "#e09df5", "marron": "#35231c"}, K_VIN={"blanco": "#f4f5fa", "negro": "#060d1a", "azul-rey": "#0f04b0", "azul-marino": "#060b2f", "turquesa": "#65bbb2", "beige": "#c7c4b6", "verde-neon": "#72f460", "amarillo-neon": "#e2f353", "amarillo-cat": "#eaaf41", "rojo": "#ad3d40", "coral-neon": "#d73958", "vino-tinto": "#5a201b", "fucsia": "#ce58b0", "lila": "#d7a4ec", "morado": "#6233de", "azul-indigo": "#508cea", "gris": "#9aa0a6", "naranja": "#f37021", "dorado": "#c9a13b", "plateado": "#c0c3c8", "amarillo": "#f7d117", "rosado": "#f29bc0", "verde": "#1e8c3a"};
+var MOCK_H=0.19;   /* escala común de las prendas */
+function slug(n){var s=String(n||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  return s.replace(/-bebe(?=-|$)/g,'-bb').replace(/^(rosado|rosada)(?=-|$)/,'rosa').replace(/^rosa-viejo$/,'rosa-vieja').replace(/^vinotinto$/,'vino-tinto').replace(/^amarillo-cat[a-z]*$/,'amarillo-cat')}
+function hex2rgb(h){h=String(h).replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]}
+function colorTela(n){var k=slug(String(n).replace(/^\d+\s*[·.\-]\s*/,''));return hex2rgb(K_TELA[k]||'#9a9a9a')}
+function colorVinil(n){var s=String(n||'').split(/\s*\+\s*/)[0];var k=slug(s);return hex2rgb(K_VIN[k]||'#f4f5fa')}
+function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+var _img={};
+function loadImg(src){if(_img[src])return _img[src];return _img[src]=new Promise(function(ok,ko){var i=new Image();i.crossOrigin='anonymous';i.onload=function(){ok(i)};i.onerror=function(){ko(new Error('No se pudo cargar '+src))};i.src=src})}
+var _boxes=null;
+function boxes(){return _boxes||(_boxes=fetch(BASE+'boxes.json').then(function(r){return r.json()}))}
+var AR=362/311;
+/* mockup teñido con la tela + logos del perchero (alitas oficiales / palabra IKOA) en color del vinil */
+async function mockup(linea,estilo,vista,tela,vin){
+  var nm=linea+'_'+estilo+'_'+vista, bx=await boxes(), im=await loadImg(BASE+nm+'.png');
+  var W=im.width,H=im.height,S=bx.S*(W/561)/(W/561);   /* cajas están en px del original 1122; las imágenes miden 561 -> S=0.5 */
+  var c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');x.drawImage(im,0,0);
+  var d=x.getImageData(0,0,W,H),p=d.data;
+  for(var i=0;i<p.length;i+=4){var L=p[i]/255;L=Math.pow(L,1.05)*1.04;p[i]=Math.min(255,tela[0]*L);p[i+1]=Math.min(255,tela[1]*L);p[i+2]=Math.min(255,tela[2]*L)}
+  x.putImageData(d,0,0);
+  var b=bx.boxes[nm];
+  if(b){
+    var bw=(b[2]-b[0])*bx.S,bh=(b[3]-b[1])*bx.S,cx=(b[0]+b[2])/2*bx.S,cy=(b[1]+b[3])/2*bx.S,mask,lw,lh;
+    if(vista==='espalda'&&linea==='comfy'){mask=await loadImg(BASE+'gl_'+nm+'.png');lw=bw;lh=bh}
+    else{mask=await loadImg(BASE+'alas.png');var a=Math.sqrt(bw*bh);lw=a*Math.sqrt(AR);lh=a/Math.sqrt(AR)}
+    var lc=document.createElement('canvas');lc.width=Math.max(1,Math.round(lw));lc.height=Math.max(1,Math.round(lh));var lx=lc.getContext('2d');
+    lx.drawImage(mask,0,0,lc.width,lc.height);lx.globalCompositeOperation='source-in';lx.fillStyle='rgb('+vin.join(',')+')';lx.fillRect(0,0,lc.width,lc.height);
+    x.drawImage(lc,Math.round(cx-lw/2),Math.round(cy-lh/2));
+  }
+  /* recorte al contenido */
+  var q=x.getImageData(0,0,W,H).data,x0=W,x1=0,y0=H,y1=0;
+  for(var yy=0;yy<H;yy++)for(var xx=0;xx<W;xx++)if(q[(yy*W+xx)*4+3]>12){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(yy<y0)y0=yy;if(yy>y1)y1=yy}
+  var cw=x1-x0+1,ch=y1-y0+1,o=document.createElement('canvas');o.width=cw;o.height=ch;o.getContext('2d').drawImage(c,x0,y0,cw,ch,0,0,cw,ch);
+  return {url:o.toDataURL('image/png'),h:Math.round(ch*2/1402*1000*MOCK_H)};   /* alto en px CSS, misma escala para todas las prendas */
+}
+var CSS='.cp *{box-sizing:border-box}.cp{font-family:Montserrat,Barlow,Arial,sans-serif;color:#111;font-size:11px;width:700px}'+
+'.cp .top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #ddd;padding-bottom:12px}.cp .top img{height:54px}.cp .top .r{text-align:right;color:#888;letter-spacing:.25em;font-size:9px}.cp .top .r b{display:block;letter-spacing:.05em;font-weight:400;margin-top:4px;font-size:11px}'+
+'.cp .k{letter-spacing:.3em;font-size:8.5px;color:#888;text-transform:uppercase}.cp h1{font-size:50px;margin:4px 0 6px;font-weight:900;letter-spacing:-.02em;line-height:1.05}.cp .lead{color:#666;font-size:12px;line-height:1.7;max-width:420px;margin:0 0 16px}'+
+'.cp .sum{display:flex;border:1px solid #111;margin-bottom:16px}.cp .sum>div{flex:1;padding:12px 16px;border-right:1px solid #111}.cp .sum>div:last-child{flex:1.3;border:0;background:#111;color:#fff}.cp .sum b{display:block;font-size:19px;margin-top:6px}.cp .sum>div:last-child b{font-size:14px}'+
+'.cp .two{display:flex;gap:26px;margin-bottom:14px}.cp .two>div{flex:1;border-top:2px solid #111;padding-top:8px}.cp .row{display:flex;border-bottom:1px solid #e6e6e6;padding:7px 0}.cp .row span{width:78px;color:#888;flex:none}.cp .row b{font-weight:700}'+
+'.cp .ph{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #111;margin-top:6px;padding-top:12px;margin-bottom:8px}.cp .ph h2{margin:2px 0 0;font-size:19px}.cp .ph .num{color:#888;margin-right:16px;font-size:11px;font-weight:400}.cp .vin{display:flex;align-items:center;gap:8px;letter-spacing:.2em;color:#888;font-size:9px}.cp .vin i{width:15px;height:15px;border-radius:50%;border:1px solid #bbb;display:inline-block}.cp .vin b{color:#111;font-size:12px;letter-spacing:.08em}'+
+'.cp .blk{display:flex;gap:20px;border-top:1px solid #e6e6e6;padding:12px 0}.cp .mk{width:190px;flex:none}.cp .mk .im{display:flex;gap:6px;align-items:flex-end;justify-content:center;height:190px}.cp .mk img{width:auto;max-width:50%;object-fit:contain}.cp .mk small{display:block;color:#888;letter-spacing:.2em;font-size:8px;margin-top:6px}'+
+'.cp .bd{flex:1;min-width:0}.cp .tl{display:flex;align-items:center;gap:8px;justify-content:space-between}.cp .tl .a{display:flex;align-items:center;gap:8px}.cp .sw{width:21px;height:21px;border-radius:50%;border:1px solid #999;display:inline-block}.cp .tag{border:1px solid #111;padding:3px 7px;font-size:8px;letter-spacing:.2em;font-weight:700}.cp .tl .c{color:#888}'+
+'.cp table{width:100%;border-collapse:collapse;margin-top:8px}.cp th{text-align:left;font-weight:400;color:#888;letter-spacing:.2em;font-size:8px;padding:4px 0;border-bottom:1.5px solid #111}.cp td{padding:9px 0;border-bottom:1px solid #e6e6e6;vertical-align:middle}'+
+'.cp .t{display:inline-block;background:#111;color:#fff;font-weight:700;min-width:48px;text-align:center;padding:8px 0;font-size:13px}.cp .g{letter-spacing:.2em;font-size:8px;font-weight:700}.cp .nm b{font-size:13px}.cp .nm div{color:#777;font-size:9.5px;margin-top:2px}';
+var ETQ={normal:'CUELLO NORMAL',alto:'CUELLO ALTO',capucha:'CON CAPUCHA',capuchatapaboca:'CAPUCHA CON TAPABOCA'};
+function filas(piezas,i0,pn){var h='',i=i0;piezas.forEach(function(p){i++;h+='<tr><td style="color:#888;width:34px">'+(i<10?'0':'')+i+'</td><td style="width:70px"><span class="t">'+esc(p.talla)+'</span></td><td class="g" style="width:100px">'+esc(String(p.genero||'').toUpperCase())+'</td><td class="nm"><b>'+esc(p.nombre||'')+'</b>'+(p.extra?'<div>'+esc(p.extra)+'</div>':'')+'</td></tr>'});return {h:h,i:i}}
+/* datos = {cod,fecha,nombre,cedula,celular,correo,agencia,direccion,retira,retiraCi,retiraCel,urgente,packs:[{titulo,linea,vinil,bloques:[{tela,estilo,piezas:[{talla,genero,nombre,extra}],you:{img,lineas:[[a,b]]}|null}]}]} */
+async function armarPaginas(d){
+  var logo=await loadImg(BASE+'ikoa_logo.png'),secs=[],n=0;
+  d.packs.forEach(function(p){p.bloques.forEach(function(b){n+=b.piezas.length})});
+  secs.push('<div class="top"><img src="'+logo.src+'"><div class="r">ORDEN DE PRODUCCIÓN<b>'+esc(d.fecha)+'</b></div></div><div class="k" style="margin-top:16px">IKOA &amp; BEKATE</div><h1>COD '+esc(d.cod)+'</h1><p class="lead">Esta es la orden de producción de tu pedido. Revisa que los colores, las tallas y los nombres sean los que elegiste.</p>'+
+   '<div class="sum"><div><span class="k">Packs</span><b>'+d.packs.length+'</b></div><div><span class="k">Piezas</span><b>'+n+'</b></div><div><span class="k">Envío</span><b>'+esc(d.agencia)+'</b></div>'+(d.urgente?'<div><span class="k" style="color:#bbb">Urgente</span><b>'+esc(d.urgente)+'</b></div>':'')+'</div>'+
+   '<div class="two"><div><div class="k" style="margin-bottom:6px">Cliente</div><div class="row"><span>Nombre</span><b>'+esc(d.nombre)+'</b></div><div class="row"><span>Cédula</span><b>'+esc(d.cedula)+'</b></div><div class="row"><span>Celular</span><b>'+esc(d.celular)+'</b></div><div class="row"><span>Correo</span><b>'+esc(d.correo)+'</b></div></div>'+
+   '<div><div class="k" style="margin-bottom:6px">Envío</div><div class="row"><span>Agencia</span><b>'+esc(d.agencia)+'</b></div><div class="row"><span>Dirección</span><b>'+esc(d.direccion)+'</b></div><div class="row"><span>Retira</span><b>'+esc(d.retira)+'</b></div><div class="row"><span>C.I. / Cel.</span><b>'+esc(d.retiraCi)+(d.retiraCel?' · '+esc(d.retiraCel):'')+'</b></div></div></div>');
+  var cont=0;
+  for(var pi=0;pi<d.packs.length;pi++){
+    var p=d.packs[pi],vr=colorVinil(p.vinil),vh='rgb('+vr.join(',')+')',head='<div class="ph"><div><span class="k">Pack '+(pi+1)+'</span><h2><span class="num">'+(pi+1<10?'0':'')+(pi+1)+'</span>'+esc(p.titulo)+'</h2></div><div class="vin">VINIL <i style="background:'+vh+'"></i><b>'+esc(p.vinil)+'</b></div></div>';
+    for(var bi=0;bi<p.bloques.length;bi++){
+      var b=p.bloques[bi],tr=colorTela(b.tela),hx='rgb('+tr.join(',')+')',f=filas(b.piezas,cont,pi+1);cont=f.i;var np=b.piezas.length;
+      var left,tl='<div class="tl"><div class="a"><span class="k">Tela</span><i class="sw" style="background:'+hx+'"></i><b style="font-size:13px">'+esc(b.tela)+'</b><span class="tag">'+ETQ[b.estilo]+'</span></div><span class="c">'+np+' pieza'+(np>1?'s':'')+'</span></div>',extra='';
+      if(b.you&&b.you.img){
+        left='<div class="mk" style="width:290px"><div class="k" style="font-size:8px;margin-bottom:5px">DISEÑO IKOA YOU</div><img src="'+b.you.img+'" style="width:290px;max-width:none;height:auto;display:block"><small>FRENTE · ESPALDA, TAL COMO LO DISEÑASTE</small></div>';
+        extra='<div style="margin:8px 0 2px;font-size:10px;line-height:1.6">'+(b.you.lineas||[]).map(function(l){return '<div><span style="display:inline-block;width:56px;color:#888">'+esc(l[0])+'</span><b>'+esc(l[1])+'</b></div>'}).join('')+'</div>';
+      }else{
+        var fr=await mockup(p.linea,b.estilo,'frente',tr,vr),es=await mockup(p.linea,b.estilo,'espalda',tr,vr);
+        left='<div class="mk"><div class="im"><img src="'+fr.url+'" style="height:'+fr.h+'px"><img src="'+es.url+'" style="height:'+es.h+'px"></div><small>FRENTE · ESPALDA</small></div>';
+      }
+      var blk='<div class="blk">'+left+'<div class="bd">'+tl+extra+'<table><tr><th style="white-space:nowrap;width:34px">P'+(pi+1)+'</th><th>TALLA</th><th>GÉNERO</th><th>NOMBRE EN MANGA</th></tr>'+f.h+'</table></div></div>';
+      secs.push(bi===0?head+blk:blk);
+    }
+  }
+  /* paginación Carta 816x1056 px, márgenes 50/58 */
+  var host=document.createElement('div');host.style.cssText='position:fixed;left:-20000px;top:0;background:#fff';document.body.appendChild(host);
+  var style=document.createElement('style');style.textContent=CSS;host.appendChild(style);
+  var pages=[],cur;
+  function nueva(){cur=document.createElement('div');cur.className='pg';cur.style.cssText='width:816px;height:1056px;background:#fff;padding:50px 58px;overflow:hidden;position:relative';var c=document.createElement('div');c.className='cp';cur.appendChild(c);host.appendChild(cur);pages.push(cur);return c}
+  /* página 1: ticket de envío (igual a la primera página de IKOA_COD.docx) */
+  var tk=nueva().parentNode,tc=tk.firstChild,ct=await loadImg(BASE+'ticket_contacto.png');
+  tk.style.padding='50px 58px 0';
+  tc.innerHTML='<div style="background:#000;color:#fff;text-align:center;font-weight:900;font-size:46px;letter-spacing:.14em;padding:12px 0;font-family:Arial,Helvetica,sans-serif;white-space:nowrap">IKOA IKOA IKOA</div>'+
+   '<div style="font:700 15px Arial,Helvetica,sans-serif;margin-top:12px">ENVIA: IKOA BRAND CORP C.A.</div>'+
+   '<div style="display:flex;justify-content:space-between;font:700 15px Arial,Helvetica,sans-serif;margin-top:8px"><span>RIF: J-505031716</span><span>CEL: 0414-9450742</span></div>'+
+   '<div style="border-top:1px solid #999;margin:10px 0 26px"></div>'+
+   '<div style="padding-left:30px;font:700 17px/1.55 Arial,Helvetica,sans-serif">'+
+   '<div style="font-size:21px;margin-bottom:6px">COD - '+esc(d.cod)+'</div>'+
+   '<div>AGENCIA: '+esc(d.agencia)+'</div><div>DIRECCIÓN: '+esc(d.direccion)+'</div>'+
+   '<div style="margin-top:34px;text-decoration:underline">ENVIAR A:</div>'+
+   '<div style="margin-top:6px">CLIENTE: '+esc(d.retira||d.nombre)+'</div><div>C.I: '+esc(d.retiraCi||d.cedula)+'</div><div>CEL: '+esc(d.retiraCel||d.celular)+'</div></div>'+
+   '<img src="'+ct.src+'" style="position:absolute;left:0;right:0;bottom:30px;width:700px;margin:0 auto;display:block">';
+  var c=nueva(),MAXH=1056-100;
+  for(var s=0;s<secs.length;s++){
+    var w=document.createElement('div');w.innerHTML=secs[s];
+    var imgs=w.querySelectorAll('img'),waits=[];imgs.forEach(function(im){if(!im.complete)waits.push(new Promise(function(r){im.onload=im.onerror=r}))});
+    c.appendChild(w);await Promise.all(waits);
+    if(c.offsetHeight>MAXH&&c.children.length>1){c.removeChild(w);c=nueva();c.appendChild(w);await Promise.all(waits)}
+  }
+  return {pages:pages,host:host};
+}
+function cargarLib(src,test){return new Promise(function(ok,ko){if(test()){ok();return}var s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=function(){ko(new Error('No se pudo cargar '+src))};document.head.appendChild(s)})}
+async function generar(datos){
+  await cargarLib('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',function(){return window.html2canvas});
+  await cargarLib('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',function(){return window.jspdf});
+  if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+  var r=await armarPaginas(datos),pdf=new window.jspdf.jsPDF({unit:'pt',format:'letter'});
+  for(var i=0;i<r.pages.length;i++){
+    var cv=await window.html2canvas(r.pages[i],{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
+    if(i)pdf.addPage('letter');pdf.addImage(cv.toDataURL('image/jpeg',0.92),'JPEG',0,0,612,792);
+  }
+  document.body.removeChild(r.host);
+  var uri=pdf.output('datauristring');return {base64:uri.split(',')[1],paginas:r.pages.length};
+}
+window.CODPDF={generar:generar,armarPaginas:armarPaginas,slug:slug};
+})();
+
+
+// ── PDF del COD (diseño v8) ──
+// Se arma AQUÍ, en el momento de enviar, con los datos ACTUALES de la cola (lo que se haya corregido en Inventario).
+// Si algo no se puede armar, lanza un error con lo que hay que corregir y NO se envía nada.
+const _sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function codEsLarga(pk){const m=String(pk.modelo||'').toUpperCase();return /(COMFY|LICRA|IKOA YOU)/.test(m)&&!/(DRESS|SHORT|CORTAVIENTO|BIKINI|PLAYERA|ENTERIZO|TOALLA)/.test(m)&&/LARGA/i.test(pk.manga||'');}
+function codParsePiezas(txt,etq){
+  const out=[]; let last=null;
+  String(txt||'').split(' | ').map(x=>x.trim()).filter(Boolean).forEach(seg=>{
+    const mm=seg.match(/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):\s*(.*)$/);
+    if(mm){ if(!last)throw new Error(etq+': dato "'+seg+'" sin pieza'); last[mm[1]]=mm[2]; return; }
+    const m=seg.match(/^(.+?)\s+(XS|S|M|L|XL|[2-9]XL|\d{1,2})(\s+CAPUCHA CON TAPABOCA|\s+CON CAPUCHA)?(\s+CON CUELLO ALTO)?(?:\s+-\s+(.*))?$/i);
+    if(!m)throw new Error(etq+': no se entiende la pieza "'+seg+'" (formato: Género Talla [CON CAPUCHA|CAPUCHA CON TAPABOCA] [CON CUELLO ALTO] - Nombre)');
+    last={genero:m[1],talla:m[2].toUpperCase(),tapaboca:/TAPABOCA/i.test(m[3]||''),capucha:!!m[3],cuelloAlto:!!m[4],nombre:(m[5]||'').trim()};
+    out.push(last);
+  });
+  if(!out.length)throw new Error(etq+': el pack no tiene piezas');
+  return out;
+}
+function codParseSticker(txt,etq){   // "S.V.3 vinil FUCSIA" | "S.V.3 (DTF a todo color)"
+  const m=String(txt||'').match(/^(\S+)\s*(?:\(DTF a todo color\)|vinil\s+(.+))$/i); if(!m)throw new Error(etq+': no se entiende el sticker "'+txt+'"');
+  return {c:m[1],v:m[2]?m[2].trim():'DTF'};
+}
+function codParseLista(txt,etq){    // "Stickers 1) S.V.1 vinil NEGRO, 2) S.V.2 (DTF a todo color)"
+  const t=String(txt||'').replace(/^Stickers\s*/i,'').trim(); if(!t)return [];
+  return t.split(/,\s*(?=\d\))/).map(x=>{const m=x.trim().match(/^(\d)\)\s*(\S+)\s*(?:\(DTF a todo color\)|vinil\s+(.+))$/i); if(!m)throw new Error(etq+': no se entiende el sticker "'+x+'"'); return {n:+m[1],c:m[2],v:m[3]?m[3].trim():'DTF'};});
+}
+async function codRenderYou(linea,d,estIdx,etq){
+  const fr=document.createElement('iframe'); fr.style.cssText='position:fixed;left:-3000px;top:0;width:430px;height:900px;border:0'; fr.src=(linea==='licra')?'ikoa-you-licra.html':'ikoa-you.html';
+  document.body.appendChild(fr);
+  try{
+    await new Promise((ok,ko)=>{fr.onload=ok;setTimeout(()=>ko(new Error('el diseñador Ikoa You no cargó')),25000)});
+    const w=fr.contentWindow; let t=0;
+    while(t<50&&!(w.S&&w.TELAS&&w.VIN&&typeof w.capturaDiseno==='function'&&typeof w.preciosDeHoja==='function'&&w.preciosDeHoja())){await _sleep(500);t++;}
+    if(!(w.S&&typeof w.capturaDiseno==='function'))throw new Error('el diseñador Ikoa You no está listo (¿falta subir la versión nueva de ikoa-you.html?)');
+    const sl=n=>String(n||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+    const ix=(L,n)=>{for(let i=0;i<L.length;i++)if(sl(L[i][0])===sl(n))return i;return -1};
+    const S=w.S, it=ix(w.TELAS,d.tela), ia=ix(w.VIN,d.vinilA), ib=d.vinilB?ix(w.VIN,d.vinilB):ia;
+    if(it<0)throw new Error(etq+': la tela "'+d.tela+'" no existe en el diseñador Ikoa You');
+    if(ia<0)throw new Error(etq+': el vinil "'+d.vinilA+'" no existe en el diseñador Ikoa You');
+    if(ib<0)throw new Error(etq+': el vinil "'+d.vinilB+'" no existe en el diseñador Ikoa You');
+    const key=v=>(v==='DTF'||sl(v)===sl(d.vinilA))?'A':(sl(v)===sl(d.vinilB)?'B':null);
+    const place=(d.mangaL.length&&d.espaldaL.length)?'a':(d.espaldaL.length?'e':'m');
+    S.t=it;S.A=ia;S.B=ib;S.est=estIdx;S.name=d.nombre||'';S.nameC=(d.nombreColor&&sl(d.nombreColor)===sl(d.vinilB)&&ib!==ia)?'B':'A';S.place=place;
+    const arr=L=>{const a=[null,null,null,null];L.forEach(o=>{const k=key(o.v);if(!k)throw new Error(etq+': el vinil "'+o.v+'" del sticker '+o.c+' no coincide con los vinilos del pack');if(o.n<1||o.n>4)throw new Error(etq+': posición de sticker inválida ('+o.n+')');a[o.n-1]={c:o.c,k:k}});return a};
+    S.m=arr(d.mangaL);S.e=arr(d.espaldaL);
+    if(d.pechoL){const k=key(d.pechoL.v);if(!k)throw new Error(etq+': el vinil "'+d.pechoL.v+'" del pecho no coincide con los vinilos del pack');S.chest='s';S.chestS=d.pechoL.c;S.chestC=k;}else{S.chest='n';S.chestS=null;}
+    const cods=[].concat(d.mangaL,d.espaldaL,d.pechoL?[d.pechoL]:[]).map(o=>o.c);
+    for(let k=0;k<40&&cods.some(c=>!w.stSrc(c));k++)await _sleep(500);   // el catálogo de stickers puede tardar en llegar
+    const falta=cods.filter(c=>!w.stSrc(c)); if(falta.length)throw new Error(etq+': el sticker '+falta.join(', ')+' no existe en el catálogo');
+    try{w.ui()}catch(e){}
+    await _sleep(2500);   // deja cargar mockups y stickers
+    let img=w.capturaDiseno(); await _sleep(800); img=w.capturaDiseno();
+    if(!img||img.length<8000)throw new Error(etq+': no se pudo dibujar el diseño');
+    return img;
+  } finally { try{document.body.removeChild(fr)}catch(e){} }
+}
+async function armarPdfCODv8(allPacks,cola,cod){
+  if(!window.CODPDF)throw new Error('el generador del PDF no cargó');
+  const hoy=new Date(), p2=n=>String(n).padStart(2,'0'), ag=String(cola.agencia||'').split('—'), dif=(cola.retira&&cola.retira!==cola.nombre);
+  let extras={};
+  try{const d=await scriptGETjson({action:'leerPackCOD',codigos:allPacks.map(p=>p.codigoS).filter(Boolean).join(',')},20000);if(d&&d.ok&&d.packs)extras=d.packs;}catch(e){}
+  const packs=[];
+  for(let k=0;k<allPacks.length;k++){
+    const pk=allPacks[k], etq='Pack '+(k+1)+' ('+(pk.codigoC||pk.codigoS||'')+')';
+    if(!String(pk.tela||'').trim())throw new Error(etq+': falta la tela');
+    if(!String(pk.vinil||'').trim())throw new Error(etq+': falta el vinil');
+    const piezas=codParsePiezas(pk.piezas,etq), linea=/LICRA/i.test(pk.modelo||'')?'licra':'comfy', esYou=/IKOA YOU/i.test(pk.modelo||'');
+    let ex={}; try{ex=(extras[pk.codigoS]&&extras[pk.codigoS].json)?JSON.parse(extras[pk.codigoS].json):{}}catch(e){}
+    const estilo=p=>p.tapaboca?'capuchatapaboca':(p.cuelloAlto?'alto':(p.capucha?'capucha':'normal')), orden=['normal','alto','capucha','capuchatapaboca'], grupos={};
+    piezas.forEach(p=>{(grupos[estilo(p)]=grupos[estilo(p)]||[]).push(p)});
+    const vs=String(pk.vinil).split(/\s*\+\s*/), vinilA=vs[0], vinilB=vs[1]||vs[0];
+    let dis=null,lineas=null;
+    if(esYou){
+      const p0=piezas.find(p=>p.LogoPecho||p.LogoManga||p.LogoEspalda)||piezas[0];
+      dis={tela:pk.tela,vinilA:vinilA,vinilB:vinilB,nombre:piezas[0].nombre||'',nombreColor:(ex.ikoaYou&&ex.ikoaYou.nombreColor)||vinilA,
+        pechoL:p0.LogoPecho?codParseSticker(p0.LogoPecho,etq):null,mangaL:codParseLista(p0.LogoManga,etq),espaldaL:codParseLista(p0.LogoEspalda,etq)};
+      const L=a=>a.map(x=>x.n+') '+x.c+' ('+(x.v==='DTF'?'DTF a todo color':'vinil '+x.v)+')').join(' · ');
+      lineas=[]; if(dis.pechoL)lineas.push(['Pecho',dis.pechoL.c+' ('+(dis.pechoL.v==='DTF'?'DTF a todo color':'vinil '+dis.pechoL.v)+')']);
+      if(dis.mangaL.length)lineas.push(['Manga',L(dis.mangaL)]); if(dis.espaldaL.length)lineas.push(['Espalda',L(dis.espaldaL)]); if(dis.nombre)lineas.push(['Nombre',dis.nombre+' · vinil '+dis.nombreColor]);
+    }
+    const bloques=[];
+    for(const e of orden){ if(!grupos[e])continue;
+      const bl={tela:pk.tela,estilo:e,piezas:grupos[e].map(p=>({talla:p.talla,genero:p.genero,nombre:p.nombre,extra:esYou?'Diseño Ikoa You':[p.LogoPecho?'Logo pecho: '+p.LogoPecho:'',p.LogoManga?'Logo manga: '+p.LogoManga:'',p.LogoEspalda?'Logo espalda: '+p.LogoEspalda:''].filter(Boolean).join(' · ')})),you:null};
+      if(esYou) bl.you={img:await codRenderYou(linea,dis,orden.indexOf(e),etq),lineas:lineas};
+      bloques.push(bl);
+    }
+    const mod=String(pk.modelo||'').replace(/\s*\(IKOA YOU\)/i,'').replace(/COMFY MEGA PROMO/i,'Comfy').trim();
+    packs.push({titulo:(esYou?'Ikoa You · ':'')+(linea==='licra'?'Licra':'Comfy')+' · '+(pk.manga||'Manga Larga'),linea:linea,vinil:pk.vinil,bloques:bloques});
+  }
+  return await CODPDF.generar({cod:String(cod),fecha:p2(hoy.getDate())+'.'+p2(hoy.getMonth()+1)+'.'+hoy.getFullYear(),
+    nombre:cola.nombre||'',cedula:cola.cedula||'',celular:cola.celular||'',correo:cola.correo||'',
+    agencia:(ag[0]||'').trim(),direccion:(ag.length>1?ag[1].trim():''),retira:dif?cola.retira:(cola.nombre||''),retiraCi:dif?(cola.retiraCi||''):(cola.cedula||''),retiraCel:dif?(cola.retiraCel||''):(cola.celular||''),
+    urgente:cola.urgente||'',packs:packs});
+}
+async function vistaPreviaCOD(){
+  const el=document.getElementById('plan-error'); const data=pendingCola; if(!data)return;
+  const packs=data.allPacks||[]; el.style.color='var(--muted)';
+  if(!packs.length||!packs.every(codEsLarga)){ el.textContent='Este pedido usa la plantilla de siempre (no es solo Comfy/Licra manga larga): no hay vista previa nueva.'; return; }
+  el.textContent='⏳ Armando vista previa...';
+  try{
+    let cod='—'; try{const d=await scriptGETjson({action:'leerCOD'}); if(d.ok)cod=String(d.codSiguiente);}catch(e){}
+    const r=await armarPdfCODv8(packs,data,cod);
+    const bin=atob(r.base64),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+    window.open(URL.createObjectURL(new Blob([u8],{type:'application/pdf'})),'_blank'); el.textContent='';
+  }catch(e){ el.style.color='var(--danger)'; el.textContent='✗ '+e.message; }
+}
 async function confirmarPlanificacion(){
   const unlock=document.getElementById('plan-unlock').value.trim().toUpperCase();
   const errEl=document.getElementById('plan-error');
@@ -6626,6 +6881,15 @@ async function confirmarPlanificacion(){
     makeBody.append('usuario',USUARIOS[unlock]||'');
     makeBody.append('fecha',fechaProd);
 
+    // PDF del COD con el diseño v8, armado AHORA con los datos actuales. Si todos los packs son Comfy/Licra manga larga es obligatorio:
+    // cualquier falla detiene el envío (no se manda nada) hasta corregirla. Otros productos siguen con la plantilla de siempre.
+    if(allPacks.length&&allPacks.every(codEsLarga)){
+      msgEl.innerHTML='<span class="spinner">↻</span> Armando PDF del COD con los datos actuales...';
+      let pdf8; try{ pdf8=await armarPdfCODv8(allPacks,pendingCola,codMake); }catch(e){ throw new Error('No se envió nada. Corrige esto y reintenta: '+e.message); }
+      if(!pdf8||!pdf8.base64)throw new Error('No se envió nada: no se pudo armar el PDF del COD.');
+      makeBody.append('pdf_base64',pdf8.base64); makeBody.append('pdf_cod',String(codMake)); makeBody.append('exigir_pdf','si');
+    }
+    msgEl.innerHTML='<span class="spinner">↻</span> Enviando...';
     const procR=await enviarAProceso(makeBody,'COD');
  if(!procR.ok) throw new Error('No se pudo enviar el pedido a producción: '+(procR.error||'sin detalle'));
  if(procR.codigo) codMake=String(procR.codigo);
@@ -6730,6 +6994,7 @@ async function confirmarPlanificacion(){
       msgEl.innerHTML=`✅ Enviado a producción · <b>${lastCodigoP}</b> · COD: ${codMake||'—'} · ${USUARIOS[unlock]}`;
       // Buscar automáticamente el archivo de Imprenta que Make.com genera para este COD,
       // y mostrarlo listo para imprimir apenas esté disponible — sin ocultar el mensaje mientras tanto.
+      try{ ikoaImprimirTicket(ikoaTicketDatos(codMake,pendingCola.agencia,pendingCola.nombre,pendingCola.cedula,pendingCola.celular,pendingCola.retira,pendingCola.retiraCi,pendingCola.retiraCel)); }catch(e){ console.warn('ticket:',e); }
       if(codMake) rvEsperarYAbrirImprentaPorCOD(codMake, msgEl);
       else setTimeout(()=>{msgEl.style.display='none';cargarCola();},5000);
     } else {
@@ -8441,7 +8706,7 @@ async function cargarTaller(){
       const cod=v(2)||v(1)||v(0);
       const codigoC=v(1);
       if(!tallerGrupos[cod]) tallerGrupos[cod]={
-        cod, nombre:v(4), correo:v(5), cedula:v(6), celular:v(7), agencia:v(15),
+        cod, nombre:v(4), correo:v(5), cedula:v(6), celular:v(7), agencia:v(15), retira:v(16), retiraCi:v(17), retiraCel:v(18),
         fecha:v(25)||v(3), urgente:v(27), packs:[]
       };
       // Preferir siempre los datos de COLA.P/R.COLA.P (fuente confiable) sobre
@@ -8478,6 +8743,10 @@ async function cargarTaller(){
           </div>
           <div style="font-size:12px;color:var(--muted);">${resumenPacks||'—'}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px;">Cédula: ${g.cedula||'—'} · Fecha: ${g.fecha||'—'}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">
+            ${tallerWaBtn(g)}
+            <button type="button" onclick="event.preventDefault();event.stopPropagation();tallerImprimirTicket('${cod}')" style="padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🖨 Ticket de envío</button>
+          </div>
         </div>`;
       lista.appendChild(card);
     });
@@ -8487,6 +8756,12 @@ async function cargarTaller(){
   }
 }
 
+function tallerWaBtn(g){
+  var t=String(g.celular||'').replace(/\D/g,''); if(!t)return '<span style="font-size:11px;color:var(--muted);">Sin celular</span>';
+  if(t.length===11&&t[0]==='0')t='58'+t.slice(1); else if(t.length===10)t='58'+t; else if(t.length<10)return '<span style="font-size:11px;color:var(--muted);">Celular inválido: '+g.celular+'</span>';
+  var m='Hola '+(g.nombre||'')+', te escribimos de IKOA sobre tu pedido COD '+g.cod+'.';
+  return '<a href="https://wa.me/'+t+'?text='+encodeURIComponent(m)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="padding:7px 12px;background:#128c4a;border-radius:8px;color:#fff;font-size:12px;font-weight:700;text-decoration:none;">💬 WhatsApp '+g.celular+'</a>';
+}
 function toggleTallerSel(cod, checked){
   if(checked) tallerSeleccionados.add(cod); else tallerSeleccionados.delete(cod);
   tallerActualizarContador();
