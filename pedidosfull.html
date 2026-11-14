@@ -231,6 +231,10 @@ button[style*="background:linear-gradient"] { background: var(--accent) !importa
 #ikoa-perchero .showroom-fabric{position:absolute;inset:0;background:var(--tela);-webkit-mask:var(--shirt-mask) center/contain no-repeat;mask:var(--shirt-mask) center/contain no-repeat}
 #ikoa-perchero .showroom-logo{position:absolute;aspect-ratio:362 / 311;background:var(--vinil);-webkit-mask:var(--logo-mask) center/contain no-repeat;mask:var(--logo-mask) center/contain no-repeat}
 #ikoa-perchero .showroom-garment img.is-tinted{mix-blend-mode:multiply;filter:none}
+#ikoa-perchero .showroom-estilos{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:440px}
+#ikoa-perchero .showroom-estilos button{font:inherit;font-size:10px;letter-spacing:.05em;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--background);color:var(--foreground);cursor:pointer}
+#ikoa-perchero .showroom-estilos button[aria-pressed="true"]{background:var(--foreground);color:var(--background)}
+
 #ikoa-perchero .showroom-item img{position:relative;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 10px 14px color-mix(in oklab, var(--foreground) 18%, transparent))}
 #ikoa-perchero .showroom-tag{margin-top:8px;padding:5px 9px;border:1px solid var(--border);font-size:9px;letter-spacing:.14em;text-transform:uppercase;background:var(--background)}
 #ikoa-perchero .showroom-rack.has-active .showroom-item{filter:blur(3px);opacity:.45}
@@ -1354,8 +1358,8 @@ function renderFranelasB(){
       </div>
       <div style="margin-top:10px;">
         <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Nombre en manga</div>
-        <input class="field-input" type="text" id="nombre-b${i}" placeholder="Ej: JUAN" maxlength="30"
-          style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+        <input class="field-input" type="text" id="nombre-b${i}" placeholder="Ej: JUAN" maxlength="15"
+          style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9\u00d1]/g,'').slice(0,15)">
         <button type="button" onclick="document.getElementById('nombre-b${i}').value='SIN NOMBRE EN MANGA'"
           style="margin-top:6px;padding:5px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">
           Sin nombre en manga
@@ -1398,6 +1402,7 @@ function renderFranelasB(){
     if(franelasB[i].talla) document.getElementById(`talla-b${i}`).value=franelasB[i].talla;
     if(franelasB[i].nombre) document.getElementById(`nombre-b${i}`).value=franelasB[i].nombre;
   });
+ [0,1,2].forEach(function(i){var f=franelasB[i]||{}; ampliarEstiloPieza('b',i,(f.conCapucha===undefined&&f.conCuelloAlto===undefined)?-1:(f.conCapucha?(f.conTapaboca?3:2):(f.conCuelloAlto?1:0)));});
 }
 
 function selectTelaB(btn, idx, valor){
@@ -1428,11 +1433,11 @@ function intentarPaso4B(){
     const logoManga=document.getElementById(`logo-manga-check-b${i}`)?.checked?(document.getElementById(`logo-manga-txt-b${i}`).value.trim()||'Sí'):'';
     const conCapucha=document.getElementById(`capucha-check-b${i}`)?.checked||false;
     const conCuelloAlto=conCapucha?false:(document.getElementById(`cuello-check-b${i}`)?.checked||false);
-    franelasB[i]={tela, talla, nombre, logoPecho, logoEspalda, logoManga, conCapucha, conCuelloAlto};
+    franelasB[i]={tela, talla, nombre, logoPecho, logoEspalda, logoManga, conCapucha, conCuelloAlto, conTapaboca:!!(conCapucha&&document.getElementById(`tapaboca-check-b${i}`)?.checked)};
   }
   pedido.vinil = vinilB;
   pedido.tela = franelasB.map(f=>f.tela).join(' / ');
-  pedido.piezas = franelasB.map(f=>({talla:f.talla, nombre:f.nombre, genero: document.getElementById(`genero-b${franelasB.indexOf(f)}`)?.value||'Dama', logoPecho:f.logoPecho||'', logoEspalda:f.logoEspalda||'', logoManga:f.logoManga||'', tela:f.tela||'', conCapucha:f.conCapucha||false, conCuelloAlto:f.conCuelloAlto||false}));
+  pedido.piezas = franelasB.map(f=>({talla:f.talla, nombre:f.nombre, genero: document.getElementById(`genero-b${franelasB.indexOf(f)}`)?.value||'Dama', logoPecho:f.logoPecho||'', logoEspalda:f.logoEspalda||'', logoManga:f.logoManga||'', tela:f.tela||'', conCapucha:f.conCapucha||false, conCuelloAlto:f.conCuelloAlto||false, conTapaboca:f.conTapaboca||false}));
   pedido.packs.push({
     pack:franelasB.length, modelo:'COMFY MEGA PROMO (Opción B)',
     manga:'Manga Larga', capucha:textoCapuchaPack(pedido.piezas),
@@ -1841,7 +1846,7 @@ function addPieza(copiarDe=null){
       <button onclick="cambiarRepeticion(${id},+1)" style="width:32px;height:32px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
       <div id="rep-label-${id}" style="font-size:11px;color:var(--muted);min-width:40px;"></div>
     </div>`;
-  document.getElementById('piezas-container').appendChild(div);
+  document.getElementById('piezas-container').appendChild(div); ampliarEstiloPieza('pz',id);
   if(genCopy) updateTallas(id,talCopy);
   actualizarBotonesMult();
 }
@@ -1957,7 +1962,7 @@ function savePiezas(){
     const conCuelloAlto=(sinPers||conCapucha||sinCuelloAlto)?false:(document.getElementById('pz-cuello-'+id)?.checked||false);   // capucha y cuello alto no van juntos
     // Expandir repeticiones
     for(let i=0;i<rep;i++){
-      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre,logoPecho,logoEspalda,logoManga,conCapucha,conCuelloAlto,largo});
+      pedido.piezas.push({genero:g,talla:t,nombre:n,sinNombre,logoPecho,logoEspalda,logoManga,conCapucha,conCuelloAlto,conTapaboca:!!(conCapucha&&document.getElementById('pz-tapaboca-'+id)?.checked),largo});
     }
   });
 }
@@ -1965,7 +1970,7 @@ function savePiezas(){
 // ── PAGO ──────────────────────────────────────────────────────
 let precioComfy={bs:0,usd:0}, precioRecarga={bs:0,usd:0};
 let precioLogoPecho={bs:0,usd:0}, precioLogoEspalda={bs:0,usd:0}, precioLogoManga={bs:0,usd:0};
-let precioCapucha={bs:0,usd:0};
+let precioCapucha={bs:0,usd:0}; let precioCapuchaTb={bs:0,usd:0}; // Capucha con tapaboca: código C.01.1 de la hoja CODIGOS (si no existe, cobra como capucha C.01)
 let pagoMoneda='', pagoRef='', pagoTotalBs=0, pagoTotalUsd=0;
 let casheaPct=0, casheaPctLicra=0, recargosCasheaPct=0, pagoTotalCasheaBs=0, pagoTotalCasheaUsd=0, tasaBcvActual=0, precioCargadoOk=false;
 
@@ -2010,7 +2015,7 @@ async function calcularPago(){
       precioLogoPecho={bs:parseFloat(pp['P.06']?.bs)||0, usd:parseFloat(pp['P.06']?.usd)||0};
       precioLogoEspalda={bs:parseFloat(pp['P.05']?.bs)||0, usd:parseFloat(pp['P.05']?.usd)||0};
       precioLogoManga={bs:parseFloat(pp['P.04']?.bs)||0, usd:parseFloat(pp['P.04']?.usd)||0};
-      precioCapucha={bs:parseFloat(data.capucha_bs)||0, usd:parseFloat(data.capucha_usd)||0};
+      precioCapucha={bs:parseFloat(data.capucha_bs)||0, usd:parseFloat(data.capucha_usd)||0}; precioCapuchaTb={bs:parseFloat(pp['C.01.1']?.bs)||precioCapucha.bs, usd:parseFloat(pp['C.01.1']?.usd)||precioCapucha.usd};
       if(data.tasa_bcv){
         tasaBcvActual=parseFloat(data.tasa_bcv)||0;
         document.getElementById('pago-tasa-bcv').textContent='Bs '+tasaBcvActual.toFixed(2);
@@ -2044,7 +2049,7 @@ async function calcularPago(){
   const tallasGrandes=['XL','XXL','3XL','XXXL','2XL',
     'DAMA XL','DAMA XXL','DAMA 3XL','DAMA XXXL','DAMA 2XL',
     'CABALLERO XL','CABALLERO XXL','CABALLERO 3XL','CABALLERO XXXL','CABALLERO 2XL'];
-  let totalLogosPecho=0, totalLogosEspalda=0, totalLogosManga=0, totalConCapucha=0, totalCuelloAlto=0, totalRecargas=0;
+  let totalLogosPecho=0, totalLogosEspalda=0, totalLogosManga=0, totalConCapucha=0, totalTapaboca=0, totalCuelloAlto=0, totalRecargas=0;
   let sumaBs=0, sumaUsd=0, recargaTotalBs=0, recargaTotalUsd=0;
   let hayYou=false, faltaCodigoYou=false, youExtraTotBs=0, youExtraTotUsd=0;
   let sumaBsLicra=0, faltaCodigoLicra=false, hayComfy=false;
@@ -2072,12 +2077,12 @@ async function calcularPago(){
     const logosPecho=esYou?0:pk.piezas.filter(p=>p.logoPecho).length;
     const logosEspalda=esYou?0:pk.piezas.filter(p=>p.logoEspalda).length;
     const logosManga=esYou?0:pk.piezas.filter(p=>p.logoManga).length;
-    const conCapucha=pk.piezas.filter(p=>p.conCapucha).length;
+    const conTapaboca=pk.piezas.filter(p=>p.conCapucha&&p.conTapaboca).length; const conCapucha=pk.piezas.filter(p=>p.conCapucha&&!p.conTapaboca).length;
     const conCuelloAlto=pk.piezas.filter(p=>p.conCuelloAlto).length;
     totalLogosPecho+=logosPecho;
     totalLogosEspalda+=logosEspalda;
     totalLogosManga+=logosManga;
-    totalConCapucha+=conCapucha;
+    totalConCapucha+=conCapucha; totalTapaboca+=conTapaboca;
     totalCuelloAlto+=conCuelloAlto;
     totalRecargas+=recargas;
     // Precio específico de ESTE pack (no el global de la selección actual)
@@ -2099,15 +2104,15 @@ async function calcularPago(){
     sumaUsd+=franelas*precioPackUsd;
     const etqSerie=etiquetaSerie(pk.mangaTipo,pk.modelo); const etiquetaPack=etqSerie?(franelas>1?etqSerie+'s':etqSerie):(pk.mangaTipo==='short')?(franelas>1?'shorts':'short'):(pk.esDress?(franelas>1?'vestidos':'vestido'):(franelas>1?'franelas':'franela'));
     const logosTxt=[logosPecho>0?`${logosPecho} logo pecho`:'',logosEspalda>0?`${logosEspalda} logo espalda`:'',logosManga>0?`${logosManga} logo manga`:''].filter(Boolean).join(', ');
-    desglose.push(`Pack ${i+1}: ${franelas} ${etiquetaPack}${pk.linea==='licra'?(' · '+pk.modelo+' '+pk.manga):''}${esYou?(franelas>=2?' · diseño Ikoa You (promo 2+ unds)':' · diseño Ikoa You (1 unidad, precio base normal)'):''}${recargas>0?` + ${recargas} recarga(s) talla grande`:''}${conCapucha>0?` + ${conCapucha} con capucha`:''}${conCuelloAlto>0?` + ${conCuelloAlto} con cuello alto`:''}${logosTxt?` + ${logosTxt}`:''}`);
+    desglose.push(`Pack ${i+1}: ${franelas} ${etiquetaPack}${pk.linea==='licra'?(' · '+pk.modelo+' '+pk.manga):''}${esYou?(franelas>=2?' · diseño Ikoa You (promo 2+ unds)':' · diseño Ikoa You (1 unidad, precio base normal)'):''}${recargas>0?` + ${recargas} recarga(s) talla grande`:''}${conCapucha>0?` + ${conCapucha} con capucha`:''}${conTapaboca>0?` + ${conTapaboca} con tapaboca`:''}${conCuelloAlto>0?` + ${conCuelloAlto} con cuello alto`:''}${logosTxt?` + ${logosTxt}`:''}`);
     recargaTotalBs+=recargas*precioRecarga.bs;
     recargaTotalUsd+=recargas*precioRecarga.usd;
   });
 
   const totalLogosBs=totalLogosPecho*precioLogoPecho.bs+totalLogosEspalda*precioLogoEspalda.bs+totalLogosManga*precioLogoManga.bs;
   const totalLogosUsd=totalLogosPecho*precioLogoPecho.usd+totalLogosEspalda*precioLogoEspalda.usd+totalLogosManga*precioLogoManga.usd;
-  const totalCapuchaBs=(totalConCapucha+totalCuelloAlto)*precioCapucha.bs;     // cuello alto = mismo precio que la capucha
-  const totalCapuchaUsd=(totalConCapucha+totalCuelloAlto)*precioCapucha.usd;
+  const totalCapuchaBs=(totalConCapucha+totalCuelloAlto)*precioCapucha.bs+totalTapaboca*precioCapuchaTb.bs;     // cuello alto = mismo precio que la capucha
+  const totalCapuchaUsd=(totalConCapucha+totalCuelloAlto)*precioCapucha.usd+totalTapaboca*precioCapuchaTb.usd;
   const totalRecargosVariosBs=recargaTotalBs + totalLogosBs + totalCapuchaBs + youExtraTotBs; // talla plus + logos + capucha + diseño Ikoa You
   const totalRecargosVariosUsd=recargaTotalUsd + totalLogosUsd + totalCapuchaUsd + youExtraTotUsd;
   pagoTotalBs=Math.round((sumaBs + totalRecargosVariosBs)*100)/100;
@@ -2125,7 +2130,7 @@ async function calcularPago(){
     basesMostrar.map(b=>`<br><span style="color:var(--muted);">• Precio/${b.unid} · ${b.nom} (${b.n}):</span> Bs ${b.bs.toFixed(2)} / $${b.usd.toFixed(2)} c/u`).join('')+
     (totalRecargas>0?`<br><span style="color:var(--muted);">• Recarga talla grande (${totalRecargas}):</span> Bs ${precioRecarga.bs.toFixed(2)} / $${precioRecarga.usd.toFixed(2)} c/u`:'')+
     (totalConCapucha>0?`<br><span style="color:var(--muted);">• Con Capucha (${totalConCapucha}):</span> Bs ${precioCapucha.bs.toFixed(2)} / $${precioCapucha.usd.toFixed(2)} c/u`:'')+
-     (totalCuelloAlto>0?`<br><span style="color:var(--muted);">• Con Cuello alto (${totalCuelloAlto}):</span> Bs ${precioCapucha.bs.toFixed(2)} / $${precioCapucha.usd.toFixed(2)} c/u`:'')+
+     (totalTapaboca>0?`<br><span style="color:var(--muted);">• Capucha con tapaboca (${totalTapaboca}):</span> Bs ${precioCapuchaTb.bs.toFixed(2)} / $${precioCapuchaTb.usd.toFixed(2)} c/u`:'')+ (totalCuelloAlto>0?`<br><span style="color:var(--muted);">• Con Cuello alto (${totalCuelloAlto}):</span> Bs ${precioCapucha.bs.toFixed(2)} / $${precioCapucha.usd.toFixed(2)} c/u`:'')+
     (totalLogosPecho>0?`<br><span style="color:var(--muted);">• Logo Pecho (${totalLogosPecho}):</span> Bs ${precioLogoPecho.bs.toFixed(2)} / $${precioLogoPecho.usd.toFixed(2)} c/u`:'')+
     (totalLogosEspalda>0?`<br><span style="color:var(--muted);">• Logo Espalda (${totalLogosEspalda}):</span> Bs ${precioLogoEspalda.bs.toFixed(2)} / $${precioLogoEspalda.usd.toFixed(2)} c/u`:'')+
     (totalLogosManga>0?`<br><span style="color:var(--muted);">• Logo Manga (${totalLogosManga}):</span> Bs ${precioLogoManga.bs.toFixed(2)} / $${precioLogoManga.usd.toFixed(2)} c/u`:'')+
@@ -2145,6 +2150,7 @@ async function calcularPago(){
     return;
   }
   precioCargadoOk=true;
+  carritoEnviar('Llegó al pago');
   // Reactivar los botones de pago ahora que el precio ya está actualizado y confirmado
   botonesPago.forEach(b=>{ b.disabled=false; b.style.opacity=''; b.style.cursor=''; });
   validarRef(); // re-evalúa el botón Siguiente con el precio ya confirmado
@@ -2210,6 +2216,7 @@ function irAlResumen(){
     pedido.pagoRef=ref;
     pedido.pagoMonto=(pagoMoneda==='bs')?pagoTotalBs:pagoTotalUsd;
   }
+  carritoEnviar('Eligió método de pago');
   const curEl=document.getElementById('step6');
   curEl.classList.remove('active');
   currentStep=7;
@@ -2271,7 +2278,7 @@ function buildResumen(){
     const etqS=etiquetaSerie(pk.mangaTipo,pk.modelo), etqSMay=etqS?etqS.charAt(0).toUpperCase()+etqS.slice(1):'';
     const etiquetaResumen=etqS?etqSMay:(pk.mangaTipo==='short')?'Short':(pk.esDress?'Vestido':'Franela');
     const etiquetaResumenPlural=etqS?etqSMay+'s':(pk.mangaTipo==='short')?'Shorts':(pk.esDress?'Vestidos':'Franelas');
-    const piezasHtml=pk.piezas.map((p,j)=>`<b>${etiquetaResumen} ${j+1}:</b> ${p.genero} Talla ${p.talla}${p.conCapucha?' 🧢 CON CAPUCHA':''}${p.conCuelloAlto?' 🧣 CON CUELLO ALTO':''}${p.nombre?' — '+p.nombre:''}${pk.ikoaYou?'':`${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`}`).join('<br>');
+    const piezasHtml=pk.piezas.map((p,j)=>`<b>${etiquetaResumen} ${j+1}:</b> ${p.genero} Talla ${p.talla}${p.conCapucha?(p.conTapaboca?' 🧢 CAPUCHA CON TAPABOCA':' 🧢 CON CAPUCHA'):''}${p.conCuelloAlto?' 🧣 CON CUELLO ALTO':''}${p.nombre?' — '+p.nombre:''}${pk.ikoaYou?'':`${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`}`).join('<br>');
     return `<div class="resumen-label">📦 Pack ${i+1} · ${pk.pack}PACK</div>
       <div class="resumen-block"><b>Modelo:</b> ${pk.modelo} ${pk.manga} ${capSerie(pk)}<br><b>Tela:</b> ${pk.tela} · <b>Vinil:</b> ${pk.vinil}</div>${pk.ikoaYou?ikoaDisenoHtml(pk):''}
       <div class="resumen-label">📏 ${etiquetaResumenPlural} (${pk.piezas.length})</div>
@@ -2299,13 +2306,32 @@ function buildResumen(){
 function buildMensaje(){
   const retiraText=pedido.mismoEnvio?'Mismo titular':`${pedido.eNombre} | C.I: ${pedido.eCi} | Cel: ${pedido.eCel}`;
   const packsText=pedido.packs.map((pk,i)=>{
-    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${(p.conCapucha&&pk.piezas.some(x=>x.conCuelloAlto))?' 🧢 con capucha':''}${p.conCuelloAlto?' 🧣 con cuello alto':''}${p.nombre?' — '+p.nombre:''}${pk.ikoaYou?'':`${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`}`).join('\n');
+    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conTapaboca?' 🧢 capucha con tapaboca':((p.conCapucha&&pk.piezas.some(x=>x.conCuelloAlto))?' 🧢 con capucha':'')}${p.conCuelloAlto?' 🧣 con cuello alto':''}${p.nombre?' — '+p.nombre:''}${pk.ikoaYou?'':`${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`}`).join('\n');
     return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: ${pk.modelo} ${pk.manga} ${capSerie(pk)}\nTela: ${pk.tela} · Vinil: ${pk.vinil}${pk.ikoaYou?ikoaDisenoTexto(pk):''}\n${etqTituloPlural(pk)} (${pk.piezas.length}):\n${piezasText}`;
   }).join('\n\n');
   return `🛍️ *PEDIDO IKOA & BEKATE*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
 }
 
+// ── CARRITOS: seguimiento de quién llega al pago y no termina ──
+var CARRITO_ID='';
+function carritoEnviar(estado){
+  try{
+    if(!CARRITO_ID) CARRITO_ID=(typeof tokenActual!=='undefined'&&tokenActual)?tokenActual:('W'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+    var res=(pedido.packs||[]).map(function(p,i){
+      return 'Pack '+(i+1)+': '+(p.pack||'')+'PACK '+(p.modelo||'')+' '+(p.manga||'')+(p.linea==='licra'?' (Licra)':'')+' · '+(p.tela||'')+'/'+(p.vinil||'')+' · '+((p.piezas||[]).length)+' pzs'+
+        ((p.piezas||[]).some(function(x){return x.conTapaboca})?' · con tapaboca':'')+((p.piezas||[]).some(function(x){return x.conCuelloAlto})?' · cuello alto':'');
+    }).join(' | ');
+    var metodo=(typeof pagoMoneda!=='undefined'&&pagoMoneda)?(pagoMoneda==='bs'?'Bs':pagoMoneda==='usd'?'Divisa':'Cashea'):'';
+    scriptGET({action:'carritoGuardar',id:CARRITO_ID,estado:estado,app:(document.title||'Pedidos').slice(0,40),
+      nombre:pedido.nombre||'',celular:pedido.celular||'',correo:pedido.correo||'',cedula:pedido.cedula||'',
+      resumen:res,usd:(typeof pagoTotalUsd!=='undefined'?pagoTotalUsd:''),bs:(typeof pagoTotalBs!=='undefined'?pagoTotalBs:''),
+      cashea:(typeof pagoTotalCasheaBs!=='undefined'?pagoTotalCasheaBs:''),metodo:metodo,
+      dispositivo:/Mobi|Android|iPhone/i.test(navigator.userAgent)?'Celular':'Computadora',
+      origen:(document.referrer||'').slice(0,120)}).catch(function(){});
+  }catch(e){ console.warn('carrito',e); }
+}
 async function guardarEnSheets(){
+  carritoEnviar('Completado');
   const retiraNombre=pedido.mismoEnvio?pedido.nombre:pedido.eNombre;
   const retiraCi=pedido.mismoEnvio?pedido.cedula:pedido.eCi;
   const retiraCel=pedido.mismoEnvio?pedido.celular:pedido.eCel;
@@ -2323,7 +2349,7 @@ async function guardarEnSheets(){
   let codigoPrincipal='';
   for(let i=0; i<pedido.packs.length; i++){
     const pk=pedido.packs[i];
-    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?' CON CAPUCHA':''}${p.conCuelloAlto?' CON CUELLO ALTO':''}${p.nombre?' - '+p.nombre:''}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}${p.tela?' | Tela: '+p.tela:''}${p.largo?' | Largo: '+p.largo:''}`).join(' | ');
+    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?(p.conTapaboca?' CAPUCHA CON TAPABOCA':' CON CAPUCHA'):''}${p.conCuelloAlto?' CON CUELLO ALTO':''}${p.nombre?' - '+p.nombre:''}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}${p.tela?' | Tela: '+p.tela:''}${p.largo?' | Largo: '+p.largo:''}`).join(' | ');
     try{
       const res=await scriptGETjson({
         action:'addSolicitud',
@@ -2533,8 +2559,8 @@ body{padding-top:44px}
 .combiner-fabric { position: absolute; inset: 0; background: var(--tela); mask: var(--shirt-mask) center / contain no-repeat; }
 .combiner-shirt img { position: relative; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
 .combiner-shirt img.is-photo { mix-blend-mode: normal; }
-.combiner-logo { position: absolute; left: 59.5%; top: 26.1%; width: 3.5%; aspect-ratio: 362 / 311; background: var(--vinil-pecho); mask: var(--logo-mask) center / contain no-repeat; }
-.combiner-sleeve { position: absolute; left: 11.5%; top: 77.5%; transform: translate(-50%, -50%) rotate(-78deg); color: var(--vinil-manga); font-family: "Lemon Milk", "Montserrat", sans-serif; font-size: 3.8cqi; font-weight: 400; letter-spacing: .04em; white-space: nowrap; max-width: 34cqi; overflow: hidden; }
+.combiner-logo { position: absolute; left: 61.4%; top: 27.6%; width: 3.5%; aspect-ratio: 362 / 311; background: var(--vinil-pecho); mask: var(--logo-mask) center / contain no-repeat; }
+.combiner-sleeve { position: absolute; left: 7.6%; top: 85%; transform: translate(-50%, -50%) rotate(-86deg); color: var(--vinil-manga); font-family: "Lemon Milk", "Montserrat", sans-serif; font-size: 3.8cqi; font-weight: 400; letter-spacing: .04em; white-space: nowrap; max-width: 34cqi; overflow: hidden; }
 .combiner-label { position: absolute; left: 47.5%; top: 5%; transform: translateX(-50%); display: grid; justify-items: center; gap: .25cqi; color: var(--fabric-label-ink); opacity: .38; font-family: "Lemon Milk", "Montserrat", sans-serif; text-align: center; line-height: 1.15; }
 .combiner-label b { font-size: 1.8cqi; font-weight: 700; letter-spacing: .18em; }
 .combiner-label i { font-size: .95cqi; font-style: normal; letter-spacing: .2em; }
@@ -2651,11 +2677,11 @@ body{padding-top:44px}
   <section class="fabric-section"><h2 class="fabric-section-title">Colores de franelas</h2>
     <figure class="fabric-sheet"><img src="pedidosfull_imagenes_subida1/pedidosfull-img/img-07.jpg" alt="Paleta de colores de franelas Comfy"><figcaption>DISPONIBILIDAD A CONSULTAR</figcaption></figure></section>
   <section class="fabric-section"><h2 class="fabric-section-title">Combina tela y vinil</h2>
-    <div class="combiner" id="ikoa-combiner" style='--logo-mask:url("pedidosfull_imagenes_subida1/pedidosfull-img/img-08.png");--shirt-mask:url("pedidosfull_imagenes_subida1/pedidosfull-img/img-09.png")'>
+    <div class="combiner" id="ikoa-combiner" style='--logo-mask:url("pedidosfull_imagenes_subida1/pedidosfull-img/img-08.png");--shirt-mask:url("pedidosfull_fotos_v2/larga_v3.webp")'>
       <figure class="combiner-stage">
-        <div class="combiner-shirt"><span class="combiner-fabric"></span><img src="pedidosfull_imagenes_subida1/pedidosfull-img/img-09.png" alt="Franela Comfy">
+        <div class="combiner-shirt"><span class="combiner-fabric"></span><img src="pedidosfull_fotos_v2/larga_v3.webp" alt="Franela Comfy">
           <span class="combiner-logo"></span><span class="combiner-sleeve" id="cb-word">NOMBRE</span>
-          <span class="combiner-label"><b>IKOA</b><i>COMFY PROTECT</i><u>M</u></span></div>
+          </div>
         <figcaption><span id="cb-tela"></span><span id="cb-vinil"></span></figcaption>
         <p class="combiner-note">Vista de referencia: el tono real del vinil puede variar ligeramente.</p>
       </figure>
@@ -2686,7 +2712,7 @@ body{padding-top:44px}
 <div class="size-list size-finder-chips" id="sf-chips"></div>
       <div class="size-finder-body">
         <figure class="size-finder-stage"><div class="size-finder-shirt"><div class="size-finder-fit">
-          <img src="pedidosfull_imagenes_subida1/pedidosfull-img/img-09.png" alt="Franela Comfy con medidas">
+          <img src="pedidosfull_fotos_v2/larga_v3.webp" alt="Franela Comfy con medidas">
           <span class="size-line size-line--chest"></span><span class="size-line size-line--length"></span><span class="size-line size-line--sleeve"></span>
           <span class="size-mark size-mark--chest">A</span><span class="size-mark size-mark--length">B</span><span class="size-mark size-mark--sleeve">C</span>
         </div><div class="size-finder-legend">
@@ -2857,19 +2883,19 @@ body{padding-top:44px}
 <script id="ikoa-perchero-js">
 (function(){
 "use strict";
-var IMG={tb_playera:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_playera.webp',tb_dress:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_dress.webp',tb_cortaviento:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_cortaviento.webp',tb_short:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_short.webp',tb_bikini:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_bikini.webp',tb_enterizo:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_enterizo.webp',tb_bikiniml:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_bikiniml.webp',tb_toalla:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_toalla.webp',licra:'FALTAN_1_para_carpeta_pedidosfull-img/licra.webp',cero:'pedidosfull_imagenes_subida1/pedidosfull-img/cero.webp',larga:'FALTAN_1_para_carpeta_pedidosfull-img/larga.webp',corta:'pedidosfull_imagenes_subida1/pedidosfull-img/corta.webp',dress:'pedidosfull_imagenes_subida1/pedidosfull-img/dress.webp',dresscero:'pedidosfull_imagenes_subida1/pedidosfull-img/dresscero.webp',short:'FALTAN_1_para_carpeta_pedidosfull-img/short.webp',alas:'pedidosfull_imagenes_subida1/pedidosfull-img/alas.webp',ikoa_logo:'pedidosfull_imagenes_subida1/pedidosfull-img/ikoa_logo.webp'};
+var IMG={tb_playera:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_playera.webp',tb_dress:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_dress.webp',tb_cortaviento:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_cortaviento.webp',tb_short:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_short.webp',tb_bikini:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_bikini.webp',tb_enterizo:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_enterizo.webp',tb_bikiniml:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_bikiniml.webp',tb_toalla:'FALTAN_2_para_carpeta_pedidosfull-col2/tb_toalla.webp',licra:'pedidosfull_fotos_v2/licra_v3.webp',cero:'pedidosfull_imagenes_subida1/pedidosfull-img/cero.webp',larga:'pedidosfull_fotos_v2/larga_v3.webp',corta:'pedidosfull_imagenes_subida1/pedidosfull-img/corta.webp',dress:'pedidosfull_imagenes_subida1/pedidosfull-img/dress.webp',dresscero:'pedidosfull_imagenes_subida1/pedidosfull-img/dresscero.webp',short:'FALTAN_1_para_carpeta_pedidosfull-img/short.webp',alas:'pedidosfull_imagenes_subida1/pedidosfull-img/alas.webp',ikoa_logo:'pedidosfull_imagenes_subida1/pedidosfull-img/ikoa_logo.webp'};
 var PRENDAS=[
  {id:'cero',grupo:'comfy',nombre:'Comfy Manga Cero',img:IMG.cero,ratio:'607 / 1000',tela:'Rojo',vinil:'Blanco',logo:{x:58.4,y:29.3,w:4.2},prenda:'playera',manga:'cero'},
  {id:'corta',grupo:'comfy',nombre:'Comfy Manga Corta',img:IMG.corta,ratio:'671 / 827',tela:'Menta',vinil:'Fucsia',logo:{x:59.5,y:26.1,w:3.5},prenda:'playera',manga:'corta'},
- {id:'larga',grupo:'comfy',nombre:'Comfy Manga Larga',img:IMG.larga,ratio:'863 / 1082',tela:'Azul Marino',vinil:'Blanco',logo:{x:59.5,y:26.1,w:3.5},prenda:'playera',manga:'larga',sleeve:{x:9,y:80,r:-81,s:3.8}},
+ {id:'larga',grupo:'comfy',nombre:'Comfy Manga Larga',img:IMG.larga,ratio:'620 / 777',tela:'Azul Marino',vinil:'Blanco',logo:{x:61.4,y:27.6,w:3.5},prenda:'playera',manga:'larga',sleeve:{x:7.6,y:85,r:-86,s:3.8}},
  {id:'dress',grupo:'comfy',nombre:'Comfy Dress Manga Larga',img:IMG.dress,ratio:'620 / 969',tela:'Rosado Bebe',vinil:'Negro',logo:{x:58,y:22,w:4},prenda:'dress',manga:'larga',sleeve:{x:9.6,y:70,r:-81,s:3.8}},
- {id:'you',grupo:'comfy',nombre:'Ikoa You',img:IMG.larga,ratio:'863 / 1082',tela:'Lila',vinil:'Fucsia',logo:{x:59.5,y:26.1,w:3.5},prenda:'playera',manga:'larga',sleeve:{x:9,y:80,r:-81,s:3.8},you:true},
+ {id:'you',grupo:'comfy',nombre:'Ikoa You',img:IMG.larga,ratio:'620 / 777',tela:'Lila',vinil:'Fucsia',logo:{x:61.4,y:27.6,w:3.5},prenda:'playera',manga:'larga',sleeve:{x:7.6,y:85,r:-86,s:3.8},you:true},
  {id:'short',grupo:'comfy',nombre:'Short Unicolor',img:IMG.short,ratio:'1290 / 1219',tela:'Azul Marino',vinil:'Blanco',logo:{x:79.4,y:79.2,w:5},prenda:'short',manga:''},
- {id:'licra',grupo:'licra',nombre:'Licra Protect Manga Larga',img:IMG.licra,ratio:'744 / 898',tela:'Amarillo Neón',vinil:'Rojo',logo:{x:60.8,y:29.6,w:3.5},prenda:'licra',manga:'larga',sleeve:{x:9.6,y:80,r:-76,s:3.6},linea:'licra',licraKey:'larga'},
+ {id:'licra',grupo:'licra',nombre:'Licra Protect Manga Larga',img:IMG.licra,ratio:'620 / 751',tela:'Amarillo Neón',vinil:'Rojo',logo:{x:61.4,y:25.4,w:3.5},prenda:'licra',manga:'larga',sleeve:{x:7.6,y:85.5,r:-86,s:3.6},linea:'licra',licraKey:'larga'},
  {id:'licra-corta',grupo:'licra',nombre:'Licra Protect Manga Corta',img:IMG.corta,ratio:'671 / 827',tela:'Rojo',vinil:'Blanco',logo:{x:59.5,y:26.1,w:3.5},prenda:'licra',manga:'corta',linea:'licra',licraKey:'corta'},
  {id:'licra-dress',grupo:'licra',nombre:'Licra Dress Manga Larga',img:IMG.dress,ratio:'620 / 969',tela:'Verde Militar',vinil:'Blanco',logo:{x:58,y:22,w:4},prenda:'licra',manga:'larga',sleeve:{x:9.6,y:70,r:-81,s:3.8},linea:'licra',licraKey:'dress'},
  {id:'licra-dress-cero',grupo:'licra',nombre:'Licra Dress Manga Cero',img:IMG.dresscero,ratio:'620 / 1408',tela:'Negro',vinil:'Amarillo Neon',logo:{x:62.2,y:20.4,w:5.9},prenda:'licra',manga:'cero',linea:'licra',licraKey:'dress-cero'},
- {id:'you-licra',grupo:'licra',nombre:'Ikoa You Licra',img:IMG.licra,ratio:'744 / 898',tela:'Menta',vinil:'Fucsia',logo:{x:60.8,y:29.6,w:3.5},prenda:'playera',manga:'larga',sleeve:{x:9.6,y:80,r:-76,s:3.6},you:true,base:'licra'},
+ {id:'you-licra',grupo:'licra',nombre:'Ikoa You Licra',img:IMG.licra,ratio:'620 / 748',tela:'Menta',vinil:'Fucsia',logo:{x:61.4,y:25.4,w:3.5},prenda:'playera',manga:'larga',sleeve:{x:7.6,y:85.5,r:-86,s:3.6},you:true,base:'licra'},
  {id:'tb-playera',grupo:'tiburon',foto:true,nombre:'Playera Tiburón Ballena',img:IMG.tb_playera,ratio:'520 / 560',tela:'Tiburón Ballena',vinil:'Blanco',logo:{x:63,y:24,w:4.6},sleeve:{x:8.2,y:82,r:-82,s:4.2},prenda:'licra',manga:'Manga Larga',linea:'licra',tb:{codigo:'TiburonBallena',modelo:'Playera Tiburón Ballena',manga:'Manga Larga',esDress:false,tipo:'licra-larga',label:'TIBURÓN BALLENA',sub:'Playera Tiburón Ballena'}},
  {id:'tb-dress',grupo:'tiburon',foto:true,nombre:'Dress Tiburón Ballena',img:IMG.tb_dress,ratio:'368 / 560',tela:'Tiburón Ballena',vinil:'Blanco',logo:{x:64,y:21,w:5.2},sleeve:{x:8.4,y:70,r:-84,s:4.6},prenda:'licra',manga:'Manga Larga',linea:'licra',tb:{codigo:'TiburonBallenaDress',modelo:'Dress Tiburón Ballena',manga:'Manga Larga',esDress:true,tipo:'dress-larga',label:'TIBURÓN BALLENA',sub:'Dress Tiburón Ballena'}},
  {id:'tb-cortaviento',grupo:'tiburon',foto:true,nombre:'Cortaviento Tiburón Ballena',img:IMG.tb_cortaviento,ratio:'510 / 640',tela:'Tiburón Ballena',vinil:'Blanco',logo:{x:0,y:0,w:0},sleeve:{x:9.2,y:79,r:-86,s:4.2},prenda:'licra',manga:'Manga Larga',linea:'licra',tb:{codigo:'TiburonBallenaCortaviento',modelo:'Cortaviento Tiburón Ballena',manga:'Manga Larga',esDress:false,tipo:'licra-larga',label:'TIBURÓN BALLENA',sub:'Cortaviento Tiburón Ballena'}},
@@ -2879,6 +2905,32 @@ var PRENDAS=[
  {id:'tb-bikiniml',grupo:'tiburon',foto:true,nombre:'Bikini Manga Larga Tiburón Ballena',img:IMG.tb_bikiniml,ratio:'423 / 560',tela:'Tiburón Ballena',vinil:'Blanco',logo:{x:0,y:0,w:0},prenda:'licra',manga:'Manga Larga',linea:'licra',tb:{codigo:'TiburonBallenaBikiniMLarga',modelo:'Bikini Manga Larga Tiburón Ballena',manga:'Manga Larga',esDress:false,tipo:'traje',label:'TIBURÓN BALLENA',sub:'Bikini Manga Larga Tiburón Ballena'}},
  {id:'tb-toalla',grupo:'tiburon',foto:true,nombre:'Toalla Tiburón Ballena',img:IMG.tb_toalla,ratio:'291 / 560',tela:'Tiburón Ballena',vinil:'Blanco',logo:{x:0,y:0,w:0},prenda:'licra',manga:'Única',linea:'licra',tb:{codigo:'TOALLATBALLENA',modelo:'Toalla Tiburón Ballena',manga:'Única',esDress:false,tipo:'toalla',label:'TIBURÓN BALLENA',sub:'Toalla Tiburón Ballena'}}
 ];
+// El estilo elegido en el perchero (0 normal, 1 cuello alto, 2 capucha, 3 capucha con tapaboca) se marca solo en las páginas siguientes; -1 = sin elección
+window.estiloPerchero=-1;
+function aplicarEstiloPerchero(capId,cuId){var e=window.estiloPerchero|0; if(e<=0||window.estiloPerchero<0)return; var t=document.getElementById((e===2||e===3)?capId:cuId); if(t&&t.type==='checkbox'&&!t.checked){t.checked=true;t.dispatchEvent(new Event('change',{bubbles:true}));}}
+// Franelas de Comfy/Licra manga larga elegidas en el perchero: 4 opciones tildables (cuello normal / cuello alto / capucha / capucha con tapaboca), la del perchero ya viene marcada
+function ampliarEstiloPieza(kind,key,ini){
+ if(window.estiloPerchero==null||window.estiloPerchero<0)return;
+ var capId=kind==='pz'?'pz-capucha-'+key:'capucha-check-b'+key, cuId=kind==='pz'?'pz-cuello-'+key:'cuello-check-b'+key, tbId=kind==='pz'?'pz-tapaboca-'+key:'tapaboca-check-b'+key;
+ var cap=document.getElementById(capId), cu=document.getElementById(cuId);
+ if(!cap||!cu||cap.type!=='checkbox'||cu.type!=='checkbox'||document.getElementById(tbId))return;
+ var rc=cap.parentNode, ru=cu.parentNode; rc.style.display='none'; ru.style.display='none';
+ var tb=document.createElement('input'); tb.type='checkbox'; tb.id=tbId; tb.style.display='none'; rc.parentNode.insertBefore(tb,rc);
+ var box=document.createElement('div'); box.className='estilo-opciones'; box.style.cssText='margin:8px 0;padding:8px 10px;border:1px solid var(--border);border-radius:8px;';
+ var nm='est-'+kind+'-'+key, ops=['Cuello normal','🧣 Cuello alto','🧢 Capucha','🎭 Capucha con tapaboca'];
+ box.innerHTML='<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Cuello / capucha (esta franela)</div>'+ops.map(function(t,v){return '<label style="display:flex;align-items:center;gap:8px;margin:4px 0;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;"><input type="radio" name="'+nm+'" value="'+v+'" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);"> '+t+'</label>';}).join('');
+ rc.parentNode.insertBefore(box,rc);
+ function fijar(v){cap.checked=(v===2||v===3);cu.checked=(v===1);tb.checked=(v===3);}
+ [].forEach.call(box.querySelectorAll('input'),function(r){r.onchange=function(){fijar(+r.value);};});
+ var v0=(ini==null||ini<0)?window.estiloPerchero:ini; v0=Math.max(0,Math.min(3,v0|0));
+ box.querySelectorAll('input')[v0].checked=true; fijar(v0);
+}
+window.ampliarEstiloPieza=ampliarEstiloPieza;
+window.aplicarEstiloPerchero=aplicarEstiloPerchero;
+function marcarCapuchaPerchero(){var e=window.estiloPerchero; if(e==null||e<0||typeof seleccionarCapuchaComfy!=='function')return; try{seleccionarCapuchaComfy((e===2||e===3)?'Con Capucha':'Sin Capucha');}catch(x){}}
+var ESTN=['Cuello normal','Cuello alto','Con capucha','Capucha con tapaboca'],estSel={},EST_VAR={"larga": [{"u": "pedidosfull_fotos_v2/larga_alto.webp", "h": 777, "dy": 0}, {"u": "pedidosfull_fotos_v2/larga_capucha.webp", "h": 983, "dy": 206}, {"u": "pedidosfull_fotos_v2/larga_capuchatapaboca.webp", "h": 991, "dy": 214}], "licra": [{"u": "pedidosfull_fotos_v2/licra_alto.webp", "h": 773, "dy": 22}, {"u": "pedidosfull_fotos_v2/licra_capucha.webp", "h": 994, "dy": 243}, {"u": "pedidosfull_fotos_v2/licra_capuchatapaboca.webp", "h": 991, "dy": 240}]};
+var LGS={"larga": [{"x": 62.851, "y": 29.899, "w": 4.239, "a": 1.164, "s": {"x": 7.358, "y": 93.317, "r": -91.94}, "o": 1}, {"x": 62.586, "y": 29.719, "w": 4.088, "a": 1.164, "s": {"x": 7.205, "y": 92.692, "r": -91.87}, "o": 1}, {"x": 62.432, "y": 31.155, "w": 5.291, "a": 1.164, "s": {"x": 6.8, "y": 92.923, "r": -90.98}, "o": 1}, {"x": 62.738, "y": 30.546, "w": 4.392, "a": 1.164, "s": {"x": 6.543, "y": 92.451, "r": -89.8}, "o": 1}], "licra": [{"x": 63.797, "y": 24.786, "w": 3.874, "a": 1.164, "s": {"x": 6.828, "y": 91.649, "r": -91.19}, "o": 1}, {"x": 62.266, "y": 27.281, "w": 3.946, "a": 1.164, "s": {"x": 6.97, "y": 91.827, "r": -91.48}, "o": 1}, {"x": 63.248, "y": 27.004, "w": 4.304, "a": 1.164, "s": {"x": 7.019, "y": 92.906, "r": -91.33}, "o": 1}, {"x": 64.401, "y": 29.727, "w": 3.943, "a": 1.164, "s": {"x": 6.848, "y": 92.709, "r": -90.19}, "o": 1}]};
+PRENDAS.forEach(function(p){if(EST_VAR[p.id])p.est=EST_VAR[p.id]});
 var COLIMG={"alpha-gris_playera": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-gris_playera.webp", "alpha-gris_dress": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-gris_dress.webp", "alpha-gris_cortaviento": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-gris_cortaviento.webp", "alpha-gris_short": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-gris_short.webp", "alpha-gris_bikini": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-gris_bikini.webp", "alpha-gris_enterizo": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-gris_enterizo.webp", "alpha-gris_bikiniml": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-gris_bikiniml.webp", "alpha-gris_toalla": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-gris_toalla.webp", "alpha-marino_playera": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-marino_playera.webp", "alpha-marino_dress": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-marino_dress.webp", "alpha-marino_cortaviento": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-marino_cortaviento.webp", "alpha-marino_short": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-marino_short.webp", "alpha-marino_bikini": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-marino_bikini.webp", "alpha-marino_enterizo": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-marino_enterizo.webp", "alpha-marino_bikiniml": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-marino_bikiniml.webp", "alpha-marino_toalla": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-marino_toalla.webp", "alpha-selva_playera": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-selva_playera.webp", "alpha-selva_dress": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-selva_dress.webp", "alpha-selva_cortaviento": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-selva_cortaviento.webp", "alpha-selva_short": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-selva_short.webp", "alpha-selva_bikini": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-selva_bikini.webp", "alpha-selva_enterizo": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-selva_enterizo.webp", "alpha-selva_bikiniml": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-selva_bikiniml.webp", "alpha-selva_toalla": "pedidosfull_imagenes_subida1/pedidosfull-col1/alpha-selva_toalla.webp", "camping-black_playera": "pedidosfull_imagenes_subida1/pedidosfull-col1/camping-black_playera.webp", "camping-black_dress": "pedidosfull_imagenes_subida1/pedidosfull-col1/camping-black_dress.webp", "camping-black_cortaviento": "pedidosfull_imagenes_subida1/pedidosfull-col1/camping-black_cortaviento.webp", "camping-black_short": "pedidosfull_imagenes_subida1/pedidosfull-col1/camping-black_short.webp", "camping-black_bikini": "pedidosfull_imagenes_subida1/pedidosfull-col1/camping-black_bikini.webp", "camping-black_enterizo": "pedidosfull_imagenes_subida1/pedidosfull-col1/camping-black_enterizo.webp", "camping-black_bikiniml": "pedidosfull_imagenes_subida1/pedidosfull-col1/camping-black_bikiniml.webp", "camping-black_toalla": "pedidosfull_imagenes_subida1/pedidosfull-col1/camping-black_toalla.webp", "camping-camo_playera": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-camo_playera.webp", "camping-camo_dress": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-camo_dress.webp", "camping-camo_cortaviento": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-camo_cortaviento.webp", "camping-camo_short": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-camo_short.webp", "camping-camo_bikini": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-camo_bikini.webp", "camping-camo_enterizo": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-camo_enterizo.webp", "camping-camo_bikiniml": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-camo_bikiniml.webp", "camping-camo_toalla": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-camo_toalla.webp", "camping-selva_playera": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-selva_playera.webp", "camping-selva_dress": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-selva_dress.webp", "camping-selva_cortaviento": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-selva_cortaviento.webp", "camping-selva_short": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-selva_short.webp", "camping-selva_bikini": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-selva_bikini.webp", "camping-selva_enterizo": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-selva_enterizo.webp", "camping-selva_bikiniml": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-selva_bikiniml.webp", "camping-selva_toalla": "pedidosfull_imagenes_subida2/pedidosfull-col2/camping-selva_toalla.webp", "nautica-marino_playera": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-marino_playera.webp", "nautica-marino_dress": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-marino_dress.webp", "nautica-marino_cortaviento": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-marino_cortaviento.webp", "nautica-marino_short": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-marino_short.webp", "nautica-marino_bikini": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-marino_bikini.webp", "nautica-marino_enterizo": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-marino_enterizo.webp", "nautica-marino_bikiniml": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-marino_bikiniml.webp", "nautica-marino_toalla": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-marino_toalla.webp", "nautica-mint_playera": "FALTAN_2_para_carpeta_pedidosfull-col2/nautica-mint_playera.webp", "nautica-mint_dress": "FALTAN_2_para_carpeta_pedidosfull-col2/nautica-mint_dress.webp", "nautica-mint_cortaviento": "FALTAN_2_para_carpeta_pedidosfull-col2/nautica-mint_cortaviento.webp", "nautica-mint_short": "FALTAN_2_para_carpeta_pedidosfull-col2/nautica-mint_short.webp", "nautica-mint_bikini": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-mint_bikini.webp", "nautica-mint_enterizo": "FALTAN_2_para_carpeta_pedidosfull-col2/nautica-mint_enterizo.webp", "nautica-mint_bikiniml": "FALTAN_2_para_carpeta_pedidosfull-col2/nautica-mint_bikiniml.webp", "nautica-mint_toalla": "FALTAN_2_para_carpeta_pedidosfull-col2/nautica-mint_toalla.webp", "nautica-blackjack_playera": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-blackjack_playera.webp", "nautica-blackjack_dress": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-blackjack_dress.webp", "nautica-blackjack_cortaviento": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-blackjack_cortaviento.webp", "nautica-blackjack_short": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-blackjack_short.webp", "nautica-blackjack_bikini": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-blackjack_bikini.webp", "nautica-blackjack_enterizo": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-blackjack_enterizo.webp", "nautica-blackjack_bikiniml": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-blackjack_bikiniml.webp", "nautica-blackjack_toalla": "pedidosfull_imagenes_subida2/pedidosfull-col2/nautica-blackjack_toalla.webp", "nautica-pink_playera": "FALTAN_2_para_carpeta_pedidosfull-col2/nautica-pink_playera.webp", "nautica-pink_dress": "FALTAN_2_para_carpeta_pedidosfull-col2/nautica-pink_dress.webp", "nautica-pink_cortaviento": "FALTAN_2_para_carpeta_pedidosfull-col2/nautica-pink_cortaviento.webp", "nautica-pink_short": "FALTAN_2_para_carpeta_pedidosfull-col2/nautica-pink_short.webp", "nautica-pink_bikini": "FALTAN_2_para_carpeta_pedidosfull-col2/nautica-pink_bikini.webp", "nautica-pink_enterizo": "FALTAN_2_para_carpeta_pedidosfull-col2/nautica-pink_enterizo.webp", "nautica-pink_bikiniml": "FALTAN_2_para_carpeta_pedidosfull-col2/nautica-pink_bikiniml.webp", "nautica-pink_toalla": "FALTAN_2_para_carpeta_pedidosfull-col2/nautica-pink_toalla.webp", "kids-boy-3_playera": "pedidosfull_imagenes_subida2/pedidosfull-col2/kids-boy-3_playera.webp", "kids-boy-3_dress": "pedidosfull_imagenes_subida2/pedidosfull-col2/kids-boy-3_dress.webp", "kids-boy-3_cortaviento": "pedidosfull_imagenes_subida2/pedidosfull-col2/kids-boy-3_cortaviento.webp", "kids-boy-3_short": "pedidosfull_imagenes_subida2/pedidosfull-col2/kids-boy-3_short.webp", "kids-boy-3_bikini": "pedidosfull_imagenes_subida2/pedidosfull-col2/kids-boy-3_bikini.webp", "kids-boy-3_enterizo": "pedidosfull_imagenes_subida2/pedidosfull-col2/kids-boy-3_enterizo.webp", "kids-boy-3_bikiniml": "pedidosfull_imagenes_subida2/pedidosfull-col2/kids-boy-3_bikiniml.webp", "kids-boy-3_toalla": "pedidosfull_imagenes_subida2/pedidosfull-col2/kids-boy-3_toalla.webp", "girl-6_playera": "pedidosfull_imagenes_subida2/pedidosfull-col2/girl-6_playera.webp", "girl-6_dress": "pedidosfull_imagenes_subida2/pedidosfull-col2/girl-6_dress.webp", "girl-6_cortaviento": "pedidosfull_imagenes_subida2/pedidosfull-col2/girl-6_cortaviento.webp", "girl-6_short": "pedidosfull_imagenes_subida2/pedidosfull-col2/girl-6_short.webp", "girl-6_bikini": "pedidosfull_imagenes_subida2/pedidosfull-col2/girl-6_bikini.webp", "girl-6_enterizo": "pedidosfull_imagenes_subida2/pedidosfull-col2/girl-6_enterizo.webp", "girl-6_bikiniml": "pedidosfull_imagenes_subida2/pedidosfull-col2/girl-6_bikiniml.webp", "girl-6_toalla": "pedidosfull_imagenes_subida2/pedidosfull-col2/girl-6_toalla.webp", "refl_front": "FALTAN_1_para_carpeta_pedidosfull-img/refl_front.webp", "refl_back": "FALTAN_1_para_carpeta_pedidosfull-img/refl_back.webp"};
 var COLECCIONES=[["alpha-gris", "Alpha Gris"], ["alpha-marino", "Alpha Marino"], ["alpha-selva", "Alpha Selva"], ["camping-black", "Camping Black"], ["camping-camo", "Camping Camo"], ["camping-selva", "Camping Selva"], ["nautica-marino", "Náutica Marino"], ["nautica-mint", "Náutica Mint Jack"], ["nautica-blackjack", "Náutica Black Jack"], ["nautica-pink", "Náutica Pink"], ["kids-boy-3", "Kids Boy 3"], ["girl-6", "Girl 6"]];var colActual=COLECCIONES[0][0];
 window.__codigosFijos={"AlphaGris": 1, "AlphaGrisDress": 1, "AlphaGrisCortaviento": 1, "AlphaGrisShort": 1, "AlphaGrisBikini": 1, "AlphaGrisEnterizo": 1, "AlphaGrisBikiniMLarga": 1, "TOALLAALPHAGRIS": 1, "AlphaMarino": 1, "AlphaMarinoDress": 1, "AlphaMarinoCortaviento": 1, "AlphaMarinoShort": 1, "AlphaMarinoBikini": 1, "AlphaMarinoEnterizo": 1, "AlphaMarinoBikiniMLarga": 1, "TOALLAALPHAMARINO": 1, "AlphaSelva": 1, "AlphaSelvaDress": 1, "AlphaSelvaCortaviento": 1, "AlphaSelvaShort": 1, "AlphaSelvaBikini": 1, "AlphaSelvaEnterizo": 1, "AlphaSelvaBikiniMLarga": 1, "TOALLAALPHASELVA": 1, "CampingBlack": 1, "CampingBlackDress": 1, "CampingBlackCortaviento": 1, "CampingBlackShort": 1, "CampingBlackBikini": 1, "CampingBlackEnterizo": 1, "CampingBlackBikiniMLarga": 1, "TOALLACAMPINGBLACK": 1, "CampingCamo": 1, "CampingCamoDress": 1, "CampingCamoCortaviento": 1, "CampingCamoShort": 1, "CampingCamoBikini": 1, "CampingCamoEnterizo": 1, "CampingCamoBikiniMLarga": 1, "TOALLACAMPINGCAMO": 1, "CampingSelva": 1, "CampingSelvaDress": 1, "CampingSelvaCortaviento": 1, "CampingSelvaShort": 1, "CampingSelvaBikini": 1, "CampingSelvaEnterizo": 1, "CampingSelvaBikiniMLarga": 1, "TOALLACAMPINGSELVA": 1, "NauticaMarino": 1, "NauticaMarinoDress": 1, "NauticaMarinoCortaviento": 1, "NauticaMarinoShort": 1, "NauticaMarinoBikini": 1, "NauticaMarinoEnterizo": 1, "NauticaMarinoBikiniMLarga": 1, "TOALLANAUTICAMARINO": 1, "NauticaMintJack": 1, "NauticaMintJackDress": 1, "NauticaMintJackCortaviento": 1, "NauticaMintJackShort": 1, "NauticaMintJackBikini": 1, "NauticaMintJackEnterizo": 1, "NauticaMintJackBikiniMLarga": 1, "TOALLANAUTICAMINTJACK": 1, "NauticaBlackJack": 1, "NauticaBlackJackDress": 1, "NauticaBlackJackCortaviento": 1, "NauticaBlackJackShort": 1, "NauticaBlackJackBikini": 1, "NauticaBlackJackEnterizo": 1, "NauticaBlackJackBikiniMLarga": 1, "TOALLANAUTICABLACKJACK": 1, "NauticaPink": 1, "NauticaPinkDress": 1, "NauticaPinkCortaviento": 1, "NauticaPinkShort": 1, "NauticaPinkBikini": 1, "NauticaPinkEnterizo": 1, "NauticaPinkBikiniMLarga": 1, "TOALLANAUTICAPINK": 1, "KidsBoy3": 1, "KidsBoy3Dress": 1, "KidsBoy3Cortaviento": 1, "KidsBoy3Short": 1, "KidsBoy3Bikini": 1, "KidsBoy3Enterizo": 1, "KidsBoy3BikiniMLarga": 1, "TOALLAKIDSBOY3": 1, "Girl6": 1, "Girl6Dress": 1, "Girl6Cortaviento": 1, "Girl6Short": 1, "Girl6Bikini": 1, "Girl6Enterizo": 1, "Girl6BikiniMLarga": 1, "TOALLAGIRL6": 1, "CortavientoReflectivo": 1};
@@ -2952,20 +3004,26 @@ function pintar(){
     if(tl.length){ if(tl.indexOf(c.tela)<0) c.tela=buscar(tl,p.tela); }
     if(vl.length){ if(vl.indexOf(c.vinil)<0) c.vinil=buscar(vl,p.vinil); }
   });
-  rack.classList.toggle('has-active',activa!==null);
+  rack.classList.toggle('has-active',activa!==null);raiz.classList.toggle('has-focus',activa!==null);
   [].slice.call(rack.children).forEach(function(b,i){
     var p=PRENDAS[i],c=combo[p.id],g=b.querySelector('.showroom-garment');
     b.style.display=(p.grupo===grupo&&(!p.col||p.col===colActual))?'':'none';var im0=b.querySelector('img');if(p.back){var ve=!!vista[p.id];im0.src=ve?p.back:p.img;[].forEach.call(g.querySelectorAll('.showroom-logo,.showroom-sleeve'),function(x){x.style.visibility=ve?'hidden':'';});}
-    b.classList.toggle('is-active',i===activa);
+    b.classList.toggle('is-active',i===activa);var mr2=String(p.ratio).match(/([\d.]+)\s*\/\s*([\d.]+)/);if(i===activa&&mr2){var ww=Math.round(Math.min(innerWidth*.8,330,innerHeight*.4*(+mr2[1]/+mr2[2])));b.style.width=ww+'px';var kx=(typeof estSel!=='undefined'?(estSel[p.id]|0):0),dyv=(kx&&p.est&&p.est[kx-1])?(p.est[kx-1].dy||0):0;rack.style.paddingTop=Math.round(14+dyv*ww/(+mr2[1]))+'px'}else{b.style.width='';if(activa===null)rack.style.paddingTop=''}
     b.setAttribute('aria-pressed',i===activa?'true':'false');
     g.style.setProperty('--tela',tonoTela(c.tela,true));
     g.style.setProperty('--vinil',tonoVinil(c.vinil));
+ if(p.est){var k=estSel[p.id]|0,E=k?p.est[k-1]:null,mr=String(p.ratio).match(/([\d.]+)\s*\/\s*([\d.]+)/),RW=+mr[1],H0=+mr[2],HH=E?E.h:H0,dy=E?E.dy:0,u=E?E.u:p.img;
+  var imE=b.querySelector('img');if(imE.getAttribute('src')!==u)imE.src=u; g.style.setProperty('--shirt-mask','url('+u+')'); g.style.aspectRatio=RW+' / '+H0; g.style.width=''; g.style.maxHeight='';
+  var up=(E&&HH>H0)?(HH/H0*100)+'%':'', fb=g.querySelector('.showroom-fabric');
+  [imE,fb].forEach(function(el){if(!el)return;if(up){el.style.position='absolute';el.style.left='0';el.style.top='auto';el.style.bottom='0';el.style.width='100%';el.style.height=up}else{el.style.position='';el.style.left='';el.style.top='';el.style.bottom='';el.style.width='';el.style.height=''}});
+  var lg=g.querySelector('.showroom-logo'); if(lg)lg.style.top=''; var sv=g.querySelector('.showroom-sleeve'); if(sv)sv.style.top='';}
+    var LGp=LGS[p.id==='you'?'larga':p.id];if(LGp){var kk=(p.id==='you'?0:(estSel[p.id]|0)),G=LGp[kk],lg2=g.querySelector('.showroom-logo');if(lg2&&G){lg2.style.left=G.x+'%';lg2.style.top=G.y+'%';lg2.style.width=G.w+'%';lg2.style.aspectRatio=G.a;lg2.style.setProperty('--logo-mask','url('+(G.u||IMG.alas)+')')}var sv2=g.querySelector('.showroom-sleeve');if(sv2&&G&&G.s){sv2.style.left=G.s.x+'%';sv2.style.top=G.s.y+'%';sv2.style.transformOrigin='0 50%';sv2.style.transform='translate(0,-50%) rotate('+G.s.r+'deg)'}}
     b.querySelector('img').alt=p.nombre+' en '+c.tela+' con vinil '+c.vinil;
   });
   if(activa===null){acciones.innerHTML='<p>Toca una prenda del perchero</p>';return;}
   var p=PRENDAS[activa],c=combo[p.id];
   var el=elegido[p.id];
-  var h='<p><b>'+p.nombre+'</b> \u00b7 '+(el.tela?c.tela:'elige tu tela')+' \u00b7 '+(el.vinil?'vinil '+c.vinil:'elige tu vinil')+'</p>';
+  var h='<button type="button" class="showroom-volver" id="ikoa-volver">\u2190 Volver al perchero</button><p><b>'+p.nombre+'</b> \u00b7 '+(el.tela?c.tela:'elige tu tela')+' \u00b7 '+(el.vinil?'vinil '+c.vinil:'elige tu vinil')+'</p>';
   if(!el.tela||!el.vinil)h+='<p class=\"showroom-nota\">Colores de muestra \u00b7 elige los tuyos</p>';
   var tl=telasDe(p),vl=vinilesDe(p);
   if(!tl.length&&!vl.length){h+='<p>Cargando colores de la base de datos\u2026</p>';}
@@ -2977,18 +3035,21 @@ function pintar(){
     h+='</div>';
   }
   if(p.back)h+='<button type="button" class="showroom-otras" id="ikoa-vista">'+(vista[p.id]?'Ver frente':'Ver espalda')+'</button>';
-  var listo=!!(el.tela&&el.vinil);
+  if(p.est){h+='<span class="showroom-label">Cuello / capucha</span><div class="showroom-estilos">';ESTN.forEach(function(n,k){h+='<button type="button" aria-pressed="'+((estSel[p.id]|0)===k)+'" data-e="'+k+'">'+n+'</button>';});h+='</div>';}
+ var listo=!!(el.tela&&el.vinil);
   if(listo){var av=avisoColores(c.tela,c.vinil);if(av)h+='<p class="showroom-aviso">'+av+'</p>';}
   h+='<button type="button" class="showroom-cta" id="ikoa-continuar"'+(listo?'':' disabled')+'>'+(listo?'Continuar con este modelo \u2192':(p.foto?'Elige el vinil para continuar':'Elige tela y vinil para continuar'))+'</button>';
-  acciones.innerHTML=h;
+  acciones.innerHTML=h;var vb=document.getElementById('ikoa-volver');if(vb)vb.onclick=function(){if(typeof estSel!=='undefined')for(var k in estSel)estSel[k]=0;activa=null;pintar();};
   [].slice.call(acciones.querySelectorAll('.showroom-colors button')).forEach(function(b){
     b.onclick=function(){combo[p.id][b.getAttribute('data-k')]=b.getAttribute('data-v');elegido[p.id][b.getAttribute('data-k')]=true;pintar();};
   });
   var vb=document.getElementById('ikoa-vista');if(vb)vb.onclick=function(){vista[p.id]=!vista[p.id];pintar();};
-  var ct=document.getElementById('ikoa-continuar');
+  [].forEach.call(acciones.querySelectorAll('.showroom-estilos button'),function(b){b.onclick=function(){estSel[p.id]=+b.getAttribute('data-e');pintar();};});
+ var ct=document.getElementById('ikoa-continuar');
   if(ct) ct.onclick=function(){
     var d=combo[p.id],e=elegido[p.id];
     if(!(e.tela&&e.vinil))return;
+ window.estiloPerchero=p.est?(estSel[p.id]|0):-1;
     pendiente={tela:d.tela,vinil:d.vinil};colorListo=true;rotular();
     if(p.tb){
       if(typeof continuarTrasTiburon!=='function'){cerrar();return;}
@@ -2997,19 +3058,19 @@ function pintar(){
     }
     if(p.linea==='licra'){
       if(typeof continuarTrasLicra!=='function'){cerrar();return;}
-      try{if(window.pintarColoresLinea)window.pintarColoresLinea('licra');continuarTrasLicra(p.licraKey);}catch(e){cerrar();return;}
+      try{if(window.pintarColoresLinea)window.pintarColoresLinea('licra');continuarTrasLicra(p.licraKey);marcarCapuchaPerchero();}catch(e){cerrar();return;}
       cerrar();return;
     }
     if(window.pintarColoresLinea)window.pintarColoresLinea('comfy');
     if(typeof seleccionarPrendaComfy!=='function'){cerrar();return;}
     try{seleccionarPrendaComfy(p.prenda);}catch(e){}
     if(p.manga&&typeof seleccionarMangaTipo==='function'){try{seleccionarMangaTipo(p.manga);}catch(e){}}
-    try{continuarTrasMangaTipo();}catch(e){cerrar();return;}
+    try{continuarTrasMangaTipo();marcarCapuchaPerchero();}catch(e){cerrar();return;}
     cerrar();
   };
 }
 
-function abrir(){if(!raiz.classList.contains('is-open'))reiniciar();raiz.classList.add('is-open');raiz.setAttribute('aria-hidden','false');if(paso)paso.setAttribute('inert','');pintar();}
+function abrir(){window.estiloPerchero=-1;if(!raiz.classList.contains('is-open'))reiniciar();raiz.classList.add('is-open');raiz.setAttribute('aria-hidden','false');if(paso)paso.setAttribute('inert','');pintar();}
 function cerrar(){raiz.classList.remove('is-open');raiz.setAttribute('aria-hidden','true');if(paso)paso.removeAttribute('inert');}
 
 // Abre el perchero en una prenda concreta (link de compra desde la tienda): pestaña, colección y prenda activa. Si el id no existe, no hace nada.
@@ -3341,8 +3402,8 @@ if(typeof _p45==='function')window.intentarPaso45=async function(){
 .combiner-fabric { position: absolute; inset: 0; background: var(--tela); mask: var(--shirt-mask) center / contain no-repeat; }
 .combiner-shirt img { position: relative; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
 .combiner-shirt img.is-photo { mix-blend-mode: normal; }
-.combiner-logo { position: absolute; left: 59.5%; top: 26.1%; width: 3.5%; aspect-ratio: 362 / 311; background: var(--vinil-pecho); mask: var(--logo-mask) center / contain no-repeat; }
-.combiner-sleeve { position: absolute; left: 11.5%; top: 77.5%; transform: translate(-50%, -50%) rotate(-78deg); color: var(--vinil-manga); font-family: "Lemon Milk", "Montserrat", sans-serif; font-size: 3.8cqi; font-weight: 400; letter-spacing: .04em; white-space: nowrap; max-width: 34cqi; overflow: hidden; }
+.combiner-logo { position: absolute; left: 61.4%; top: 27.6%; width: 3.5%; aspect-ratio: 362 / 311; background: var(--vinil-pecho); mask: var(--logo-mask) center / contain no-repeat; }
+.combiner-sleeve { position: absolute; left: 7.6%; top: 85%; transform: translate(-50%, -50%) rotate(-86deg); color: var(--vinil-manga); font-family: "Lemon Milk", "Montserrat", sans-serif; font-size: 3.8cqi; font-weight: 400; letter-spacing: .04em; white-space: nowrap; max-width: 34cqi; overflow: hidden; }
 .combiner-label { position: absolute; left: 47.5%; top: 5%; transform: translateX(-50%); display: grid; justify-items: center; gap: .25cqi; color: var(--fabric-label-ink); opacity: .38; font-family: "Lemon Milk", "Montserrat", sans-serif; text-align: center; line-height: 1.15; }
 .combiner-label b { font-size: 1.8cqi; font-weight: 700; letter-spacing: .18em; }
 .combiner-label i { font-size: .95cqi; font-style: normal; letter-spacing: .2em; }
@@ -3477,7 +3538,7 @@ if(typeof _p45==='function')window.intentarPaso45=async function(){
       <figure class="combiner-stage">
         <div class="combiner-shirt"><span class="combiner-fabric"></span><img loading="lazy" src="@@PRENDA@@" alt="Franela Licra">
           <span class="combiner-logo"></span><span class="combiner-sleeve" id="cb-word">NOMBRE</span>
-          <span class="combiner-label"><b>IKOA</b><i>LICRA PROTECT</i><u>M</u></span></div>
+          </div>
         <figcaption><span id="cb-tela"></span><span id="cb-vinil"></span></figcaption>
         <p class="combiner-note">Vista de referencia: el tono real del vinil puede variar ligeramente.</p>
       </figure>
@@ -3652,5 +3713,39 @@ if(typeof _p45==='function')window.intentarPaso45=async function(){
 </div>
 </script>
 <script type="text/plain" id="ikoa-guia-licra-prenda">FALTAN_1_para_carpeta_pedidosfull-img/img-45.webp</script>
-<script>(function(){var d=document.createElement("div");d.id="ikoa-marca";d.innerHTML="<span></span><b>IKOA</b>";d.firstChild.style.setProperty("--m","url(pedidosfull_imagenes_subida1/pedidosfull-img/alas.webp)");(document.getElementById("ikoa-tabbar")||document.body).appendChild(d);})();</script></body>
+<script>(function(){var d=document.createElement("div");d.id="ikoa-marca";d.innerHTML="<span></span><b>IKOA</b>";d.firstChild.style.setProperty("--m","url(pedidosfull_imagenes_subida1/pedidosfull-img/alas.webp)");(document.getElementById("ikoa-tabbar")||document.body).appendChild(d);})();</script><style id="ikoa-perchero-css2">
+#ikoa-perchero .showroom-tabs--bajo{margin-top:clamp(84px,17dvh,170px)!important;margin-bottom:18px!important}
+#ikoa-perchero .showroom-rack{padding-bottom:34px}
+#ikoa-perchero.has-focus .showroom-bar,#ikoa-perchero.has-focus .showroom-tabs--bajo,#ikoa-perchero.has-focus .showroom-colsel{display:none!important}
+#ikoa-perchero .showroom-rack.has-active{justify-content:center;overflow:visible!important}#ikoa-perchero .showroom-stage{overflow-x:hidden}
+#ikoa-perchero .showroom-rack.has-active .showroom-item:not(.is-active){display:none!important}
+#ikoa-perchero .showroom-rack.has-active .showroom-item.is-active{flex:0 0 auto;max-width:none;transform:none;animation:none;filter:none;opacity:1;margin:0 auto}
+#ikoa-perchero .showroom-rack.has-active .showroom-hook{display:none}
+#ikoa-perchero.has-focus .showroom{overflow-y:auto}#ikoa-perchero.has-focus .showroom-stage{flex:0 0 auto!important;overflow:visible!important}#ikoa-perchero.has-focus .showroom-actions{padding-bottom:24px}
+#ikoa-perchero .showroom-volver{font:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:9px 16px;border:1px solid var(--border);border-radius:999px;background:var(--background);color:var(--foreground);cursor:pointer}
+#ikoa-perchero .showroom-rack.has-active .showroom-garment{max-height:none}
+</style><style id="ikoa-wa-css">
+#ikoa-wa{position:fixed;right:12px;bottom:calc(88px + env(safe-area-inset-bottom,0px));width:46px;height:46px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,.28);z-index:2147482000;opacity:.93;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:transform .15s,opacity .15s}
+#ikoa-wa:hover,#ikoa-wa:active{opacity:1;transform:scale(1.07)}
+#ikoa-wa svg{width:26px;height:26px;fill:#fff}
+#ikoa-wa.alto{bottom:calc(200px + env(safe-area-inset-bottom,0px))}
+@media print{#ikoa-wa{display:none!important}}
+</style>
+<a id="ikoa-wa" href="#" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp" title="¿Necesitas ayuda? Escríbenos por WhatsApp"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16.003 3C9.374 3 4 8.373 4 15c0 2.116.553 4.18 1.6 6L4 29l8.16-1.57A11.93 11.93 0 0 0 16 27c6.627 0 12-5.373 12-12S22.63 3 16.003 3zm0 21.8c-1.9 0-3.76-.51-5.38-1.47l-.39-.23-4.84.93.97-4.72-.25-.4A9.8 9.8 0 0 1 6.2 15c0-5.42 4.4-9.8 9.8-9.8 5.4 0 9.8 4.38 9.8 9.8s-4.4 9.8-9.8 9.8zm5.38-7.34c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.79-1.47-1.76-1.64-2.06-.17-.3-.02-.46.13-.6.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.23 1.36.2 1.87.12.57-.09 1.75-.72 2-1.41.25-.69.25-1.28.17-1.41-.07-.13-.27-.2-.57-.35z"/></svg></a>
+<script>
+(function(){
+  var a=document.getElementById('ikoa-wa'); if(!a) return;
+  var num=(typeof WHATSAPP_NUM!=='undefined'&&WHATSAPP_NUM)?WHATSAPP_NUM:'584149450742';
+  function txt(){
+    var n=''; try{ n=(pedido&&pedido.nombre)||''; }catch(e){}
+    var p=''; try{ p=(typeof currentStep!=='undefined')?String(currentStep):''; }catch(e){}
+    return 'Hola IKOA, necesito ayuda con mi pedido'+(n?' (soy '+n+')':'')+(p?'. Estoy en el paso: '+p:'')+'.';
+  }
+  function ir(){ a.href='https://wa.me/'+num+'?text='+encodeURIComponent(txt()); }
+  ir(); a.addEventListener('click',ir); a.addEventListener('touchstart',ir,{passive:true});
+  // en el perchero la barra de series ocupa la parte baja: subir el botón para no taparla
+  setInterval(function(){ var r=document.getElementById('ikoa-perchero'); var v=r&&getComputedStyle(r).display!=='none'; a.classList.toggle('alto',!!v); },800);
+})();
+</script>
+</body>
 </html>

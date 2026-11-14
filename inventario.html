@@ -2208,6 +2208,34 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         </table>
       </div>
     </div>
+
+    <!-- CARRITOS: clientes que llegaron al paso de pago de pedidos / pedidosfull -->
+    <div id="carritos-card" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:20px;">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">🛒 Carritos · llegaron al pago</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <select id="car-per" onchange="renderCarritos()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:12px;"><option value="1">Hoy</option><option value="7" selected>7 días</option><option value="30">30 días</option><option value="0">Todo</option></select>
+          <select id="car-est" onchange="renderCarritos()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:12px;"><option value="">Todos</option><option value="sin">Sin concretar</option><option value="curso">En curso</option><option value="ok">Completados</option></select>
+          <button onclick="cargarCarritos()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;">↻ Actualizar</button>
+        </div>
+      </div>
+      <div id="car-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px;"></div>
+      <div id="car-aviso" style="font-size:11px;color:var(--muted);margin-bottom:8px;">“Sin concretar” = llegó al pago y pasaron más de 30 min sin enviar el pedido.</div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr>
+            <th style="padding:8px;text-align:left;color:var(--muted);border-bottom:1px solid var(--border);">Última actividad</th>
+            <th style="padding:8px;text-align:left;color:var(--muted);border-bottom:1px solid var(--border);">Cliente</th>
+            <th style="padding:8px;text-align:left;color:var(--muted);border-bottom:1px solid var(--border);">Pedido</th>
+            <th style="padding:8px;text-align:right;color:var(--muted);border-bottom:1px solid var(--border);">Total</th>
+            <th style="padding:8px;text-align:center;color:var(--muted);border-bottom:1px solid var(--border);">Estado</th>
+            <th style="padding:8px;text-align:center;color:var(--muted);border-bottom:1px solid var(--border);">Contactado</th>
+            <th style="padding:8px;text-align:left;color:var(--muted);border-bottom:1px solid var(--border);">Nota</th>
+          </tr></thead>
+          <tbody id="car-body"><tr><td colspan="7" style="text-align:center;padding:16px;color:var(--muted);">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -4002,6 +4030,67 @@ function renderVentas(){
     </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">Sin ventas en este período</td></tr>';
 }
 
+
+// ── CARRITOS (clientes que llegaron al pago) ──
+var _carritos=[];
+function carEsc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function carFecha(t){var d=new Date(String(t||'').replace(' ','T')+'-04:00');return isNaN(d)?null:d}
+function carEstado(r){
+  if(r['Estado']==='Completado')return 'ok';
+  var d=carFecha(r['Ultima actividad']);
+  return (d&&(Date.now()-d.getTime())<30*60000)?'curso':'sin';
+}
+async function cargarCarritos(){
+  var b=document.getElementById('car-body'); if(b)b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--muted);">⏳ Cargando...</td></tr>';
+  try{
+    var d=await scriptGETjson({action:'leerCarritos'});
+    if(!d||!d.ok)throw new Error((d&&d.error)||'Error');
+    _carritos=d.rows||[]; renderCarritos();
+  }catch(e){ if(b)b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--danger);">✗ '+carEsc(e.message)+'</td></tr>'; }
+}
+function renderCarritos(){
+  var per=parseInt(document.getElementById('car-per').value)||0, fe=document.getElementById('car-est').value;
+  var desde=per?Date.now()-per*86400000:0;
+  var base=_carritos.filter(function(r){var d=carFecha(r['Inicio']);return !per||(d&&d.getTime()>=desde)});
+  var n={ok:0,sin:0,curso:0},riesgo=0,cel=0,pc=0,mx=0;
+  base.forEach(function(r){var e=carEstado(r);n[e]++;if(e==='sin')riesgo+=parseFloat(r['Total USD'])||0;if(r['Dispositivo']==='Celular')cel++;else pc++;if(r['Método'])mx++;});
+  var tot=base.length, conv=tot?Math.round(n.ok*100/tot):0;
+  var k=function(t,v,c){return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;"><div style="font-size:11px;color:var(--muted);">'+t+'</div><div style="font-size:20px;font-weight:700;color:'+(c||'var(--text)')+';">'+v+'</div></div>'};
+  document.getElementById('car-kpis').innerHTML=
+    k('Llegaron al pago',tot)+k('Completaron',n.ok,'var(--accent)')+k('Sin concretar',n.sin,'var(--danger)')+k('En curso',n.curso,'var(--warn)')+
+    k('Conversión',conv+'%')+k('$ sin concretar','$'+riesgo.toFixed(2),'var(--danger)')+k('Desde celular',tot?Math.round(cel*100/tot)+'%':'0%')+k('Eligieron método',mx);
+  var lista=base.filter(function(r){return !fe||carEstado(r)===fe});
+  var b=document.getElementById('car-body');
+  if(!lista.length){b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--muted);">Sin registros en este periodo</td></tr>';return}
+  b.innerHTML=lista.map(function(r){
+    var e=carEstado(r), col=e==='ok'?'var(--accent)':e==='curso'?'var(--warn)':'var(--danger)';
+    var txt=e==='ok'?'✓ Completado':(e==='curso'?'⏳ En curso':'⚠ Sin concretar')+(r['Estado']==='Eligió método de pago'?' (ya eligió pago)':'');
+    var tel=String(r['Celular']||'').replace(/\D/g,''); if(tel.length===10)tel='58'+tel.replace(/^0/,''); else if(/^0/.test(tel))tel='58'+tel.slice(1);
+    var wa=tel?'<a href="https://wa.me/'+tel+'?text='+encodeURIComponent('Hola '+(r['Nombre']||'')+', te escribimos de IKOA. Vimos que estabas armando tu pedido, ¿te ayudamos a terminarlo?')+'" target="_blank" style="color:#25D366;text-decoration:none;">💬 '+carEsc(r['Celular'])+'</a>':'<span style="color:var(--muted);">sin celular</span>';
+    var f=carFecha(r['Ultima actividad']);
+    var tt=(r['Total USD']!==''?'$'+(parseFloat(r['Total USD'])||0).toFixed(2):'')+(r['Total Bs']!==''&&r['Total Bs']!=null?'<br><span style="color:var(--muted);">Bs '+(parseFloat(r['Total Bs'])||0).toFixed(2)+'</span>':'');
+    var idq=carEsc(r['ID']).replace(/'/g,'');
+    return '<tr style="border-bottom:1px solid var(--border);">'+
+      '<td style="padding:8px;white-space:nowrap;">'+(f?f.toLocaleString('es-VE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'')+'<br><span style="color:var(--muted);">'+carEsc(r['Dispositivo'])+'</span></td>'+
+      '<td style="padding:8px;"><b>'+carEsc(r['Nombre']||'(sin nombre)')+'</b><br>'+wa+'</td>'+
+      '<td style="padding:8px;max-width:320px;color:var(--muted);">'+carEsc(r['Resumen'])+'</td>'+
+      '<td style="padding:8px;text-align:right;white-space:nowrap;">'+tt+(r['Método']?'<br><span style="color:var(--muted);">'+carEsc(r['Método'])+'</span>':'')+'</td>'+
+      '<td style="padding:8px;text-align:center;color:'+col+';font-weight:700;">'+txt+'</td>'+
+      '<td style="padding:8px;text-align:center;"><input type="checkbox" '+(r['Contactado']==='Sí'?'checked':'')+' onchange="carMarcar(\''+idq+'\',this.checked?\'1\':\'0\',null)"></td>'+
+      '<td style="padding:8px;"><input type="text" value="'+carEsc(r['Nota'])+'" maxlength="300" placeholder="Nota…" onchange="carMarcar(\''+idq+'\',null,this.value)" style="width:150px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12px;"></td></tr>';
+  }).join('');
+}
+async function carMarcar(id,cont,nota){
+  var p={action:'carritoMarcar',id:id}; if(cont!==null)p.contactado=cont; if(nota!==null)p.nota=nota;
+  try{await scriptGETjson(p);var r=_carritos.find(function(x){return x['ID']===id});if(r){if(cont!==null)r['Contactado']=cont==='1'?'Sí':'';if(nota!==null)r['Nota']=nota}}catch(e){alert('No se pudo guardar: '+e.message)}
+}
+// Ícono de WhatsApp junto a un número: abre el chat con ese número
+function waIcono(num,msg){
+  var t=String(num||'').replace(/\D/g,''); if(!t) return '';
+  if(t.length===11&&t[0]==='0') t='58'+t.slice(1); else if(t.length===10) t='58'+t;
+  else if(t.length<10) return '';
+  return ' <a href="https://wa.me/'+t+(msg?'?text='+encodeURIComponent(msg):'')+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Abrir WhatsApp" style="display:inline-flex;vertical-align:middle;margin-left:4px;text-decoration:none;"><svg viewBox="0 0 32 32" width="18" height="18" style="background:#25D366;border-radius:50%;padding:3px;fill:#fff"><path d="M16.003 3C9.374 3 4 8.373 4 15c0 2.116.553 4.18 1.6 6L4 29l8.16-1.57A11.93 11.93 0 0 0 16 27c6.627 0 12-5.373 12-12S22.63 3 16.003 3zm5.38 14.46c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.79-1.47-1.76-1.64-2.06-.17-.3-.02-.46.13-.6.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.23 1.36.2 1.87.12.57-.09 1.75-.72 2-1.41.25-.69.25-1.28.17-1.41-.07-.13-.27-.2-.57-.35z"/></svg></a>';
+}
 function confirmarVentasLock(){
   const unlock=document.getElementById('ventas-lock-unlock').value.trim();
   const errEl=document.getElementById('ventas-lock-error');
@@ -4010,6 +4099,7 @@ function confirmarVentasLock(){
   document.getElementById('ventas-contenido').style.display='block';
   setVentasPeriodo('semana');
   cargarVentas();
+  cargarCarritos();
   cargarCuentaActiva();
 }
 
@@ -5088,7 +5178,7 @@ async function cargarAprobacionesCashea(){
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:12px;">
           <div><span style="color:var(--muted);">Correo:</span> ${v(8)}</div>
           <div><span style="color:var(--muted);">Cédula:</span> ${v(9)}</div>
-          <div><span style="color:var(--muted);">Celular:</span> ${v(10)}</div>
+          <div><span style="color:var(--muted);">Celular:</span> ${v(10)}${waIcono(v(10))}</div>
           <div><span style="color:var(--muted);">Agencia:</span> ${v(18)}</div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
@@ -6217,7 +6307,7 @@ async function cargarCola(){
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:10px;">
           <div><span style="color:var(--muted);">Correo:</span> ${v(8)}</div>
           <div><span style="color:var(--muted);">Cédula:</span> ${v(9)}</div>
-          <div><span style="color:var(--muted);">Celular:</span> ${v(10)}</div>
+          <div><span style="color:var(--muted);">Celular:</span> ${v(10)}${waIcono(v(10))}</div>
           <div><span style="color:var(--muted);">Agencia:</span> ${v(18)}</div>
         </div>
         <div style="background:var(--surface2);border:1px solid #1a4a2a;border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr;gap:4px;">
@@ -6799,7 +6889,7 @@ async function cargarSolicitudes(filtro){
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:12px;">
           <div><span style="color:var(--muted);">Correo:</span> ${v(8)}</div>
           <div><span style="color:var(--muted);">Cédula:</span> ${v(9)}</div>
-          <div><span style="color:var(--muted);">Celular:</span> ${v(10)}</div>
+          <div><span style="color:var(--muted);">Celular:</span> ${v(10)}${waIcono(v(10))}</div>
           <div><span style="color:var(--muted);">Agencia:</span> ${v(18)}</div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
@@ -7291,7 +7381,7 @@ async function buscarCOD(){
           <div><span style="color:var(--muted);">COD:</span> <b style="color:var(--text);">${v(3)}</b></div>
           <div><span style="color:var(--muted);">N° Guía:</span> <b>${v(4)||'—'}</b></div>
           <div><span style="color:var(--muted);">Cédula:</span> ${v(1)||'—'}</div>
-          <div><span style="color:var(--muted);">Celular:</span> ${v(7)||'—'}</div>
+          <div><span style="color:var(--muted);">Celular:</span> ${v(7)||'—'}${waIcono(v(7))}</div>
           <div><span style="color:var(--muted);">Agencia:</span> ${v(5)||'—'}</div>
           <div><span style="color:var(--muted);">Fecha:</span> ${v(8)||'—'}</div>
           <div style="grid-column:1/-1;"><span style="color:var(--muted);">Correo:</span> ${v(2)||'—'}</div>
@@ -7697,7 +7787,7 @@ async function buscarPedidoCOD(){
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:10px;">
             <div><span style="color:var(--muted);">Correo:</span> ${p0.correo||'—'}</div>
             <div><span style="color:var(--muted);">Cédula:</span> ${p0.cedula||'—'}</div>
-            <div><span style="color:var(--muted);">Celular:</span> ${p0.celular||'—'}</div>
+            <div><span style="color:var(--muted);">Celular:</span> ${p0.celular||'—'}${waIcono(p0.celular)}</div>
             <div><span style="color:var(--muted);">Agencia:</span> ${p0.agencia||'—'}</div>
           </div>
           <div style="background:var(--surface2);border:1px solid #1a4a2a;border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr;gap:4px;">
@@ -7707,7 +7797,7 @@ async function buscarPedidoCOD(){
             <div style="grid-column:1/-1;"><span style="color:var(--muted);">Ref:</span> <b style="color:var(--warn);">${p0.referencia||'—'}</b></div>
           </div>
           <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;">
-            <span style="color:var(--muted);">Retira:</span> ${p0.retiraNombre||data.nombre}${p0.retiraCi?` · C.I: ${p0.retiraCi}`:''}${p0.retiraCel?` · Cel: ${p0.retiraCel}`:''}
+            <span style="color:var(--muted);">Retira:</span> ${p0.retiraNombre||data.nombre}${p0.retiraCi?` · C.I: ${p0.retiraCi}`:''}${p0.retiraCel?` · Cel: ${p0.retiraCel}${waIcono(p0.retiraCel)}`:''}
           </div>
           ${packs.map((pk,idx)=>{
             const piezasFmt=(pk.piezas||'').split('|').map(s=>s.trim()).filter(Boolean).join('<br>');
@@ -7742,7 +7832,7 @@ async function buscarPedidoCOD(){
       <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:8px;">
         <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">${esMismo?'👤 Cliente / Quien retira':'👤 Cliente (titular)'}</div>
         <b>${data.nombre}</b><br>
-        C.I: ${data.cedula} · Cel: ${data.celular}
+        C.I: ${data.cedula} · Cel: ${data.celular}${waIcono(data.celular)}
       </div>
       ${!esMismo?`<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:8px;">
         <div style="color:var(--warn);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">📦 Quien retira (diferente)</div>
