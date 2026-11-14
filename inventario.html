@@ -4101,20 +4101,27 @@ function ikoaTicketDatos(cod,agenciaTxt,nombre,ci,cel,retira,retiraCi,retiraCel)
 }
 function ikoaTicketHTML(t){
   var e=function(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
-  return '<!doctype html><html><head><meta charset="utf-8"><title>Ticket COD '+e(t.cod)+'</title><style>@page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{margin:0;width:74mm;font-family:Arial,Helvetica,sans-serif;color:#000}'+
-   '.b{background:#000;color:#fff;text-align:center;font-weight:900;font-size:19px;letter-spacing:.08em;padding:6px 0;white-space:nowrap}.s{font-size:11px;font-weight:700;margin-top:5px;display:flex;justify-content:space-between}'+
-   'hr{border:0;border-top:1px solid #000;margin:6px 0}.c{font-size:20px;font-weight:900;margin:4px 0}.l{font-size:13px;font-weight:700;line-height:1.35;margin:2px 0;word-break:break-word}.u{text-decoration:underline;margin-top:12px}.f{text-align:center;font-size:9px;font-weight:700;margin-top:12px}</style></head><body>'+
-   '<div class="b">IKOA IKOA IKOA</div><div class="s"><span>ENVIA: IKOA BRAND CORP C.A.</span></div><div class="s"><span>RIF: J-505031716</span><span>CEL: 0414-9450742</span></div><hr>'+
-   '<div class="c">COD - '+e(t.cod)+'</div><div class="l">AGENCIA: '+e(t.agencia)+'</div><div class="l">DIRECCIÓN: '+e(t.direccion)+'</div>'+
-   '<div class="l u">ENVIAR A:</div><div class="l">CLIENTE: '+e(t.nombre)+'</div><div class="l">C.I: '+e(t.ci)+'</div><div class="l">CEL: '+e(t.cel)+'</div><hr>'+
-   '<div class="f">LOS QUE CONFÍAN EN DIOS LEVANTARÁN SUS ALAS COMO LAS ÁGUILAS<br>Isaías 40:31</div></body></html>';
+  var img=new URL('cod-mockups/ticket_contacto.png',location.href).href;
+  /* misma página 1 del COD (700 px de ancho) reducida al ancho del rollo de 80 mm */
+  return '<!doctype html><html><head><meta charset="utf-8"><title>Ticket COD '+e(t.cod)+'</title><style>@page{size:80mm auto;margin:3mm}*{box-sizing:border-box}html,body{margin:0;background:#fff}body{width:74mm}'+
+   '.w{width:700px;zoom:.4;font-family:Arial,Helvetica,sans-serif;color:#000}</style></head><body><div class="w">'+
+   '<div style="background:#000;color:#fff;text-align:center;font-weight:900;font-size:46px;letter-spacing:.14em;padding:12px 0;white-space:nowrap">IKOA IKOA IKOA</div>'+
+   '<div style="font:700 15px Arial,Helvetica,sans-serif;margin-top:12px">ENVIA: IKOA BRAND CORP C.A.</div>'+
+   '<div style="display:flex;justify-content:space-between;font:700 15px Arial,Helvetica,sans-serif;margin-top:8px"><span>RIF: J-505031716</span><span>CEL: 0414-9450742</span></div>'+
+   '<div style="border-top:1px solid #999;margin:10px 0 26px"></div>'+
+   '<div style="padding-left:30px;font:700 17px/1.55 Arial,Helvetica,sans-serif"><div style="font-size:21px;margin-bottom:6px">COD - '+e(t.cod)+'</div>'+
+   '<div>AGENCIA: '+e(t.agencia)+'</div><div>DIRECCIÓN: '+e(t.direccion)+'</div><div style="margin-top:34px;text-decoration:underline">ENVIAR A:</div>'+
+   '<div style="margin-top:6px">CLIENTE: '+e(t.nombre)+'</div><div>C.I: '+e(t.ci)+'</div><div>CEL: '+e(t.cel)+'</div></div>'+
+   '<img id="ct" src="'+img+'" style="display:block;width:700px;margin:40px auto 0"></div></body></html>';
 }
 function ikoaImprimirTicket(t){
   var fr=document.createElement('iframe'); fr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
   document.body.appendChild(fr);
   var d=fr.contentWindow.document; d.open(); d.write(ikoaTicketHTML(t)); d.close();
-  setTimeout(function(){try{fr.contentWindow.focus();fr.contentWindow.print()}catch(x){alert('No se pudo abrir la impresión: '+x.message)}
-    setTimeout(function(){try{document.body.removeChild(fr)}catch(x){}},60000)},300);
+  var go=function(){try{fr.contentWindow.focus();fr.contentWindow.print()}catch(x){alert('No se pudo abrir la impresión: '+x.message)}
+    setTimeout(function(){try{document.body.removeChild(fr)}catch(x){}},60000)};
+  var im=d.getElementById('ct'), done=false, once=function(){if(!done){done=true;setTimeout(go,200)}};
+  if(im&&!im.complete){im.onload=im.onerror=once;setTimeout(once,4000)} else once();
 }
 function tallerImprimirTicket(cod){
   var g=tallerGrupos[cod]; if(!g){alert('Pedido no encontrado');return}
