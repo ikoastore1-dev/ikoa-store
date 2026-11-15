@@ -6626,6 +6626,7 @@ function abrirModalPlanificacion(data){
 /* ===== COD PDF v8 (se arma en el navegador de inventario y se envía a Apps Script) ===== */
 /* ===== COD PDF v8 (se arma en el navegador de inventario y se envía a Apps Script) ===== */
 /* ===== COD PDF v8 (se arma en el navegador de inventario y se envía a Apps Script) ===== */
+/* ===== COD PDF v8 (se arma en el navegador de inventario y se envía a Apps Script) ===== */
 (function(){
 var BASE='cod-mockups/', K_TELA={"vino-tinto": "#6f191a", "naranja": "#ef632e", "fucsia": "#f451c8", "morado": "#8952fb", "amarillo-bb": "#fdfac4", "amarillo-neon": "#e8fe05", "blanco": "#f7f6fc", "negro": "#040d1b", "azul-rey": "#0101ef", "azul-marino": "#060a32", "menta": "#69d5d3", "azul-bb": "#c3e9f4", "beige": "#c2bfaf", "gris": "#8f969e", "rojo": "#a32a25", "rosa-bb": "#eac3ca", "rosa-vieja": "#d29fa8", "verde-militar": "#535433", "naranja-neon": "#e2500e", "lila": "#e09df5", "marron": "#35231c"}, K_VIN={"blanco": "#f4f5fa", "negro": "#060d1a", "azul-rey": "#0f04b0", "azul-marino": "#060b2f", "turquesa": "#65bbb2", "beige": "#c7c4b6", "verde-neon": "#72f460", "amarillo-neon": "#e2f353", "amarillo-cat": "#eaaf41", "rojo": "#ad3d40", "coral-neon": "#d73958", "vino-tinto": "#5a201b", "fucsia": "#ce58b0", "lila": "#d7a4ec", "morado": "#6233de", "azul-indigo": "#508cea", "gris": "#9aa0a6", "naranja": "#f37021", "dorado": "#c9a13b", "plateado": "#c0c3c8", "amarillo": "#f7d117", "rosado": "#f29bc0", "verde": "#1e8c3a"};
 var MOCK_H=0.19;   /* escala común de las prendas */
@@ -6674,10 +6675,11 @@ var CSS='.cp *{box-sizing:border-box}.cp{font-family:Montserrat,Barlow,Arial,san
 '.cp table{width:100%;border-collapse:collapse;margin-top:8px}.cp th{text-align:left;font-weight:400;color:#888;letter-spacing:.2em;font-size:8px;padding:4px 0;border-bottom:1.5px solid #111}.cp td{padding:9px 0;border-bottom:1px solid #e6e6e6;vertical-align:middle}'+
 '.cp .t{display:inline-block;background:#111;color:#fff;font-weight:700;min-width:48px;text-align:center;padding:8px 0;font-size:13px}.cp .g{letter-spacing:.2em;font-size:8px;font-weight:700}.cp .nm b{font-size:13px}.cp .nm div{color:#777;font-size:9.5px;margin-top:2px}';
 var ETQ={normal:'CUELLO NORMAL',alto:'CUELLO ALTO',capucha:'CON CAPUCHA',capuchatapaboca:'CAPUCHA CON TAPABOCA'};
-function filas(piezas,i0,pn){var h='',i=i0;piezas.forEach(function(p){i++;h+='<tr><td style="color:#888;width:34px">'+(i<10?'0':'')+i+'</td><td style="width:70px"><span class="t">'+esc(p.talla)+'</span></td><td class="g" style="width:100px">'+esc(String(p.genero||'').toUpperCase())+'</td><td class="nm"><b>'+esc(p.nombre||'')+'</b>'+(p.extra?'<div>'+esc(p.extra)+'</div>':'')+'</td></tr>'});return {h:h,i:i}}
+var CHK=false;
+function filas(piezas,i0,pn){var h='',i=i0;piezas.forEach(function(p){i++;h+='<tr>'+(CHK&&p.id?'<td style="width:46px"><input type="checkbox" class="pchk" data-k="'+esc(p.id)+'" style="width:30px;height:30px;accent-color:#111;cursor:pointer"></td>':(CHK?'<td></td>':''))+'<td style="color:#888;width:34px">'+(i<10?'0':'')+i+'</td><td style="width:70px"><span class="t">'+esc(p.talla)+'</span></td><td class="g" style="width:100px">'+esc(String(p.genero||'').toUpperCase())+'</td><td class="nm"><b>'+esc(p.nombre||'')+'</b>'+(p.extra?'<div>'+esc(p.extra)+'</div>':'')+'</td></tr>'});return {h:h,i:i}}
 /* datos = {cod,fecha,nombre,cedula,celular,correo,agencia,direccion,retira,retiraCi,retiraCel,urgente,packs:[{titulo,linea,vinil,bloques:[{tela,estilo,piezas:[{talla,genero,nombre,extra}],you:{img,lineas:[[a,b]]}|null}]}]} */
 async function armarPaginas(d){
-  var logo=d.soloSecciones?{src:''}:await loadImg(BASE+'ikoa_logo.png'),secs=[],n=0,PO=d.off||0;
+  CHK=!!d.chk;var logo=d.soloSecciones?{src:''}:await loadImg(BASE+'ikoa_logo.png'),secs=[],n=0,PO=d.off||0;
   d.packs.forEach(function(p){p.bloques.forEach(function(b){n+=b.piezas.length})});
   secs.push('<div class="top"><img src="'+logo.src+'"><div class="r">ORDEN DE PRODUCCIÓN<b>'+esc(d.fecha)+'</b></div></div><div class="k" style="margin-top:16px">IKOA &amp; BEKATE</div><h1>COD '+esc(d.cod)+'</h1><p class="lead">Esta es la orden de producción de tu pedido. Revisa que los colores, las tallas y los nombres sean los que elegiste.</p>'+
    '<div class="sum"><div><span class="k">Packs</span><b>'+d.packs.length+'</b></div><div><span class="k">Piezas</span><b>'+n+'</b></div><div><span class="k">Envío</span><b>'+esc(d.agencia)+'</b></div>'+(d.urgente?'<div><span class="k" style="color:#bbb">Urgente</span><b>'+esc(d.urgente)+'</b></div>':'')+'</div>'+
@@ -6696,7 +6698,7 @@ async function armarPaginas(d){
         var fr=await mockup(p.linea,b.estilo,'frente',tr,vr),es=await mockup(p.linea,b.estilo,'espalda',tr,vr);
         left='<div class="mk"><div class="im"><img src="'+fr.url+'" style="height:'+fr.h+'px"><img src="'+es.url+'" style="height:'+es.h+'px"></div><small>FRENTE · ESPALDA</small></div>';
       }
-      var blk='<div class="blk">'+left+'<div class="bd">'+tl+extra+'<table><tr><th style="white-space:nowrap;width:34px">P'+(pi+1+PO)+'</th><th>TALLA</th><th>GÉNERO</th><th>NOMBRE EN MANGA</th></tr>'+f.h+'</table></div></div>';
+      var blk='<div class="blk">'+left+'<div class="bd">'+tl+extra+'<table><tr>'+(CHK?'<th style="width:46px">HECHO</th>':'')+'<th style="white-space:nowrap;width:34px">P'+(pi+1+PO)+'</th><th>TALLA</th><th>GÉNERO</th><th>NOMBRE EN MANGA</th></tr>'+f.h+'</table></div></div>';
       secs.push(bi===0?head+blk:blk);
     }
   }
@@ -6807,7 +6809,7 @@ async function codConstruirPacks(allPacks,extras,offset){
     const pk=allPacks[k], etq='Pack '+(k+1)+' ('+(pk.codigoC||pk.codigoS||'')+')';
     if(!String(pk.tela||'').trim())throw new Error(etq+': falta la tela');
     if(!String(pk.vinil||'').trim())throw new Error(etq+': falta el vinil');
-    const piezas=codParsePiezas(pk.piezas,etq), linea=/LICRA/i.test(pk.modelo||'')?'licra':'comfy', esYou=/IKOA YOU/i.test(pk.modelo||'');
+    const piezas=codParsePiezas(pk.piezas,etq); piezas.forEach((p,ix)=>{p.idx=ix}); const linea=/LICRA/i.test(pk.modelo||'')?'licra':'comfy', esYou=/IKOA YOU/i.test(pk.modelo||'');
     let ex={}; try{ex=(extras[pk.codigoS]&&extras[pk.codigoS].json)?JSON.parse(extras[pk.codigoS].json):{}}catch(e){}
     const estilo=p=>p.tapaboca?'capuchatapaboca':(p.cuelloAlto?'alto':(p.capucha?'capucha':'normal')), orden=['normal','alto','capucha','capuchatapaboca'], grupos={};
     piezas.forEach(p=>{(grupos[estilo(p)]=grupos[estilo(p)]||[]).push(p)});
@@ -6823,7 +6825,7 @@ async function codConstruirPacks(allPacks,extras,offset){
     }
     const bloques=[];
     for(const e of orden){ if(!grupos[e])continue;
-      const bl={tela:pk.tela,estilo:e,piezas:grupos[e].map(p=>({talla:p.talla,genero:p.genero,nombre:p.nombre,extra:esYou?'Diseño Ikoa You':[p.LogoPecho?'Logo pecho: '+p.LogoPecho:'',p.LogoManga?'Logo manga: '+p.LogoManga:'',p.LogoEspalda?'Logo espalda: '+p.LogoEspalda:''].filter(Boolean).join(' · ')})),you:null};
+      const bl={tela:pk.tela,estilo:e,piezas:grupos[e].map(p=>({id:(pk.codigoS||('P'+(k+offset)))+'#'+p.idx,talla:p.talla,genero:p.genero,nombre:p.nombre,extra:esYou?'Diseño Ikoa You':[p.LogoPecho?'Logo pecho: '+p.LogoPecho:'',p.LogoManga?'Logo manga: '+p.LogoManga:'',p.LogoEspalda?'Logo espalda: '+p.LogoEspalda:''].filter(Boolean).join(' · ')})),you:null};
       if(esYou) bl.you={img:await codRenderYou(linea,dis,orden.indexOf(e),etq),lineas:lineas};
       bloques.push(bl);
     }
@@ -8574,18 +8576,75 @@ function cerrarVisorPDF(){
 
 // ── PRODUCCION ────────────────────────────────────────────────
 
-/* ===== Vista de producción para tablet: pedido con mockups, tallas y nombres ===== */
-var prodVistaCache={};
-function prodCerrarTablet(){var o=document.getElementById('prod-overlay');if(o)o.remove();document.body.style.overflow='';}
+/* ===== Vista de producción para tablet: pedido con mockups, tallas y nombres + avance por pieza ===== */
+var prodVistaCache={}, prodSel=new Set(), prodDirty=false, prodCodAbierto=null;
+window.prodAvance=window.prodAvance||{};
+function prodEsc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+/* claves de las piezas de un pedido: <codigoS>#<n° de pieza en el pack> */
+function prodKeysPack(p,k){
+  var out=[],n=0; String(p.piezas||'').split(' | ').map(function(x){return x.trim()}).filter(Boolean).forEach(function(seg){
+    if(/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):/.test(seg))return; out.push({key:(p.codigoS||('P'+k))+'#'+n,txt:seg}); n++; });
+  return out;
+}
+function prodKeys(g){var o=[];g.packs.forEach(function(p,k){prodKeysPack(p,k).forEach(function(x){o.push(x.key)})});return o;}
+function prodPedirClave(titulo,detalle){
+  return new Promise(function(ok){
+    var m=document.createElement('div'); m.style.cssText='position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px';
+    m.innerHTML='<div style="background:#fff;color:#111;border-radius:14px;padding:20px;max-width:380px;width:100%;font-family:Barlow,Arial,sans-serif">'+
+      '<div style="font-size:18px;font-weight:800;margin-bottom:6px">'+prodEsc(titulo)+'</div><div style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.4">'+prodEsc(detalle||'')+'</div>'+
+      '<input id="pc-in" type="password" inputmode="numeric" autocomplete="off" placeholder="Tu código personal" style="width:100%;box-sizing:border-box;padding:12px;font-size:18px;border:2px solid #111;border-radius:10px;text-align:center">'+
+      '<div id="pc-err" style="color:#c00;font-size:12px;min-height:16px;margin-top:6px;text-align:center"></div>'+
+      '<div style="display:flex;gap:8px;margin-top:6px"><button id="pc-no" style="flex:1;padding:12px;border:1px solid #bbb;background:#fff;border-radius:10px;font-size:15px;font-weight:700">Cancelar</button><button id="pc-si" style="flex:1;padding:12px;border:0;background:#111;color:#fff;border-radius:10px;font-size:15px;font-weight:800">Confirmar</button></div></div>';
+    document.body.appendChild(m); var inp=m.querySelector('#pc-in'); inp.focus();
+    function fin(v){m.remove();ok(v)}
+    function go(){var c=inp.value.trim().toUpperCase(); if(!USUARIOS[c]){m.querySelector('#pc-err').textContent='❌ Código incorrecto';inp.value='';inp.focus();return;} fin(c+' - '+USUARIOS[c]);}
+    m.querySelector('#pc-si').onclick=go; m.querySelector('#pc-no').onclick=function(){fin(null)}; inp.onkeydown=function(e){if(e.key==='Enter')go()};
+  });
+}
+function prodCerrarTablet(forzar){
+  if(prodDirty&&!forzar&&!confirm('Hay piezas marcadas sin guardar. ¿Cerrar sin guardar?'))return;
+  var o=document.getElementById('prod-overlay');if(o)o.remove();document.body.style.overflow='';prodDirty=false;prodCodAbierto=null;
+  if(typeof cargarProduccion==='function'&&document.getElementById('produccion-lista'))cargarProduccion();
+}
+function prodActualizarBarra(){
+  var g=(window.prodGrupos||{})[prodCodAbierto]; if(!g)return;
+  var ks=prodKeys(g), hechas=ks.filter(function(k){return prodSel.has(k)}).length, av=window.prodAvance[prodCodAbierto]||{};
+  var t=document.getElementById('prod-prog'); if(t)t.textContent='✔ '+hechas+'/'+ks.length+(av.completo?' · EJECUTADO':'');
+  var sv=document.getElementById('prod-save'); if(sv)sv.style.display=prodDirty?'inline-block':'none';
+}
+function prodAplicarChecks(){
+  var host=document.getElementById('prod-packs'); if(!host)return;
+  host.querySelectorAll('.pchk').forEach(function(c){c.checked=prodSel.has(c.dataset.k); c.onchange=function(){ if(c.checked)prodSel.add(c.dataset.k); else prodSel.delete(c.dataset.k); prodDirty=true; prodActualizarBarra(); var row=c.closest('tr,label'); if(row)row.style.opacity=c.checked?'.45':'1'; }; var row=c.closest('tr,label'); if(row)row.style.opacity=c.checked?'.45':'1'; });
+  prodActualizarBarra();
+}
+async function prodGuardar(completo,reabrir){
+  var cod=prodCodAbierto, g=(window.prodGrupos||{})[cod]; if(!g)return;
+  var ks=prodKeys(g);
+  if(completo){ prodSel=new Set(ks); }
+  var det=completo?'Marcar TODO el pedido COD '+cod+' como ejecutado. Saldrá de Producción (en Taller seguirá hasta que se envíe).':(reabrir?'Reabrir el pedido COD '+cod+' en Producción.':'Guardar las piezas marcadas del COD '+cod+' ('+ks.filter(function(k){return prodSel.has(k)}).length+'/'+ks.length+').');
+  var usr=await prodPedirClave(completo?'Ejecutado total':(reabrir?'Reabrir pedido':'Guardar avance'),det); if(!usr)return;
+  var btns=document.querySelectorAll('#prod-overlay button'); btns.forEach(function(b){b.disabled=true});
+  try{
+    var r=await scriptGETjson({action:'guardarProdAvance',cod:cod,done:JSON.stringify(Array.from(prodSel).filter(function(k){return ks.indexOf(k)>=0})),completo:completo?'SI':'',usuario:usr});
+    if(!r||!r.ok)throw new Error((r&&r.error)||'no se pudo guardar');
+    window.prodAvance[cod.toUpperCase()]={done:Array.from(prodSel),completo:!!completo,usuario:usr,fecha:''};
+    prodDirty=false; prodCerrarTablet(true);
+  }catch(e){ btns.forEach(function(b){b.disabled=false}); alert('✗ No se guardó: '+e.message); }
+}
 async function abrirProduccionTablet(cod){
   var g=(window.prodGrupos||{})[cod]; if(!g){alert('Pedido no encontrado');return;}
-  prodCerrarTablet();
+  var o0=document.getElementById('prod-overlay'); if(o0)o0.remove();
+  prodCodAbierto=cod; prodDirty=false;
+  var av=window.prodAvance[String(cod).toUpperCase()]||{done:[],completo:false}; prodSel=new Set(av.done||[]);
   var o=document.createElement('div'); o.id='prod-overlay';
   o.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;overflow:auto;-webkit-overflow-scrolling:touch;color:#111';
-  var CW=Math.max(320,window.innerWidth-28), z=Math.max(0.6,Math.min(1.6,CW/700)), esc=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
-  var bar='<div style="position:sticky;top:0;z-index:2;background:#111;color:#fff;display:flex;align-items:center;gap:10px;padding:10px 14px;flex-wrap:wrap;">'+
-    '<button onclick="prodCerrarTablet()" style="background:#fff;color:#111;border:0;border-radius:10px;padding:12px 18px;font-size:16px;font-weight:800;cursor:pointer;">✕ Cerrar</button>'+
-    '<div style="flex:1;min-width:140px;font-size:18px;font-weight:800;">COD '+esc(cod)+' · '+esc(g.nombre)+'</div>'+
+  var CW=Math.max(320,window.innerWidth-28), z=Math.max(0.6,Math.min(1.6,CW/700)), esc=prodEsc;
+  var bar='<div style="position:sticky;top:0;z-index:2;background:#111;color:#fff;display:flex;align-items:center;gap:8px;padding:10px 14px;flex-wrap:wrap;">'+
+    '<button onclick="prodCerrarTablet()" style="background:#fff;color:#111;border:0;border-radius:10px;padding:12px 16px;font-size:16px;font-weight:800;cursor:pointer;">✕ Cerrar</button>'+
+    '<div style="flex:1;min-width:130px;font-size:17px;font-weight:800;">COD '+esc(cod)+' · '+esc(g.nombre)+'<div id="prod-prog" style="font-size:13px;font-weight:700;color:#7dffb0;margin-top:2px"></div></div>'+
+    '<button id="prod-save" onclick="prodGuardar(false)" style="display:none;background:#f5b700;color:#000;border:0;border-radius:10px;padding:12px 14px;font-size:15px;font-weight:800;cursor:pointer;">💾 Guardar</button>'+
+    (av.completo?'<button onclick="prodGuardar(false,true)" style="background:#444;color:#fff;border:1px solid #888;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:700;cursor:pointer;">↩ Reabrir</button>':
+      '<button onclick="prodGuardar(true)" style="background:#1fbf6a;color:#000;border:0;border-radius:10px;padding:12px 14px;font-size:15px;font-weight:800;cursor:pointer;">✅ Ejecutado total</button>')+
     waBoton(g.celular,g.nombre,'('+cod+')')+
     '<button onclick="prodTicket(\''+esc(cod)+'\')" style="background:#333;color:#fff;border:1px solid #666;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:700;cursor:pointer;">🖨 Ticket</button></div>';
   var ag=String(g.agencia||'').split('—');
@@ -8597,9 +8656,9 @@ async function abrirProduccionTablet(cod){
     '<div><span style="color:#888">Retira</span> <b>'+esc(g.retira||g.nombre)+'</b>'+(g.retiraCI?' · '+esc(g.retiraCI):'')+(g.retiraCel?' · '+esc(g.retiraCel):'')+'</div>'+
     '<div><span style="color:#888">Fecha</span> <b>'+esc(g.fecha)+'</b></div></div></div>';
   o.innerHTML=bar+head+'<div id="prod-packs" style="zoom:'+z+';padding:6px 14px 60px;box-sizing:border-box;width:'+Math.round((CW+28)/z)+'px"></div>';
-  document.body.appendChild(o); document.body.style.overflow='hidden';
-  var host=document.getElementById('prod-packs');
-  if(prodVistaCache[cod]){host.innerHTML=prodVistaCache[cod];return;}
+  document.body.appendChild(o); document.body.style.overflow='hidden'; prodActualizarBarra();
+  var host=document.getElementById('prod-packs'), estilo='<style>.cp{width:'+Math.round(CW/z)+'px!important}</style>';
+  if(prodVistaCache[cod]){host.innerHTML=prodVistaCache[cod]; prodAplicarChecks(); return;}
   host.innerHTML='<div style="padding:30px 0;color:#666;font-size:14px">⏳ Armando mockups del pedido...</div>';
   var extras={}; try{var d=await scriptGETjson({action:'leerPackCOD',codigos:g.packs.map(function(p){return p.codigoS}).filter(Boolean).join(',')},20000);if(d&&d.ok&&d.packs)extras=d.packs;}catch(e){}
   var html='', css='';
@@ -8607,20 +8666,25 @@ async function abrirProduccionTablet(cod){
     var pk=g.packs[k], parte='';
     if(codEsLarga(pk)){
       try{
-        var pks=await codConstruirPacks([pk],extras);
-        var r=await CODPDF.secciones({off:k,cod:String(cod),fecha:g.fecha||'',nombre:g.nombre,cedula:g.cedula,celular:g.celular,correo:g.correo,agencia:(ag[0]||'').trim(),direccion:'',retira:'',retiraCi:'',retiraCel:'',urgente:'',packs:pks});
+        var pks=await codConstruirPacks([pk],extras,k);
+        var r=await CODPDF.secciones({off:k,chk:true,cod:String(cod),fecha:g.fecha||'',nombre:g.nombre,cedula:g.cedula,celular:g.celular,correo:g.correo,agencia:(ag[0]||'').trim(),direccion:'',retira:'',retiraCi:'',retiraCel:'',urgente:'',packs:pks});
         css=r.css; parte=r.secs.join('');
       }catch(e){ parte='<div style="background:#fee;border:1px solid #c00;color:#900;padding:8px 10px;font-size:12px;margin:8px 0">⚠️ Pack '+(k+1)+': no se pudo dibujar el mockup ('+esc(e.message)+'). Se muestra el detalle en texto.</div>'+prodPackTexto(pk,k,g.packs.length); }
     }else parte=prodPackTexto(pk,k,g.packs.length);
-    html+=parte; host.innerHTML='<style>'+css+'.cp{width:'+Math.round(CW/z)+'px!important}</style><div class="cp">'+html+'</div>';
+    html+=parte; host.innerHTML='<style>'+css+estilo.slice(7,-8)+'</style><div class="cp">'+html+'</div>'; prodAplicarChecks();
   }
-  prodVistaCache[cod]='<style>'+css+'.cp{width:'+Math.round(CW/z)+'px!important}</style><div class="cp">'+html+'</div>';
+  prodVistaCache[cod]='<style>'+css+estilo.slice(7,-8)+'</style><div class="cp">'+html+'</div>';
 }
 function prodPackTexto(p,i,n){
-  var esc=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+  var esc=prodEsc, ks=prodKeysPack(p,i), lines='';
+  var segs=String(p.piezas||'').split(' | ').map(function(x){return x.trim()}).filter(Boolean), n2=0;
+  segs.forEach(function(seg){
+    if(/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):/.test(seg)){lines+='<div style="margin:-4px 0 6px 42px;font-size:12px;color:#777">'+esc(seg)+'</div>';return;}
+    var key=ks[n2++].key;
+    lines+='<label style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #e6e6e6;font-size:15px;cursor:pointer"><input type="checkbox" class="pchk" data-k="'+esc(key)+'" style="width:30px;height:30px;accent-color:#111;flex:none"><span>'+esc(seg)+'</span></label>';
+  });
   return '<div style="border-top:1px solid #111;margin-top:14px;padding:12px 0;font-size:13px;max-width:700px"><div style="font-size:19px;font-weight:800">Pack '+(i+1)+(n>1?' de '+n:'')+': '+esc(p.pack||'—')+' · '+esc(p.modelo)+(new RegExp(String(p.manga||'#').replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i').test(p.modelo)?'':' '+esc(p.manga))+'</div>'+
-   '<div style="margin:6px 0"><span style="color:#888">Tela</span> <b>'+esc(p.tela)+'</b> &nbsp; <span style="color:#888">Vinil</span> <b>'+esc(p.vinil)+'</b></div>'+
-   '<div style="line-height:1.9">'+String(p.piezas||'').split(' | ').map(esc).join('<br>')+'</div></div>';
+   '<div style="margin:6px 0 10px"><span style="color:#888">Tela</span> <b>'+esc(p.tela)+'</b> &nbsp; <span style="color:#888">Vinil</span> <b>'+esc(p.vinil)+'</b></div>'+lines+'</div>';
 }
 function prodTicket(cod){
   var g=(window.prodGrupos||{})[cod]; if(!g)return;
@@ -8634,6 +8698,7 @@ async function cargarProduccion(){
   try{
     const data=await scriptGETjson({action:'leerProduccion'});
     const rows=data.rows||[];
+    try{ const av=await scriptGETjson({action:'leerProdAvance'}); window.prodAvance=(av&&av.avance)||{}; }catch(e){ window.prodAvance=window.prodAvance||{}; }
     if(rows.length===0){
       msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
       msg.innerHTML='✅ No hay pedidos en producción';
@@ -8656,10 +8721,15 @@ async function cargarProduccion(){
       });
     });
     window.prodGrupos=grupos;
-    const codigos=Object.keys(grupos);
-    lista.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${codigos.length} pedido(s) en producción</div>`;
+    const todos=Object.keys(grupos), esComp=c=>!!(window.prodAvance[String(c).toUpperCase()]||{}).completo;
+    const ejec=todos.filter(esComp).length, ver=!!window.prodVerEjecutados;
+    const codigos=todos.filter(c=>ver||!esComp(c));
+    lista.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;"><div style="font-size:12px;color:var(--muted);">${codigos.length} pedido(s) ${ver?'(con ejecutados)':'por ejecutar'}</div>
+      <label style="font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;cursor:pointer;"><input type="checkbox" ${ver?'checked':''} onchange="window.prodVerEjecutados=this.checked;cargarProduccion()"> Mostrar ejecutados (${ejec})</label></div>`;
+    if(!codigos.length){ lista.innerHTML+='<div style="text-align:center;padding:24px;color:var(--accent);font-size:14px;">✅ Todo ejecutado: no hay pedidos pendientes en Producción</div>'; }
     codigos.forEach(cod=>{
       const g=grupos[cod];
+      const _ks=prodKeys(g), _av=window.prodAvance[String(cod).toUpperCase()]||{done:[]}, _hechas=_ks.filter(k=>(_av.done||[]).indexOf(k)>=0).length;
       const packsHTML=g.packs.map((p,i)=>`
         <div style="border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--bg);${i>0?'margin-top:8px':''}">
           <div style="font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;color:var(--accent);margin-bottom:6px;">
@@ -8683,7 +8753,7 @@ async function cargarProduccion(){
               ${g.packs.length>1?`<span style="background:#1a1a2a;border:1px solid var(--muted);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--muted);">${g.packs.length} packs</span>`:''}
             </div>
           </div>
-          <span style="background:#1a1a2a;border:1px solid var(--accent);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--accent);">EN PRODUCCIÓN</span>
+          <span style="background:${_av.completo?'#0a2a0a':'#1a1a2a'};border:1px solid var(--accent);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--accent);">${_av.completo?'✅ EJECUTADO':'EN PRODUCCIÓN · '+_hechas+'/'+_ks.length}</span>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
           <button type="button" onclick="abrirProduccionTablet('${cod}')" style="flex:1;min-width:180px;padding:12px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-size:14px;font-weight:800;cursor:pointer;">🖼 Ver pedido con mockups</button>
