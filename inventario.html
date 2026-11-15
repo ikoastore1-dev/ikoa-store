@@ -2087,6 +2087,13 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <div id="ventas-contenido">
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;">📊 Ventas</div>
 
+    <!-- Sub-pestañas de Ventas -->
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <button class="ventas-sub-btn" data-vsub="resumen" onclick="switchVentasSub('resumen')" style="flex:1;padding:10px;border:2px solid var(--accent);border-radius:8px;background:var(--surface2);color:var(--accent);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📊 Resumen ventas</button>
+      <button class="ventas-sub-btn" data-vsub="carrito" onclick="switchVentasSub('carrito')" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🛒 Carrito</button>
+    </div>
+    <div id="ventas-sec-resumen">
+
     <!-- Interruptor de cuenta activa (afecta a TODAS las apps de venta) -->
     <div style="background:var(--surface);border:1px solid var(--accent);border-radius:12px;padding:14px;margin-bottom:16px;">
       <button onclick="toggleFacturaPanel()" id="btn-factura-toggle" style="width:100%;padding:12px;background:var(--surface2);border:none;border-radius:10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
@@ -2210,6 +2217,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       </div>
     </div>
 
+    </div><!-- /ventas-sec-resumen -->
+    <div id="ventas-sec-carrito" style="display:none;">
     <!-- CARRITOS: clientes que llegaron al paso de pago de pedidos / pedidosfull -->
     <div id="carritos-card" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:20px;">
       <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
@@ -2237,6 +2246,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         </table>
       </div>
     </div>
+    </div><!-- /ventas-sec-carrito -->
     </div>
   </div>
 
@@ -4040,6 +4050,15 @@ function carEstado(r){
   if(r['Estado']==='Completado')return 'ok';
   var d=carFecha(r['Ultima actividad']);
   return (d&&(Date.now()-d.getTime())<30*60000)?'curso':'sin';
+}
+function switchVentasSub(sub){
+  document.querySelectorAll('.ventas-sub-btn').forEach(function(b){
+    var on=b.dataset.vsub===sub;
+    b.style.borderColor=on?'var(--accent)':'var(--border)'; b.style.color=on?'var(--accent)':'var(--muted)';
+  });
+  document.getElementById('ventas-sec-resumen').style.display=sub==='resumen'?'block':'none';
+  document.getElementById('ventas-sec-carrito').style.display=sub==='carrito'?'block':'none';
+  if(sub==='carrito'&&typeof cargarCarritos==='function') cargarCarritos();
 }
 async function cargarCarritos(){
   var b=document.getElementById('car-body'); if(b)b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--muted);">⏳ Cargando...</td></tr>';
