@@ -1049,6 +1049,11 @@ function exclusivoExtra(id,cual){const cap=document.getElementById('pz-capucha-'
 function exclusivoExtraB(i,cual){const cap=document.getElementById('capucha-check-b'+i),cu=document.getElementById('cuello-check-b'+i);
   if(cual==='capucha'&&cap&&cap.checked&&cu)cu.checked=false; if(cual==='cuello'&&cu&&cu.checked&&cap)cap.checked=false;}
 // Texto de capucha / cuello alto a nivel de pack (si el pack es mixto no se indica: el detalle por pieza lo aclara)
+function etiquetaCuelloNormal(p,pk){   // texto para el cliente: la franela sin capucha ni cuello alto dice "cuello normal" explícito
+  if(!p||p.conCapucha||p.conCuelloAlto||!pk||pk.esDress)return '';
+  if(/SHORT|CORTAVIENTO|BIKINI|PLAYERA|ENTERIZO|TOALLA/i.test(String(pk.modelo||'')))return '';
+  return ' 👕 CUELLO NORMAL';
+}
 function textoCapuchaPack(pz){const n=pz.length,c=pz.filter(x=>x.conCapucha).length,u=pz.filter(x=>x.conCuelloAlto).length;
   if(c===n)return 'Con Capucha'; if(u===n)return 'Con Cuello Alto'; if(c===0&&u===0)return 'Sin Capucha'; return '';}
 function seleccionarCapuchaComfy(c){
@@ -2278,7 +2283,7 @@ function buildResumen(){
     const etqS=etiquetaSerie(pk.mangaTipo,pk.modelo), etqSMay=etqS?etqS.charAt(0).toUpperCase()+etqS.slice(1):'';
     const etiquetaResumen=etqS?etqSMay:(pk.mangaTipo==='short')?'Short':(pk.esDress?'Vestido':'Franela');
     const etiquetaResumenPlural=etqS?etqSMay+'s':(pk.mangaTipo==='short')?'Shorts':(pk.esDress?'Vestidos':'Franelas');
-    const piezasHtml=pk.piezas.map((p,j)=>`<b>${etiquetaResumen} ${j+1}:</b> ${p.genero} Talla ${p.talla}${p.conCapucha?(p.conTapaboca?' 🧢 CAPUCHA CON TAPABOCA':' 🧢 CON CAPUCHA'):''}${p.conCuelloAlto?' 🧣 CON CUELLO ALTO':''}${p.nombre?' — '+p.nombre:''}${pk.ikoaYou?'':`${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`}`).join('<br>');
+    const piezasHtml=pk.piezas.map((p,j)=>`<b>${etiquetaResumen} ${j+1}:</b> ${p.genero} Talla ${p.talla}${p.conCapucha?(p.conTapaboca?' 🧢 CAPUCHA CON TAPABOCA':' 🧢 CON CAPUCHA'):''}${p.conCuelloAlto?' 🧣 CON CUELLO ALTO':''}${etiquetaCuelloNormal(p,pk)}${p.nombre?' — '+p.nombre:''}${pk.ikoaYou?'':`${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`}`).join('<br>');
     return `<div class="resumen-label">📦 Pack ${i+1} · ${pk.pack}PACK</div>
       <div class="resumen-block"><b>Modelo:</b> ${pk.modelo} ${pk.manga} ${capSerie(pk)}<br><b>Tela:</b> ${pk.tela} · <b>Vinil:</b> ${pk.vinil}</div>${pk.ikoaYou?ikoaDisenoHtml(pk):''}
       <div class="resumen-label">📏 ${etiquetaResumenPlural} (${pk.piezas.length})</div>
@@ -2306,7 +2311,7 @@ function buildResumen(){
 function buildMensaje(){
   const retiraText=pedido.mismoEnvio?'Mismo titular':`${pedido.eNombre} | C.I: ${pedido.eCi} | Cel: ${pedido.eCel}`;
   const packsText=pedido.packs.map((pk,i)=>{
-    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conTapaboca?' 🧢 capucha con tapaboca':((p.conCapucha&&pk.piezas.some(x=>x.conCuelloAlto))?' 🧢 con capucha':'')}${p.conCuelloAlto?' 🧣 con cuello alto':''}${p.nombre?' — '+p.nombre:''}${pk.ikoaYou?'':`${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`}`).join('\n');
+    const piezasText=pk.piezas.map(p=>`  • ${p.genero} talla ${p.talla}${p.conTapaboca?' 🧢 capucha con tapaboca':((p.conCapucha&&pk.piezas.some(x=>x.conCuelloAlto))?' 🧢 con capucha':'')}${p.conCuelloAlto?' 🧣 con cuello alto':''}${p.conCuelloAlto?'':etiquetaCuelloNormal(p,pk).toLowerCase()}${p.nombre?' — '+p.nombre:''}${pk.ikoaYou?'':`${p.logoPecho?' | Logo Pecho: '+p.logoPecho:''}${p.logoEspalda?' | Logo Espalda: '+p.logoEspalda:''}${p.logoManga?' | Logo Manga: '+p.logoManga:''}`}`).join('\n');
     return `📦 *PACK ${i+1} · ${pk.pack}PACK*\nModelo: ${pk.modelo} ${pk.manga} ${capSerie(pk)}\nTela: ${pk.tela} · Vinil: ${pk.vinil}${pk.ikoaYou?ikoaDisenoTexto(pk):''}\n${etqTituloPlural(pk)} (${pk.piezas.length}):\n${piezasText}`;
   }).join('\n\n');
   return `🛍️ *PEDIDO IKOA & BEKATE*\n\n👤 *Datos del cliente*\nNombre: ${pedido.nombre}\nCorreo: ${pedido.correo}\nCédula: ${pedido.cedula}\nWhatsApp: ${pedido.celular}\n\n${packsText}\n\n🚚 *Entrega*\nAgencia: ${pedido.agencia}\nRetira: ${retiraText}\n\n💳 *Pago*\nMoneda: ${pedido.pagoMoneda}\nMonto: ${pedido.pagoMoneda==='Divisa'?'$':'Bs'}${pedido.pagoMonto}\nReferencia: ${pedido.pagoRef}\n\n_Pedido vía formulario IKOA · 5 días hábiles_`;
