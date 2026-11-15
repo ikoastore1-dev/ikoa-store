@@ -6627,7 +6627,7 @@ function abrirModalPlanificacion(data){
 /* ===== COD PDF v8 (se arma en el navegador de inventario y se envía a Apps Script) ===== */
 /* ===== COD PDF v8 (se arma en el navegador de inventario y se envía a Apps Script) ===== */
 (function(){
-var BASE='cod-mockups/', K_TELA={"blanco": "#f7f6fc", "negro": "#040d1b", "azul-rey": "#0101ef", "azul-marino": "#060a32", "menta": "#69d5d3", "azul-bb": "#c3e9f4", "beige": "#c2bfaf", "gris": "#8f969e", "rojo": "#a32a25", "rosa-bb": "#eac3ca", "rosa-vieja": "#d29fa8", "verde-militar": "#535433", "naranja-neon": "#e2500e", "lila": "#e09df5", "marron": "#35231c"}, K_VIN={"blanco": "#f4f5fa", "negro": "#060d1a", "azul-rey": "#0f04b0", "azul-marino": "#060b2f", "turquesa": "#65bbb2", "beige": "#c7c4b6", "verde-neon": "#72f460", "amarillo-neon": "#e2f353", "amarillo-cat": "#eaaf41", "rojo": "#ad3d40", "coral-neon": "#d73958", "vino-tinto": "#5a201b", "fucsia": "#ce58b0", "lila": "#d7a4ec", "morado": "#6233de", "azul-indigo": "#508cea", "gris": "#9aa0a6", "naranja": "#f37021", "dorado": "#c9a13b", "plateado": "#c0c3c8", "amarillo": "#f7d117", "rosado": "#f29bc0", "verde": "#1e8c3a"};
+var BASE='cod-mockups/', K_TELA={"vino-tinto": "#6f191a", "naranja": "#ef632e", "fucsia": "#f451c8", "morado": "#8952fb", "amarillo-bb": "#fdfac4", "amarillo-neon": "#e8fe05", "blanco": "#f7f6fc", "negro": "#040d1b", "azul-rey": "#0101ef", "azul-marino": "#060a32", "menta": "#69d5d3", "azul-bb": "#c3e9f4", "beige": "#c2bfaf", "gris": "#8f969e", "rojo": "#a32a25", "rosa-bb": "#eac3ca", "rosa-vieja": "#d29fa8", "verde-militar": "#535433", "naranja-neon": "#e2500e", "lila": "#e09df5", "marron": "#35231c"}, K_VIN={"blanco": "#f4f5fa", "negro": "#060d1a", "azul-rey": "#0f04b0", "azul-marino": "#060b2f", "turquesa": "#65bbb2", "beige": "#c7c4b6", "verde-neon": "#72f460", "amarillo-neon": "#e2f353", "amarillo-cat": "#eaaf41", "rojo": "#ad3d40", "coral-neon": "#d73958", "vino-tinto": "#5a201b", "fucsia": "#ce58b0", "lila": "#d7a4ec", "morado": "#6233de", "azul-indigo": "#508cea", "gris": "#9aa0a6", "naranja": "#f37021", "dorado": "#c9a13b", "plateado": "#c0c3c8", "amarillo": "#f7d117", "rosado": "#f29bc0", "verde": "#1e8c3a"};
 var MOCK_H=0.19;   /* escala común de las prendas */
 function slug(n){var s=String(n||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
   return s.replace(/-bebe(?=-|$)/g,'-bb').replace(/^(rosado|rosada)(?=-|$)/,'rosa').replace(/^rosa-viejo$/,'rosa-vieja').replace(/^vinotinto$/,'vino-tinto').replace(/^amarillo-cat[a-z]*$/,'amarillo-cat')}
@@ -8582,7 +8582,7 @@ async function abrirProduccionTablet(cod){
   prodCerrarTablet();
   var o=document.createElement('div'); o.id='prod-overlay';
   o.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;overflow:auto;-webkit-overflow-scrolling:touch;color:#111';
-  var z=Math.max(1,Math.min(1.8,(window.innerWidth-28)/700)), esc=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+  var CW=Math.max(320,window.innerWidth-28), z=Math.max(0.6,Math.min(1.6,CW/700)), esc=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
   var bar='<div style="position:sticky;top:0;z-index:2;background:#111;color:#fff;display:flex;align-items:center;gap:10px;padding:10px 14px;flex-wrap:wrap;">'+
     '<button onclick="prodCerrarTablet()" style="background:#fff;color:#111;border:0;border-radius:10px;padding:12px 18px;font-size:16px;font-weight:800;cursor:pointer;">✕ Cerrar</button>'+
     '<div style="flex:1;min-width:140px;font-size:18px;font-weight:800;">COD '+esc(cod)+' · '+esc(g.nombre)+'</div>'+
@@ -8596,7 +8596,7 @@ async function abrirProduccionTablet(cod){
     '<div><span style="color:#888">Agencia</span> <b>'+esc((ag[0]||'').trim())+'</b></div>'+(ag.length>1?'<div><span style="color:#888">Dirección</span> <b>'+esc(ag.slice(1).join('—').trim())+'</b></div>':'')+
     '<div><span style="color:#888">Retira</span> <b>'+esc(g.retira||g.nombre)+'</b>'+(g.retiraCI?' · '+esc(g.retiraCI):'')+(g.retiraCel?' · '+esc(g.retiraCel):'')+'</div>'+
     '<div><span style="color:#888">Fecha</span> <b>'+esc(g.fecha)+'</b></div></div></div>';
-  o.innerHTML=bar+head+'<div id="prod-packs" style="zoom:'+z+';padding:6px 14px 60px;box-sizing:border-box"></div>';
+  o.innerHTML=bar+head+'<div id="prod-packs" style="zoom:'+z+';padding:6px 14px 60px;box-sizing:border-box;width:'+Math.round((CW+28)/z)+'px"></div>';
   document.body.appendChild(o); document.body.style.overflow='hidden';
   var host=document.getElementById('prod-packs');
   if(prodVistaCache[cod]){host.innerHTML=prodVistaCache[cod];return;}
@@ -8612,9 +8612,9 @@ async function abrirProduccionTablet(cod){
         css=r.css; parte=r.secs.join('');
       }catch(e){ parte='<div style="background:#fee;border:1px solid #c00;color:#900;padding:8px 10px;font-size:12px;margin:8px 0">⚠️ Pack '+(k+1)+': no se pudo dibujar el mockup ('+esc(e.message)+'). Se muestra el detalle en texto.</div>'+prodPackTexto(pk,k,g.packs.length); }
     }else parte=prodPackTexto(pk,k,g.packs.length);
-    html+=parte; host.innerHTML='<style>'+css+'</style><div class="cp">'+html+'</div>';
+    html+=parte; host.innerHTML='<style>'+css+'.cp{width:'+Math.round(CW/z)+'px!important}</style><div class="cp">'+html+'</div>';
   }
-  prodVistaCache[cod]='<style>'+css+'</style><div class="cp">'+html+'</div>';
+  prodVistaCache[cod]='<style>'+css+'.cp{width:'+Math.round(CW/z)+'px!important}</style><div class="cp">'+html+'</div>';
 }
 function prodPackTexto(p,i,n){
   var esc=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
