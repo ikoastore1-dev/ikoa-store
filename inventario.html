@@ -1626,7 +1626,28 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
       <!-- PRODUCCIÓN -->
       <div id="produccion-wrap" style="display:none;">
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <button id="ptab-lista" onclick="prodTab('lista')" style="flex:1;padding:12px;border:2px solid var(--accent);border-radius:10px;background:var(--surface2);color:var(--accent);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;cursor:pointer;">🏭 Pedidos</button>
+          <button id="ptab-lim" onclick="prodTab('lim')" style="flex:1;padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;cursor:pointer;">🚦 Limitador</button>
+        </div>
+        <div id="produccion-pane-lim" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">🚦 Limitador de unidades por color</div>
+            <button onclick="limCargar()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">↻ Actualizar</button>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Fija cuántas unidades se venden de un color. Al completarse, el color desaparece solo de las ventas (pedidos, Ikoa You y combinadores). Se cuentan los pedidos pendientes y aprobados; si se reprueba uno, la unidad se libera.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:6px;">
+            <div style="flex:1;min-width:140px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px;">Producto / línea</div><select id="lim-linea" onchange="limPintarTelas()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;"><option value="TODAS">Todos los productos</option><option value="COLORES.COMFY">Comfy</option><option value="COLORES.FULLCOMFY">Comfy Protect</option><option value="COLORES.LICRA">Licra</option><option value="COLORES.COLECCION">Colección</option><option value="COLORES.COLECCION.UNICOLOR">Unicolor</option><option value="COLORES.TOALLA">Toalla</option></select></div>
+            <div style="flex:1;min-width:110px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px;">Aplica a</div><select id="lim-tipo" onchange="limPintarTelas()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;"><option value="tela">Color de tela</option><option value="vinil">Color de vinil</option></select></div>
+            <div style="flex:2;min-width:150px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px;">Color</div><select id="lim-tela" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;"></select></div>
+            <div style="width:90px"><div style="font-size:11px;color:var(--muted);margin-bottom:3px;">Unidades</div><input id="lim-tope" type="number" min="1" inputmode="numeric" placeholder="10" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;"></div>
+            <button onclick="limGuardar()" style="padding:11px 18px;background:var(--accent);border:0;border-radius:8px;color:#000;font-weight:800;font-size:14px;cursor:pointer;">Fijar límite</button>
+          </div>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-bottom:10px;"><input type="checkbox" id="lim-cero" checked> Empezar a contar desde ahora (no sumar ventas anteriores)</label>
+          <div id="lim-msg" style="display:none;padding:8px;border-radius:8px;font-size:13px;text-align:center;margin-bottom:8px;"></div>
+          <div id="lim-lista"></div>
+        </div>
+        <div id="produccion-pane-lista" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
             <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">🏭 Pedidos en Producción</div>
             <button onclick="cargarProduccion()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">↻ Actualizar</button>
@@ -4460,7 +4481,7 @@ async function cargarColores(app){
   const cont=document.getElementById('prog-content');
   cont.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">⏳ Cargando...</div>';
   try{
-    const data=await scriptGETjson({action:'leerColores',hoja:HOJAS_COLORES[app]});
+    const data=await scriptGETjson({action:'leerColores',todos:'1',hoja:HOJAS_COLORES[app]});
     if(!data.ok) throw new Error(data.error||'Error');
     const telas=data.telas||[], viniles=data.viniles||[];
     const esColeccion=app==='coleccion';
@@ -8965,6 +8986,65 @@ function prodTicket(cod){
   var g=(window.prodGrupos||{})[cod]; if(!g)return;
   ikoaImprimirTicket(ikoaTicketDatos(cod,g.agencia,g.nombre,g.cedula,g.celular,g.retira,g.retiraCI,g.retiraCel));
 }
+
+/* ═══ LIMITADOR (Producción) ═══ */
+var LIM_COL={}, LIM_DATA=[];
+var LIM_NOM={'TODAS':'Todos los productos','COLORES.COMFY':'Comfy','COLORES.FULLCOMFY':'Comfy Protect','COLORES.LICRA':'Licra','COLORES.COLECCION':'Colección','COLORES.COLECCION.UNICOLOR':'Unicolor','COLORES.TOALLA':'Toalla'};
+function prodTab(t){
+  var l=t==='lim';
+  document.getElementById('produccion-pane-lista').style.display=l?'none':'block';
+  document.getElementById('produccion-pane-lim').style.display=l?'block':'none';
+  [['ptab-lista',!l],['ptab-lim',l]].forEach(function(x){var b=document.getElementById(x[0]);b.style.borderColor=x[1]?'var(--accent)':'var(--border)';b.style.color=x[1]?'var(--accent)':'var(--muted)';});
+  if(l)limCargar();
+}
+function limMsg(t,ok){var m=document.getElementById('lim-msg');if(!t){m.style.display='none';return;}m.style.display='block';m.textContent=t;m.style.background=ok?'rgba(34,197,94,.15)':'rgba(239,68,68,.15)';m.style.color=ok?'#22c55e':'#ef4444';}
+function limPintarTelas(){
+  var h=document.getElementById('lim-linea').value, tipo=document.getElementById('lim-tipo').value, sel=document.getElementById('lim-tela'), lst=[];
+  if(h==='TODAS'){var seen={};Object.keys(LIM_COL).forEach(function(k){(LIM_COL[k][tipo==='vinil'?'viniles':'telas']||[]).forEach(function(c){var u=c.toUpperCase();if(!seen[u]){seen[u]=1;lst.push(c);}});});}
+  else lst=(LIM_COL[h]&&LIM_COL[h][tipo==='vinil'?'viniles':'telas'])||[];
+  sel.innerHTML=lst.map(function(t){return '<option>'+prodEsc(t)+'</option>';}).join('');
+}
+async function limCargar(){
+  var cont=document.getElementById('lim-lista'); cont.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">Cargando…</div>';
+  try{
+    var d=await scriptGETjson({action:'leerLimites'});
+    if(!d||!d.ok)throw new Error((d&&d.error)||'sin respuesta');
+    LIM_COL=d.colores||LIM_COL; LIM_DATA=d.limites||[]; limPintarTelas(); limRender();
+  }catch(e){cont.innerHTML='<div style="color:#ef4444;font-size:13px;padding:8px">No se pudo cargar: '+prodEsc(e.message)+' (¿actualizaste el Apps Script?)</div>';}
+}
+function limRender(){
+  var c=document.getElementById('lim-lista');
+  if(!LIM_DATA.length){c.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px;text-align:center">No hay límites. Ej.: Comfy · tela AZUL MARINO · 10.</div>';return;}
+  c.innerHTML=LIM_DATA.map(function(l,i){
+    var pct=l.tope?Math.min(100,Math.round(l.vendidas*100/l.tope)):0, col=l.agotado?'#ef4444':(pct>=80?'#f5b700':'#22c55e');
+    return '<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;background:var(--surface2)">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-weight:800;font-size:15px">'+prodEsc(LIM_NOM[l.hoja]||l.hoja)+' · '+(l.tipo==='vinil'?'vinil ':'tela ')+prodEsc(l.color)+'</div>'+
+      '<div style="font-size:12px;font-weight:800;color:'+col+'">'+(l.agotado?'⛔ AGOTADO · oculto en ventas':'🟢 '+l.restan+' disponibles')+'</div></div>'+
+      '<div style="height:8px;background:var(--border);border-radius:6px;margin:8px 0;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+col+'"></div></div>'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-size:13px;color:var(--muted)">Vendidas <b style="color:var(--text)">'+l.vendidas+'</b> de <b style="color:var(--text)">'+l.tope+'</b></div><div style="display:flex;gap:6px">'+
+      '<button onclick="limEditar('+i+')" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:12px;font-weight:700;cursor:pointer">✏️ Cambiar tope</button>'+
+      '<button onclick="limQuitar('+i+')" style="padding:7px 12px;border:1px solid #ef4444;border-radius:8px;background:transparent;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer">Quitar límite</button></div></div></div>';
+  }).join('');
+}
+async function limGuardar(){
+  var hoja=document.getElementById('lim-linea').value, tipo=document.getElementById('lim-tipo').value, color=document.getElementById('lim-tela').value, tope=parseInt(document.getElementById('lim-tope').value,10);
+  if(!color||!(tope>0)){limMsg('Elige el color y escribe las unidades (mayor a 0).',false);return;}
+  limMsg('Guardando…',true);
+  try{
+    var d=await scriptGETjson({action:'guardarLimite',hoja:hoja,tipo:tipo,color:color,tope:tope,desdeCero:document.getElementById('lim-cero').checked?'si':'no',usuario:''});
+    if(!d||!d.ok)throw new Error((d&&d.error)||'error');
+    document.getElementById('lim-tope').value=''; limMsg('✅ Límite guardado: '+color+' · '+tope+' unidades',true); limCargar();
+  }catch(e){limMsg('⚠️ '+e.message,false);}
+}
+function limEditar(i){
+  var l=LIM_DATA[i], v=prompt('Nuevo tope para '+l.color+' (vendidas hasta ahora: '+l.vendidas+')',l.tope);
+  if(v===null)return; v=parseInt(v,10); if(!(v>0)){alert('Escribe un número mayor a 0');return;}
+  scriptGETjson({action:'guardarLimite',hoja:l.hoja,tipo:l.tipo,color:l.color,tope:v}).then(function(){limCargar();});
+}
+function limQuitar(i){
+  var l=LIM_DATA[i]; if(!confirm('¿Quitar el límite de '+l.color+'? El color volverá a estar disponible.'))return;
+  scriptGETjson({action:'eliminarLimite',hoja:l.hoja,tipo:l.tipo,color:l.color}).then(function(){limCargar();});
+}
 async function cargarProduccion(){
   const msg=document.getElementById('produccion-msg');
   const lista=document.getElementById('produccion-lista');
@@ -11136,7 +11216,7 @@ async function cotModalSelectApp(app){
   // Colores
   document.getElementById('cotm-colores-section').style.display='block';
   document.getElementById('cotm-vinil-wrap').style.display='block';
-  const data=await scriptGETjson({action:'leerColores', hoja:COT_HOJAS[app]});
+  const data=await scriptGETjson({action:'leerColores', todos:'1', hoja:COT_HOJAS[app]});
   const selT=document.getElementById('cotm-tela'), selV=document.getElementById('cotm-vinil');
   selT.innerHTML='<option value="">Seleccionar...</option>';
   selV.innerHTML='<option value="">Seleccionar...</option>';
