@@ -4128,19 +4128,19 @@ function ikoaTicketDatos(cod,agenciaTxt,nombre,ci,cel,retira,retiraCi,retiraCel)
 function ikoaTicketHTML(t){
   var e=function(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
   var img=new URL('cod-mockups/ticket_contacto.png',location.href).href;
-  /* diseño propio para rollo de 80 mm (74 mm útiles ≈ 280 px): datos grandes y legibles, mismo estilo IKOA */
-  return '<!doctype html><html><head><meta charset="utf-8"><title>Ticket COD '+e(t.cod)+'</title><style>@page{size:80mm auto;margin:3mm}*{box-sizing:border-box}html,body{margin:0;background:#fff}body{width:74mm;font-family:Arial,Helvetica,sans-serif;color:#000}'+
-   '.ban{background:#000;color:#fff;text-align:center;font-weight:900;font-size:21px;letter-spacing:.1em;padding:9px 0;white-space:nowrap}'+
-   '.env{display:flex;justify-content:space-between;align-items:flex-end;font-size:10px;font-weight:700;line-height:1.35;margin:6px 0 4px}.env span:last-child{text-align:right}'+
-   '.cod{border:3px solid #000;text-align:center;margin:8px 0;padding:6px 0 4px}.cod small{display:block;font-size:11px;font-weight:700;letter-spacing:.3em}.cod b{display:block;font-size:42px;line-height:1.05;font-weight:900;letter-spacing:.02em}'+
-   '.k{font-size:10px;font-weight:700;letter-spacing:.18em;color:#444;margin-top:9px}.v{font-size:17px;font-weight:900;line-height:1.25;word-break:break-word;margin-top:1px}'+
-   '.to{border-top:3px solid #000;border-bottom:1px solid #000;margin-top:12px;padding:6px 0 8px}.to .h{font-size:13px;font-weight:900;letter-spacing:.2em}.to .n{font-size:22px;font-weight:900;line-height:1.15;margin-top:6px;word-break:break-word}.to .d{font-size:18px;font-weight:700;margin-top:4px}'+
-   'img{display:block;width:100%;margin-top:12px}.f{text-align:center;font-size:9px;font-weight:700;margin-top:6px}</style></head><body>'+
+  /* etiqueta 100 mm x 150 mm vertical (área útil 92 x 142 mm) */
+  return '<!doctype html><html><head><meta charset="utf-8"><title>Ticket COD '+e(t.cod)+'</title><style>@page{size:100mm 150mm;margin:4mm}*{box-sizing:border-box}html,body{margin:0;background:#fff}body{width:92mm;height:141mm;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#000;display:flex;flex-direction:column}'+
+   '.ban{background:#000;color:#fff;text-align:center;font-weight:900;font-size:22px;letter-spacing:.1em;padding:6px 0;white-space:nowrap}'+
+   '.env{display:flex;justify-content:space-between;align-items:flex-end;font-size:11px;font-weight:700;line-height:1.35;margin:5px 0 3px}.env span:last-child{text-align:right}'+
+   '.cod{border:3px solid #000;text-align:center;margin:4px 0;padding:3px 0 1px}.cod small{display:block;font-size:11px;font-weight:700;letter-spacing:.3em}.cod b{display:block;font-size:38px;line-height:1;font-weight:900}'+
+   '.k{font-size:10px;font-weight:700;letter-spacing:.18em;color:#444;margin-top:7px}.v{font-size:17px;font-weight:900;line-height:1.2;word-break:break-word;margin-top:1px}'+
+   '.to{border-top:3px solid #000;border-bottom:1px solid #000;margin-top:9px;padding:5px 0 7px}.to .h{font-size:13px;font-weight:900;letter-spacing:.2em}.to .n{font-size:20px;font-weight:900;line-height:1.1;margin-top:4px;word-break:break-word}.to .d{font-size:16px;font-weight:700;margin-top:3px}'+
+   'img{display:block;width:88%;margin:auto auto 0;flex:none}</style></head><body>'+
    '<div class="ban">IKOA IKOA IKOA</div>'+
    '<div class="env"><span>ENVIA: IKOA BRAND CORP C.A.<br>RIF: J-505031716</span><span>CEL:<br>0414-9450742</span></div>'+
    '<div class="cod"><small>COD</small><b>'+e(t.cod)+'</b></div>'+
    '<div class="k">AGENCIA</div><div class="v">'+e(t.agencia)+'</div>'+
-   '<div class="k">DIRECCIÓN</div><div class="v" style="font-size:14px;font-weight:700">'+e(t.direccion)+'</div>'+
+   '<div class="k">DIRECCIÓN</div><div class="v" style="font-size:13px;font-weight:700">'+e(t.direccion)+'</div>'+
    '<div class="to"><div class="h">ENVIAR A</div><div class="n">'+e(t.nombre)+'</div><div class="d">C.I: '+e(t.ci)+'</div><div class="d">CEL: '+e(t.cel)+'</div></div>'+
    '<img id="ct" src="'+img+'"></body></html>';
 }
@@ -6677,7 +6677,7 @@ var ETQ={normal:'CUELLO NORMAL',alto:'CUELLO ALTO',capucha:'CON CAPUCHA',capucha
 function filas(piezas,i0,pn){var h='',i=i0;piezas.forEach(function(p){i++;h+='<tr><td style="color:#888;width:34px">'+(i<10?'0':'')+i+'</td><td style="width:70px"><span class="t">'+esc(p.talla)+'</span></td><td class="g" style="width:100px">'+esc(String(p.genero||'').toUpperCase())+'</td><td class="nm"><b>'+esc(p.nombre||'')+'</b>'+(p.extra?'<div>'+esc(p.extra)+'</div>':'')+'</td></tr>'});return {h:h,i:i}}
 /* datos = {cod,fecha,nombre,cedula,celular,correo,agencia,direccion,retira,retiraCi,retiraCel,urgente,packs:[{titulo,linea,vinil,bloques:[{tela,estilo,piezas:[{talla,genero,nombre,extra}],you:{img,lineas:[[a,b]]}|null}]}]} */
 async function armarPaginas(d){
-  var logo=await loadImg(BASE+'ikoa_logo.png'),secs=[],n=0,PO=d.off||0;
+  var logo=d.soloSecciones?{src:''}:await loadImg(BASE+'ikoa_logo.png'),secs=[],n=0,PO=d.off||0;
   d.packs.forEach(function(p){p.bloques.forEach(function(b){n+=b.piezas.length})});
   secs.push('<div class="top"><img src="'+logo.src+'"><div class="r">ORDEN DE PRODUCCIÓN<b>'+esc(d.fecha)+'</b></div></div><div class="k" style="margin-top:16px">IKOA &amp; BEKATE</div><h1>COD '+esc(d.cod)+'</h1><p class="lead">Esta es la orden de producción de tu pedido. Revisa que los colores, las tallas y los nombres sean los que elegiste.</p>'+
    '<div class="sum"><div><span class="k">Packs</span><b>'+d.packs.length+'</b></div><div><span class="k">Piezas</span><b>'+n+'</b></div><div><span class="k">Envío</span><b>'+esc(d.agencia)+'</b></div>'+(d.urgente?'<div><span class="k" style="color:#bbb">Urgente</span><b>'+esc(d.urgente)+'</b></div>':'')+'</div>'+
@@ -8618,7 +8618,7 @@ async function abrirProduccionTablet(cod){
 }
 function prodPackTexto(p,i,n){
   var esc=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
-  return '<div style="border-top:1px solid #111;margin-top:14px;padding:12px 0;font-size:13px;max-width:700px"><div style="font-size:19px;font-weight:800">Pack '+(i+1)+(n>1?' de '+n:'')+': '+esc(p.pack||'—')+' · '+esc(p.modelo)+' '+esc(p.manga)+'</div>'+
+  return '<div style="border-top:1px solid #111;margin-top:14px;padding:12px 0;font-size:13px;max-width:700px"><div style="font-size:19px;font-weight:800">Pack '+(i+1)+(n>1?' de '+n:'')+': '+esc(p.pack||'—')+' · '+esc(p.modelo)+(new RegExp(String(p.manga||'#').replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i').test(p.modelo)?'':' '+esc(p.manga))+'</div>'+
    '<div style="margin:6px 0"><span style="color:#888">Tela</span> <b>'+esc(p.tela)+'</b> &nbsp; <span style="color:#888">Vinil</span> <b>'+esc(p.vinil)+'</b></div>'+
    '<div style="line-height:1.9">'+String(p.piezas||'').split(' | ').map(esc).join('<br>')+'</div></div>';
 }
