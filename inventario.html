@@ -3629,7 +3629,17 @@ const PRECIOS_BOTONES=[
   {nombre:'Short', codigo:'TiburonBallenaShort', linea:'coleccion'},
   {nombre:'Comfy Manga Corta', codigo:'COMFY06', linea:'comfy'},
   {nombre:'Comfy Manga Cero', codigo:'COMFY07', linea:'comfy'},
-  {nombre:'Vestido Comfy', codigo:'COMFY04', linea:'comfy'}
+  {nombre:'Vestido Comfy', codigo:'COMFY04', linea:'comfy'},
+  {nombre:'Vestido Comfy Manga Cero', codigo:'COMFY03', linea:'comfy'},
+  {nombre:'Licra Manga Corta', codigo:'LICRA06', linea:'licra'},
+  {nombre:'Licra Dress Manga Larga', codigo:'LICRA04', linea:'licra'},
+  {nombre:'Licra Dress Manga Cero', codigo:'LICRA03', linea:'licra'},
+  {nombre:'Playera Tiburón Ballena', codigo:'TiburonBallena', linea:'coleccion'},
+  {nombre:'Dress Tiburón Ballena', codigo:'TiburonBallenaDress', linea:'coleccion'},
+  {nombre:'Bikini Tiburón Ballena', codigo:'TiburonBallenaBikini', linea:'coleccion'},
+  {nombre:'Bikini M. Larga Tiburón', codigo:'TiburonBallenaBikiniMLarga', linea:'coleccion'},
+  {nombre:'Enterizo Tiburón Ballena', codigo:'TiburonBallenaEnterizo', linea:'coleccion'},
+  {nombre:'Toalla Tiburón Ballena', codigo:'TOALLATBALLENA', linea:'coleccion', sinPlus:true}
 ];
 let preciosPP={}, preciosCashea={}, preciosAgregados=[], preciosTasaBCV=0;
 
@@ -3642,12 +3652,30 @@ async function cargarPrecios(){
   renderBotonesPrecios();
 }
 
+// Series de colección: cada serie genera sus 8 prendas con el código CódigoSerie + sufijo (ej. AlphaGris, AlphaGrisDress, TOALLAALPHAGRIS)
+const PRECIOS_SERIES=[
+  {id:'AlphaGris',nombre:'Alpha Gris'},{id:'AlphaMarino',nombre:'Alpha Marino'},
+  {id:'CampingBlack',nombre:'Camping Black'},{id:'CampingCamo',nombre:'Camping Camo'},{id:'CampingSelva',nombre:'Camping Selva'}
+];
+const PRECIOS_PRENDAS_SERIE=[['','Playera'],['Dress','Dress'],['Cortaviento','Cortaviento'],['Short','Short'],['Bikini','Bikini'],['BikiniMLarga','Bikini M. Larga'],['Enterizo','Enterizo'],['TOALLA','Toalla']];
+PRECIOS_SERIES.forEach(se=>PRECIOS_PRENDAS_SERIE.forEach(pr=>{
+  PRECIOS_BOTONES.push({nombre:pr[1]+' '+se.nombre, corto:pr[1], serie:se.id, linea:'coleccion', sinPlus:pr[0]==='TOALLA',
+    codigo:pr[0]==='TOALLA'?'TOALLA'+se.id.toUpperCase():se.id+pr[0]});
+}));
+let preciosSerieAbierta=null;
+function abrirSeriePrecios(id){ preciosSerieAbierta=id; renderBotonesPrecios(); }
 function renderBotonesPrecios(){
   const cont=document.getElementById('precios-botones');
-  cont.innerHTML=PRECIOS_BOTONES.map((b,i)=>`
-    <button onclick="tocarBotonPrecio(${i})" style="padding:24px 14px;background:linear-gradient(160deg,var(--surface),var(--surface2));border:1.5px solid var(--border);border-radius:14px;color:var(--text);cursor:pointer;text-align:center;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;">
-      ${b.nombre}
-    </button>`).join('');
+  const estilo='padding:24px 14px;background:linear-gradient(160deg,var(--surface),var(--surface2));border:1.5px solid var(--border);border-radius:14px;color:var(--text);cursor:pointer;text-align:center;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;';
+  if(preciosSerieAbierta){
+    const se=PRECIOS_SERIES.find(x=>x.id===preciosSerieAbierta);
+    cont.innerHTML='<button onclick="abrirSeriePrecios(null)" style="grid-column:1/-1;padding:12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;color:var(--accent);font-size:14px;font-weight:800;cursor:pointer;text-align:left;">← Volver · '+se.nombre+'</button>'+
+      PRECIOS_BOTONES.map((b,i)=>b.serie===preciosSerieAbierta?`<button onclick="tocarBotonPrecio(${i})" style="${estilo}">${b.corto}</button>`:'').join('');
+    return;
+  }
+  cont.innerHTML=PRECIOS_BOTONES.map((b,i)=>b.serie?'':`<button onclick="tocarBotonPrecio(${i})" style="${estilo}">${b.nombre}</button>`).join('')+
+    '<div style="grid-column:1/-1;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:6px;">Series</div>'+
+    PRECIOS_SERIES.map(se=>`<button onclick="abrirSeriePrecios('${se.id}')" style="${estilo}border-color:var(--accent);">${se.nombre} ▸</button>`).join('');
 }
 
 let preciosModalIdx=null, preciosModalCantidad=1;
