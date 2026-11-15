@@ -5232,7 +5232,7 @@ async function cargarAprobacionesCashea(){
       let html=`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;">${v(7)}</div>${waBoton(v(10),v(7),'('+(v(1)||v(0))+')')}</div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;">${v(7)}</div>${waBoton(v(10),v(7),'('+(v(1)||v(0))+')')}${aproVerBtn(base,packs,r)}</div>
             <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;">
               <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text);">${base}</span>
               ${packs.length>1?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">${packs.length} packs</span>`:''}
@@ -6361,7 +6361,7 @@ async function cargarCola(){
       let html=`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
           <div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;">${v(7)}</div>${waBoton(v(10),v(7),'('+(v(1)||v(0))+')')}</div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;">${v(7)}</div>${waBoton(v(10),v(7),'('+(v(1)||v(0))+')')}${aproVerBtn(base,packs,r)}</div>
             <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
               <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text);">${base}</span>
               ${packs.length>1?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">${packs.length} packs</span>`:''}
@@ -7187,7 +7187,7 @@ async function cargarSolicitudes(filtro){
       let html=`
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;">${v(7)}</div>${waBoton(v(10),v(7),'('+(v(1)||v(0))+')')}</div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;">${v(7)}</div>${waBoton(v(10),v(7),'('+(v(1)||v(0))+')')}${aproVerBtn(base,packs,r)}</div>
             <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;">
               <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text);">${base}</span>
               ${packs.length>1?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">${packs.length} packs</span>`:''}
@@ -8674,6 +8674,56 @@ async function abrirProduccionTablet(cod){
     html+=parte; host.innerHTML='<style>'+css+estilo.slice(7,-8)+'</style><div class="cp">'+html+'</div>'; prodAplicarChecks();
   }
   prodVistaCache[cod]='<style>'+css+estilo.slice(7,-8)+'</style><div class="cp">'+html+'</div>';
+}
+
+/* ===== Aprobaciones: botón "Ver pedido" (vista previa estilo COD, sin aprobar) ===== */
+window._aproVer=window._aproVer||{};
+function aproVerBtn(base,packs,r){
+  window._aproVer[base]={packs:packs,r:r};
+  return '<button onclick="aproVerPedido(\''+String(base).replace(/'/g,"\\'")+'\')" title="Ver pedido con mockups" style="background:var(--surface2);color:var(--text);border:1px solid var(--accent);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;">👁 Ver pedido</button>';
+}
+async function aproVerPedido(base){
+  var d=window._aproVer[base]; if(!d){alert('Pedido no encontrado');return;}
+  var r=d.r, v=function(i){return String(r[i]||'').trim()}, esc=prodEsc;
+  var packs=d.packs.map(function(pk){var q=function(i){return String(pk[i]||'').trim()};
+    return {codigoS:q(0),codigoC:q(1),modelo:q(11),manga:q(12),capucha:q(13),pack:q(14),tela:q(15),vinil:q(16),piezas:q(17)};});
+  var o0=document.getElementById('aprover-overlay'); if(o0)o0.remove();
+  var o=document.createElement('div'); o.id='aprover-overlay';
+  o.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;overflow:auto;-webkit-overflow-scrolling:touch;color:#111';
+  var CW=Math.max(320,window.innerWidth-28), z=Math.max(0.6,Math.min(1.6,CW/700));
+  var ag=v(18).split('—');
+  var bar='<div style="position:sticky;top:0;z-index:2;background:#111;color:#fff;display:flex;align-items:center;gap:8px;padding:10px 14px;flex-wrap:wrap;">'+
+    '<button onclick="document.getElementById(\'aprover-overlay\').remove();document.body.style.overflow=\'\'" style="background:#fff;color:#111;border:0;border-radius:10px;padding:12px 16px;font-size:16px;font-weight:800;cursor:pointer;">✕ Cerrar</button>'+
+    '<div style="flex:1;min-width:130px;font-size:17px;font-weight:800;">'+esc(base)+' · '+esc(v(7))+'<div style="font-size:12px;font-weight:600;color:#aaa">Vista previa (no aprobado)</div></div>'+
+    waBoton(v(10),v(7),'('+(v(1)||v(0))+')')+'</div>';
+  var head='<div style="zoom:'+z+';padding:14px 14px 0;font-family:Montserrat,Barlow,Arial,sans-serif;width:'+Math.round(window.innerWidth/z)+'px;box-sizing:border-box">'+
+    (v(31)?'<div style="background:#111;color:#fff;border-radius:6px;padding:8px 12px;font-weight:800;font-size:14px;margin-bottom:10px">⚡ '+esc(v(31))+'</div>':'')+
+    '<div style="display:flex;flex-wrap:wrap;gap:6px 24px;font-size:12px;line-height:1.5;border:1px solid #111;padding:10px 14px;max-width:700px">'+
+    '<div><span style="color:#888">Cliente</span> <b>'+esc(v(7))+'</b></div><div><span style="color:#888">Cédula</span> <b>'+esc(v(9))+'</b></div><div><span style="color:#888">Celular</span> <b>'+esc(v(10))+'</b></div>'+
+    '<div><span style="color:#888">Agencia</span> <b>'+esc((ag[0]||'').trim())+'</b></div>'+(ag.length>1?'<div><span style="color:#888">Dirección</span> <b>'+esc(ag.slice(1).join('—').trim())+'</b></div>':'')+
+    '<div><span style="color:#888">Retira</span> <b>'+esc(v(19)||v(7))+'</b>'+(v(20)?' · '+esc(v(20)):'')+(v(21)?' · '+esc(v(21)):'')+'</div>'+
+    (v(29)?'<div><span style="color:#888">Pago</span> <b>'+esc(v(28)==='Bs'?'Bs':'$')+esc(v(29))+(v(30)?' · Ref '+esc(v(30)):'')+'</b></div>':'')+'</div></div>';
+  o.innerHTML=bar+head+'<div id="aprover-packs" style="zoom:'+z+';padding:6px 14px 60px;box-sizing:border-box;width:'+Math.round((CW+28)/z)+'px"><div style="padding:30px 0;color:#666;font-size:14px">⏳ Armando mockups del pedido...</div></div>';
+  document.body.appendChild(o); document.body.style.overflow='hidden';
+  var host=document.getElementById('aprover-packs'), html='', css='', estilo='.cp{width:'+Math.round(CW/z)+'px!important}';
+  var extras={}; try{var dd=await scriptGETjson({action:'leerPackCOD',codigos:packs.map(function(p){return p.codigoS}).filter(Boolean).join(',')},20000);if(dd&&dd.ok&&dd.packs)extras=dd.packs;}catch(e){}
+  for(var k=0;k<packs.length;k++){
+    var pk=packs[k], parte='';
+    if(codEsLarga(pk)){
+      try{
+        var pks=await codConstruirPacks([pk],extras,k);
+        var rr=await CODPDF.secciones({off:k,chk:false,cod:String(base),fecha:v(4),nombre:v(7),cedula:v(9),celular:v(10),correo:v(8),agencia:(ag[0]||'').trim(),direccion:'',retira:'',retiraCi:'',retiraCel:'',urgente:'',packs:pks});
+        css=rr.css; parte=rr.secs.join('');
+      }catch(e){ parte='<div style="background:#fee;border:1px solid #c00;color:#900;padding:8px 10px;font-size:12px;margin:8px 0">⚠️ Pack '+(k+1)+': no se pudo dibujar el mockup ('+esc(e.message)+').</div>'+aproPackTexto(pk,k,packs.length); }
+    }else parte=aproPackTexto(pk,k,packs.length);
+    html+=parte; host.innerHTML='<style>'+css+estilo+'</style><div class="cp">'+html+'</div>';
+  }
+}
+function aproPackTexto(p,i,n){
+  var esc=prodEsc, lines=String(p.piezas||'').split(' | ').map(function(x){return x.trim()}).filter(Boolean).map(function(seg){
+    return '<div style="padding:7px 0;border-bottom:1px solid #e6e6e6;font-size:15px">'+esc(seg)+'</div>';}).join('');
+  return '<div style="border-top:1px solid #111;margin-top:14px;padding:12px 0;font-size:13px;max-width:700px"><div style="font-size:19px;font-weight:800">Pack '+(i+1)+(n>1?' de '+n:'')+': '+esc(p.pack||'—')+' · '+esc(p.modelo)+' '+esc(p.manga)+'</div>'+
+   '<div style="margin:6px 0 10px"><span style="color:#888">Tela</span> <b>'+esc(p.tela)+'</b> &nbsp; <span style="color:#888">Vinil</span> <b>'+esc(p.vinil)+'</b></div>'+lines+'</div>';
 }
 function prodPackTexto(p,i,n){
   var esc=prodEsc, ks=prodKeysPack(p,i), lines='';
