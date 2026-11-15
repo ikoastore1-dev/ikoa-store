@@ -2107,7 +2107,7 @@ async function calcularPago(){
     sumaUsd+=franelas*precioPackUsd;
     const etqSerie=etiquetaSerie(pk.mangaTipo,pk.modelo); const etiquetaPack=etqSerie?(franelas>1?etqSerie+'s':etqSerie):(pk.mangaTipo==='short')?(franelas>1?'shorts':'short'):(pk.esDress?(franelas>1?'vestidos':'vestido'):(franelas>1?'franelas':'franela'));
     const logosTxt=[logosPecho>0?`${logosPecho} logo pecho`:'',logosEspalda>0?`${logosEspalda} logo espalda`:'',logosManga>0?`${logosManga} logo manga`:''].filter(Boolean).join(', ');
-    desglose.push(`Pack ${i+1}: ${franelas} ${etiquetaPack}${pk.linea==='licra'?(' · '+pk.modelo+' '+pk.manga):''}${esYou?(franelas>=2?' · diseño Ikoa You (promo 2+ unds)':' · diseño Ikoa You (1 unidad, precio base normal)'):''}${recargas>0?` + ${recargas} recarga(s) talla grande`:''}${conCapucha>0?` + ${conCapucha} con capucha`:''}${conCuelloAlto>0?` + ${conCuelloAlto} con cuello alto`:''}${logosTxt?` + ${logosTxt}`:''}`);
+    desglose.push(`Pack ${i+1}: ${franelas} ${etiquetaPack}${pk.linea==='licra'?(' · '+(pk.manga&&String(pk.modelo).toLowerCase().indexOf(String(pk.manga).toLowerCase())>=0?pk.modelo:pk.modelo+' '+pk.manga)):''}${esYou?(franelas>=2?' · diseño Ikoa You (promo 2+ unds)':' · diseño Ikoa You (1 unidad, precio base normal)'):''}${recargas>0?` + ${recargas} recarga(s) talla grande`:''}${conCapucha>0?` + ${conCapucha} con capucha`:''}${conCuelloAlto>0?` + ${conCuelloAlto} con cuello alto`:''}${logosTxt?` + ${logosTxt}`:''}`);
     recargaTotalBs+=recargas*precioRecarga.bs;
     recargaTotalUsd+=recargas*precioRecarga.usd;
   });
@@ -2374,7 +2374,7 @@ async function guardarEnSheets(){
         correo:pedido.correo,
         cedula:pedido.cedula,
         celular:pedido.celular,
-        modelo:(pk.linea==='licra'?(pk.modelo+' '+pk.manga+(pk.ikoaYou?' (IKOA YOU)':'')):pk.ikoaYou?'COMFY MEGA PROMO (IKOA YOU)':((pk.esDress?'COMFY DRESS MEGA PROMO':(pk.mangaTipo==='short'?'COMFY SHORT MEGA PROMO':'COMFY MEGA PROMO')) + (pasoPorOpcionAB?(' '+(modalidadComfy==='B'?'(Opción B)':'(Opción A)')):''))),
+        modelo:(pk.linea==='licra'?((pk.manga&&String(pk.modelo).toLowerCase().indexOf(String(pk.manga).toLowerCase())>=0?pk.modelo:pk.modelo+' '+pk.manga)+(pk.ikoaYou?' (IKOA YOU)':'')):pk.ikoaYou?'COMFY MEGA PROMO (IKOA YOU)':((pk.esDress?'COMFY DRESS MEGA PROMO':(pk.mangaTipo==='short'?'COMFY SHORT MEGA PROMO':'COMFY MEGA PROMO')) + (pasoPorOpcionAB?(' '+(modalidadComfy==='B'?'(Opción B)':'(Opción A)')):''))),
         manga:pk.manga,
         capucha:pk.piezas.some(p=>p.conCapucha)?'Con Capucha':(pk.piezas.some(p=>p.conCuelloAlto)?'Con Cuello Alto':'Sin Capucha'),
         pack:`${pk.pack}PACK`,
