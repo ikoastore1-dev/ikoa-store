@@ -6638,7 +6638,7 @@ function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return
 var _img={};
 function loadImg(src){if(_img[src])return _img[src];return _img[src]=new Promise(function(ok,ko){var i=new Image();i.crossOrigin='anonymous';i.onload=function(){ok(i)};i.onerror=function(){ko(new Error('No se pudo cargar '+src))};i.src=src})}
 var _boxes=null;
-function boxes(){return _boxes||(_boxes=fetch(BASE+'boxes.json').then(function(r){return r.json()}))}
+function boxes(){return _boxes||(_boxes=fetch(BASE+'boxes.json').then(function(r){if(!r.ok)throw new Error('No se encontró '+BASE+'boxes.json: sube la carpeta cod-mockups completa junto a inventario.html');return r.json()}).catch(function(e){_boxes=null;throw e}))}
 var AR=362/311;
 /* mockup teñido con la tela + logos del perchero (alitas oficiales / palabra IKOA) en color del vinil */
 async function mockup(linea,estilo,vista,tela,vin){
