@@ -280,6 +280,9 @@ button[style*="background:linear-gradient"] { background: var(--accent) !importa
 #ikoa-perchero .showroom-item--licra-dress-cero .showroom-garment{width:min(calc(100% * 969 / 1408),calc(40dvh * 620 / 1408))!important}}   /* mismo alto que los otros vestidos aunque su foto sea más larga (igual que en pedidos.html) */
 #ikoa-perchero .showroom-ajustada .showroom-foto img{object-fit:contain}   /* solo las prendas cuya caja se igualó a la de Tiburón; las de Tiburón no se tocan */
 </style>
+<style>/* Cortaviento Reflectivo: prenda más grande en el perchero */
+.showroom-item--reflectivo{flex:0 0 auto!important;width:min(70vw,300px)!important;margin-inline:auto}
+.showroom-item--reflectivo .showroom-garment{width:100%!important;max-width:none!important;max-height:none!important}</style>
 </head>
 <body>
 <!-- SPLASH SCREEN -->
@@ -2502,6 +2505,12 @@ function marthaConfirmar(){
       ocupado=false;
     }).observe(el,{childList:true,characterData:true,subtree:true});
   });
+  // Título del paso 2 según la prenda real (short / vestido / franela), sin depender del clic en el botón
+  var s2=document.getElementById('step2');
+  if(s2){
+    var _t=function(){ if(!s2.classList.contains('active'))return; var t=(typeof mangaTipoActual!=='undefined'&&mangaTipoActual==='short')?TITULO_SHORTS:((typeof pedido!=='undefined'&&pedido.esDress)?TITULO_VESTIDOS:TITULO_FRANELAS); var el=document.querySelector('#step2 .step-title'); if(el&&el.textContent!==t)el.textContent=t; };
+    new MutationObserver(_t).observe(s2,{attributes:true,attributeFilter:['class']}); _t();
+  }
 })();
 </script>
 <!-- ===== IKOA: pestañas Tela y Tallas (añadido; el formulario de arriba sigue intacto) ===== -->
@@ -2928,7 +2937,7 @@ window.estiloPerchero=-1;
 function aplicarEstiloPerchero(capId,cuId){var e=window.estiloPerchero|0; if(e<=0||window.estiloPerchero<0)return; var t=document.getElementById((e===2||e===3)?capId:cuId); if(t&&t.type==='checkbox'&&!t.checked){t.checked=true;t.dispatchEvent(new Event('change',{bubbles:true}));}}
 // Franelas de Comfy/Licra manga larga elegidas en el perchero: 4 opciones tildables (cuello normal / cuello alto / capucha / capucha con tapaboca), la del perchero ya viene marcada
 function ampliarEstiloPieza(kind,key,ini){
- if(window.estiloPerchero==null||window.estiloPerchero<0)return;
+ var _sinP=(window.estiloPerchero==null||window.estiloPerchero<0); if(_sinP&&!(typeof cfgYou!=='undefined'&&cfgYou))return;   // Ikoa You: sin perchero también ofrece las 4 opciones de cuello
  var capId=kind==='pz'?'pz-capucha-'+key:'capucha-check-b'+key, cuId=kind==='pz'?'pz-cuello-'+key:'cuello-check-b'+key, tbId=kind==='pz'?'pz-tapaboca-'+key:'tapaboca-check-b'+key;
  var cap=document.getElementById(capId), cu=document.getElementById(cuId);
  if(!cap||!cu||cap.type!=='checkbox'||cu.type!=='checkbox'||document.getElementById(tbId))return;
@@ -2940,7 +2949,7 @@ function ampliarEstiloPieza(kind,key,ini){
  rc.parentNode.insertBefore(box,rc);
  function fijar(v){cap.checked=(v===2||v===3);cu.checked=(v===1);tb.checked=(v===3);}
  [].forEach.call(box.querySelectorAll('input'),function(r){r.onchange=function(){fijar(+r.value);};});
- var v0=(ini==null||ini<0)?window.estiloPerchero:ini; v0=Math.max(0,Math.min(3,v0|0));
+ var v0=(ini==null||ini<0)?(_sinP?(cap.checked?2:(cu.checked?1:0)):window.estiloPerchero):ini; v0=Math.max(0,Math.min(3,v0|0));
  box.querySelectorAll('input')[v0].checked=true; fijar(v0);
 }
 window.ampliarEstiloPieza=ampliarEstiloPieza;
@@ -2987,7 +2996,7 @@ function viniles(){return vinilesDe({grupo:grupo});}
 
 // Caja estándar por tipo de prenda = la de la serie Tiburón Ballena (ancho / alto de su foto)
 // Marca (alitas) en vinilo según el tipo de prenda, en % de la foto: trajes de baño → pantaleta · cortavientos → pecho · toallas → alitas + palabra IKOA abajo, centradas
-var MARCA_TIPO={bikini:{x:68,y:65,w:7}, enterizo:{x:68,y:69,w:7}, bikiniml:{x:68,y:62,w:7}, cortaviento:{x:66,y:37,w:5}, toalla:{x:50,y:88.2,w:36,ikoa:1}};
+var MARCA_TIPO={bikini:{x:68,y:65,w:7}, enterizo:{x:68,y:69,w:7}, bikiniml:{x:68,y:62,w:4.8}, cortaviento:{x:66,y:37,w:5}, toalla:{x:50,y:88.2,w:36,ikoa:1}};
 var REF_RATIO={playera:[520,560],dress:[368,560],cortaviento:[510,640],short:[420,393],bikini:[287,560],enterizo:[313,560],bikiniml:[423,560],toalla:[291,560]};
 function tipoDe(m){ m=String(m||''); return /^Bikini Manga Larga/i.test(m)?'bikiniml':/^Bikini/i.test(m)?'bikini':/^Enterizo/i.test(m)?'enterizo':/^Dress/i.test(m)?'dress':/^Cortaviento/i.test(m)?'cortaviento':/^Short/i.test(m)?'short':/^Toalla/i.test(m)?'toalla':/^Playera/i.test(m)?'playera':null; }
 function uniformar(p){
