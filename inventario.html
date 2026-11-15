@@ -1494,9 +1494,10 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <button onclick="setTipoGestion('Cotizaciones')" id="gbtn-Cotizaciones" style="padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">💰 Cotizaciones</button>
         </div>
         <!-- Sub-modos Enviado -->
-        <div id="envio-modos" style="display:none;margin-top:12px;grid-template-columns:1fr 1fr;gap:8px;">
+        <div id="envio-modos" style="display:none;margin-top:12px;grid-template-columns:1fr 1fr 1fr;gap:8px;">
           <button onclick="setTipoGestion('Enviado')" id="gbtn-EnviadoManual" style="padding:14px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;">✏️ Envío Manual</button>
           <button onclick="abrirEnvioSeleccion()" id="gbtn-EnviadoSel" style="padding:14px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;">🔎 Envío por Selección</button>
+          <button onclick="abrirEnvioCarga()" id="gbtn-EnviadoCarga" style="padding:14px;border:2px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">📷 Carga de envíos</button>
         </div>
       </div>
 
@@ -1539,6 +1540,25 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <button onclick="cancelarEnvioSeleccion()" style="width:100%;padding:10px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;">← Cancelar</button>
         </div>
       </div>
+
+  <div id="envios-carga-wrap" style="display:none;">
+    <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">📷 Carga de envíos</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Sube la foto de la guía: leo el nombre, te sugiero a qué COD pertenece y, al aceptar, queda guardada como <b>COD.JPG</b> en la carpeta de envíos pendientes.</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;">
+      <label style="display:block;border:2px dashed var(--accent);border-radius:12px;padding:22px;text-align:center;cursor:pointer;color:var(--accent);font-weight:700;font-size:15px;">
+        📷 Tomar / elegir foto(s) de la guía
+        <input type="file" id="envios-file" accept="image/*" multiple style="display:none" onchange="enviosArchivos(this.files);this.value=''">
+      </label>
+      <div id="envios-msg" style="display:none;margin-top:10px;padding:10px;border-radius:8px;font-size:13px;"></div>
+    </div>
+    <div id="envios-lista"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin:18px 0 8px;">
+      <div style="font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">⏳ Envíos pendientes (en carpeta)</div>
+      <button onclick="enviosCargarPendientes()" style="margin-left:auto;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">↻ Actualizar</button>
+    </div>
+    <div id="envios-pendientes" style="font-size:13px;color:var(--muted);"></div>
+  </div>
+
 
       <!-- FORMULARIO DINÁMICO -->
       <!-- IMPRENTA -->
@@ -2335,6 +2355,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </div>
 
   <!-- TAB PROGRAMACION -->
+
   <div id="tab-programacion" style="display:none;padding:16px;">
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;">📅 Programación de Colores</div>
 
@@ -7568,6 +7589,7 @@ function resetGestionBtns(){
   const modos=document.getElementById('envio-modos');
   if(modos) modos.style.display='none';
   document.getElementById('envio-seleccion-wrap').style.display='none';
+  var _ec=document.getElementById('envios-carga-wrap'); if(_ec) _ec.style.display='none';
   document.getElementById('gestion-form-wrap').style.display='none';
   document.getElementById('imprenta-wrap').style.display='none';
   document.getElementById('produccion-wrap').style.display='none';
@@ -7577,6 +7599,7 @@ function resetGestionBtns(){
 function setTipoGestion(tipo){
   // Resetear todo primero
   resetGestionBtns();
+  var _bc0=document.getElementById('gbtn-EnviadoCarga'); if(_bc0){_bc0.style.borderColor='var(--border)';_bc0.style.color='var(--muted)';}
 
   document.getElementById('g-tipo').value=tipo;
   document.getElementById('g-status').value=tipo;
@@ -7657,7 +7680,7 @@ function toggleEnvioModos(){
   document.getElementById('gestion-form-wrap').style.display='none';
   document.getElementById('envio-seleccion-wrap').style.display='none';
   // Resetear sub-botones
-  ['gbtn-EnviadoManual','gbtn-EnviadoSel'].forEach(id=>{
+  ['gbtn-EnviadoManual','gbtn-EnviadoSel','gbtn-EnviadoCarga'].forEach(id=>{
     const b=document.getElementById(id);
     if(b){ b.style.borderColor='var(--border)'; b.style.background='var(--surface2)'; b.style.color='var(--muted)'; }
   });
@@ -8011,6 +8034,8 @@ let pedidoEncontrado=null;
 
 
 function abrirEnvioSeleccion(){
+  var _ec=document.getElementById('envios-carga-wrap'); if(_ec) _ec.style.display='none';
+  var _bc=document.getElementById('gbtn-EnviadoCarga'); if(_bc){_bc.style.borderColor='var(--border)';_bc.style.color='var(--muted)';}
   document.getElementById('envio-seleccion-wrap').style.display='block';
   document.getElementById('gestion-form-wrap').style.display='none';
   document.getElementById('es-cod-input').value='';
@@ -8754,6 +8779,125 @@ async function enviarCorreoPagoCliente(base){
     var r=await fetch(SCRIPT_URL,{method:'POST',body:form}); var j=await r.json();
     if(!j.ok&&!j.omitido) console.warn('Correo de pago:',j); return j;
   }catch(e){ console.warn('Correo de pago:',e); return {ok:false,error:String(e&&e.message||e)}; }
+}
+
+/* ===== CARGA DE ENVÍOS: foto de la guía -> lee el nombre (OCR) -> sugiere el COD -> al aceptar sube COD.JPG a envíos pendientes ===== */
+window._envios={items:[],cands:null,cnt:0};
+function enviosNorm(t){return String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();}
+function enviosLev(a,b){ if(a===b)return 0; var m=a.length,n=b.length; if(!m)return n; if(!n)return m; var d=[],i,j; for(j=0;j<=n;j++)d[j]=j;
+  for(i=1;i<=m;i++){var prev=d[0];d[0]=i;for(j=1;j<=n;j++){var t=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=t;}} return d[n]; }
+function enviosEsta(tok,palabras,textoCompacto){
+  if(textoCompacto.indexOf(tok)>=0) return 1;
+  if(tok.length<4) return 0;
+  var tol=tok.length>=8?2:1;
+  for(var i=0;i<palabras.length;i++){var w=palabras[i]; if(Math.abs(w.length-tok.length)>tol)continue; if(enviosLev(tok,w)<=tol)return 0.85;}
+  return 0;
+}
+// puntaje de un pedido contra el texto leído: nombre del cliente / de quien retira (+ cédula, celular, COD si aparecen)
+function enviosPuntaje(g,texto){
+  var T=enviosNorm(texto), palabras=T.split(' ').filter(Boolean), compacto=T.replace(/ /g,''), digitos=String(texto||'').replace(/\D/g,'');
+  function nom(n){ var toks=enviosNorm(n).split(' ').filter(function(x){return x.length>=3&&['DE','DEL','LAS','LOS','VAN','SAN'].indexOf(x)<0}); if(!toks.length)return 0;
+    var s=0; toks.forEach(function(t){s+=enviosEsta(t,palabras,T)}); return s/toks.length; }
+  var sc=Math.max(nom(g.nombre),nom(g.retira)), extra=[];
+  var ci=String(g.cedula||'').replace(/\D/g,''); if(ci.length>=6&&digitos.indexOf(ci)>=0){sc=Math.min(1,sc+0.35);extra.push('cédula');}
+  var cel=String(g.celular||'').replace(/\D/g,'').slice(-7); if(cel.length===7&&digitos.indexOf(cel)>=0){sc=Math.min(1,sc+0.2);extra.push('celular');}
+  var cod=enviosNorm(g.cod).replace(/ /g,''); if(cod.length>=4&&compacto.indexOf(cod)>=0){sc=1;extra.push('COD');}
+  return {sc:sc,extra:extra};
+}
+async function enviosCandidatos(forzar){
+  if(window._envios.cands&&!forzar) return window._envios.cands;
+  var data=await scriptGETjson({action:'leerProduccion'},30000), grupos={};
+  (data.rows||[]).forEach(function(r){ var v=function(i){return String(r[i]||'').trim()}, cod=v(2);
+    if(!cod) return;
+    if(!grupos[cod]) grupos[cod]={cod:cod,nombre:v(4),cedula:v(6),celular:v(7),agencia:v(15),retira:v(16),fecha:v(25)||v(3)}; });
+  window._envios.cands=Object.keys(grupos).map(function(k){return grupos[k]});
+  return window._envios.cands;
+}
+function enviosMsg(bg,color,html){var m=document.getElementById('envios-msg'); if(!m)return; if(!html){m.style.display='none';return;} m.style.display='block';m.style.background=bg;m.style.color=color;m.innerHTML=html;}
+function abrirEnvioCarga(){
+  var modos=document.getElementById('envio-modos'); if(modos) modos.style.display='grid';
+  document.getElementById('envio-seleccion-wrap').style.display='none';
+  document.getElementById('gestion-form-wrap').style.display='none';
+  document.getElementById('envios-carga-wrap').style.display='block';
+  ['gbtn-EnviadoManual','gbtn-EnviadoSel'].forEach(function(id){var b=document.getElementById(id); if(b){b.style.borderColor='var(--border)';b.style.color='var(--muted)';b.style.background='var(--surface2)';}});
+  var c=document.getElementById('gbtn-EnviadoCarga'); if(c){c.style.borderColor='var(--accent)';c.style.color='var(--accent)';c.style.background='var(--surface2)';}
+  var g=document.getElementById('gbtn-Enviado'); if(g){g.style.borderColor='var(--accent)';g.style.color='var(--accent)';}
+  enviosIniciar();
+}
+function enviosIniciar(){ enviosCargarPendientes(); enviosCandidatos(true).catch(function(){}); }
+async function enviosCargarPendientes(){
+  var box=document.getElementById('envios-pendientes'); if(!box)return; box.innerHTML='<span class="spinner">↻</span> Cargando...';
+  try{ var d=await scriptGETjson({action:'leerGuiasPendientes'},30000);
+    if(!d.ok){box.innerHTML='<span style="color:var(--danger)">No se pudo leer la carpeta: '+prodEsc(d.error||'')+'</span>';return;}
+    var g=d.guias||[]; if(!g.length){box.innerHTML='✅ No hay guías esperando en la carpeta.';return;}
+    box.innerHTML='<div style="margin-bottom:6px">'+g.length+' guía'+(g.length>1?'s':'')+' esperando envío:</div>'+g.map(function(x){return '<div style="display:flex;gap:10px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:5px;background:var(--surface)"><b style="color:var(--text)">'+prodEsc(x.nombre)+'</b><span style="margin-left:auto">'+prodEsc(x.fecha)+'</span></div>';}).join('');
+  }catch(e){box.innerHTML='<span style="color:var(--danger)">Error: '+prodEsc(e.message)+'</span>';}
+}
+// foto -> JPEG reducido (máx. 1600 px) para subir y para leer
+function enviosReducir(file,max){
+  return new Promise(function(ok,ko){ var url=URL.createObjectURL(file), im=new Image();
+    im.onload=function(){ var s=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight)), c=document.createElement('canvas'); c.width=Math.round(im.naturalWidth*s); c.height=Math.round(im.naturalHeight*s);
+      c.getContext('2d').drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(url); ok(c); };
+    im.onerror=function(){URL.revokeObjectURL(url);ko(new Error('No se pudo abrir la imagen'))}; im.src=url; });
+}
+async function enviosLeerTexto(canvas){
+  await cargarLibGen('https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js',function(){return window.Tesseract});
+  var w=await window.Tesseract.createWorker('spa',1,window._tessOpts||{});
+  try{ var r=await w.recognize(canvas); return (r&&r.data&&r.data.text)||''; } finally { try{await w.terminate()}catch(e){} }
+}
+function cargarLibGen(src,test){return new Promise(function(ok,ko){if(test()){ok();return}var s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=function(){ko(new Error('No se pudo cargar '+src))};document.head.appendChild(s)})}
+async function enviosArchivos(files){
+  files=[].slice.call(files||[]); if(!files.length)return;
+  var lista=document.getElementById('envios-lista');
+  for(var i=0;i<files.length;i++){
+    var id='env'+(++window._envios.cnt), card=document.createElement('div');
+    card.id=id; card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;';
+    card.innerHTML='<div class="env-body"><span class="spinner">↻</span> Leyendo la guía...</div>'; lista.insertBefore(card,lista.firstChild);
+    try{
+      var cv=await enviosReducir(files[i],1600), thumb=cv.toDataURL('image/jpeg',0.6), jpg=cv.toDataURL('image/jpeg',0.85);
+      window._envios.items[id]={jpg:jpg,texto:'',sel:''};
+      card.querySelector('.env-body').innerHTML='<div style="display:flex;gap:12px;flex-wrap:wrap"><img src="'+thumb+'" style="width:130px;max-height:170px;object-fit:contain;border-radius:8px;background:#000"><div style="flex:1;min-width:200px"><span class="spinner">↻</span> Leyendo el nombre en la foto y buscando el pedido... (la primera vez tarda un poco más)</div></div>';
+      var texto=''; try{ texto=await enviosLeerTexto(cv); }catch(e){ console.warn('OCR:',e); }
+      window._envios.items[id].texto=texto;
+      var cands=await enviosCandidatos(false);
+      var rank=cands.map(function(g){var r=enviosPuntaje(g,texto);return {g:g,sc:r.sc,extra:r.extra}}).filter(function(x){return x.sc>=0.5}).sort(function(a,b){return b.sc-a.sc}).slice(0,3);
+      enviosRender(id,thumb,rank,texto);
+    }catch(e){ card.querySelector('.env-body').innerHTML='<span style="color:var(--danger)">✗ '+prodEsc(e.message)+'</span>'; }
+  }
+}
+function enviosRender(id,thumb,rank,texto){
+  var card=document.getElementById(id); if(!card)return;
+  var sug=rank.length?rank.map(function(x,k){var pct=Math.round(x.sc*100), col=pct>=80?'var(--accent)':'var(--warn)';
+    return '<div style="border:1px solid '+(k?'var(--border)':'var(--accent)')+';border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--surface2)">'+
+      '<div style="font-size:12px;color:var(--muted)">'+(k?'Otra posibilidad':'Sugerencia')+' · coincidencia <b style="color:'+col+'">'+pct+'%</b>'+(x.extra.length?' · coincide '+x.extra.join(', '):'')+'</div>'+
+      '<div style="font-size:15px;margin:4px 0"><b>Este envío le pertenece al COD '+prodEsc(x.g.cod)+'</b></div>'+
+      '<div style="font-size:13px;color:var(--text)">'+prodEsc(x.g.nombre)+(x.g.retira&&x.g.retira!==x.g.nombre?' · retira: '+prodEsc(x.g.retira):'')+'</div>'+
+      '<div style="font-size:12px;color:var(--muted)">'+prodEsc(x.g.agencia)+'</div>'+
+      '<button onclick="enviosAceptar(\''+id+'\',\''+String(x.g.cod).replace(/\\/g,'').replace(/'/g,'')+'\')" style="margin-top:8px;padding:9px 18px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:8px;color:#000;font-weight:800;font-size:14px;cursor:pointer;">✔ Aceptar</button></div>';}).join('')
+    :'<div style="color:var(--warn);font-size:13px;margin-bottom:8px">No encontré un pedido con ese nombre. Elige el COD a mano:</div>';
+  card.innerHTML='<div style="display:flex;gap:12px;flex-wrap:wrap"><img src="'+thumb+'" style="width:130px;max-height:170px;object-fit:contain;border-radius:8px;background:#000"><div style="flex:1;min-width:220px">'+sug+
+    '<div style="display:flex;gap:6px;margin-top:4px"><input list="envios-dl" id="'+id+'-manual" class="field-input" placeholder="Otro COD (escribe o elige)" style="flex:1;text-transform:uppercase;font-size:14px"><button onclick="enviosAceptar(\''+id+'\',document.getElementById(\''+id+'-manual\').value)" style="padding:9px 14px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-weight:700;cursor:pointer">Usar</button></div>'+
+    '<details style="margin-top:8px;font-size:11px;color:var(--muted)"><summary style="cursor:pointer">Texto leído en la foto</summary><pre style="white-space:pre-wrap;margin:6px 0 0">'+prodEsc(texto||'(no se pudo leer texto)')+'</pre></details>'+
+    '<div class="env-res" style="margin-top:8px;font-size:13px"></div></div></div>';
+  var dl=document.getElementById('envios-dl'); if(!dl){dl=document.createElement('datalist');dl.id='envios-dl';document.body.appendChild(dl);}
+  dl.innerHTML=(window._envios.cands||[]).map(function(g){return '<option value="'+prodEsc(g.cod)+'">'+prodEsc(g.nombre)+'</option>'}).join('');
+}
+async function enviosAceptar(id,cod){
+  cod=String(cod||'').trim().toUpperCase(); var it=window._envios.items[id], card=document.getElementById(id), res=card&&card.querySelector('.env-res');
+  if(!it||!res)return; if(!cod){res.innerHTML='<span style="color:var(--danger)">Escribe o elige un COD</span>';return;}
+  var ok=window._envios.cands&&window._envios.cands.some(function(g){return g.cod.toUpperCase()===cod});
+  if(!ok&&!confirm('El COD '+cod+' no está entre los pedidos en producción. ¿Guardar la guía igual?'))return;
+  var clave=prompt('Código de autorización para cargar la guía de '+cod+':'); if(clave===null)return;
+  clave=String(clave).trim().toUpperCase(); if(!USUARIOS[clave]){res.innerHTML='<span style="color:var(--danger)">❌ Código incorrecto</span>';return;}
+  res.innerHTML='<span class="spinner">↻</span> Subiendo '+prodEsc(cod)+'.JPG...';
+  try{
+    var form=new FormData(); form.append('action','subirGuiaEnvio'); form.append('codigo',cod); form.append('usuario',USUARIOS[clave]); form.append('imagen_base64',it.jpg.split(',')[1]);
+    var r=await fetch(SCRIPT_URL,{method:'POST',body:form}), j=await r.json();
+    if(!j.ok)throw new Error(j.error||'no se pudo guardar');
+    res.innerHTML='<span style="color:var(--accent);font-weight:700">✅ Guardada como '+prodEsc(j.nombre)+' en envíos pendientes'+(j.reemplazada?' (reemplazó la anterior)':'')+'.</span> Ahora haz el envío desde Gestión → Enviado.';
+    card.querySelectorAll('button').forEach(function(b){b.disabled=true;b.style.opacity=.4});
+    enviosCargarPendientes();
+  }catch(e){res.innerHTML='<span style="color:var(--danger)">✗ '+prodEsc(e.message)+'</span>';}
 }
 /* ===== Aprobaciones: botón "Ver pedido" (vista previa estilo COD, sin aprobar) ===== */
 window._aproVer=window._aproVer||{};
