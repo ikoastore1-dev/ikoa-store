@@ -59,7 +59,7 @@ textarea{min-height:110px;resize:vertical}
 var URL_GS='https://script.google.com/macros/s/AKfycbw39K95bn14-yZcvd8kXuKnyD2BAqLjOg6rFNIBkuZRHQP7z_s1FFOV3P2EOyNtqz9ikw/exec';
 var GOOGLE_URL='';   // ← pega aquí el enlace de reseñas de tu ficha de Google (si está vacío, el botón de Google no se muestra)
 // ───────────────────
-var q=new URLSearchParams(location.search), C=q.get('c')||'', T=q.get('t')||'', N=q.get('n')||'', nota=0;
+var q=new URLSearchParams(location.search), C=q.get('cod')||q.get('c')||'', T=q.get('tk')||q.get('t')||'', N=q.get('n')||'', nota=0;
 var TXT=['','Muy mala','Mala','Regular','Buena','Excelente'];
 function $(i){return document.getElementById(i)}
 function ver(id){['vista-cargando','vista-form','vista-gracias','vista-error'].forEach(function(v){$(v).style.display=v===id?'block':'none'})}
@@ -76,7 +76,7 @@ function pintar(){var h='';for(var i=1;i<=5;i++)h+='<button type="button" data-n
 function error(tit,txt){$('error-tit').textContent=tit;$('error-txt').textContent=txt;ver('vista-error')}
 $('nombre').value=N;pintar();
 if(!C||!T){error('Enlace no válido','Abre esta página desde el botón del correo que te enviamos con tu pedido.')}
-else jsonp({action:'estadoResena',c:C,t:T},function(d){
+else jsonp({action:'estadoResena',cod:C,tk:T},function(d){
   if(!d||!d.ok)return error('Enlace no válido','Este enlace no es válido. Si lo necesitas, escríbenos por WhatsApp.');
   if(d.ya_enviada)return error('¡Ya recibimos tu opinión!','Gracias, ya registramos tu valoración de este pedido.');
   ver('vista-form');
@@ -87,7 +87,7 @@ $('enviar').onclick=function(){
   if(!$('nombre').value.trim()){$('err').textContent='Escribe tu nombre.';$('err').style.display='block';return}
   var b=$('enviar');b.disabled=true;b.textContent='Enviando…';
   var com=$('coment').value.trim();
-  jsonp({action:'enviarResena',c:C,t:T,nombre:$('nombre').value.trim(),estrellas:nota,comentario:com,mostrar:$('mostrar').checked?'si':'no'},function(d){
+  jsonp({action:'enviarResena',cod:C,tk:T,nombre:$('nombre').value.trim(),estrellas:nota,comentario:com,mostrar:$('mostrar').checked?'si':'no'},function(d){
     if(d&&d.ok){
       if(GOOGLE_URL){$('google-bloque').style.display='block';
         $('btn-google').href=GOOGLE_URL;
