@@ -4218,13 +4218,13 @@ function ikoaTicketHTML(t){
   var img=new URL('cod-mockups/ticket_contacto.png',location.href).href;
   /* etiqueta 100 mm x 150 mm vertical (área útil 92 x 142 mm) */
   return '<!doctype html><html><head><meta charset="utf-8"><title>Ticket COD '+e(t.cod)+'</title><style>@page{size:100mm 150mm;margin:4mm}*{box-sizing:border-box}html,body{margin:0;background:#fff}body{width:92mm;height:141mm;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#000;display:flex;flex-direction:column}'+
-   '.ban{background:#000;color:#fff;text-align:center;font-weight:900;font-size:22px;letter-spacing:.1em;padding:6px 0;white-space:nowrap}'+
+   '.ban{background:#000;text-align:center;padding:7px 0}.ban img{height:30px;width:auto;display:inline-block;margin:0;flex:none}'+
    '.env{display:flex;justify-content:space-between;align-items:flex-end;font-size:11px;font-weight:700;line-height:1.35;margin:5px 0 3px}.env span:last-child{text-align:right}'+
    '.cod{border:3px solid #000;text-align:center;margin:4px 0;padding:3px 0 1px}.cod small{display:block;font-size:11px;font-weight:700;letter-spacing:.3em}.cod b{display:block;font-size:38px;line-height:1;font-weight:900}'+
    '.k{font-size:10px;font-weight:700;letter-spacing:.18em;color:#444;margin-top:7px}.v{font-size:17px;font-weight:900;line-height:1.2;word-break:break-word;margin-top:1px}'+
    '.to{border-top:3px solid #000;border-bottom:1px solid #000;margin-top:9px;padding:5px 0 7px}.to .h{font-size:13px;font-weight:900;letter-spacing:.2em}.to .n{font-size:20px;font-weight:900;line-height:1.1;margin-top:4px;word-break:break-word}.to .d{font-size:16px;font-weight:700;margin-top:3px}'+
    'img{display:block;width:88%;margin:auto auto 0;flex:none}</style></head><body>'+
-   '<div class="ban">IKOA IKOA IKOA</div>'+
+   '<div class="ban"><img id="lg" src="'+new URL('cod-mockups/ikoa_logo_blanco.png',location.href).href+'" alt="IKOA"></div>'+
    '<div class="env"><span>ENVIA: IKOA BRAND CORP C.A.<br>RIF: J-505031716</span><span>CEL:<br>0414-9450742</span></div>'+
    '<div class="cod"><small>COD</small><b>'+e(t.cod)+'</b></div>'+
    '<div class="k">AGENCIA</div><div class="v">'+e(t.agencia)+'</div>'+
@@ -4238,8 +4238,9 @@ function ikoaImprimirTicket(t){
   var d=fr.contentWindow.document; d.open(); d.write(ikoaTicketHTML(t)); d.close();
   var go=function(){try{fr.contentWindow.focus();fr.contentWindow.print()}catch(x){alert('No se pudo abrir la impresión: '+x.message)}
     setTimeout(function(){try{document.body.removeChild(fr)}catch(x){}},60000)};
-  var im=d.getElementById('ct'), done=false, once=function(){if(!done){done=true;setTimeout(go,200)}};
-  if(im&&!im.complete){im.onload=im.onerror=once;setTimeout(once,4000)} else once();
+  var im=d.getElementById('ct'), lg=d.getElementById('lg'), done=false, once=function(){if(!done){done=true;setTimeout(go,200)}};
+  var pend=[im,lg].filter(function(x){return x&&!x.complete}), n=pend.length;
+  if(n){pend.forEach(function(x){x.onload=x.onerror=function(){if(--n<=0)once()}});setTimeout(once,4000)} else once();
 }
 function tallerImprimirTicket(cod){
   var g=tallerGrupos[cod]; if(!g){alert('Pedido no encontrado');return}
@@ -6754,6 +6755,40 @@ async function mockup(linea,estilo,vista,tela,vin){
   var cw=x1-x0+1,ch=y1-y0+1,o=document.createElement('canvas');o.width=cw;o.height=ch;o.getContext('2d').drawImage(c,x0,y0,cw,ch,0,0,cw,ch);
   return {url:o.toDataURL('image/png'),h:Math.round(ch*2/1402*1000*MOCK_H)};   /* alto en px CSS, misma escala para todas las prendas */
 }
+/* ===== Mockups de los demás productos: base teñida (manga cero/corta/larga, dress, short) o foto de referencia (series) con el logo en el vinil ===== */
+var BASE_ALTO={cero:170,corta:150,larga:185,dress:185,dresscero:200,short:110};
+var FOTO_ALTO={playera:160,dress:185,cortaviento:165,short:110,bikini:130,enterizo:185,bikiniml:160,toalla:185};
+function recorte(c){
+  var W=c.width,H=c.height,q=c.getContext('2d').getImageData(0,0,W,H).data,x0=W,x1=0,y0=H,y1=0;
+  for(var yy=0;yy<H;yy++)for(var xx=0;xx<W;xx++)if(q[(yy*W+xx)*4+3]>12){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(yy<y0)y0=yy;if(yy>y1)y1=yy}
+  if(x1<x0||y1<y0)return c;
+  var o=document.createElement('canvas');o.width=x1-x0+1;o.height=y1-y0+1;o.getContext('2d').drawImage(c,x0,y0,o.width,o.height,0,0,o.width,o.height);return o;
+}
+async function logoTeñido(maskNombre,w,h,vin){
+  var m=await loadImg(BASE+maskNombre+'.png'),lc=document.createElement('canvas');lc.width=Math.max(1,Math.round(w));lc.height=Math.max(1,Math.round(h));
+  var lx=lc.getContext('2d');lx.drawImage(m,0,0,lc.width,lc.height);lx.globalCompositeOperation='source-in';lx.fillStyle='rgb('+vin.join(',')+')';lx.fillRect(0,0,lc.width,lc.height);return lc;
+}
+async function mockGen(g,tela,vin){
+  var res=[];
+  if(g.foto){
+    try{
+      var f=g.foto,im=await loadImg(f.img),c=document.createElement('canvas');c.width=im.width;c.height=im.height;var x=c.getContext('2d');x.drawImage(im,0,0);
+      if(f.lg&&f.lg[2]){var lw=c.width*f.lg[2]/100,lh=f.ik?lw*200/831:lw*311/362,lc=await logoTeñido(f.ik?'ikoa_logo':'alas',lw,lh,vin);x.drawImage(lc,Math.round(c.width*f.lg[0]/100-lc.width/2),Math.round(c.height*f.lg[1]/100-lc.height/2))}
+      var r=recorte(c);res.push({url:r.toDataURL('image/png'),h:g.alto});res.leyenda='FOTO DE REFERENCIA'+(f.bk?' · FRENTE · ESPALDA':'');
+      if(f.bk){var ib=await loadImg(f.bk),cb=document.createElement('canvas');cb.width=ib.width;cb.height=ib.height;cb.getContext('2d').drawImage(ib,0,0);var rb=recorte(cb);res.push({url:rb.toDataURL('image/png'),h:Math.round(g.alto*rb.height/r.height)})}
+      return res;
+    }catch(e){ if(!g.base)return []; }
+  }
+  if(g.base){
+    var im2=await loadImg(BASE+'base_'+g.base+'.png'),W=im2.width,H=im2.height,c2=document.createElement('canvas');c2.width=W;c2.height=H;var x2=c2.getContext('2d');x2.drawImage(im2,0,0);
+    var d=x2.getImageData(0,0,W,H),p=d.data;
+    for(var i=0;i<p.length;i+=4){var L=p[i]/255;L=Math.pow(L,1.05)*1.04;p[i]=Math.min(255,tela[0]*L);p[i+1]=Math.min(255,tela[1]*L);p[i+2]=Math.min(255,tela[2]*L)}
+    x2.putImageData(d,0,0);
+    if(g.logo){var lw2=W*g.logo[2]*1.7/100,lh2=lw2*311/362,lc2=await logoTeñido('alas',lw2,lh2,vin);x2.drawImage(lc2,Math.round(W*g.logo[0]/100-lc2.width/2),Math.round(H*g.logo[1]/100-lc2.height/2))}
+    res.push({url:recorte(c2).toDataURL('image/png'),h:g.altoBase||g.alto});res.leyenda=g.conocida?'FRENTE':'FORMA DE REFERENCIA · COLOR DE TELA NO REGISTRADO';
+  }
+  return res;
+}
 var CSS='.cp *{box-sizing:border-box}.cp{font-family:Montserrat,Barlow,Arial,sans-serif;color:#111;font-size:11px;width:700px}'+
 '.cp .top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #ddd;padding-bottom:12px}.cp .top img{height:54px}.cp .top .r{text-align:right;color:#888;letter-spacing:.25em;font-size:9px}.cp .top .r b{display:block;letter-spacing:.05em;font-weight:400;margin-top:4px;font-size:11px}'+
 '.cp .k{letter-spacing:.3em;font-size:8.5px;color:#888;text-transform:uppercase}.cp h1{font-size:50px;margin:4px 0 6px;font-weight:900;letter-spacing:-.02em;line-height:1.05}.cp .lead{color:#666;font-size:12px;line-height:1.7;max-width:420px;margin:0 0 16px}'+
@@ -6766,7 +6801,7 @@ var CSS='.cp *{box-sizing:border-box}.cp{font-family:Montserrat,Barlow,Arial,san
 '.cp .t{display:inline-block;background:#111;color:#fff;font-weight:700;min-width:48px;text-align:center;padding:8px 0;font-size:13px}.cp .g{letter-spacing:.2em;font-size:8px;font-weight:700}.cp .nm b{font-size:13px}.cp .nm div{color:#777;font-size:9.5px;margin-top:2px}';
 var ETQ={normal:'CUELLO NORMAL',alto:'CUELLO ALTO',capucha:'CON CAPUCHA',capuchatapaboca:'CAPUCHA CON TAPABOCA'};
 var CHK=false;
-function filas(piezas,i0,pn){var h='',i=i0;piezas.forEach(function(p){i++;h+='<tr>'+(CHK&&p.id?'<td style="width:46px"><input type="checkbox" class="pchk" data-k="'+esc(p.id)+'" style="width:30px;height:30px;accent-color:#111;cursor:pointer"></td>':(CHK?'<td></td>':''))+'<td style="color:#888;width:34px">'+(i<10?'0':'')+i+'</td><td style="width:70px"><span class="t">'+esc(p.talla)+'</span></td><td class="g" style="width:100px">'+esc(String(p.genero||'').toUpperCase())+'</td><td class="nm"><b>'+esc(p.nombre||'')+'</b>'+(p.extra?'<div>'+esc(p.extra)+'</div>':'')+'</td></tr>'});return {h:h,i:i}}
+function filas(piezas,i0,pn){var h='',i=i0;piezas.forEach(function(p){i++;h+='<tr>'+(CHK&&p.id?'<td style="width:46px"><input type="checkbox" class="pchk" data-k="'+esc(p.id)+'" style="width:30px;height:30px;accent-color:#111;cursor:pointer"></td>':(CHK?'<td></td>':''))+'<td style="color:#888;width:34px">'+(i<10?'0':'')+i+'</td><td style="width:70px"><span class="t">'+esc(p.talla||'—')+'</span></td><td class="g" style="width:100px">'+esc(String(p.genero||'').toUpperCase())+'</td><td class="nm"><b>'+esc(p.nombre||'')+'</b>'+(p.extra?'<div>'+esc(p.extra)+'</div>':'')+'</td></tr>'});return {h:h,i:i}}
 /* datos = {cod,fecha,nombre,cedula,celular,correo,agencia,direccion,retira,retiraCi,retiraCel,urgente,packs:[{titulo,linea,vinil,bloques:[{tela,estilo,piezas:[{talla,genero,nombre,extra}],you:{img,lineas:[[a,b]]}|null}]}]} */
 async function armarPaginas(d){
   CHK=!!d.chk;var logo=d.soloSecciones?{src:''}:await loadImg(BASE+'ikoa_logo.png'),secs=[],n=0,PO=d.off||0;
@@ -6780,10 +6815,14 @@ async function armarPaginas(d){
     var p=d.packs[pi],vr=colorVinil(p.vinil),vh='rgb('+vr.join(',')+')',head='<div class="ph"><div><span class="k">Pack '+(pi+1+PO)+'</span><h2><span class="num">'+(pi+1+PO<10?'0':'')+(pi+1+PO)+'</span>'+esc(p.titulo)+'</h2></div><div class="vin">VINIL <i style="background:'+vh+'"></i><b>'+esc(p.vinil)+'</b></div></div>';
     for(var bi=0;bi<p.bloques.length;bi++){
       var b=p.bloques[bi],tr=colorTela(b.tela),hx='rgb('+tr.join(',')+')',f=filas(b.piezas,cont,pi+1+PO);cont=f.i;var np=b.piezas.length;
-      var left,tl='<div class="tl"><div class="a"><span class="k">Tela</span><i class="sw" style="background:'+hx+'"></i><b style="font-size:13px">'+esc(b.tela)+'</b><span class="tag">'+ETQ[b.estilo]+'</span></div><span class="c">'+np+' pieza'+(np>1?'s':'')+'</span></div>',extra='';
+      var left,tl='<div class="tl"><div class="a"><span class="k">Tela</span>'+((b.gen&&!K_TELA[slug(String(b.tela||'').replace(/^\d+\s*[·.\-]\s*/,''))])?'':'<i class="sw" style="background:'+hx+'"></i>')+'<b style="font-size:13px">'+esc(b.tela)+'</b><span class="tag">'+esc(b.etq||ETQ[b.estilo])+'</span></div><span class="c">'+np+' pieza'+(np>1?'s':'')+'</span></div>',extra='';
       if(b.you&&b.you.img){
         left='<div class="mk" style="width:290px"><div class="k" style="font-size:8px;margin-bottom:5px">DISEÑO IKOA YOU</div><img src="'+b.you.img+'" style="width:290px;max-width:none;height:auto;display:block"><small>FRENTE · ESPALDA, TAL COMO LO DISEÑASTE</small></div>';
         extra='<div style="margin:8px 0 2px;font-size:10px;line-height:1.6">'+(b.you.lineas||[]).map(function(l){return '<div><span style="display:inline-block;width:56px;color:#888">'+esc(l[0])+'</span><b>'+esc(l[1])+'</b></div>'}).join('')+'</div>';
+      }else if(b.gen){
+        var mm=[];try{mm=await mockGen(b.gen,tr,vr)}catch(e){mm=[]}
+        left=mm.length?'<div class="mk"><div class="im">'+mm.map(function(m){return '<img src="'+m.url+'" style="height:'+m.h+'px;max-width:'+(mm.length>1?'50%':'100%')+'">'}).join('')+'</div><small>'+esc(mm.leyenda||'')+'</small></div>'
+          :'<div class="mk"><div class="im" style="align-items:center;color:#aaa;font-size:9px;letter-spacing:.15em;text-align:center">SIN IMAGEN DE REFERENCIA</div></div>';
       }else{
         var fr=await mockup(p.linea,b.estilo,'frente',tr,vr),es=await mockup(p.linea,b.estilo,'espalda',tr,vr);
         left='<div class="mk"><div class="im"><img src="'+fr.url+'" style="height:'+fr.h+'px"><img src="'+es.url+'" style="height:'+es.h+'px"></div><small>FRENTE · ESPALDA</small></div>';
@@ -6799,9 +6838,9 @@ async function armarPaginas(d){
   var pages=[],cur;
   function nueva(){cur=document.createElement('div');cur.className='pg';cur.style.cssText='width:816px;height:1056px;background:#fff;padding:50px 58px;overflow:hidden;position:relative';var c=document.createElement('div');c.className='cp';cur.appendChild(c);host.appendChild(cur);pages.push(cur);return c}
   /* página 1: ticket de envío (igual a la primera página de IKOA_COD.docx) */
-  var tk=nueva().parentNode,tc=tk.firstChild,ct=await loadImg(BASE+'ticket_contacto.png');
+  var tk=nueva().parentNode,tc=tk.firstChild,ct=await loadImg(BASE+'ticket_contacto.png'),lb=await loadImg(BASE+'ikoa_logo_blanco.png');
   tk.style.padding='50px 58px 0';
-  tc.innerHTML='<div style="background:#000;color:#fff;text-align:center;font-weight:900;font-size:46px;letter-spacing:.14em;padding:12px 0;font-family:Arial,Helvetica,sans-serif;white-space:nowrap">IKOA IKOA IKOA</div>'+
+  tc.innerHTML='<div style="background:#000;text-align:center;padding:16px 0"><img src="'+lb.src+'" style="height:66px;width:auto;display:inline-block" alt="IKOA"></div>'+
    '<div style="font:700 15px Arial,Helvetica,sans-serif;margin-top:12px">ENVIA: IKOA BRAND CORP C.A.</div>'+
    '<div style="display:flex;justify-content:space-between;font:700 15px Arial,Helvetica,sans-serif;margin-top:8px"><span>RIF: J-505031716</span><span>CEL: 0414-9450742</span></div>'+
    '<div style="border-top:1px solid #999;margin:10px 0 26px"></div>'+
@@ -6833,7 +6872,7 @@ async function generar(datos){
   document.body.removeChild(r.host);
   var uri=pdf.output('datauristring');return {base64:uri.split(',')[1],paginas:r.pages.length};
 }
-window.CODPDF={lib:cargarLib,vinilHex:function(n){return 'rgb('+colorVinil(n).join(',')+')'},generar:generar,armarPaginas:armarPaginas,slug:slug,secciones:function(d){d.soloSecciones=true;return armarPaginas(d)}};
+window.CODPDF={telaConocida:function(n){return !!K_TELA[slug(String(n||'').replace(/^\d+\s*[·.\-]\s*/,''))]},BASE_ALTO:BASE_ALTO,FOTO_ALTO:FOTO_ALTO,lib:cargarLib,vinilHex:function(n){return 'rgb('+colorVinil(n).join(',')+')'},generar:generar,armarPaginas:armarPaginas,slug:slug,secciones:function(d){d.soloSecciones=true;return armarPaginas(d)}};
 })();
 
 
@@ -6842,6 +6881,53 @@ window.CODPDF={lib:cargarLib,vinilHex:function(n){return 'rgb('+colorVinil(n).jo
 // Si algo no se puede armar, lanza un error con lo que hay que corregir y NO se envía nada.
 const _sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function codEsLarga(pk){const m=String(pk.modelo||'').toUpperCase();return /(COMFY|LICRA|IKOA YOU)/.test(m)&&!/(DRESS|SHORT|CORTAVIENTO|BIKINI|PLAYERA|ENTERIZO|TOALLA)/.test(m)&&/LARGA/i.test(pk.manga||'');}
+/* Diseño nuevo del COD para TODOS los productos (franelas largas con su mockup propio; los demás con base teñida o foto de referencia) */
+function codDisenoNuevo(pk){return true;}
+function codParsePiezasSuave(txt){
+  const out=[]; let last=null;
+  String(txt||'').split(' | ').map(x=>x.trim()).filter(Boolean).forEach(seg=>{
+    const mm=seg.match(/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):\s*(.*)$/);
+    if(mm){ if(last)last[mm[1]]=mm[2]; return; }
+    const m=seg.match(/^(.+?)\s+(XS|S|M|L|XL|[2-9]XL|\d{1,2})(\s+CAPUCHA CON TAPABOCA|\s+CON CAPUCHA)?(\s+CON CUELLO ALTO)?(?:\s+-\s+(.*))?$/i);
+    last = m ? {genero:m[1],talla:m[2].toUpperCase(),capucha:!!m[3],tapaboca:/TAPABOCA/i.test(m[3]||''),cuelloAlto:!!m[4],nombre:(m[5]||'').trim()}
+             : (()=>{const m2=seg.match(/^(.+?)\s+-\s+(.*)$/); return m2?{genero:m2[1],talla:'',capucha:false,tapaboca:false,cuelloAlto:false,nombre:m2[2].trim()}:{genero:'',talla:'',capucha:false,tapaboca:false,cuelloAlto:false,nombre:seg};})();
+    out.push(last);
+  });
+  return out;
+}
+function codTipoPrenda(pk){
+  const mod=String(pk.modelo||'').toUpperCase(), t=mod+' '+String(pk.manga||'').toUpperCase();
+  const tipo=/BIKINI\s+MANGA\s+LARGA/.test(mod)?'bikiniml':/BIKINI/.test(mod)?'bikini':/ENTERIZO/.test(mod)?'enterizo':/CORTAVIENTO/.test(mod)?'cortaviento':/TOALLA/.test(mod)?'toalla':/DRESS/.test(mod)?'dress':/SHORT/.test(mod)?'short':'playera';
+  const manga=/CERO/.test(t)?'cero':(/CORTA/.test(t)?'corta':'larga');
+  return {tipo:tipo,manga:manga};
+}
+const COD_LOGO_BASE={cero:[58.4,29.3,4.2],corta:[59.5,26.1,3.5],larga:[61.4,27.6,3.5],dress:[58,22,4],dresscero:[62.2,20.4,5.9],short:[79.4,79.2,5]};
+function codMockGenerico(pk){
+  const tp=codTipoPrenda(pk), tl=window.CODPDF.slug(String(pk.tela||'').replace(/^\d+\s*[·.\-]\s*/,'')), serie=aproTipoDe(pk.modelo)||tp.tipo;
+  let f=null; const L=window.APRO_FOTOS||(typeof APRO_FOTOS!=='undefined'?APRO_FOTOS:[]);
+  for(let i=0;i<L.length;i++){ if(L[i].t===serie&&L[i].tela===tl){f=L[i];break;} }
+  if(!f&&serie==='cortaviento'&&/reflect/i.test(pk.tela+' '+pk.modelo)){ f=L.find(x=>x.tela==='reflectivo')||null; }
+  let base=null;
+  if(tp.tipo==='playera')base=tp.manga; else if(tp.tipo==='dress')base=(tp.manga==='cero'?'dresscero':'dress'); else if(tp.tipo==='short')base='short';
+  const conocida=window.CODPDF.telaConocida(pk.tela);
+  const g={base:base,logo:base?COD_LOGO_BASE[base]:null,alto:0,leyenda:'',conocida:conocida};
+  if(f){ g.foto=f; g.alto=window.CODPDF.FOTO_ALTO[serie]||170; g.leyenda='FOTO DE REFERENCIA'+(f.bk?' · FRENTE · ESPALDA':''); }
+  else if(base){ g.alto=window.CODPDF.BASE_ALTO[base]||170; g.leyenda=conocida?'FRENTE':'FORMA DE REFERENCIA (COLOR DE TELA NO REGISTRADO)'; }
+  else { g.base=null; g.leyenda=''; }
+  if(f&&base){ g.altoBase=window.CODPDF.BASE_ALTO[base]||170; }   /* si la foto no carga, se usa la base */
+  return g;
+}
+function codPackGenerico(pk,k,offset,etq){
+  const piezas=codParsePiezasSuave(pk.piezas); piezas.forEach((p,ix)=>{p.idx=ix});
+  const tp=codTipoPrenda(pk), mod=String(pk.modelo||'').replace(/\s*\(IKOA YOU\)/i,'').replace(/COMFY MEGA PROMO/i,'Comfy').trim(), mg=String(pk.manga||'').trim();
+  const titulo=(mg&&mod.toLowerCase().indexOf(mg.toLowerCase())<0)?mod+' · '+mg:mod;
+  const flag=p=>[p.tapaboca?'Capucha con tapaboca':(p.capucha?'Con capucha':''),p.cuelloAlto?'Con cuello alto':''].filter(Boolean).join(' · ');
+  const bl={tela:String(pk.tela||'').trim()||'—',estilo:'normal',etq:titulo.toUpperCase(),
+    piezas:piezas.map(p=>({id:(pk.codigoS||('P'+(k+offset)))+'#'+p.idx,talla:p.talla,genero:p.genero,nombre:p.nombre,
+      extra:[flag(p),p.LogoPecho?'Logo pecho: '+p.LogoPecho:'',p.LogoManga?'Logo manga: '+p.LogoManga:'',p.LogoEspalda?'Logo espalda: '+p.LogoEspalda:'',p.Largo?'Largo: '+p.Largo:''].filter(Boolean).join(' · ')})),
+    you:null,gen:codMockGenerico(pk)};
+  return {titulo:titulo||'Pack',linea:/LICRA/i.test(pk.modelo||'')?'licra':'comfy',vinil:String(pk.vinil||'').trim()||'—',bloques:[bl]};
+}
 function codParsePiezas(txt,etq){
   const out=[]; let last=null;
   String(txt||'').split(' | ').map(x=>x.trim()).filter(Boolean).forEach(seg=>{
@@ -6897,6 +6983,7 @@ async function codConstruirPacks(allPacks,extras,offset){
   const packs=[]; offset=offset||0;
   for(let k=0;k<allPacks.length;k++){
     const pk=allPacks[k], etq='Pack '+(k+1)+' ('+(pk.codigoC||pk.codigoS||'')+')';
+    if(!codEsLarga(pk)){ packs.push(codPackGenerico(pk,k,offset,etq)); continue; }
     if(!String(pk.tela||'').trim())throw new Error(etq+': falta la tela');
     if(!String(pk.vinil||'').trim())throw new Error(etq+': falta el vinil');
     const piezas=codParsePiezas(pk.piezas,etq); piezas.forEach((p,ix)=>{p.idx=ix}); const linea=/LICRA/i.test(pk.modelo||'')?'licra':'comfy', esYou=/IKOA YOU/i.test(pk.modelo||'');
@@ -6938,7 +7025,7 @@ async function armarPdfCODv8(allPacks,cola,cod){
 async function vistaPreviaCOD(){
   const el=document.getElementById('plan-error'); const data=pendingCola; if(!data)return;
   const packs=data.allPacks||[]; el.style.color='var(--muted)';
-  if(!packs.length||!packs.every(codEsLarga)){ el.textContent='Este pedido usa la plantilla de siempre (no es solo Comfy/Licra manga larga): no hay vista previa nueva.'; return; }
+  if(!packs.length){ el.textContent='Este pedido no tiene packs.'; return; }
   el.textContent='⏳ Armando vista previa...';
   try{
     let cod='—'; try{const d=await scriptGETjson({action:'leerCOD'}); if(d.ok)cod=String(d.codSiguiente);}catch(e){}
@@ -7018,7 +7105,7 @@ async function confirmarPlanificacion(){
 
     // PDF del COD con el diseño v8, armado AHORA con los datos actuales. Si todos los packs son Comfy/Licra manga larga es obligatorio:
     // cualquier falla detiene el envío (no se manda nada) hasta corregirla. Otros productos siguen con la plantilla de siempre.
-    if(allPacks.length&&allPacks.every(codEsLarga)){
+    if(allPacks.length&&allPacks.every(codDisenoNuevo)){
       msgEl.innerHTML='<span class="spinner">↻</span> Armando PDF del COD con los datos actuales...';
       let pdf8; try{ pdf8=await armarPdfCODv8(allPacks,pendingCola,codMake); }catch(e){ throw new Error('No se envió nada. Corrige esto y reintenta: '+e.message); }
       if(!pdf8||!pdf8.base64)throw new Error('No se envió nada: no se pudo armar el PDF del COD.');
@@ -8770,7 +8857,7 @@ async function abrirProduccionTablet(cod){
   var html='', css='';
   for(var k=0;k<g.packs.length;k++){
     var pk=g.packs[k], parte='';
-    if(codEsLarga(pk)){
+    if(codDisenoNuevo(pk)){
       try{
         var pks=await codConstruirPacks([pk],extras,k);
         var r=await CODPDF.secciones({off:k,chk:true,cod:String(cod),fecha:g.fecha||'',nombre:g.nombre,cedula:g.cedula,celular:g.celular,correo:g.correo,agencia:(ag[0]||'').trim(),direccion:'',retira:'',retiraCi:'',retiraCel:'',urgente:'',packs:pks});
@@ -8830,7 +8917,7 @@ async function correoPagoImagenes(packs,base){
     for(var k=0;k<packs.length;k++){
       var pk=packs[k], css='', parte='';
       try{
-        if(codEsLarga(pk)){
+        if(codDisenoNuevo(pk)){
           var pks=await codConstruirPacks([pk],extras,k);
           var rr=await CODPDF.secciones({off:k,chk:false,cod:String(base),fecha:'',nombre:pk.nombre,cedula:pk.cedula,celular:pk.celular,correo:pk.correo,agencia:'',direccion:'',retira:'',retiraCi:'',retiraCel:'',urgente:'',packs:pks});
           css=rr.css; parte=rr.secs.join('');
@@ -9011,7 +9098,7 @@ async function aproVerPedido(base){
   var extras={}; try{var dd=await scriptGETjson({action:'leerPackCOD',codigos:packs.map(function(p){return p.codigoS}).filter(Boolean).join(',')},20000);if(dd&&dd.ok&&dd.packs)extras=dd.packs;}catch(e){}
   for(var k=0;k<packs.length;k++){
     var pk=packs[k], parte='';
-    if(codEsLarga(pk)){
+    if(codDisenoNuevo(pk)){
       try{
         var pks=await codConstruirPacks([pk],extras,k);
         var rr=await CODPDF.secciones({off:k,chk:false,cod:String(base),fecha:v(4),nombre:v(7),cedula:v(9),celular:v(10),correo:v(8),agencia:(ag[0]||'').trim(),direccion:'',retira:'',retiraCi:'',retiraCel:'',urgente:'',packs:pks});
