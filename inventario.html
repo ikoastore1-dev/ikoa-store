@@ -4216,26 +4216,41 @@ function ikoaTicketDatos(cod,agenciaTxt,nombre,ci,cel,retira,retiraCi,retiraCel)
 function ikoaTicketHTML(t){
   var e=function(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
   var fs=function(txt,tabla){var n=String(txt||'').length;for(var i=0;i<tabla.length;i++){if(n<=tabla[i][0])return tabla[i][1]}return tabla[tabla.length-1][1]};
-  var img=new URL('cod-mockups/ticket_contacto.png',location.href).href, logo=new URL('cod-mockups/ikoa_logo_blanco.png',location.href).href;
+  var img=new URL('cod-mockups/ticket_contacto.png',location.href).href, logo=new URL('cod-mockups/ikoa_logo.png',location.href).href;
   var agKey=String(t.agencia||'').trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z0-9]/g,''), agLogo=agKey?new URL('cod-mockups/agencias/'+agKey+'.png',location.href).href:'';
-  var fNom=fs(t.nombre,[[16,27],[22,23],[30,19],[40,16],[999,14]]), fAg=fs(t.agencia,[[10,30],[16,25],[24,20],[999,16]]), fDir=fs(t.direccion,[[40,14],[80,12],[999,10.5]]);
+  /* Destinos propios (sin agencia de encomiendas): tienda, showroom y delivery */
+  var agU=String(t.agencia||'').trim().toUpperCase(), propio=null;
+  var DEST={'TIENDA MCY':['RETIRA EN TIENDA','TIENDA MARACAY','C.C. Híper Jumbo Mall, local PB 39'],
+    'SHOWROOM VALENCIA':['RETIRA EN SHOWROOM','SHOWROOM VALENCIA','Tienda Egeo, Valencia'],
+    'SHOWROOM CARACAS':['RETIRA EN SHOWROOM','SHOWROOM CARACAS','Las Mercedes, Caracas'],
+    'DELIVERY MARACAY':['ENTREGA A DOMICILIO','DELIVERY MARACAY',''],
+    'DELIVERY VALENCIA':['ENTREGA A DOMICILIO','DELIVERY VALENCIA',''],
+    'DELIVERY CARACAS':['ENTREGA A DOMICILIO','DELIVERY CARACAS','']};
+  if(DEST[agU]){
+    propio=DEST[agU].slice();
+    var auto=false; try{auto=Object.keys(DIRECCIONES_AUTO).some(function(k){return DIRECCIONES_AUTO[k]===t.direccion})}catch(x){}
+    if(!auto&&String(t.direccion||'').trim()&&/DELIVERY/.test(agU))propio[2]=t.direccion;   /* en delivery, si escribieron la dirección del cliente, se imprime */
+    if(/DELIVERY/.test(agU)&&!propio[2]&&!auto)propio[2]='';
+    agLogo='';
+  }
+  var fNom=fs(t.nombre,[[16,27],[22,23],[30,19],[40,16],[999,14]]), fAg=fs(propio?propio[1]:t.agencia,[[10,30],[16,25],[24,20],[999,16]]), fDir=fs(propio?propio[2]:t.direccion,[[40,14],[80,12],[999,10.5]]);
   /* etiqueta 100 mm x 150 mm vertical (área útil 92 x 142 mm): el cliente y la agencia de destino son lo principal */
-  return '<!doctype html><html><head><meta charset="utf-8"><title>Ticket COD '+e(t.cod)+'</title><style>@page{size:100mm 150mm;margin:4mm}*{box-sizing:border-box}html,body{margin:0;background:#fff}body{width:92mm;height:141mm;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#000;display:flex;flex-direction:column}'+
-   '.ban{background:#000;text-align:center;padding:7px 0;flex:none}.ban img{height:28px;width:auto;display:inline-block;margin:0}'+
+  return '<!doctype html><html><head><meta charset="utf-8"><title>Ticket COD '+e(t.cod)+'</title><style>@page{size:100mm 150mm;margin:4mm}*{box-sizing:border-box}html,body{margin:0;background:#fff}body{width:92mm;height:141mm;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#000;display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+   '.ban{text-align:center;padding:2px 0 7px;border-bottom:4px solid #000;flex:none}.ban img{height:34px;width:auto;display:inline-block;margin:0}'+
    '.env{display:flex;justify-content:space-between;align-items:flex-end;font-size:9.5px;font-weight:700;line-height:1.35;margin:4px 0 4px;color:#222;flex:none}.env span:last-child{text-align:right}'+
-   '.cod{background:#000;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:2px 12px;flex:none}.cod small{font-size:12px;font-weight:700;letter-spacing:.35em}.cod b{font-size:46px;line-height:1.1;font-weight:900;letter-spacing:.02em}'+
+   '.cod{border:3px solid #000;color:#000;display:flex;align-items:center;justify-content:space-between;padding:2px 12px;flex:none}.cod small{font-size:12px;font-weight:900;letter-spacing:.35em}.cod b{font-size:46px;line-height:1.1;font-weight:900;letter-spacing:.02em}'+
    '.sec{border:3px solid #000;margin-top:7px;padding:5px 9px 7px;flex:none}.k{font-size:9px;font-weight:900;letter-spacing:.22em;color:#555}'+
    '.n{font-weight:900;line-height:1.08;word-break:break-word;margin-top:3px;text-transform:uppercase}'+
    '.fila{display:flex;align-items:baseline;gap:8px;margin-top:5px}.fila i{font-style:normal;font-size:10px;font-weight:900;letter-spacing:.15em;color:#555;width:32px;flex:none}.fila b{font-size:20px;font-weight:900;letter-spacing:.01em}'+
    '.ag{border-top:0;margin-top:0;border-width:0 3px 3px 3px}.ag .a{font-weight:900;line-height:1.05;margin-top:3px;word-break:break-word}.ag .d{font-weight:700;line-height:1.25;margin-top:3px;word-break:break-word;color:#111}'+
-   '.ar{display:flex;align-items:center;justify-content:space-between;gap:10px}.ar .a{margin-top:3px}.ar .agl{display:block;width:auto;height:auto;max-height:48px;max-width:46%;object-fit:contain;flex:none}'+
+   '.ar{display:flex;align-items:center;justify-content:space-between;gap:10px}.ar .a{margin-top:3px}.ar .agl{width:auto;height:auto;max-height:58px;max-width:75%;object-fit:contain;flex:none;margin:3px 0 1px}'+
    '.pie{margin-top:auto;flex:none}.pie img{display:block;width:86%;margin:0 auto}</style></head><body>'+
    '<div class="ban"><img id="lg" src="'+logo+'" alt="IKOA"></div>'+
    '<div class="env"><span>ENVÍA: IKOA BRAND CORP C.A.<br>RIF: J-505031716</span><span>CEL: 0414-9450742</span></div>'+
    '<div class="cod"><small>COD</small><b>'+e(t.cod)+'</b></div>'+
-   '<div class="sec" style="border-bottom-width:3px"><div class="k">ENVIAR A</div><div class="n" style="font-size:'+fNom+'px">'+e(t.nombre)+'</div>'+
+   '<div class="sec" style="border-bottom-width:3px"><div class="k">'+(propio?'ENTREGAR A':'ENVIAR A')+'</div><div class="n" style="font-size:'+fNom+'px">'+e(t.nombre)+'</div>'+
    '<div class="fila"><i>C.I.</i><b>'+e(t.ci)+'</b></div><div class="fila"><i>CEL.</i><b>'+e(t.cel)+'</b></div></div>'+
-   '<div class="sec ag" style="margin-top:0;border-top:1px solid #000"><div class="k">AGENCIA DE DESTINO</div><div class="ar"><div class="a" style="font-size:'+fAg+'px">'+e(t.agencia)+'</div>'+(agLogo?'<img id="ag" class="agl" src="'+agLogo+'" alt="" onerror="this.style.display=\'none\'">':'')+'</div><div class="d" style="font-size:'+fDir+'px">'+e(t.direccion)+'</div></div>'+
+   '<div class="sec ag" style="margin-top:0;border-top:1px solid #000"><div class="k">'+(propio?propio[0]:'AGENCIA DE DESTINO')+'</div><div class="ar">'+(agLogo?'<img id="ag" class="agl" src="'+agLogo+'" alt="'+e(t.agencia)+'" style="display:none" onload="this.style.display=\'block\';var n=document.getElementById(\'agn\');if(n)n.style.display=\'none\'" onerror="this.style.display=\'none\'">':'')+'<div id="agn" class="a" style="font-size:'+fAg+'px">'+e(propio?propio[1]:t.agencia)+'</div></div>'+((propio?propio[2]:t.direccion)?'<div class="d" style="font-size:'+fDir+'px">'+e(propio?propio[2]:t.direccion)+'</div>':'')+'</div>'+
    '<div class="pie"><img id="ct" src="'+img+'"></div></body></html>';
 }
 function ikoaImprimirTicket(t){
