@@ -469,6 +469,7 @@ window.addEventListener('load',function(){
         <div class="err-msg" id="err-celular">Ingresa un número válido</div>
       </div>
     </div>
+    <div class="field-note" style="margin:10px 4px 0;">🔒 Guardamos tu progreso para ayudarte a terminar tu pedido si algo se interrumpe.</div>
     <div class="nav-row"><button class="btn-back" onclick="volverDeDatos()">← Atrás</button><button class="btn-next" onclick="intentarPaso1()">Siguiente →</button></div>
   </div>
 
@@ -672,17 +673,17 @@ window.addEventListener('load',function(){
           <span><span style="color:var(--muted);">Banco:</span> <b>Banesco</b></span>
         </div>
         <div style="display:none;">
-          <span><span style="color:var(--muted);">Titular:</span> <b id="pm-nombre">Johan Cazorla</b></span>
+          <span><span style="color:var(--muted);">Titular:</span> <b id="pm-nombre">Blanca Celis</b></span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
-          <span><span style="color:var(--muted);">Celular:</span> <b id="pm-cel">04149450742</b></span>
+          <span><span style="color:var(--muted);">Celular:</span> <b id="pm-cel">04243274955</b></span>
           <div style="display:flex;gap:4px;">
             <button onclick="copiarDato(document.getElementById('pm-cel').textContent,'btn-copy-cel')" id="btn-copy-cel" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Completo</button>
             <button onclick="copiarDato(document.getElementById('pm-cel').textContent.slice(-7),'btn-copy-cel2')" id="btn-copy-cel2" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Sin código</button>
           </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
-          <span><span style="color:var(--muted);">Cédula:</span> <b id="pm-ci">18265345</b></span>
+          <span><span style="color:var(--muted);">Cédula:</span> <b id="pm-ci">7280585</b></span>
           <button onclick="copiarDato(document.getElementById('pm-ci').textContent,'btn-copy-ci')" id="btn-copy-ci" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;"><span><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-bs" style="color:var(--accent);">—</b></span><button onclick="copiarMonto('bs','btn-copy-monto-bs')" id="btn-copy-monto-bs" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button></div>
@@ -1930,15 +1931,27 @@ const CUENTAS_BANCARIAS={
   personal:{nombre:'Johan Cazorla', cel:'04149450742', cedula:'18265345'},
   blanca:{nombre:'Blanca Celis', cel:'04243274955', cedula:'7280585'}
 };
+function esClienteEmpresa(){
+  var c=String((typeof pedido!=='undefined'&&pedido&&pedido.cedula)||'').trim().toUpperCase();
+  if(!c){var t=document.getElementById('p-cedula-tipo'),n=document.getElementById('p-cedula-num');c=((t?t.value:'')+(n?n.value:'')).trim().toUpperCase();}
+  return /^J[-\s]?\d/.test(c);   /* RIF de empresa (J-) */
+}
 async function aplicarCuentaActiva(){
-  try{
-    const data=await scriptGETjson({action:'leerCuentaActiva'});
-    const cuenta=CUENTAS_BANCARIAS[data.cuenta]||CUENTAS_BANCARIAS.personal;
-    const elNombre=document.getElementById('pm-nombre'), elCel=document.getElementById('pm-cel'), elCi=document.getElementById('pm-ci');
-    if(elNombre) elNombre.textContent=cuenta.nombre;
-    if(elCel) elCel.textContent=cuenta.cel;
-    if(elCi) elCi.textContent=cuenta.cedula;
-  }catch(e){ console.warn('Error al leer cuenta activa:', e); }
+  /* Si no se puede leer la cuenta activa (falla de conexión o respuesta inválida), se usa la cuenta de Blanca */
+  let clave='blanca';
+  if(esClienteEmpresa()){ clave='empresa'; }
+  else for(let intento=0;intento<3;intento++){
+    try{
+      const data=await scriptGETjson({action:'leerCuentaActiva'});
+      if(data&&data.ok&&CUENTAS_BANCARIAS[data.cuenta]){ clave=data.cuenta; break; }
+    }catch(e){ console.warn('Error al leer cuenta activa (intento '+(intento+1)+'):', e); }
+    if(intento<2) await new Promise(r=>setTimeout(r,700));
+  }
+  const cuenta=CUENTAS_BANCARIAS[clave]||CUENTAS_BANCARIAS.blanca;
+  const elNombre=document.getElementById('pm-nombre'), elCel=document.getElementById('pm-cel'), elCi=document.getElementById('pm-ci');
+  if(elNombre) elNombre.textContent=cuenta.nombre;
+  if(elCel) elCel.textContent=cuenta.cel;
+  if(elCi) elCi.textContent=cuenta.cedula;
 }
 
 async function calcularPago(){
@@ -2075,6 +2088,7 @@ async function calcularPago(){
   const recargosCasheaBs=Math.round(totalRecargosVariosBs*(1+recargosCasheaPct/100)*100)/100;
   pagoTotalCasheaBs=Math.round((baseCasheaBs+recargosCasheaBs)*100)/100;
   pagoTotalCasheaUsd=tasaBcvActual>0?Math.round((pagoTotalCasheaBs/tasaBcvActual)*100)/100:0;
+  if(esClienteEmpresa()){ pagoTotalBs=pagoTotalCasheaBs; pagoTotalUsd=pagoTotalCasheaUsd; }   /* RIF de empresa: precio tipo Cashea como precio normal */
 
   document.getElementById('pago-desglose').innerHTML=
     desglose.join('<br>')+
@@ -2093,6 +2107,15 @@ async function calcularPago(){
   document.getElementById('pm-monto-cashea').textContent='Bs '+pagoTotalCasheaBs.toFixed(2)+' ($'+pagoTotalCasheaUsd.toFixed(2)+')';
 
   // Solo aquí, con el precio confirmado y calculado con éxito, se permite continuar.
+  if(esClienteEmpresa()){
+    var _bc=document.getElementById('btn-pago-cashea'); if(_bc){_bc.style.display='none';var _gp=_bc.parentNode;if(_gp){_gp.classList.remove('cols3');_gp.classList.add('cols2');}}
+    var _bu=document.getElementById('btn-pago-usd'); if(_bu)_bu.style.display='none';   /* RIF de empresa: solo pago en Bs */
+    var _gq=_bc?_bc.parentNode:(_bu?_bu.parentNode:null); if(_gq){_gq.classList.remove('cols3','cols2');_gq.classList.add('cols1');_gq.style.gridTemplateColumns='1fr';}
+    var _cu=document.getElementById('pago-usd-card'); if(_cu)_cu.style.display='none';
+    var _cc=document.getElementById('pago-cashea-card'); if(_cc)_cc.style.display='none';
+    document.getElementById('pago-desglose').innerHTML=desglose.join('<br>');   /* sin precios unitarios ni mención a Cashea */
+    if(pagoMoneda!=='bs'){ pagoMoneda='bs'; var _bb=document.getElementById('btn-pago-bs'); if(_bb)_bb.classList.add('selected'); var _cb=document.getElementById('pago-bs-card'); if(_cb)_cb.style.display='block'; }
+  }
   const totalGeneral=pagoTotalBs+pagoTotalUsd+pagoTotalCasheaBs;
   if(totalGeneral<=0 || faltaCodigoYou || faltaCodigoLicra){
     // El servidor respondió pero el monto calculado sigue en 0 (dato incompleto) o falta un código de precio de Ikoa You — seguimos bloqueados.
@@ -2272,14 +2295,96 @@ function carritoEnviar(estado){
         ((p.piezas||[]).some(function(x){return x.conTapaboca})?' · con tapaboca':'')+((p.piezas||[]).some(function(x){return x.conCuelloAlto})?' · cuello alto':'');
     }).join(' | ');
     var metodo=(typeof pagoMoneda!=='undefined'&&pagoMoneda)?(pagoMoneda==='bs'?'Bs':pagoMoneda==='usd'?'Divisa':'Cashea'):'';
+    var celNum=carritoVal('p-celular-num'), cedNum=carritoVal('p-cedula-num');
+    var detalle=(estado==='Navegando')?'':carritoDetalle();
     scriptGET({action:'carritoGuardar',id:CARRITO_ID,estado:estado,app:(document.title||'Pedidos').slice(0,40),
-      nombre:pedido.nombre||'',celular:pedido.celular||'',correo:pedido.correo||'',cedula:pedido.cedula||'',
-      resumen:res,usd:(typeof pagoTotalUsd!=='undefined'?pagoTotalUsd:''),bs:(typeof pagoTotalBs!=='undefined'?pagoTotalBs:''),
-      cashea:(typeof pagoTotalCasheaBs!=='undefined'?pagoTotalCasheaBs:''),metodo:metodo,
+      vid:ikoaVid(),paso:carritoPasoTxt(),detalle:detalle,
+      nombre:pedido.nombre||carritoVal('p-nombre'),celular:pedido.celular||(celNum?(carritoVal('p-cel-pais')+celNum):''),correo:pedido.correo||carritoVal('p-correo'),cedula:pedido.cedula||(cedNum?(carritoVal('p-cedula-tipo')+cedNum):''),
+      resumen:res,usd:(typeof pagoTotalUsd!=='undefined'&&pagoTotalUsd>0?pagoTotalUsd:''),bs:(typeof pagoTotalBs!=='undefined'&&pagoTotalBs>0?pagoTotalBs:''),
+      cashea:(typeof pagoTotalCasheaBs!=='undefined'&&pagoTotalCasheaBs>0?pagoTotalCasheaBs:''),metodo:metodo,
       dispositivo:/Mobi|Android|iPhone/i.test(navigator.userAgent)?'Celular':'Computadora',
       origen:(document.referrer||'').slice(0,120)}).catch(function(){});
   }catch(e){ console.warn('carrito',e); }
 }
+// ── CARRITOS: seguimiento anónimo por navegador + paso alcanzado + detalle para cargar a pendiente ──
+function ikoaVid(){
+  try{ var v=localStorage.getItem('ikoa_vid'); if(!v){ v='V'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); localStorage.setItem('ikoa_vid',v); } return v; }
+  catch(e){ return window.__vid||(window.__vid='V'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)); }
+}
+function carritoVal(id){ var e=document.getElementById(id); return e?String(e.value||'').trim():''; }
+function packCodJson(pk){
+    var yo=pk.ikoaYou, y=null;
+    if(yo){y={pechoL:yo.pechoL||null,mangaL:yo.mangaL||[],espaldaL:yo.espaldaL||[],nombre:yo.nombre||'',nombreColor:yo.nombreColor||'',vinilA:yo.vinilA||'',vinilB:yo.vinilB||'',tela:yo.tela||'',mangaSinCosto:!!yo.mangaSinCosto};}
+    var j={linea:pk.linea||'comfy',modelo:pk.modelo||'',manga:pk.manga||'',tela:pk.tela||'',vinil:pk.vinil||'',pack:pk.pack||'',dress:!!pk.esDress,mangaTipo:pk.mangaTipo||'',ikoaYou:y,
+      piezas:(pk.piezas||[]).map(function(p){return {genero:p.genero||'',talla:p.talla||'',nombre:p.nombre||'',capucha:!!p.conCapucha,tapaboca:!!p.conTapaboca,cuelloAlto:!!p.conCuelloAlto,logoPecho:p.logoPecho||'',logoManga:p.logoManga||'',logoEspalda:p.logoEspalda||''}})};
+    return j;
+}
+function carritoSolicitudes(){
+  const retiraNombre=pedido.mismoEnvio?pedido.nombre:pedido.eNombre;
+  const retiraCi=pedido.mismoEnvio?pedido.cedula:pedido.eCi;
+  const retiraCel=pedido.mismoEnvio?pedido.celular:pedido.eCel;
+  const codigoPrincipal='';
+  const lista=[];
+  for(let i=0; i<pedido.packs.length; i++){
+    const pk=pedido.packs[i];
+    const piezasText=pk.piezas.map(p=>`${p.genero} ${p.talla}${p.conCapucha?(p.conTapaboca?' CAPUCHA CON TAPABOCA':' CON CAPUCHA'):''}${p.conCuelloAlto?' CON CUELLO ALTO':''}${p.nombre?' - '+p.nombre:''}${p.logoPecho?' | LogoPecho: '+p.logoPecho:''}${p.logoEspalda?' | LogoEspalda: '+p.logoEspalda:''}${p.logoManga?' | LogoManga: '+p.logoManga:''}${p.tela?' | Tela: '+p.tela:''}${p.largo?' | Largo: '+p.largo:''}`).join(' | ');
+    lista.push({
+        action:'addSolicitud',
+        tasa:String(tasaBcvActual||''),
+        fecha:new Date().toLocaleString('es-VE'),
+        nombre:pedido.nombre,
+        correo:pedido.correo,
+        cedula:pedido.cedula,
+        celular:pedido.celular,
+        modelo:(pk.linea==='licra'?(pk.modelo+' '+pk.manga+(pk.ikoaYou?' (IKOA YOU)':'')):pk.ikoaYou?'COMFY MEGA PROMO (IKOA YOU)':((pk.esDress?'COMFY DRESS MEGA PROMO':(pk.mangaTipo==='short'?'COMFY SHORT MEGA PROMO':'COMFY MEGA PROMO')) + (pasoPorOpcionAB?(' '+(modalidadComfy==='B'?'(Opción B)':'(Opción A)')):''))),
+        manga:pk.manga,
+        capucha:pk.piezas.some(p=>p.conCapucha)?'Con Capucha':(pk.piezas.some(p=>p.conCuelloAlto)?'Con Cuello Alto':'Sin Capucha'),
+        pack:`${pk.pack}PACK`,
+        tela:pk.tela,
+        vinil:pk.vinil,
+        piezas:piezasText,
+        agencia:pedido.agencia,
+        retira_nombre:retiraNombre,
+        retira_ci:retiraCi,
+        retira_cel:retiraCel,
+        subindex: i===0 ? '0' : String(i+1),
+        codigo_principal: codigoPrincipal,
+        pago_moneda: pedido.pagoMoneda||'',
+        pago_monto: String(pedido.pagoMonto||''),
+        pago_ref: pedido.pagoRef||'',
+        cashea_flag: pagoMoneda==='cashea' ? 'SI' : 'NO',
+        cashea_pct_aplicado: pagoMoneda==='cashea' ? String(pk.linea==='licra'?casheaPctLicra:casheaPct) : ''
+    });
+  }
+  return lista;
+}
+function carritoDetalle(){
+  try{
+    if(!(pedido.packs&&pedido.packs.length)) return '';
+    var s=JSON.stringify({sol:carritoSolicitudes(),pc:pedido.packs.map(packCodJson)});
+    return s.length<=45000?s:'';
+  }catch(e){ return ''; }
+}
+function carritoPasoTxt(){
+  try{
+    var st=document.querySelector('.step.active'); if(!st) return '';
+    var n=(st.querySelector('.step-num')||{}).textContent||'', t=(st.querySelector('.step-title')||{}).textContent||'';
+    return (n+' · '+t).replace(/\s+/g,' ').trim().slice(0,80);
+  }catch(e){ return ''; }
+}
+var _carTimer=null;
+function carritoEnviarDeb(estado){ clearTimeout(_carTimer); _carTimer=setTimeout(function(){ carritoEnviar(estado||'Navegando'); },1500); }
+(function(){
+  /* guarda al cambiar de paso (aunque aún no haya llegado al pago) y al escribir celular / correo / nombre / cédula */
+  try{
+    var _up=updateProgress;
+    updateProgress=function(){ var r=_up.apply(this,arguments); try{ carritoEnviarDeb('Navegando'); }catch(e){} return r; };
+    ['p-nombre','p-correo','p-celular-num','p-cedula-num'].forEach(function(id){
+      var e=document.getElementById(id); if(e){ e.addEventListener('change',function(){ carritoEnviarDeb('Navegando'); }); e.addEventListener('blur',function(){ carritoEnviarDeb('Navegando'); }); }
+    });
+    setTimeout(function(){ carritoEnviar('Navegando'); },3000);
+  }catch(e){ console.warn('carrito init',e); }
+})();
 // ── PACKS_COD: detalle estructurado del pack + imagen del diseño Ikoa You, para armar el PDF del COD ──
 async function packCodEnviar(codigo,pk){
   try{
