@@ -1,0 +1,24 @@
+<!-- OPINIONES DE CLIENTES IKOA — pegar en un widget HTML de Elementor (o en una página, pestaña Código) -->
+<div id="ikoa-ops" style="font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:0 auto;padding:10px">
+  <div id="ikoa-ops-head" style="text-align:center;margin-bottom:18px;color:#555">Cargando opiniones…</div>
+  <div id="ikoa-ops-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px"></div>
+</div>
+<script>
+(function(){
+  var URL_GS='https://script.google.com/macros/s/AKfycbw39K95bn14-yZcvd8kXuKnyD2BAqLjOg6rFNIBkuZRHQP7z_s1FFOV3P2EOyNtqz9ikw/exec';
+  function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function est(n){var s='';for(var i=1;i<=5;i++)s+='<span style="color:'+(i<=n?'#f5b700':'#ddd')+'">★</span>';return s}
+  var cb='_ops'+Date.now(),s=document.createElement('script');
+  window[cb]=function(d){
+    var h=document.getElementById('ikoa-ops-head'),l=document.getElementById('ikoa-ops-list');
+    if(!d||!d.ok||!d.total){h.textContent='Pronto verás aquí las opiniones de nuestros clientes.';return}
+    h.innerHTML='<div style="font-size:30px;font-weight:bold;color:#111">'+d.promedio.toFixed(1)+' <span style="font-size:26px">'+est(Math.round(d.promedio))+'</span></div><div>'+d.total+' opinion'+(d.total===1?'':'es')+' de clientes reales</div>';
+    l.innerHTML=d.items.map(function(r){return '<div style="border:1px solid #e6e6e6;border-radius:12px;padding:14px;background:#fff">'+
+      '<div style="font-size:18px">'+est(r.estrellas)+'</div>'+
+      (r.comentario?'<p style="margin:8px 0;color:#333;line-height:1.5">“'+esc(r.comentario)+'”</p>':'')+
+      '<div style="font-size:13px;color:#888"><b style="color:#111">'+esc(r.nombre)+'</b> · '+esc(r.fecha)+'</div>'+
+      (r.respuesta?'<div style="margin-top:8px;padding:8px 10px;background:#f6f6f6;border-radius:8px;font-size:13px;color:#555"><b>IKOA:</b> '+esc(r.respuesta)+'</div>':'')+'</div>'}).join('');
+  };
+  s.src=URL_GS+'?action=leerResenasPublicas&callback='+cb;document.head.appendChild(s);
+})();
+</script>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tu opinión · IKOA</title>
+<style>
+:root{--ink:#111;--mut:#666;--line:#e6e6e6;--gold:#f5b700}
+*{box-sizing:border-box}body{margin:0;background:#f6f6f6;font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
+.card{max-width:520px;margin:0 auto;background:#fff;min-height:100vh;padding:26px 20px 40px}
+@media(min-width:560px){.card{min-height:0;margin:24px auto;border-radius:14px;box-shadow:0 2px 14px rgba(0,0,0,.08)}}
+h1{font-size:22px;margin:14px 0 6px}p{line-height:1.5;color:var(--mut);margin:0 0 14px}
+.logo{text-align:center}.logo b{font-size:26px;letter-spacing:.2em}
+.stars{display:flex;gap:6px;justify-content:center;margin:10px 0 4px}
+.stars button{background:none;border:0;font-size:44px;line-height:1;color:#d8d8d8;cursor:pointer;padding:2px}
+.stars button.on{color:var(--gold)}
+.lbl{font-size:13px;font-weight:bold;margin:14px 0 6px;display:block}
+input[type=text],textarea{width:100%;padding:12px;border:1px solid #ccc;border-radius:8px;font:inherit;font-size:16px}
+textarea{min-height:110px;resize:vertical}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--mut);margin:12px 0}
+.btn{display:block;width:100%;padding:15px;border:0;border-radius:10px;background:var(--ink);color:#fff;font-size:16px;font-weight:bold;cursor:pointer;text-align:center;text-decoration:none}
+.btn.sec{background:#fff;color:var(--ink);border:2px solid var(--ink);margin-top:10px}
+.btn[disabled]{opacity:.5}
+.msg{padding:12px;border-radius:8px;font-size:14px;margin:12px 0;display:none}
+.err{background:#fdeaea;color:#a11}.ok{background:#e8f6ec;color:#146c2e}
+.premio{background:#fff8e1;border:1px solid #ffe08a;border-radius:10px;padding:12px;font-size:14px;color:#555;margin:14px 0}
+.small{font-size:12px;color:#999;margin-top:14px}
+</style></head><body><div class="card">
+<div class="logo"><b>IKOA</b></div>
+<div id="vista-cargando"><p style="text-align:center;margin-top:30px">Cargando…</p></div>
+
+<div id="vista-form" style="display:none">
+  <h1>¿Cómo te fue con tu pedido?</h1>
+  <p>Tu opinión nos ayuda a mejorar. Toma menos de un minuto.</p>
+  <div class="stars" id="stars"></div>
+  <p id="star-txt" style="text-align:center;margin:0;min-height:20px"></p>
+  <label class="lbl" for="nombre">Tu nombre</label>
+  <input type="text" id="nombre" maxlength="60" autocomplete="given-name">
+  <label class="lbl" for="coment">Cuéntanos tu experiencia (opcional)</label>
+  <textarea id="coment" maxlength="600" placeholder="Calidad, ajuste, atención, tiempo de entrega…"></textarea>
+  <label class="chk"><input type="checkbox" id="mostrar" checked> <span>Autorizo mostrar mi opinión en la web de IKOA (solo mi nombre y la inicial del apellido).</span></label>
+  <div class="premio">🎁 <b>Todas las opiniones, buenas o no tanto,</b> participan en futuros premios de IKOA.</div>
+  <div class="msg err" id="err"></div>
+  <button class="btn" id="enviar">Enviar mi valoración</button>
+  <p class="small">Revisamos las opiniones antes de publicarlas. Solo quitamos las que contengan insultos, spam o datos personales.</p>
+</div>
+
+<div id="vista-gracias" style="display:none">
+  <h1>¡Gracias por tu opinión! 💛</h1>
+  <p>Ya quedó registrada y participas en los futuros premios de IKOA.</p>
+  <div id="google-bloque" style="display:none">
+    <p>Si quieres, también puedes compartir tu experiencia en Google. Es opcional y no suma ni resta para los premios.</p>
+    <a class="btn sec" id="btn-google" target="_blank" rel="noopener">⭐ Publicar también en Google</a>
+    <p class="small" id="google-nota"></p>
+  </div>
+</div>
+
+<div id="vista-error" style="display:none"><h1 id="error-tit">Enlace no válido</h1><p id="error-txt">Este enlace no es válido o venció. Si lo necesitas, escríbenos por WhatsApp.</p></div>
+</div>
+<script>
+// ── CONFIGURACIÓN ──
+var URL_GS='https://script.google.com/macros/s/AKfycbw39K95bn14-yZcvd8kXuKnyD2BAqLjOg6rFNIBkuZRHQP7z_s1FFOV3P2EOyNtqz9ikw/exec';
+var GOOGLE_URL='';   // ← pega aquí el enlace de reseñas de tu ficha de Google (si está vacío, el botón de Google no se muestra)
+// ───────────────────
+var q=new URLSearchParams(location.search), C=q.get('c')||'', T=q.get('t')||'', N=q.get('n')||'', nota=0;
+var TXT=['','Muy mala','Mala','Regular','Buena','Excelente'];
+function $(i){return document.getElementById(i)}
+function ver(id){['vista-cargando','vista-form','vista-gracias','vista-error'].forEach(function(v){$(v).style.display=v===id?'block':'none'})}
+function jsonp(params,ok,fail){
+  var cb='_r'+Date.now()+Math.floor(Math.random()*999),s=document.createElement('script'),fin=false;
+  var qs=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k])}).join('&');
+  window[cb]=function(d){if(fin)return;fin=true;s.remove();ok(d)};
+  s.onerror=function(){if(fin)return;fin=true;s.remove();fail()};
+  s.src=URL_GS+'?'+qs+'&callback='+cb;document.head.appendChild(s);
+  setTimeout(function(){if(!fin){fin=true;s.remove();fail()}},20000);
+}
+function pintar(){var h='';for(var i=1;i<=5;i++)h+='<button type="button" data-n="'+i+'" class="'+(i<=nota?'on':'')+'" aria-label="'+i+' estrellas">★</button>';$('stars').innerHTML=h;$('star-txt').textContent=TXT[nota]||'';
+  [].forEach.call($('stars').children,function(b){b.onclick=function(){nota=+b.getAttribute('data-n');pintar()}})}
+function error(tit,txt){$('error-tit').textContent=tit;$('error-txt').textContent=txt;ver('vista-error')}
+$('nombre').value=N;pintar();
+if(!C||!T){error('Enlace no válido','Abre esta página desde el botón del correo que te enviamos con tu pedido.')}
+else jsonp({action:'estadoResena',c:C,t:T},function(d){
+  if(!d||!d.ok)return error('Enlace no válido','Este enlace no es válido. Si lo necesitas, escríbenos por WhatsApp.');
+  if(d.ya_enviada)return error('¡Ya recibimos tu opinión!','Gracias, ya registramos tu valoración de este pedido.');
+  ver('vista-form');
+},function(){error('Sin conexión','No pudimos cargar la página. Intenta de nuevo en un momento.')});
+$('enviar').onclick=function(){
+  $('err').style.display='none';
+  if(!nota){$('err').textContent='Elige de 1 a 5 estrellas.';$('err').style.display='block';return}
+  if(!$('nombre').value.trim()){$('err').textContent='Escribe tu nombre.';$('err').style.display='block';return}
+  var b=$('enviar');b.disabled=true;b.textContent='Enviando…';
+  var com=$('coment').value.trim();
+  jsonp({action:'enviarResena',c:C,t:T,nombre:$('nombre').value.trim(),estrellas:nota,comentario:com,mostrar:$('mostrar').checked?'si':'no'},function(d){
+    if(d&&d.ok){
+      if(GOOGLE_URL){$('google-bloque').style.display='block';
+        $('btn-google').href=GOOGLE_URL;
+        $('btn-google').onclick=function(){if(com&&navigator.clipboard){navigator.clipboard.writeText(com).then(function(){$('google-nota').textContent='Copiamos tu comentario: solo tienes que pegarlo en Google.'},function(){})}};}
+      ver('vista-gracias');
+    } else if(d&&d.error==='ya_enviada'){error('¡Ya recibimos tu opinión!','Gracias, ya registramos tu valoración de este pedido.')}
+    else{b.disabled=false;b.textContent='Enviar mi valoración';$('err').textContent='No se pudo enviar. Intenta otra vez.';$('err').style.display='block'}
+  },function(){b.disabled=false;b.textContent='Enviar mi valoración';$('err').textContent='Sin conexión. Intenta otra vez.';$('err').style.display='block'});
+};
+</script></body></html>

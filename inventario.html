@@ -1492,6 +1492,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <button onclick="setTipoGestion('Imprenta')" id="gbtn-Imprenta" style="padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🖨️ Imprenta</button>
           <button onclick="setTipoGestion('Produccion')" id="gbtn-Produccion" style="padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">🏭 Producción</button>
           <button onclick="setTipoGestion('Cotizaciones')" id="gbtn-Cotizaciones" style="padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">💰 Cotizaciones</button>
+          <button onclick="setTipoGestion('Resenas')" id="gbtn-Resenas" style="padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;">⭐ Reseñas</button>
         </div>
         <!-- Sub-modos Enviado -->
         <div id="envio-modos" style="display:none;margin-top:12px;grid-template-columns:1fr 1fr 1fr;gap:8px;">
@@ -1621,6 +1622,23 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
             <button onclick="imprimirActual()" style="flex:1;padding:14px;background:linear-gradient(135deg,var(--accent),#00b890);border:none;border-radius:10px;color:#000;font-size:16px;font-weight:700;cursor:pointer;">🖨️ Imprimir este</button>
             <button onclick="cerrarVisorPDF()" style="padding:14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">✕</button>
           </div>
+        </div>
+      </div>
+
+      <!-- RESEÑAS -->
+      <div id="resenas-wrap" style="display:none;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">⭐ Reseñas de clientes</div>
+            <button onclick="resCargar()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">↻ Actualizar</button>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Aprueba las que salen en la web. Rechaza solo insultos, spam, datos personales o quien no es cliente. Una reseña negativa pero educada se aprueba y se responde. Todas participan en los premios.</div>
+          <div style="display:flex;gap:6px;margin-bottom:10px;">
+            <button id="rtab-Pendiente" onclick="resFiltro('Pendiente')" style="flex:1;padding:9px;border:2px solid var(--accent);border-radius:8px;background:var(--surface2);color:var(--accent);font-weight:700;font-size:13px;cursor:pointer;">Pendientes</button>
+            <button id="rtab-Aprobada" onclick="resFiltro('Aprobada')" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-weight:700;font-size:13px;cursor:pointer;">Aprobadas</button>
+            <button id="rtab-Rechazada" onclick="resFiltro('Rechazada')" style="flex:1;padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-weight:700;font-size:13px;cursor:pointer;">Rechazadas</button>
+          </div>
+          <div id="resenas-lista"></div>
         </div>
       </div>
 
@@ -7631,7 +7649,7 @@ const WEBHOOK_URL='https://hook.us2.make.com/9vb6zab74fbbqkbv46c2coi8i7e4mnqs';
 const WEBHOOK_FOTO='https://hook.us2.make.com/6eprt8kp7xj3jj8t5ahsypbtz3hohf6c';
 
 function resetGestionBtns(){
-  ['COD','Enviado','Buscar','Imprenta','Produccion','Cotizaciones'].forEach(t=>{
+  ['COD','Enviado','Buscar','Imprenta','Produccion','Cotizaciones','Resenas'].forEach(t=>{
     const b=document.getElementById('gbtn-'+t);
     if(b){ b.style.borderColor='var(--border)'; b.style.background='var(--surface2)'; b.style.color='var(--muted)'; }
   });
@@ -7643,6 +7661,7 @@ function resetGestionBtns(){
   document.getElementById('imprenta-wrap').style.display='none';
   document.getElementById('produccion-wrap').style.display='none';
   const cwrap=document.getElementById('cotizaciones-wrap'); if(cwrap) cwrap.style.display='none';
+  var _rw=document.getElementById('resenas-wrap'); if(_rw) _rw.style.display='none';
 }
 
 function setTipoGestion(tipo){
@@ -7702,6 +7721,15 @@ function setTipoGestion(tipo){
     document.getElementById('cotizaciones-wrap').style.display='none';
     submitBtn.style.display='none';
     cargarProduccion();
+    return;
+  } else if(tipo==='Resenas'){
+    document.getElementById('gestion-form-wrap').style.display='none';
+    document.getElementById('imprenta-wrap').style.display='none';
+    document.getElementById('produccion-wrap').style.display='none';
+    var _cw=document.getElementById('cotizaciones-wrap'); if(_cw) _cw.style.display='none';
+    document.getElementById('resenas-wrap').style.display='block';
+    submitBtn.style.display='none';
+    resCargar();
     return;
   } else if(tipo==='Cotizaciones'){
     document.getElementById('gestion-form-wrap').style.display='none';
@@ -9072,6 +9100,49 @@ function limEditar(i){
 function limQuitar(i){
   var l=LIM_DATA[i]; if(!confirm('¿Quitar el límite de '+l.color+'? El color volverá a estar disponible.'))return;
   scriptGETjson({action:'eliminarLimite',hoja:l.hoja,tipo:l.tipo,color:l.color}).then(function(){limCargar();});
+}
+
+/* ═══ RESEÑAS (Gestión) ═══ */
+var RES_FILTRO='Pendiente', RES_DATA=[];
+function resFiltro(f){
+  RES_FILTRO=f;
+  ['Pendiente','Aprobada','Rechazada'].forEach(function(k){var b=document.getElementById('rtab-'+k);b.style.borderColor=k===f?'var(--accent)':'var(--border)';b.style.color=k===f?'var(--accent)':'var(--muted)';});
+  resCargar();
+}
+async function resCargar(){
+  var c=document.getElementById('resenas-lista'); c.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">Cargando…</div>';
+  try{
+    var d=await scriptGETjson({action:'leerResenas',filtro:RES_FILTRO});
+    if(!d||!d.ok)throw new Error((d&&d.error)||'sin respuesta');
+    RES_DATA=d.rows||[]; resRender();
+  }catch(e){c.innerHTML='<div style="color:#ef4444;font-size:13px;padding:8px">No se pudo cargar: '+prodEsc(e.message)+' (¿actualizaste el Apps Script?)</div>';}
+}
+function resRender(){
+  var c=document.getElementById('resenas-lista');
+  if(!RES_DATA.length){c.innerHTML='<div style="color:var(--muted);font-size:13px;padding:10px;text-align:center">No hay reseñas '+RES_FILTRO.toLowerCase()+'s.</div>';return;}
+  c.innerHTML=RES_DATA.map(function(r,i){
+    var n=parseInt(r[4],10)||0, est='<span style="color:#f5b700;font-size:18px">'+'★'.repeat(n)+'</span><span style="color:var(--border);font-size:18px">'+'★'.repeat(5-n)+'</span>';
+    var btns=(RES_FILTRO!=='Aprobada'?'<button onclick="resMod('+i+',\'Aprobada\')" style="padding:8px 14px;border:0;border-radius:8px;background:#22c55e;color:#000;font-weight:800;font-size:13px;cursor:pointer">✓ Aprobar</button>':'')+
+      (RES_FILTRO!=='Rechazada'?'<button onclick="resMod('+i+',\'Rechazada\')" style="padding:8px 14px;border:1px solid #ef4444;border-radius:8px;background:transparent;color:#ef4444;font-weight:800;font-size:13px;cursor:pointer">✕ Rechazar</button>':'')+
+      '<button onclick="resResponder('+i+')" style="padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-weight:700;font-size:13px;cursor:pointer">💬 Responder</button>';
+    return '<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--surface2)">'+
+      '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center">'+est+'<div style="font-size:12px;color:var(--muted)">'+prodEsc(r[0])+' · COD '+prodEsc(r[2])+' · '+prodEsc(String(r[1]).split(',')[0])+'</div></div>'+
+      '<div style="margin:6px 0 2px;font-weight:800">'+prodEsc(r[3])+(r[7]==='no'?' <span style="font-size:11px;color:var(--muted);font-weight:400">(no autorizó mostrar su nombre)</span>':'')+'</div>'+
+      '<div style="font-size:14px;margin-bottom:8px;white-space:pre-wrap">'+(r[5]?prodEsc(r[5]):'<i style="color:var(--muted)">Sin comentario, solo estrellas</i>')+'</div>'+
+      (r[9]?'<div style="font-size:12px;background:var(--surface);border-radius:8px;padding:8px;margin-bottom:8px"><b>Respuesta IKOA:</b> '+prodEsc(r[9])+'</div>':'')+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap">'+btns+'</div></div>';
+  }).join('');
+}
+async function resMod(i,estado){
+  var r=RES_DATA[i]; if(!r)return;
+  try{ var d=await scriptGETjson({action:'moderarResena',id:r[0],estado:estado}); if(!d||!d.ok)throw new Error((d&&d.error)||'error'); resCargar(); }
+  catch(e){ alert('No se pudo guardar: '+e.message); }
+}
+async function resResponder(i){
+  var r=RES_DATA[i]; if(!r)return;
+  var t=prompt('Respuesta pública de IKOA para '+r[3]+' (déjala vacía para quitarla):',r[9]||''); if(t===null)return;
+  try{ var d=await scriptGETjson({action:'moderarResena',id:r[0],estado:r[6],respuesta:t}); if(!d||!d.ok)throw new Error((d&&d.error)||'error'); resCargar(); }
+  catch(e){ alert('No se pudo guardar: '+e.message); }
 }
 async function cargarProduccion(){
   const msg=document.getElementById('produccion-msg');
