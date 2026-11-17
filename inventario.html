@@ -8891,6 +8891,7 @@ function prodKeysPack(p,k){
     if(/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):/.test(seg))return; out.push({key:(p.codigoS||('P'+k))+'#'+n,txt:seg}); n++; });
   return out;
 }
+function prodFabricado(cod,g){var av=(window.prodAvance||{})[String(cod).toUpperCase()]; if(!av)return false; if(av.completo)return true; var ks=prodKeys(g); return ks.length>0 && ks.every(function(k){return (av.done||[]).indexOf(k)>=0;});}
 function prodKeys(g){var o=[];g.packs.forEach(function(p,k){prodKeysPack(p,k).forEach(function(x){o.push(x.key)})});return o;}
 function prodPedirClave(titulo,detalle){
   return new Promise(function(ok){
@@ -8926,6 +8927,8 @@ async function prodGuardar(completo,reabrir){
   var cod=prodCodAbierto, g=(window.prodGrupos||{})[cod]; if(!g)return;
   var ks=prodKeys(g);
   if(completo){ prodSel=new Set(ks); }
+  if(reabrir&&ks.length){ prodSel.delete(ks[ks.length-1]); }
+  var autoComp=!completo&&!reabrir&&ks.length>0&&ks.every(function(k){return prodSel.has(k)}); if(autoComp)completo=true;
   var det=completo?'Marcar TODO el pedido COD '+cod+' como ejecutado. Saldrá de Producción (en Taller seguirá hasta que se envíe).':(reabrir?'Reabrir el pedido COD '+cod+' en Producción.':'Guardar las piezas marcadas del COD '+cod+' ('+ks.filter(function(k){return prodSel.has(k)}).length+'/'+ks.length+').');
   var usr=await prodPedirClave(completo?'Ejecutado total':(reabrir?'Reabrir pedido':'Guardar avance'),det); if(!usr)return;
   var btns=document.querySelectorAll('#prod-overlay button'); btns.forEach(function(b){b.disabled=true});
@@ -8948,7 +8951,7 @@ async function abrirProduccionTablet(cod){
     '<button onclick="prodCerrarTablet()" style="background:#fff;color:#111;border:0;border-radius:10px;padding:12px 16px;font-size:16px;font-weight:800;cursor:pointer;">✕ Cerrar</button>'+
     '<div style="flex:1;min-width:130px;font-size:17px;font-weight:800;">COD '+esc(cod)+' · '+esc(g.nombre)+'<div id="prod-prog" style="font-size:13px;font-weight:700;color:#7dffb0;margin-top:2px"></div></div>'+
     '<button id="prod-save" onclick="prodGuardar(false)" style="display:none;background:#f5b700;color:#000;border:0;border-radius:10px;padding:12px 14px;font-size:15px;font-weight:800;cursor:pointer;">💾 Guardar</button>'+
-    (av.completo?'<button onclick="prodGuardar(false,true)" style="background:#444;color:#fff;border:1px solid #888;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:700;cursor:pointer;">↩ Reabrir</button>':
+    ((av.completo||prodFabricado(cod,g))?'<button onclick="prodGuardar(false,true)" style="background:#444;color:#fff;border:1px solid #888;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:700;cursor:pointer;">↩ Reabrir</button>':
       '<button onclick="prodGuardar(true)" style="background:#1fbf6a;color:#000;border:0;border-radius:10px;padding:12px 14px;font-size:15px;font-weight:800;cursor:pointer;">✅ Ejecutado total</button>')+
     waBoton(g.celular,g.nombre,'('+cod+')')+
     '<button onclick="prodTicket(\''+esc(cod)+'\')" style="background:#333;color:#fff;border:1px solid #666;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:700;cursor:pointer;">🖨 Ticket</button></div>';
@@ -9374,7 +9377,7 @@ async function cargarProduccion(){
       });
     });
     window.prodGrupos=grupos;
-    const todos=Object.keys(grupos), esComp=c=>!!(window.prodAvance[String(c).toUpperCase()]||{}).completo;
+    const todos=Object.keys(grupos), esComp=c=>prodFabricado(c,grupos[c]);
     const ejec=todos.filter(esComp).length, ver=!!window.prodVerEjecutados;
     const codigos=todos.filter(c=>ver||!esComp(c));
     lista.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;"><div style="font-size:12px;color:var(--muted);">${codigos.length} pedido(s) ${ver?'(con ejecutados)':'por ejecutar'}</div>
@@ -9406,7 +9409,7 @@ async function cargarProduccion(){
               ${g.packs.length>1?`<span style="background:#1a1a2a;border:1px solid var(--muted);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--muted);">${g.packs.length} packs</span>`:''}
             </div>
           </div>
-          <span style="background:${_av.completo?'#0a2a0a':'#1a1a2a'};border:1px solid var(--accent);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--accent);">${_av.completo?'✅ EJECUTADO':'EN PRODUCCIÓN · '+_hechas+'/'+_ks.length}</span>
+          <span style="background:${(_hechas>=_ks.length&&_ks.length>0)||_av.completo?'#0a2a0a':'#1a1a2a'};border:1px solid var(--accent);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--accent);">${(_av.completo||(_hechas>=_ks.length&&_ks.length>0))?'✅ EJECUTADO':'EN PRODUCCIÓN · '+_hechas+'/'+_ks.length}</span>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
           <button type="button" onclick="abrirProduccionTablet('${cod}')" style="flex:1;min-width:180px;padding:12px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-size:14px;font-weight:800;cursor:pointer;">🖼 Ver pedido con mockups</button>
@@ -9503,6 +9506,7 @@ async function cargarTaller(){
       scriptGETjson({action:'leerProduccion'}),
       scriptGETjson({action:'leerTallerFuente'}).catch(()=>({ok:false}))
     ]);
+    try{ const av=await scriptGETjson({action:'leerProdAvance'}); window.prodAvance=(av&&av.avance)||{}; }catch(e){ window.prodAvance=window.prodAvance||{}; }
     const rows=data.rows||[];
     tallerGrupos={};
     if(rows.length===0){
@@ -9545,7 +9549,8 @@ async function cargarTaller(){
         tela:(real&&real.tela)||v(12),
         vinil:(real&&real.vinil)||v(13),
         piezas:(real&&real.piezas)||v(14),
-        fuenteConfiable:!!real
+        fuenteConfiable:!!real,
+        codigoS:v(0), piezasProd:v(14)
       });
     });
     const codigos=Object.keys(tallerGrupos);
@@ -9554,14 +9559,16 @@ async function cargarTaller(){
     codigos.forEach(cod=>{
       const g=tallerGrupos[cod];
       const resumenPacks=g.packs.map(p=>`${p.pack||'—'}× ${p.modelo||''} ${p.manga||''}`.trim()).join(' · ');
+      const _gk={packs:g.packs.map(p=>({codigoS:p.codigoS,piezas:p.piezasProd}))}, _fab=prodFabricado(cod,_gk);
       const card=document.createElement('label');
-      card.style.cssText=`display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid ${g.urgente?'var(--warn)':'var(--border)'};border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;`;
+      card.style.cssText=`display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid ${_fab?'var(--accent)':(g.urgente?'var(--warn)':'var(--border)')};border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;`;
       card.innerHTML=`
         <input type="checkbox" class="taller-check-item" data-cod="${cod}" onchange="toggleTallerSel('${cod}',this.checked)" style="width:20px;height:20px;margin-top:2px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;">
         <div style="flex:1;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
             <span style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;">${g.nombre}</span>
             <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;">${cod}</span>
+            ${_fab?`<span style="background:#0a2a0a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">✅ FABRICADO 100% · en espera de guía de envío</span>`:''}
             ${g.urgente?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">⚡ ${g.urgente}</span>`:''}
             ${g.packs.some(p=>!p.fuenteConfiable)?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:10px;color:var(--warn);">⚠ sin match COLA.P</span>`:''}
           </div>
@@ -9995,7 +10002,7 @@ function tallerAgruparNombresVinil(codigos){
       tallerParsearPiezas(p.piezas).forEach(pz=>{
         // 1) el nombre (primero, como se lee en el pedido)
         let nombre=String(pz.nombre||'').trim();
-        if(nombre&&!/sin nombre en manga/i.test(nombre)){
+        if(nombre&&!/^\s*sin nombre/i.test(nombre)){
           let color=colorPack;
           // Ikoa You: el pack trae dos vinilos ("NEGRO + FUCSIA"); el color del nombre viene dentro del propio nombre: "ANA (vinil NEGRO)"
           const mc=nombre.match(/\s*\(\s*vinil\s+([^)]+?)\s*\)\s*$/i);
