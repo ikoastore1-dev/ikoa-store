@@ -4139,7 +4139,18 @@ function carEstado(r){
   if(r['Estado']==='Completado')return 'ok';
   if(r['Estado']==='Navegando')return 'nav';
   var d=carFecha(r['Ultima actividad']);
+  if(carCompletoDespues(r))return 'ok2';
   return (d&&(Date.now()-d.getTime())<30*60000)?'curso':'sin';
+}
+// ¿la misma persona (celular o navegador) completó un pedido después de este carrito?
+var _carComp=null;
+function carCompletoDespues(r){
+  if(!_carComp){_carComp={v:{},t:{}};
+    _carritos.forEach(function(x){ if(x['Estado']!=='Completado')return; var d=carFecha(x['Ultima actividad']); if(!d)return; var t=d.getTime(),tel=carTel(x),v=x['VID'];
+      if(v&&(!_carComp.v[v]||_carComp.v[v]<t))_carComp.v[v]=t; if(tel.length>=10&&(!_carComp.t[tel]||_carComp.t[tel]<t))_carComp.t[tel]=t; });
+  }
+  var d0=carFecha(r['Inicio']); if(!d0)return false; var t0=d0.getTime(),tel0=carTel(r);
+  return !!((r['VID']&&_carComp.v[r['VID']]>t0)||(tel0.length>=10&&_carComp.t[tel0]>t0));
 }
 function switchVentasSub(sub){
   document.querySelectorAll('.ventas-sub-btn').forEach(function(b){
@@ -4155,7 +4166,7 @@ async function cargarCarritos(){
   try{
     var d=await scriptGETjson({action:'leerCarritos'});
     if(!d||!d.ok)throw new Error((d&&d.error)||'Error');
-    _carritos=d.rows||[]; renderCarritos();
+    _carritos=d.rows||[]; _carComp=null; renderCarritos();
   }catch(e){ if(b)b.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--danger);">✗ '+carEsc(e.message)+'</td></tr>'; }
 }
 function carLlego(r){return r['Estado']==='Llegó al pago'||r['Estado']==='Eligió método de pago'||r['Estado']==='Completado'}
@@ -4167,7 +4178,7 @@ function renderCarritos(){
   // visitas por navegador (VID) o celular: detecta quien volvió
   var porV={},porC={};
   _carritos.forEach(function(r){var v=r['VID'],c=carTel(r); if(v)porV[v]=(porV[v]||0)+1; if(c.length>=10)porC[c]=(porC[c]||0)+1;});
-  var n={ok:0,sin:0,curso:0,nav:0},riesgo=0,cel=0,anon=0,llegaron=0,vids={};
+  var n={ok:0,ok2:0,sin:0,curso:0,nav:0},riesgo=0,cel=0,anon=0,llegaron=0,vids={};
   base.forEach(function(r){var e=carEstado(r);n[e]++;if(e==='sin')riesgo+=parseFloat(r['Total USD'])||0;if(r['Dispositivo']==='Celular')cel++;if(carLlego(r))llegaron++;if(!r['Nombre']&&carTel(r).length<10&&!r['Correo'])anon++;vids[r['VID']||r['ID']]=1;});
   var tot=base.length, conv=llegaron?Math.round(n.ok*100/llegaron):0, visit=Object.keys(vids).length;
   var k=function(t,v,c){return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;"><div style="font-size:11px;color:var(--muted);">'+t+'</div><div style="font-size:20px;font-weight:700;color:'+(c||'var(--text)')+';">'+v+'</div></div>'};
@@ -4178,8 +4189,8 @@ function renderCarritos(){
   var b=document.getElementById('car-body');
   if(!lista.length){b.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--muted);">Sin registros en este periodo</td></tr>';return}
   b.innerHTML=lista.map(function(r){
-    var e=carEstado(r), col=e==='ok'?'var(--accent)':e==='curso'?'var(--warn)':e==='nav'?'var(--muted)':'var(--danger)';
-    var txt=e==='ok'?'✓ Completado':e==='nav'?'👀 Navegó':(e==='curso'?'⏳ En curso':'⚠ Sin concretar')+(r['Estado']==='Eligió método de pago'?' (ya eligió pago)':'');
+    var e=carEstado(r), col=(e==='ok'||e==='ok2')?'var(--accent)':e==='curso'?'var(--warn)':e==='nav'?'var(--muted)':'var(--danger)';
+    var txt=e==='ok'?'✓ Completado':e==='ok2'?'✓ Completó después':e==='nav'?'👀 Navegó':(e==='curso'?'⏳ En curso':'⚠ Sin concretar')+(r['Estado']==='Eligió método de pago'?' (ya eligió pago)':'');
     var tel=carTel(r);
     var wa=tel.length>=10?'<a href="https://wa.me/'+tel+'?text='+encodeURIComponent('Hola '+(r['Nombre']||'')+', te escribimos de IKOA. Vimos que estabas armando tu pedido, ¿te ayudamos a terminarlo?')+'" target="_blank" style="color:#25D366;text-decoration:none;">💬 '+carEsc(r['Celular'])+'</a>':'<span style="color:var(--muted);">sin celular</span>';
     var f=carFecha(r['Ultima actividad']);
@@ -4190,14 +4201,14 @@ function renderCarritos(){
     var quien=r['Nombre']?'<b>'+carEsc(r['Nombre'])+'</b>':'<b style="color:var(--muted);">Anónimo</b> <span style="color:var(--muted);font-size:10px;">'+carEsc(String(r['VID']||r['ID']).slice(-6))+'</span>';
     var pend='';
     if(r['Cargado']) pend='<span style="color:var(--accent);font-weight:700;">✓ '+carEsc(r['Cargado'])+'</span>';
-    else if(r['Detalle']&&(r['Estado']==='Llegó al pago'||r['Estado']==='Eligió método de pago')) pend='<button onclick="carCargarPendiente(\''+idq+'\')" style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📥 Cargar a pendiente</button>';
+    else if(r['Detalle']&&e!=='ok2'&&(r['Estado']==='Llegó al pago'||r['Estado']==='Eligió método de pago')) pend='<button onclick="carCargarPendiente(\''+idq+'\')" style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📥 Cargar a pendiente</button>';
     else pend='<span style="color:var(--muted);">—</span>';
     return '<tr style="border-bottom:1px solid var(--border);">'+
       '<td style="padding:8px;white-space:nowrap;">'+(f?f.toLocaleString('es-VE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'')+'<br><span style="color:var(--muted);">'+carEsc(r['Dispositivo'])+'</span></td>'+
       '<td style="padding:8px;">'+quien+vol+'<br>'+wa+(r['Correo']?'<br><span style="color:var(--muted);">'+carEsc(r['Correo'])+'</span>':'')+'</td>'+
       '<td style="padding:8px;max-width:320px;color:var(--muted);">'+(r['Resumen']?carEsc(r['Resumen']):'<i>Aún sin armar pedido</i>')+'</td>'+
       '<td style="padding:8px;text-align:right;white-space:nowrap;">'+tt+(r['Método']?'<br><span style="color:var(--muted);">'+carEsc(r['Método'])+'</span>':'')+'</td>'+
-      '<td style="padding:8px;text-align:center;color:'+col+';font-weight:700;">'+txt+(r['Paso']&&e!=='ok'?'<br><span style="font-weight:400;font-size:10px;color:var(--muted);">'+carEsc(r['Paso'])+'</span>':'')+'</td>'+
+      '<td style="padding:8px;text-align:center;color:'+col+';font-weight:700;">'+txt+(r['Paso']&&e!=='ok'&&e!=='ok2'?'<br><span style="font-weight:400;font-size:10px;color:var(--muted);">'+carEsc(r['Paso'])+'</span>':'')+'</td>'+
       '<td style="padding:8px;text-align:center;"><input type="checkbox" '+(r['Contactado']==='Sí'?'checked':'')+' onchange="carMarcar(\''+idq+'\',this.checked?\'1\':\'0\',null)"></td>'+
       '<td style="padding:8px;"><input type="text" value="'+carEsc(r['Nota'])+'" maxlength="300" placeholder="Nota…" onchange="carMarcar(\''+idq+'\',null,this.value)" style="width:150px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12px;"></td>'+
       '<td style="padding:8px;text-align:center;">'+pend+'</td></tr>';
