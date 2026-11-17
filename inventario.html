@@ -1716,8 +1716,6 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
                 <option value="ZOOM">ZOOM</option>
                 <option value="TEALCA">TEALCA</option>
                 <option value="TIENDA MCY">TIENDA MCY</option>
-                <option value="SHOWROOM CARACAS">SHOWROOM CARACAS</option>
-                <option value="DELIVERY CARACAS">DELIVERY CARACAS</option>
                 <option value="DELIVERY MARACAY">DELIVERY MARACAY</option>
                 <option value="SHOWROOM VALENCIA">SHOWROOM VALENCIA</option>
                 <option value="DELIVERY VALENCIA">DELIVERY VALENCIA</option>
@@ -4290,15 +4288,21 @@ function ikoaTicketHTML(t){
   var agU=String(t.agencia||'').trim().toUpperCase(), propio=null;
   var DEST={'TIENDA MCY':['RETIRA EN TIENDA','TIENDA MARACAY','C.C. Híper Jumbo Mall, local PB 39'],
     'SHOWROOM VALENCIA':['RETIRA EN SHOWROOM','SHOWROOM VALENCIA','Tienda Egeo, Valencia'],
-    'SHOWROOM CARACAS':['RETIRA EN SHOWROOM','SHOWROOM CARACAS','Las Mercedes, Caracas'],
-    'DELIVERY MARACAY':['ENTREGA A DOMICILIO','DELIVERY MARACAY',''],
-    'DELIVERY VALENCIA':['ENTREGA A DOMICILIO','DELIVERY VALENCIA',''],
-    'DELIVERY CARACAS':['ENTREGA A DOMICILIO','DELIVERY CARACAS','']};
+    'DELIVERY MARACAY':['ENTREGA A DOMICILIO','DELIVERY DESDE MARACAY',''],
+    'DELIVERY VALENCIA':['ENTREGA A DOMICILIO','DELIVERY DESDE VALENCIA','']};
+  var dirT=String(t.direccion||'').trim();
+  if(/DELIVERY/.test(agU)){   /* "Delivery desde Valencia" / "Delivery Maracay" etc. -> destino propio DELIVERY <ciudad> */
+    var mC=agU.match(/MARACAY|VALENCIA/)||dirT.toUpperCase().match(/MARACAY|VALENCIA/); agU='DELIVERY '+(mC?mC[0]:'');
+  }
+  if(!DEST[agU]&&/^DELIVERY/.test(agU)) DEST[agU]=['ENTREGA A DOMICILIO','DELIVERY',''];
   if(DEST[agU]){
     propio=DEST[agU].slice();
-    var auto=false; try{auto=Object.keys(DIRECCIONES_AUTO).some(function(k){return DIRECCIONES_AUTO[k]===t.direccion})}catch(x){}
-    if(!auto&&String(t.direccion||'').trim()&&/DELIVERY/.test(agU))propio[2]=t.direccion;   /* en delivery, si escribieron la dirección del cliente, se imprime */
-    if(/DELIVERY/.test(agU)&&!propio[2]&&!auto)propio[2]='';
+    var origen='', resto=dirT;
+    if(/DELIVERY/.test(agU)){   /* separa "SE EJECUTA DESDE ..." (origen) de la dirección real del cliente, si la escribieron */
+      var mO=resto.match(/SE EJECUTA DESDE[^\n]*?(TIENDA IKOA\.|CASA EGEO\.|CARACAS\.|$)/i);
+      if(mO){ origen=mO[0].replace(/^SE EJECUTA DESDE\s*/i,'').replace(/\.$/,''); resto=(resto.slice(0,mO.index)+' '+resto.slice(mO.index+mO[0].length)).replace(/^[\s—|\-,.]+|[\s—|\-,.]+$/g,''); }
+      propio[2]=resto||(origen?'SALE DESDE: '+origen:'');
+    }
     agLogo='';
   }
   var fNom=fs(t.nombre,[[16,27],[22,23],[30,19],[40,16],[999,14]]), fAg=fs(propio?propio[1]:t.agencia,[[8,40],[12,36],[18,30],[26,24],[999,19]]), fDir=fs(propio?propio[2]:t.direccion,[[30,19],[60,16],[100,14],[150,12.5],[999,11.5]]);
@@ -6952,11 +6956,11 @@ function abrirModalPlanificacion(data0){
   const data=colaUnirConjuntos(data0);
   pendingCola=data;
   const packs=data.allPacks||[];
-  const conj=(data.unidos&&data.unidos.length)?`<div style="background:rgba(80,140,255,.12);border:1.5px solid var(--accent2);border-radius:8px;padding:8px 10px;margin:6px 0;font-weight:700;color:var(--accent2)">🔗 ENVÍO CONJUNTO: ${[data.baseConjunto].concat(data.unidos.map(u=>u.base)).join(' + ')} saldrán bajo <u>UN solo COD</u> (${packs.length} packs).</div>`:'';
+  const conj=(data.unidos&&data.unidos.length)?`<div style="background:rgba(80,140,255,.12);border:1.5px solid var(--accent2);border-radius:8px;padding:8px 10px;margin:6px 0;font-weight:700;color:var(--accent2)">🔗 ENVÍO CONJUNTO: ${[data.baseConjunto].concat(data.unidos.map(u=>u.base)).join(' + ')} saldrán bajo <u>UN solo COD</u> (${data.unidos.length+1} pedidos acoplados · ${packs.length} pack${packs.length>1?'s':''}).</div>`:'';
   const fuera=(data.fuera&&data.fuera.length)?`<div style="background:#2a1f0a;border:1px solid var(--warn);border-radius:8px;padding:8px 10px;margin:6px 0;color:var(--warn);font-weight:700">⏳ ${data.fuera.map(f=>f.base+(f.ub?' ('+f.ub+')':'')).join(', ')} está unido pero aún no está en Cola: saldrá con otro COD si envías ahora.</div>`:'';
   document.getElementById('plan-resumen').innerHTML=`
     <b style="color:var(--text)">${data.nombre}</b><br>
-    <span style="color:var(--text);">${data.codigoCBase||''}</span> · <b>${packs.length} pack(s)</b><br>
+    <span style="color:var(--text);">${data.codigoCBase||''}</span> · <b>${(data.unidos&&data.unidos.length)?(data.unidos.length+1)+' pedidos acoplados':packs.length+' pack(s)'}</b><br>
     Agencia: <span>${data.agencia}</span><br>${conj}${fuera}
     ${packs.map((pk,i)=>`Pack ${i+1}${pk._base&&data.unidos&&data.unidos.length?' ['+pk._base+']':''}: ${pk.pack} · ${pk.tela}/${pk.vinil}`).join('<br>')}`;
   document.getElementById('plan-unlock').value='';
