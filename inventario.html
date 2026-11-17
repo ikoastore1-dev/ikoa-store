@@ -2349,8 +2349,10 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   <div id="tab-taller" style="display:none;padding:16px;">
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">🏭 Taller — Cortador &amp; Estampador</div>
 
-    <div style="display:flex;gap:8px;margin-bottom:16px;">
-      <button class="tab" id="tallersub-produccion" onclick="switchTallerSub('produccion')" style="font-size:13px;padding:8px 14px;">🏭 En Producción</button>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="tab" id="tallersub-produccion" onclick="switchTallerSub('produccion')" style="font-size:13px;padding:8px 14px;">🏭 Pedidos en Taller <span id="tcnt-produccion"></span></button>
+      <button class="tab" id="tallersub-fabricados" onclick="switchTallerSub('fabricados')" style="font-size:13px;padding:8px 14px;">✅ Fabricados <span id="tcnt-fabricados"></span></button>
+      <button class="tab" id="tallersub-mensajero" onclick="switchTallerSub('mensajero')" style="font-size:13px;padding:8px 14px;">🛵 Enviados al mensajero <span id="tcnt-mensajero"></span></button>
       <button class="tab" id="tallersub-historial" onclick="switchTallerSub('historial')" style="font-size:13px;padding:8px 14px;">📋 Historial de Pedidos</button>
     </div>
 
@@ -9135,6 +9137,7 @@ async function abrirProduccionTablet(cod){
     ((av.completo||prodFabricado(cod,g))?'<button onclick="prodGuardar(false,true)" style="background:#444;color:#fff;border:1px solid #888;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:700;cursor:pointer;">↩ Reabrir</button>':
       '<button onclick="prodGuardar(true)" style="background:#1fbf6a;color:#000;border:0;border-radius:10px;padding:12px 14px;font-size:15px;font-weight:800;cursor:pointer;">✅ Ejecutado total</button>')+
     waBoton(g.celular,g.nombre,'('+cod+')')+
+    '<button onclick="tallerNotificarMensajero(\''+esc(cod)+'\')" style="background:#ffb020;color:#000;border:0;border-radius:10px;padding:12px 14px;font-size:14px;font-weight:800;cursor:pointer;">🛵 Notificar mensajero</button>'+
     '<button onclick="prodTicket(\''+esc(cod)+'\')" style="background:#333;color:#fff;border:1px solid #666;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:700;cursor:pointer;">🖨 Ticket</button></div>';
   var ag=String(g.agencia||'').split('—');
   var head='<div style="zoom:'+z+';padding:14px 14px 0;font-family:Montserrat,Barlow,Arial,sans-serif;width:'+Math.round((window.innerWidth)/z)+'px;box-sizing:border-box">'+
@@ -9394,10 +9397,15 @@ async function tallerAbrirEscaner(){
   }catch(e){ var m=document.getElementById('scan-msg'); if(m)m.innerHTML='<span style="color:var(--warn)">No pude abrir la cámara ('+prodEsc(e.message||e)+'). Escribe el COD a mano.</span>'; }
 }
 /* Botón "Notificar mensajero" en un pedido 100% fabricado: foto del paquete -> en proceso de envío -> correo al cliente (mismo flujo del escáner, sin cámara de QR) */
+function tallerGrupoDe(cod){   // pedido desde Taller o, si no está cargado, desde Gestión > Producción
+  var g=(typeof tallerGrupos!=='undefined'&&tallerGrupos[cod])||null; if(g)return g;
+  var pg=(window.prodGrupos||{})[cod]; if(!pg)return null;
+  return Object.assign({},pg,{packs:(pg.packs||[]).map(function(p){return Object.assign({},p,{piezasProd:p.piezas})})});
+}
 function tallerNotificarMensajero(cod){
   tallerCerrarEscaner(); var S=window._scan; S.cod=''; S.jpg='';
   var o=document.createElement('div'); o.id='scan-overlay';
-  o.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:12px;overflow:auto';
+  o.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:12px;overflow:auto';
   o.innerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;max-width:520px;width:100%;padding:16px;color:var(--text);max-height:96vh;overflow:auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:18px;font-weight:800">🛵 Notificar mensajero</div><button onclick="tallerCerrarEscaner()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button></div><div id="scan-body"></div></div>';
   document.body.appendChild(o); document.body.style.overflow='hidden';
   tallerEscanerCod(cod);
@@ -9405,7 +9413,7 @@ function tallerNotificarMensajero(cod){
 async function tallerEscanerCod(cod){
   cod=String(cod||'').trim().toUpperCase(); var S=window._scan; if(!cod)return;
   if(S.stream){S.stream.getTracks().forEach(function(t){t.stop()});S.stream=null;} S.activo=false; if(S.raf)cancelAnimationFrame(S.raf);
-  var g=tallerGrupos[cod], body=document.getElementById('scan-body'); if(!body)return;
+  var g=tallerGrupoDe(cod), body=document.getElementById('scan-body'); if(!body)return;
   if(!g){ body.innerHTML='<div style="color:var(--danger);font-weight:800;margin:8px 0">✗ El COD '+prodEsc(cod)+' no está en Taller (¿ya se envió o no está en producción?).</div><button onclick="tallerAbrirEscaner()" style="padding:10px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-weight:700;cursor:pointer">↻ Escanear otro</button>'; return; }
   S.cod=cod; S.jpg='';
   var gk={packs:g.packs.map(function(p){return {codigoS:p.codigoS,piezas:p.piezasProd}})}, ks=prodKeys(gk), av=(window.prodAvance||{})[cod]||{done:[]}, hechas=ks.filter(function(k){return (av.done||[]).indexOf(k)>=0}).length, fab=prodFabricado(cod,gk);
@@ -9415,7 +9423,7 @@ async function tallerEscanerCod(cod){
     (fab?'<div style="color:var(--accent);font-weight:800;margin-bottom:8px">✅ Fabricado al 100% ('+hechas+'/'+ks.length+')</div>'
         :'<div style="color:var(--warn);font-weight:800;margin-bottom:4px">⚠ Faltan piezas por marcar en Producción ('+hechas+'/'+ks.length+')</div><label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer;margin-bottom:8px"><input type="checkbox" id="scan-force" style="width:18px;height:18px"> Confirmo que el pedido está COMPLETO y quiero marcarlo como fabricado</label>')+
     (function(){var u=uniEstadoGrupo(g); return u.cods.length?'<div style="color:var(--accent2);font-weight:700;font-size:13px;margin-bottom:8px">🔗 Sale junto con '+u.cods.map(function(c){return 'COD '+c}).join(', ')+': también se marcarán como en proceso de envío.</div>':'';})()+
-    '<label style="display:block;border:2px dashed var(--accent);border-radius:10px;padding:14px;text-align:center;cursor:pointer;font-weight:700;color:var(--accent)">📷 Tomar foto del paquete<input type="file" accept="image/*" capture="environment" style="display:none" onchange="tallerEscanerFoto(this.files[0])"></label>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap"><label style="flex:1;min-width:150px;display:block;border:2px dashed var(--accent);border-radius:10px;padding:14px;text-align:center;cursor:pointer;font-weight:700;color:var(--accent)">📷 Tomar foto<input type="file" accept="image/*" capture="environment" style="display:none" onchange="tallerEscanerFoto(this.files[0])"></label><label style="flex:1;min-width:150px;display:block;border:2px dashed var(--accent2);border-radius:10px;padding:14px;text-align:center;cursor:pointer;font-weight:700;color:var(--accent2)">🖼️ Cargar del celular<input type="file" accept="image/*" style="display:none" onchange="tallerEscanerFoto(this.files[0])"></label></div>'+
     '<div id="scan-prev" style="margin-top:8px"></div><div id="scan-res" style="margin-top:8px;font-size:13px"></div>'+
     '<button id="scan-btn" onclick="tallerEscanerConfirmar()" disabled style="width:100%;margin-top:8px;padding:13px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:10px;color:#000;font-size:15px;font-weight:800;cursor:pointer;opacity:.4">🚚 Fabricado · en proceso de envío · avisar al cliente</button>';
 }
@@ -9425,7 +9433,7 @@ async function tallerEscanerFoto(file){
   catch(e){ pv.innerHTML='<span style="color:var(--danger)">✗ '+prodEsc(e.message)+'</span>'; }
 }
 async function tallerEscanerConfirmar(){
-  var S=window._scan, g=tallerGrupos[S.cod], res=document.getElementById('scan-res'), btn=document.getElementById('scan-btn'); if(!g||!S.jpg)return;
+  var S=window._scan, g=tallerGrupoDe(S.cod), res=document.getElementById('scan-res'), btn=document.getElementById('scan-btn'); if(!g||!S.jpg)return;
   var gk={packs:g.packs.map(function(p){return {codigoS:p.codigoS,piezas:p.piezasProd}})};
   var fc=document.getElementById('scan-force'); if(!prodFabricado(S.cod,gk)&&!(fc&&fc.checked)){ res.innerHTML='<span style="color:var(--danger)">Marca la casilla para confirmar que el pedido está completo</span>'; return; }
   var re=document.getElementById('scan-reenv'), reenviar=re&&re.checked?'SI':'';
@@ -9437,14 +9445,14 @@ async function tallerEscanerConfirmar(){
     var r=await fetch(SCRIPT_URL,{method:'POST',body:f}), j=await r.json(); if(!j.ok)throw new Error(j.error||'no se pudo guardar');
     if(j.ya){ res.innerHTML='<span style="color:var(--warn)">Ya estaba escaneado el '+prodEsc(j.fecha||'')+'</span>'; return; }
     var sociosEsc=uniDeGrupo(g).cods;
-    for(var si=0;si<sociosEsc.length;si++){ var gs2=tallerGrupos[sociosEsc[si]]; if(!gs2)continue; var gk2={packs:gs2.packs.map(function(p){return {codigoS:p.codigoS,piezas:p.piezasProd}})};
+    for(var si=0;si<sociosEsc.length;si++){ var gs2=tallerGrupoDe(sociosEsc[si]); if(!gs2)continue; var gk2={packs:gs2.packs.map(function(p){return {codigoS:p.codigoS,piezas:p.piezasProd}})};
       try{ var f2=new FormData(); f2.append('action','escanearPedido'); f2.append('cod',sociosEsc[si]); f2.append('nombre',gs2.nombre||''); f2.append('correo',''); f2.append('agencia',gs2.agencia||''); f2.append('usuario','Escáner Taller'); f2.append('done',JSON.stringify(prodKeys(gk2))); f2.append('reenviar','SI'); f2.append('imagen_base64',S.jpg.split(',')[1]);
         var r2=await fetch(SCRIPT_URL,{method:'POST',body:f2}), j2=await r2.json(); if(j2&&j2.ok){ window.prodAvance[sociosEsc[si]]={done:prodKeys(gk2),completo:true}; (window._estadoEnvio=window._estadoEnvio||{})[sociosEsc[si]]={estado:'EN PROCESO DE ENVÍO',fecha:j2.fecha||'',correo:''}; } }catch(e){ console.warn('socio',e); } }
     window.prodAvance=window.prodAvance||{}; window.prodAvance[S.cod]={done:prodKeys(gk),completo:true};
     (window._estadoEnvio=window._estadoEnvio||{})[S.cod]={estado:'EN PROCESO DE ENVÍO',fecha:j.fecha||'',correo:j.correo_enviado?'ENVIADO':''};
     res.innerHTML='<div style="color:var(--accent);font-weight:800;font-size:15px">✅ '+prodEsc(g.nombre)+' · fabricado y en proceso de envío</div>'+(j.correo_enviado?'<div style="font-size:13px;color:var(--text)">📧 Correo enviado al cliente con la foto.</div>':'<div style="font-size:13px;color:var(--warn)">⚠ El pedido quedó marcado, pero el correo no salió ('+prodEsc(j.aviso||'')+').</div>')+
       '<button onclick="tallerAbrirEscaner()" style="margin-top:8px;padding:10px 16px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-weight:800;cursor:pointer">📷 Escanear otro pedido</button>';
-    btn.style.display='none'; cargarTaller();
+    btn.style.display='none'; cargarTaller(); try{ if(typeof cargarProduccion==='function')cargarProduccion(); }catch(e2){}
   }catch(e){ res.innerHTML='<span style="color:var(--danger)">✗ '+prodEsc(e.message)+'</span>'; btn.disabled=false; btn.style.opacity=1; }
 }
 /* ===== TALLER: pedido 100% fabricado -> Cargar guía de envío (foto -> verifica nombre -> clave -> sube COD.JPG y ejecuta TODO el envío) ===== */
@@ -9472,6 +9480,59 @@ async function tallerAbrirGuia(cod){
   try{ var d=await scriptGETjson({action:'buscarPedido',cod:cod},20000); if(d&&d.ok) window._tg.ped=d; }catch(e){}
   if(!window._tg.ped){ var esM=!g.retira||g.retira===g.nombre; window._tg.ped={cod:cod,nombre:g.nombre,cedula:g.cedula,correo:g.correo||'',celular:g.celular,agencia:g.agencia,direccion:'',descripcion:'',retiraNombre:g.retira||g.nombre,retiraCi:g.retiraCi||g.cedula,retiraCel:g.retiraCel||g.celular,esMismo:esM}; }
 }
+
+/* ===== Guías de envío: la app APRENDE cómo es el número de guía de cada agencia y lo sugiere al leer la foto =====
+   Aprende de 2 fuentes: (1) historial de guías ya cargadas en PEDIDOS (largo, prefijo, solo números, números cercanos) y
+   (2) lo que tú confirmas: la palabra que acompaña al número en la guía ("GUIA", "NRO"...) se recuerda por agencia. */
+window._guiaHist=null;
+async function guiaHistCargar(){ if(window._guiaHist)return; try{ var d=await scriptGETjson({action:'leerGuiasAprendizaje'},20000); window._guiaHist=(d&&d.ok&&d.rows)||[]; }catch(e){ window._guiaHist=[]; } }
+function guiaAgKey(ag){ var u=String(ag||'').toUpperCase(); return /MRW/.test(u)?'MRW':/ZOOM/.test(u)?'ZOOM':/TEALCA/.test(u)?'TEALCA':u.split('—')[0].trim(); }
+function guiaLS(k,v){ try{ if(v===undefined){ return JSON.parse(localStorage.getItem(k)||'null'); } localStorage.setItem(k,JSON.stringify(v)); }catch(e){} return null; }
+function guiaPerfil(ag){
+  var k=guiaAgKey(ag), gs=(window._guiaHist||[]).filter(function(r){return guiaAgKey(r.a)===k}).map(function(r){return String(r.g).toUpperCase().replace(/[\s]/g,'')}).filter(Boolean);
+  var P={n:gs.length,lens:{},pref:{},dig:0,nums:[]};
+  gs.forEach(function(g){ P.lens[g.length]=(P.lens[g.length]||0)+1; var pf=g.slice(0,2); P.pref[pf]=(P.pref[pf]||0)+1; if(/^\d+$/.test(g)){P.dig++; P.nums.push(parseInt(g.slice(-9),10));} });
+  return P;
+}
+function guiaSugerir(texto,ag,g){
+  var k=guiaAgKey(ag), P=guiaPerfil(ag), lbl=(guiaLS('ikoa_guia_lbl')||{})[k]||{}, lineas=String(texto||'').toUpperCase().split(/\r?\n/), cand={};
+  var ced=String(g&&g.cedula||'').replace(/\D/g,''), cel=String(g&&g.celular||'').replace(/\D/g,'').slice(-10);
+  var LAB=/GU[IÍ]A|N[º°O]\b|NRO|N[UÚ]MERO|TRACKING|CUP[OÓ]N|ENV[IÍ]O|C[OÓ]DIGO|WAYBILL|GUIDE/;
+  lineas.forEach(function(ln,i){
+    var ctx=ln+' '+(lineas[i-1]||''), toks=[];
+    (ln.match(/[A-Z0-9][A-Z0-9\-]{5,24}/g)||[]).forEach(function(t){toks.push(t.replace(/-/g,''))});
+    (ln.match(/\d(?:[\d ]{4,22}\d)/g)||[]).forEach(function(t){toks.push(t.replace(/ /g,''))});
+    toks.forEach(function(t){
+      if(t.length<6||t.length>20||!/\d/.test(t)||/^(\d)\1+$/.test(t))return;
+      var sc=0.2, isNum=/^\d+$/.test(t), why=[];
+      if(P.n>=3){ var f=(P.lens[t.length]||0)/P.n; if(f>=0.15){sc+=0.1+0.25*Math.min(1,f*1.5); why.push('largo habitual');}
+        var pf=(P.pref[t.slice(0,2)]||0)/P.n; if(pf>=0.2){sc+=0.15; why.push('prefijo habitual');}
+        if((P.dig/P.n>0.8)===isNum)sc+=0.05;
+        if(isNum&&P.nums.length){ var v=parseInt(t.slice(-9),10), cerca=P.nums.some(function(x){return Math.abs(x-v)<=20000}); if(cerca){sc+=0.2; why.push('cerca de guías recientes');} } }
+      if(LAB.test(ctx)){sc+=0.2; why.push('junto a "GUÍA/NRO"');}
+      Object.keys(lbl).forEach(function(w){ if(ctx.indexOf(w)>=0){sc+=Math.min(0.25,0.08*lbl[w]); why.push('junto a "'+w+'" (aprendido)');} });
+      if(ced&&(t.indexOf(ced)>=0||ced.indexOf(t)>=0))sc-=0.6; if(cel&&t.indexOf(cel)>=0)sc-=0.6;
+      if(/^(19|20)\d{6}$/.test(t)||/^\d{8}$/.test(t)&&/\d{2}\/\d{2}\/\d{4}/.test(ln))sc-=0.4;
+      if(!cand[t]||cand[t].sc<sc)cand[t]={t:t,sc:Math.max(0,Math.min(0.99,sc)),why:why};
+    });
+  });
+  return Object.values(cand).sort(function(a,b){return b.sc-a.sc}).slice(0,3).filter(function(c){return c.sc>=0.4});
+}
+function guiaAprender(texto,guia,ag,sug){
+  var k=guiaAgKey(ag), g=String(guia||'').toUpperCase().replace(/[\s-]/g,''); if(!g)return;
+  var st=guiaLS('ikoa_guia_stats')||{}; st.total=(st.total||0)+1; if(sug&&sug.length&&sug[0].t===g)st.acierto=(st.acierto||0)+1; guiaLS('ikoa_guia_stats',st);
+  var lineas=String(texto||'').toUpperCase().split(/\r?\n/), L=guiaLS('ikoa_guia_lbl')||{}; L[k]=L[k]||{};
+  for(var i=0;i<lineas.length;i++){ var plano=lineas[i].replace(/[\s-]/g,''); var pos=plano.indexOf(g); if(pos<0)continue;
+    var antes=lineas[i].toUpperCase().split(/[\d]/)[0], pal=(antes.match(/[A-ZÁÉÍÓÚ]{3,}/g)||[]).slice(-1)[0]||((lineas[i-1]||'').match(/[A-ZÁÉÍÓÚ]{3,}/g)||[]).slice(-1)[0];
+    if(pal){ L[k][pal]=(L[k][pal]||0)+1; } break; }
+  guiaLS('ikoa_guia_lbl',L);
+}
+function guiaSugerenciasHTML(sug){
+  if(!sug.length)return '<div style="font-size:12px;color:var(--muted);margin-bottom:6px">🤖 No encontré un número de guía claro en la foto: escríbelo (la app aprende de cada guía que cargues).</div>';
+  var st=guiaLS('ikoa_guia_stats')||{}, ap=st.total?'<span style="color:var(--muted)"> · acertó '+(st.acierto||0)+' de '+st.total+' veces</span>':'';
+  return '<div style="font-size:12px;color:var(--accent2);font-weight:700;margin-bottom:4px">🤖 Sugerencia de guía'+ap+'</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+
+    sug.map(function(c){return '<button type="button" onclick="document.getElementById(\'tg-num\').value=\''+c.t+'\';" title="'+prodEsc(c.why.join(' · '))+'" style="padding:7px 12px;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:8px;color:var(--text);font-weight:800;font-size:14px;cursor:pointer">'+c.t+' <span style="font-size:11px;color:var(--muted)">'+Math.round(c.sc*100)+'%</span></button>'}).join('')+'</div>';
+}
 async function tallerGuiaFoto(file){
   if(!file)return; var res=document.getElementById('tg-res'), form=document.getElementById('tg-form'), g=tallerGrupos[window._tg.cod];
   form.style.display='none'; res.innerHTML='<span class="spinner">↻</span> Leyendo la guía y comprobando el nombre... (la primera vez tarda un poco más)';
@@ -9495,6 +9556,8 @@ async function tallerGuiaFoto(file){
       '<div class="field-label">Tu código personal</div><input id="tg-clave" class="field-input" type="password" inputmode="numeric" autocomplete="off" placeholder="Código de autorización" style="margin-bottom:10px">'+
       '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">Al cargar: se guarda la foto como '+prodEsc(g.cod)+'.JPG, se registra como Enviado, se manda el correo al cliente con la guía y sale de Taller.</div>'+
       '<button id="tg-btn" onclick="tallerGuiaConfirmar()" style="width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:10px;color:#000;font-size:15px;font-weight:800;cursor:pointer">📦 Cargar guía y enviar</button><div id="tg-msg" style="margin-top:10px;font-size:13px"></div>';
+    if(necesita){ await guiaHistCargar(); var sug=guiaSugerir(texto,p.agencia||g.agencia,g); window._tg.sug=sug; var inp=document.getElementById('tg-num');
+      if(inp){ inp.insertAdjacentHTML('beforebegin',guiaSugerenciasHTML(sug)); if(sug.length&&sug[0].sc>=0.65)inp.value=sug[0].t; } }
   }catch(e){ res.innerHTML='<span style="color:var(--danger)">✗ '+prodEsc(e.message)+'</span>'; }
 }
 async function tallerGuiaConfirmar(){
@@ -9518,6 +9581,7 @@ async function tallerGuiaConfirmar(){
     var resP=await scriptGETjson({action:'addPedido',nombre:p.nombre,cedula:p.cedula,correo:p.correo||'',cod:t.cod,numero_guia:guia,agencia:p.agencia,status:'Enviado',celular:p.celular,fecha:fecha,descripcion:'Envio desde Taller '+usuario+(tallerLlevaFactura(g)?' · CON FACTURA'+(facNum?' '+facNum:''):''),
       nombre_envio:p.esMismo?'':p.retiraNombre,cel_envio:p.esMismo?'':p.retiraCel,ci_envio:p.esMismo?'':p.retiraCi,direccion:direccion,usuario:usuario});
     if(!resP.ok)throw new Error('No se pudo guardar en PEDIDOS: '+(resP.error||''));
+    if(necesita){ try{ guiaAprender(t.texto,cupon,agU,t.sug); (window._guiaHist=window._guiaHist||[]).push({a:agU,g:cupon}); }catch(e){} }
     try{ await eliminarDeProduccion(t.cod); }catch(e){ console.warn('eliminarProduccion error:',e); }
     var mb=new FormData();
     mb.append('tipo_operacion','Enviado'); mb.append('status','Enviado'); mb.append('nombre',p.nombre); mb.append('correo',p.correo||''); mb.append('cedula',p.cedula); mb.append('celular',p.celular);
@@ -9803,11 +9867,30 @@ async function cargarProduccion(){
 let tallerGrupos = {};           // { cod: {cod,nombre,correo,cedula,celular,fecha,urgente,packs:[...]} }
 let tallerSeleccionados = new Set();
 
+window._tallerFiltro='produccion';
+function tallerCategoria(cod){   // 'mensajero' = ya salió al mensajero · 'fabricados' = 100% fabricado esperando mensajero/guía · 'produccion' = aún se fabrica
+  var g=tallerGrupos[cod]; if(!g)return 'produccion';
+  if((window._estadoEnvio||{})[cod])return 'mensajero';
+  var gk={packs:g.packs.map(function(p){return {codigoS:p.codigoS,piezas:p.piezasProd}})};
+  return prodFabricado(cod,gk)?'fabricados':'produccion';
+}
+function tallerAplicarFiltro(){
+  var f=window._tallerFiltro, cnt={produccion:0,fabricados:0,mensajero:0}, vis=0, lista=document.getElementById('taller-lista'); if(!lista)return;
+  Object.keys(tallerGrupos||{}).forEach(function(c){ cnt.produccion++; var k=tallerCategoria(c); if(k==='fabricados')cnt.fabricados++; if(k==='mensajero')cnt.mensajero++; });
+  [].forEach.call(lista.querySelectorAll('.taller-check-item'),function(chk){
+    var cod=chk.getAttribute('data-cod'), card=chk.closest('label'); if(!card)return; var k=tallerCategoria(cod), ok=f==='produccion'||k===f;
+    card.style.display=ok?'flex':'none'; if(ok)vis++; else if(chk.checked){ chk.checked=false; tallerSeleccionados.delete(cod); } });
+  ['produccion','fabricados','mensajero'].forEach(function(k){ var e=document.getElementById('tcnt-'+k); if(e)e.textContent='('+cnt[k]+')'; });
+  var v=document.getElementById('taller-vacio'); if(!v){ v=document.createElement('div'); v.id='taller-vacio'; v.style.cssText='display:none;text-align:center;color:var(--muted);padding:26px;font-size:13px'; lista.parentNode.insertBefore(v,lista.nextSibling); }
+  v.style.display=(vis===0&&cnt.produccion>0)?'block':'none'; v.textContent=f==='fabricados'?'No hay pedidos fabricados esperando mensajero.':f==='mensajero'?'Aún no hay pedidos enviados al mensajero.':'';
+  var ct=document.getElementById('taller-check-todos'); if(ct)ct.checked=false; tallerActualizarContador();
+}
 function switchTallerSub(sub){
-  document.getElementById('tallersub-wrap-produccion').style.display=sub==='produccion'?'block':'none';
+  var lista=(sub!=='historial');
+  document.getElementById('tallersub-wrap-produccion').style.display=lista?'block':'none';
   document.getElementById('tallersub-wrap-historial').style.display=sub==='historial'?'block':'none';
-  document.getElementById('tallersub-produccion').classList.toggle('active',sub==='produccion');
-  document.getElementById('tallersub-historial').classList.toggle('active',sub==='historial');
+  ['produccion','fabricados','mensajero','historial'].forEach(function(k){ var b=document.getElementById('tallersub-'+k); if(b)b.classList.toggle('active',k===sub); });
+  if(lista){ window._tallerFiltro=sub; tallerAplicarFiltro(); }
   if(sub==='historial' && !document.getElementById('taller-hist-lista').innerHTML) cargarTallerHistorial();
 }
 
@@ -9953,6 +10036,7 @@ async function cargarTaller(){
         </div>`;
       lista.appendChild(card);
     });
+    tallerAplicarFiltro();
   }catch(e){
     msg.style.background='#2a1010'; msg.style.color='var(--danger)';
     msg.innerHTML='✗ '+e.message;
@@ -9972,6 +10056,7 @@ function toggleTallerSel(cod, checked){
 
 function tallerSeleccionarTodos(checked){
   document.querySelectorAll('.taller-check-item').forEach(chk=>{
+    const _c=chk.closest('label'); if(_c&&_c.style.display==='none')return;
     chk.checked=checked;
     const cod=chk.getAttribute('data-cod');
     if(checked) tallerSeleccionados.add(cod); else tallerSeleccionados.delete(cod);
