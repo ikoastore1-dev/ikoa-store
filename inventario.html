@@ -5429,6 +5429,11 @@ function uniDeGrupo(g){   // pedidos unidos a este grupo: {cods:[COD en producci
   Object.keys(propias).forEach(function(b){ uniMiembros(b).forEach(function(o){ if(propias[o]||vistos[o])return; vistos[o]=1; if(mapa[o]&&mapa[o].cod!==g.cod){ if(cods.indexOf(mapa[o].cod)<0)cods.push(mapa[o].cod); } else if(!mapa[o]) pend.push(o); }); });
   return {cods:cods,pend:pend};
 }
+function uniOrdenes(packs){ var o=[]; (packs||[]).forEach(function(p){ var b=facturaBase(p.codigoS||''); if(b&&o.indexOf(b)<0)o.push(b); }); return o; }   // pedidos (S-xxx) distintos dentro de un mismo COD
+function uniEtiquetaPack(packs,i,o){   // "Pedido 2 de 3 · S-500" cuando el COD reúne varios pedidos acoplados; si no, "Pack i de n"
+  var b=facturaBase(packs[i].codigoS||''), k=o.indexOf(b)+1, mismos=packs.filter(function(p){return facturaBase(p.codigoS||'')===b}), j=mismos.indexOf(packs[i])+1;
+  return 'Pedido '+k+' de '+o.length+' · '+b+(mismos.length>1?' · Pack '+j+' de '+mismos.length:'');
+}
 function uniChip(codigoS,cedula,nombre,tab){
   var b=facturaBase(codigoS); if(!b)return '';
   var otros=uniMiembros(b), ar="'"+b+"','"+String(cedula||'').replace(/'/g,'')+"','"+String(nombre||'').replace(/['"]/g,'')+"'";
@@ -9735,10 +9740,11 @@ async function cargarProduccion(){
     codigos.forEach(cod=>{
       const g=grupos[cod];
       const _ks=prodKeys(g), _av=window.prodAvance[String(cod).toUpperCase()]||{done:[]}, _hechas=_ks.filter(k=>(_av.done||[]).indexOf(k)>=0).length;
+      const _ord=uniOrdenes(g.packs);
       const packsHTML=g.packs.map((p,i)=>`
         <div style="border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--bg);${i>0?'margin-top:8px':''}">
           <div style="font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;color:var(--accent);margin-bottom:6px;">
-            Pack ${i+1}${g.packs.length>1?' de '+g.packs.length:''}: ${p.pack||'—'}
+            ${_ord.length>1?uniEtiquetaPack(g.packs,i,_ord):'Pack '+(i+1)+(g.packs.length>1?' de '+g.packs.length:'')}: ${p.pack||'—'}
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:6px;">
             <div><span style="color:var(--muted);">Tela:</span> ${p.tela||'—'}</div>
@@ -9755,7 +9761,7 @@ async function cargarProduccion(){
             <div style="font-family:'Barlow',sans-serif;font-size:20px;font-weight:700;">${g.nombre}</div>
             <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;">
               <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--text);">${cod}</span>
-              ${g.packs.length>1?`<span style="background:#1a1a2a;border:1px solid var(--muted);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--muted);">${g.packs.length} packs</span>`:''}
+              ${_ord.length>1?`<span style="background:rgba(80,140,255,.15);border:1px solid var(--accent2);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent2);">🔗 ${_ord.length} pedidos acoplados</span>`:g.packs.length>1?`<span style="background:#1a1a2a;border:1px solid var(--muted);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--muted);">${g.packs.length} packs</span>`:''}
             </div>
           </div>
           <span style="background:${(_hechas>=_ks.length&&_ks.length>0)||_av.completo?'#0a2a0a':'#1a1a2a'};border:1px solid var(--accent);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--accent);">${(_av.completo||(_hechas>=_ks.length&&_ks.length>0))?'✅ EJECUTADO':'EN PRODUCCIÓN · '+_hechas+'/'+_ks.length}</span>
