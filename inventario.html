@@ -9393,6 +9393,15 @@ async function tallerAbrirEscaner(){
     S.raf=requestAnimationFrame(loop);
   }catch(e){ var m=document.getElementById('scan-msg'); if(m)m.innerHTML='<span style="color:var(--warn)">No pude abrir la cámara ('+prodEsc(e.message||e)+'). Escribe el COD a mano.</span>'; }
 }
+/* Botón "Notificar mensajero" en un pedido 100% fabricado: foto del paquete -> en proceso de envío -> correo al cliente (mismo flujo del escáner, sin cámara de QR) */
+function tallerNotificarMensajero(cod){
+  tallerCerrarEscaner(); var S=window._scan; S.cod=''; S.jpg='';
+  var o=document.createElement('div'); o.id='scan-overlay';
+  o.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:12px;overflow:auto';
+  o.innerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;max-width:520px;width:100%;padding:16px;color:var(--text);max-height:96vh;overflow:auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:18px;font-weight:800">🛵 Notificar mensajero</div><button onclick="tallerCerrarEscaner()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button></div><div id="scan-body"></div></div>';
+  document.body.appendChild(o); document.body.style.overflow='hidden';
+  tallerEscanerCod(cod);
+}
 async function tallerEscanerCod(cod){
   cod=String(cod||'').trim().toUpperCase(); var S=window._scan; if(!cod)return;
   if(S.stream){S.stream.getTracks().forEach(function(t){t.stop()});S.stream=null;} S.activo=false; if(S.raf)cancelAnimationFrame(S.raf);
@@ -9938,6 +9947,7 @@ async function cargarTaller(){
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">
             ${tallerWaBtn(g)}
             <button type="button" onclick="event.preventDefault();event.stopPropagation();tallerImprimirTicket('${cod}')" style="padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🖨 Ticket de envío</button>
+            ${_fab?`<button type="button" onclick="event.preventDefault();event.stopPropagation();tallerNotificarMensajero('${cod}')" style="padding:7px 14px;background:${(window._estadoEnvio||{})[cod]?'var(--surface2)':'#ffb020'};border:${(window._estadoEnvio||{})[cod]?'1px solid var(--accent)':'none'};border-radius:8px;color:${(window._estadoEnvio||{})[cod]?'var(--accent)':'#000'};font-size:12px;font-weight:800;cursor:pointer;">${(window._estadoEnvio||{})[cod]?'🛵 Mensajero notificado ✓ (reenviar)':'🛵 Notificar mensajero'}</button>`:''}
             ${_fab?`<button type="button" onclick="event.preventDefault();event.stopPropagation();tallerAbrirGuia('${cod}')" style="padding:7px 14px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:8px;color:#000;font-size:12px;font-weight:800;cursor:pointer;">📦 Cargar guía de envío</button>`:''}
           </div>
         </div>`;
