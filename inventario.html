@@ -4270,9 +4270,9 @@ function waIcono(num,msg){
 }
 
 /* ===== Ticket de envío (impresora de tickets 80 mm) — se imprime con el diálogo del navegador ===== */
-function ikoaTicketDatos(cod,agenciaTxt,nombre,ci,cel,retira,retiraCi,retiraCel){
+function ikoaTicketDatos(cod,agenciaTxt,nombre,ci,cel,retira,retiraCi,retiraCel,junto){
   var ag=String(agenciaTxt||'').split('—'), dif=!!(retira&&String(retira).trim()&&String(retira).trim()!==String(nombre||'').trim());
-  return {cod:cod,agencia:(ag[0]||'').trim(),direccion:(ag.length>1?ag.slice(1).join('—').trim():''),
+  return {cod:cod,junto:junto||[],agencia:(ag[0]||'').trim(),direccion:(ag.length>1?ag.slice(1).join('—').trim():''),
     nombre:dif?retira:(nombre||''),ci:dif?(retiraCi||''):(ci||''),cel:dif?(retiraCel||''):(cel||'')};
 }
 function ikoaQrSvg(texto){   // QR en SVG (para el ticket de envío); si la librería no está, el ticket sale sin QR
@@ -4301,25 +4301,28 @@ function ikoaTicketHTML(t){
     if(/DELIVERY/.test(agU)&&!propio[2]&&!auto)propio[2]='';
     agLogo='';
   }
-  var fNom=fs(t.nombre,[[16,27],[22,23],[30,19],[40,16],[999,14]]), fAg=fs(propio?propio[1]:t.agencia,[[8,40],[12,36],[18,30],[26,24],[999,19]]), fDir=fs(propio?propio[2]:t.direccion,[[30,22],[60,18],[100,16],[150,14],[999,12]]);
+  var fNom=fs(t.nombre,[[16,27],[22,23],[30,19],[40,16],[999,14]]), fAg=fs(propio?propio[1]:t.agencia,[[8,40],[12,36],[18,30],[26,24],[999,19]]), fDir=fs(propio?propio[2]:t.direccion,[[30,19],[60,16],[100,14],[150,12.5],[999,11.5]]);
   /* etiqueta 100 mm x 150 mm vertical (área útil 92 x 142 mm): el cliente y la agencia de destino son lo principal */
-  return '<!doctype html><html><head><meta charset="utf-8"><title>Ticket COD '+e(t.cod)+'</title><style>@page{size:100mm 150mm;margin:4mm}*{box-sizing:border-box}html,body{margin:0;background:#fff}body{width:92mm;height:141mm;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#000;display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
-   '.ban{text-align:center;padding:2px 0 7px;border-bottom:4px solid #000;flex:none}.ban img{height:34px;width:auto;display:inline-block;margin:0}'+
+  return '<!doctype html><html><head><meta charset="utf-8"><title>Ticket COD '+e(t.cod)+'</title><style>@page{size:100mm 150mm;margin:4mm}*{box-sizing:border-box}html{height:141mm;overflow:hidden}html,body{margin:0;background:#fff}body{width:92mm;height:141mm;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#000;display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+   '.ban{text-align:center;padding:2px 0 7px;border-bottom:4px solid #000;flex:none}.ban img{height:27px;width:auto;display:inline-block;margin:0}'+
    '.env{display:flex;justify-content:space-between;align-items:flex-end;font-size:9.5px;font-weight:700;line-height:1.35;margin:4px 0 4px;color:#222;flex:none}.env span:last-child{text-align:right}'+
-   '.cod{border:3px solid #000;color:#000;display:flex;align-items:center;justify-content:space-between;padding:2px 12px;flex:none}.cod small{font-size:12px;font-weight:900;letter-spacing:.35em}.cod b{font-size:46px;line-height:1.1;font-weight:900;letter-spacing:.02em}.cod svg{width:16mm;height:16mm;display:block;flex:none}'+
+   '.cod{border:3px solid #000;color:#000;display:flex;align-items:center;justify-content:space-between;padding:2px 12px;flex:none}.cod small{font-size:12px;font-weight:900;letter-spacing:.35em}.cod b{font-size:46px;line-height:1.1;font-weight:900;letter-spacing:.02em}.cod svg{width:14mm;height:14mm;display:block;flex:none}'+
    '.sec{border:3px solid #000;margin-top:7px;padding:5px 9px 7px;flex:none}.k{font-size:9px;font-weight:900;letter-spacing:.22em;color:#555}'+
    '.n{font-weight:900;line-height:1.08;word-break:break-word;margin-top:3px;text-transform:uppercase}'+
    '.fila{display:flex;align-items:baseline;gap:8px;margin-top:5px}.fila i{font-style:normal;font-size:10px;font-weight:900;letter-spacing:.15em;color:#555;width:32px;flex:none}.fila b{font-size:20px;font-weight:900;letter-spacing:.01em}'+
    '.ag{border-top:0;margin-top:0;border-width:0 3px 3px 3px}.ag .a{font-weight:900;line-height:1.05;margin-top:3px;word-break:break-word}.ag .d{font-weight:700;line-height:1.25;margin-top:3px;word-break:break-word;color:#111}'+
    '.ar{display:flex;align-items:center;justify-content:space-between;gap:10px}.ar .a{margin-top:3px}.ar .agl{width:auto;height:auto;max-height:58px;max-width:80%;object-fit:contain;flex:none;margin:3px 0 1px}'+
-   '.pie{margin-top:auto;flex:none}.pie img{display:block;width:86%;margin:0 auto}</style></head><body>'+
+   '.pie{margin-top:auto;flex:none}.pie{padding-top:2px}.ctb{background:#000;color:#fff;text-align:center;font-size:14px;font-weight:900;letter-spacing:.05em;padding:4px 4px}.ctb b{font-size:14px}.ctg{display:flex;gap:6px;margin-top:4px}.ctg div{flex:1;min-width:0;border-left:3px solid #000;padding-left:5px}.ctg i{display:block;font-style:normal;font-size:9px;font-weight:900;letter-spacing:.16em;color:#555}.ctg b{display:block;font-size:13.5px;font-weight:900;line-height:1.15;word-break:break-word}.ctl{display:flex;align-items:baseline;gap:8px;border-left:3px solid #000;padding-left:5px;margin-top:4px}.ctl i{font-style:normal;font-size:9px;font-weight:900;letter-spacing:.16em;color:#555;width:52px;flex:none}.ctl b{font-size:14.5px;font-weight:900;line-height:1.15}.vs{text-align:center;font-size:10.5px;font-weight:700;color:#222;margin-top:5px;line-height:1.2}</style></head><body>'+
    '<div class="ban"><img id="lg" src="'+logo+'" alt="IKOA"></div>'+
    '<div class="env"><span>ENVÍA: IKOA BRAND CORP C.A.<br>RIF: J-505031716</span><span>CEL: 0414-9450742</span></div>'+
-   '<div class="cod"><small>COD</small><b>'+e(t.cod)+'</b>'+ikoaQrSvg('IKOA:'+t.cod)+'</div>'+
+   '<div class="cod"><small>COD</small><b'+((t.junto&&t.junto.length)?' style="font-size:'+(t.junto.length>1?24:32)+'px"':'')+'>'+e(t.cod)+((t.junto&&t.junto.length)?' + '+t.junto.map(e).join(' + '):'')+'</b>'+ikoaQrSvg('IKOA:'+t.cod)+'</div>'+
    '<div class="sec" style="border-bottom-width:3px"><div class="k">'+(propio?'ENTREGAR A':'ENVIAR A')+'</div><div class="n" style="font-size:'+fNom+'px">'+e(t.nombre)+'</div>'+
    '<div class="fila"><i>C.I.</i><b>'+e(t.ci)+'</b></div><div class="fila"><i>CEL.</i><b>'+e(t.cel)+'</b></div></div>'+
    '<div class="sec ag" style="margin-top:0;border-top:1px solid #000"><div class="k">'+(propio?propio[0]:'AGENCIA DE DESTINO')+'</div><div class="ar">'+(agLogo?'<img id="ag" class="agl" src="'+agLogo+'" alt="'+e(t.agencia)+'" style="display:none" onload="this.style.display=\'block\'" onerror="this.style.display=\'none\';var n=document.getElementById(\'agn\');if(n)n.style.display=\'block\'">':'')+'<div id="agn" class="a" style="'+(agLogo?'display:none;':'')+'font-size:'+fAg+'px">'+e(propio?propio[1]:t.agencia)+'</div></div>'+((propio?propio[2]:t.direccion)?'<div class="d" style="font-size:'+fDir+'px">'+e(propio?propio[2]:t.direccion)+'</div>':'')+'</div>'+
-   '<div class="pie"><img id="ct" src="'+img+'"></div></body></html>';
+   '<div class="pie"><div class="ctb"><span>¿DUDAS? ESCRÍBENOS</span></div>'+
+   '<div class="ctg"><div><i>WHATSAPP</i><b>0414-9450742</b></div><div><i>INSTAGRAM</i><b>@ikoabrand</b></div><div><i>FACEBOOK</i><b>IKOA BRAND</b></div></div>'+
+   '<div class="ctl"><i>CORREO</i><b>ikoa@ikoastore.com</b></div><div class="ctl"><i>TIENDA</i><b>C.C. Híper Jumbo, Maracay, Edo. Aragua</b></div>'+
+   '<div class="vs">Los que confían en Dios levantarán sus alas como las águilas<br><b>Isaías 40:31</b></div></div></body></html>';
 }
 function ikoaImprimirTicket(t){
   var fr=document.createElement('iframe'); fr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
@@ -4333,7 +4336,7 @@ function ikoaImprimirTicket(t){
 }
 function tallerImprimirTicket(cod){
   var g=tallerGrupos[cod]; if(!g){alert('Pedido no encontrado');return}
-  ikoaImprimirTicket(ikoaTicketDatos(g.cod,g.agencia,g.nombre,g.cedula,g.celular,g.retira,g.retiraCi,g.retiraCel));
+  ikoaImprimirTicket(ikoaTicketDatos(g.cod,g.agencia,g.nombre,g.cedula,g.celular,g.retira,g.retiraCi,g.retiraCel,uniDeGrupo(g).cods));
 }
 function confirmarVentasLock(){
   const unlock=document.getElementById('ventas-lock-unlock').value.trim();
@@ -5378,7 +5381,7 @@ async function confirmarPagarCuota(){
 
 /* ===== FACTURA DEL CLIENTE: casilla en Cashea / Pendiente / Cola; se exige al enviar desde Taller ===== */
 window._facturaFlags={};
-async function facturaCargarFlags(){ try{ var d=await scriptGETjson({action:'leerFacturaCliente'},15000); if(d&&d.ok) window._facturaFlags=d.bases||{}; }catch(e){} }
+async function facturaCargarFlags(){ await uniCargar(); try{ var d=await scriptGETjson({action:'leerFacturaCliente'},15000); if(d&&d.ok) window._facturaFlags=d.bases||{}; }catch(e){} }
 function facturaBase(cod){ return String(cod||'').trim().toUpperCase().split('.')[0]; }
 function facturaChk(codigoS){   // codigoS: código S de cualquier pack del pedido
   var b=facturaBase(codigoS); if(!b) return '';
@@ -5395,6 +5398,108 @@ async function facturaGuardar(base,el){
     el.parentNode.style.borderColor=val?'var(--accent)':'var(--border)';
   }catch(e){ el.checked=!val; alert('✗ No se pudo guardar la factura: '+e.message); }
   el.disabled=false;
+}
+
+/* ===== ENVÍO CONJUNTO: pedidos del mismo cliente que salen juntos (se une en Pendiente / Cashea / Cola; viaja por Taller, reportes, ticket y guía) ===== */
+window._uniones={};
+window._uniUbic={}; window._uniUbicT=0;
+async function uniCargar(){ try{ var d=await scriptGETjson({action:'leerUniones'},15000); if(d&&d.ok) window._uniones=d.uniones||{}; }catch(e){}
+  if(Object.keys(window._uniones).length && Date.now()-window._uniUbicT>45000){   // dónde está cada pedido (para mostrar "Pendiente / Cashea / Cola / En producción")
+    window._uniUbicT=Date.now(); var u={}, reg=function(r,i,t){ var b=facturaBase(r[i]); if(b) u[b]=t; };
+    await Promise.all([
+      scriptGETjson({action:'leerCola',filtro:'Pagado'},20000).then(function(d){(d.rows||[]).forEach(function(r){reg(r,0,'Cola')})}).catch(function(){}),
+      scriptGETjson({action:'leerAprobaciones',filtro:'Pendiente'},20000).then(function(d){(d.rows||[]).forEach(function(r){reg(r,0,'Pendiente')})}).catch(function(){}),
+      scriptGETjson({action:'leerCashea'},20000).then(function(d){(d.rows||[]).forEach(function(r){reg(r,0,'Cashea')})}).catch(function(){}),
+      scriptGETjson({action:'leerProduccion'},20000).then(function(d){(d.rows||[]).forEach(function(r){reg(r,0,'En producción · COD '+(r[2]||''))})}).catch(function(){})]);
+    window._uniUbic=u; }
+}
+function uniUbicDe(b){ return window._uniUbic[b]||''; }
+function uniMiembros(base){ base=facturaBase(base); var gr=window._uniones[base]; if(!gr)return []; return Object.keys(window._uniones).filter(function(b){return window._uniones[b]===gr&&b!==base}); }
+function uniMapaCod(){   // S-base -> {cod,nombre,g}
+  var m={}; [window.tallerGrupos||tallerGrupos,window.prodGrupos||{}].forEach(function(gs){ Object.keys(gs||{}).forEach(function(cod){ var g=gs[cod]; (g.packs||[]).forEach(function(p){ var b=facturaBase(p.codigoS||p.codigoC); if(b&&!m[b]) m[b]={cod:cod,nombre:g.nombre,g:g}; }); }); });
+  return m;
+}
+function uniDeGrupo(g){   // pedidos unidos a este grupo: {cods:[COD en producción], pend:[S-base aún sin COD]}
+  var mapa=uniMapaCod(), propias={}, vistos={}, cods=[], pend=[];
+  (g.packs||[]).forEach(function(p){ propias[facturaBase(p.codigoS||p.codigoC)]=1; });
+  Object.keys(propias).forEach(function(b){ uniMiembros(b).forEach(function(o){ if(propias[o]||vistos[o])return; vistos[o]=1; if(mapa[o]&&mapa[o].cod!==g.cod){ if(cods.indexOf(mapa[o].cod)<0)cods.push(mapa[o].cod); } else if(!mapa[o]) pend.push(o); }); });
+  return {cods:cods,pend:pend};
+}
+function uniChip(codigoS,cedula,nombre,tab){
+  var b=facturaBase(codigoS); if(!b)return '';
+  var otros=uniMiembros(b), ar="'"+b+"','"+String(cedula||'').replace(/'/g,'')+"','"+String(nombre||'').replace(/['"]/g,'')+"'";
+  var etiq=otros.map(function(o){ var u=uniUbicDe(o); return prodEsc(o)+(u?' <span style="font-weight:600;color:var(--muted)">('+prodEsc(u)+')</span>':''); }).join(' · ');
+  var aviso='';
+  if(otros.length&&tab==='Cola'){
+    var aqui=otros.filter(function(o){return uniUbicDe(o)==='Cola'}), fuera=otros.filter(function(o){return uniUbicDe(o)!=='Cola'});
+    if(aqui.length) aviso+='<div style="flex-basis:100%;font-size:12px;font-weight:700;color:var(--accent)">✅ Al darle 🚀 PRODUCCIÓN saldrá junto con '+aqui.map(prodEsc).join(' + ')+' bajo UN solo COD.</div>';
+    if(fuera.length) aviso+='<div style="flex-basis:100%;font-size:12px;font-weight:700;color:var(--warn)">⏳ '+fuera.map(function(o){var u=uniUbicDe(o);return prodEsc(o)+(u?' ('+prodEsc(u)+')':'')}).join(', ')+' aún no está en Cola: si envías ahora, ese pedido saldrá con otro COD (seguirán unidos en el envío).</div>';
+  } else if(otros.length){ aviso='<div style="flex-basis:100%;font-size:12px;color:var(--muted)">Al llegar todos a Cola se enviarán a producción bajo UN solo COD.</div>'; }
+  return '<div data-ubase="'+b+'" style="display:flex;align-items:center;gap:8px;margin:8px 0;background:var(--surface2);border:1.5px solid '+(otros.length?'var(--accent2)':'var(--border)')+';border-radius:10px;padding:10px 12px;flex-wrap:wrap;">'+
+    '<span style="font-size:13px;font-weight:700;color:var(--text)">🔗 '+(otros.length?'SALE JUNTO CON: <span style="color:var(--accent2)">'+etiq+'</span>':'Envío conjunto')+'</span>'+
+    '<button type="button" onclick="uniAbrir('+ar+')" style="margin-left:auto;padding:6px 12px;background:var(--surface3);border:1px solid var(--accent2);border-radius:8px;color:var(--accent2);font-size:12px;font-weight:700;cursor:pointer">'+(otros.length?'✏️ Cambiar':'➕ Unir con otro pedido')+'</button>'+
+    (otros.length?'<button type="button" onclick="uniQuitar(\''+b+'\')" style="padding:6px 10px;background:transparent;border:1px solid var(--danger);border-radius:8px;color:var(--danger);font-size:12px;font-weight:700;cursor:pointer">Quitar</button>':'')+aviso+'</div>';
+}
+/* Acopla visualmente los pedidos unidos que estén en la misma lista (Pendiente / Cashea / Cola) dentro de un mismo recuadro */
+function uniAcoplar(listEl,tab){
+  if(!listEl)return; var cards={}, orden=[];
+  [].slice.call(listEl.querySelectorAll('[data-ubase]')).forEach(function(ch){ var c=ch; while(c&&c.parentElement!==listEl)c=c.parentElement; if(!c)return; var b=ch.getAttribute('data-ubase'); if(!cards[b]){cards[b]=c; orden.push(b);} });
+  var grupos={}; orden.forEach(function(b){ var g=window._uniones[b]; if(g){ (grupos[g]=grupos[g]||[]).push(b); } });
+  Object.keys(grupos).forEach(function(g){ var bs=grupos[g]; if(bs.length<2)return;
+    var w=document.createElement('div'); w.className='uni-grupo'; w.style.cssText='border:2px solid var(--accent2);border-radius:16px;padding:10px;margin-bottom:16px;background:rgba(80,140,255,.07)';
+    var packs=bs.reduce(function(n,b){ return n+(cards[b].innerHTML.split('Part ').length-1); },0);
+    var h=document.createElement('div'); h.style.cssText='font-size:13px;font-weight:800;color:var(--accent2);margin:2px 4px 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap';
+    h.innerHTML='🔗 ENVÍO CONJUNTO · '+bs.map(prodEsc).join(' + ')+' <span style="font-weight:700;color:var(--text)">· saldrán juntos bajo UN solo COD'+(tab==='Cola'?'':' (al pasar a Cola)')+'</span>';
+    cards[bs[0]].parentNode.insertBefore(w,cards[bs[0]]); w.appendChild(h);
+    bs.forEach(function(b){ cards[b].style.marginBottom='10px'; w.appendChild(cards[b]); });
+  });
+}
+function uniCerrar(){ var o=document.getElementById('uni-overlay'); if(o)o.remove(); document.body.style.overflow=''; }
+async function uniAbrir(base,cedula,nombre){
+  uniCerrar(); var o=document.createElement('div'); o.id='uni-overlay';
+  o.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto';
+  o.innerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;max-width:520px;width:100%;padding:18px;color:var(--text);max-height:94vh;overflow:auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:18px;font-weight:800">🔗 Envío conjunto</div><button onclick="uniCerrar()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button></div>'+
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:10px">Pedido <b style="color:var(--text)">'+prodEsc(base)+'</b> · '+prodEsc(nombre)+'.<br>Marca con cuál(es) sale junto. La dirección y quien retira serán los de este pedido.</div><div id="uni-lista"><span class="spinner">↻</span> Buscando pedidos de este cliente...</div></div>';
+  document.body.appendChild(o); document.body.style.overflow='hidden';
+  var ced=String(cedula||'').replace(/\D/g,''), cand={};
+  var add=function(S,nom,ced2,fuente,cod){ var b=facturaBase(S); if(!b||b===facturaBase(base))return; if(!cand[b])cand[b]={b:b,nombre:nom,ced:String(ced2||'').replace(/\D/g,''),fuente:fuente,cod:cod||''}; };
+  var tareas=[
+    scriptGETjson({action:'leerCola',filtro:'Pagado'},20000).then(function(d){(d.rows||[]).forEach(function(r){add(r[0],r[7],r[9],'Cola')})}).catch(function(){}),
+    scriptGETjson({action:'leerAprobaciones',filtro:'Pendiente'},20000).then(function(d){(d.rows||[]).forEach(function(r){add(r[0],r[7],r[9],'Pendiente')})}).catch(function(){}),
+    scriptGETjson({action:'leerCashea'},20000).then(function(d){(d.rows||[]).forEach(function(r){add(r[0],r[7],r[9],'Cashea')})}).catch(function(){}),
+    scriptGETjson({action:'leerProduccion'},20000).then(function(d){(d.rows||[]).forEach(function(r){add(r[0],r[4],r[6],'En producción',r[2])})}).catch(function(){})];
+  await Promise.all(tareas);
+  var lista=Object.keys(cand).map(function(k){return cand[k]}), mismos=lista.filter(function(x){return ced&&x.ced===ced}), actuales=uniMiembros(base);
+  var fila=function(x,chk){ return '<label style="display:flex;gap:10px;align-items:center;border:1px solid var(--border);border-radius:10px;padding:9px 12px;margin-bottom:6px;cursor:pointer;background:var(--surface2)"><input type="checkbox" class="uni-chk" value="'+prodEsc(x.b)+'" '+(chk?'checked':'')+' style="width:18px;height:18px"><span style="flex:1"><b>'+prodEsc(x.b)+'</b>'+(x.cod?' · COD '+prodEsc(x.cod):'')+'<br><span style="font-size:12px;color:var(--muted)">'+prodEsc(x.nombre)+' · '+prodEsc(x.fuente)+'</span></span></label>'; };
+  var otrosL=lista.filter(function(x){return mismos.indexOf(x)<0}).sort(function(a,b){return (actuales.indexOf(b.b)>=0)-(actuales.indexOf(a.b)>=0)});
+  var h=mismos.length?'<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:6px">Pedidos del mismo cliente (misma cédula):</div>'+mismos.map(function(x){return fila(x,actuales.indexOf(x.b)>=0)}).join(''):'<div style="font-size:13px;color:var(--warn);margin-bottom:8px">No hay otros pedidos con esta cédula.</div>';
+  h+='<div style="font-size:12px;color:var(--accent2);font-weight:700;margin:12px 0 6px">👨‍👩‍👧 Grupo / otras familias (otra cédula): busca por nombre o código y marca varios</div><input id="uni-buscar" class="field-input" placeholder="🔍 Buscar nombre o código..." oninput="uniFiltrar(this.value)" style="width:100%;margin-bottom:8px"><div id="uni-otros" style="max-height:34vh;overflow:auto">'+otrosL.map(function(x){return fila(x,actuales.indexOf(x.b)>=0)}).join('')+'</div>';
+  h+='<div style="margin:10px 0 4px;font-size:12px;color:var(--muted)">O escribe códigos S a mano, separados por coma (ej: S-120, S-121):</div><div style="display:flex;gap:6px"><input id="uni-manual" class="field-input" placeholder="S-120, S-121" style="flex:1;text-transform:uppercase"></div>'+
+     '<button onclick="uniGuardar(\''+facturaBase(base)+'\')" style="width:100%;margin-top:12px;padding:13px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:10px;color:#000;font-size:15px;font-weight:800;cursor:pointer">🔗 Guardar envío conjunto</button><div id="uni-msg" style="margin-top:8px;font-size:13px"></div>';
+  var l=document.getElementById('uni-lista'); if(l)l.innerHTML=h;
+}
+function uniFiltrar(q){ q=String(q||'').toLowerCase().trim(); [].slice.call(document.querySelectorAll('#uni-otros label')).forEach(function(l){ l.style.display=(!q||l.textContent.toLowerCase().indexOf(q)>=0)?'flex':'none'; }); }
+async function uniGuardar(base){
+  var sel=[].slice.call(document.querySelectorAll('.uni-chk:checked')).map(function(c){return c.value}), man=String((document.getElementById('uni-manual')||{}).value||'').trim().toUpperCase();
+  if(man) man.split(/[,;\s]+/).forEach(function(m){ if(m) sel.push(facturaBase(m)); }); sel=sel.filter(function(x,i){return x&&x!==base&&sel.indexOf(x)===i}); var msg=document.getElementById('uni-msg');
+  if(!sel.length){ msg.innerHTML='<span style="color:var(--danger)">Escoge al menos un pedido</span>'; return; }
+  var grupo=window._uniones[base]||base; msg.innerHTML='<span class="spinner">↻</span> Guardando...';
+  try{ var d=await scriptGETjson({action:'guardarUnion',bases:[base].concat(sel).join(','),grupo:grupo,usuario:''},15000); if(!d||!d.ok)throw new Error((d&&d.error)||'no se guardó');
+    window._uniones[base]=grupo; sel.forEach(function(b){window._uniones[b]=grupo}); window._uniUbicT=0; await uniCargar(); uniCerrar(); uniRefrescar();
+  }catch(e){ msg.innerHTML='<span style="color:var(--danger)">✗ '+prodEsc(e.message)+'</span>'; }
+}
+async function uniQuitar(base){
+  if(!confirm('¿Quitar '+base+' del envío conjunto?'))return;
+  try{ var d=await scriptGETjson({action:'guardarUnion',bases:base,grupo:'',usuario:''},15000); if(!d||!d.ok)throw new Error((d&&d.error)||'no se guardó'); delete window._uniones[base]; window._uniUbicT=0;
+    var resto=Object.keys(window._uniones).filter(function(b){return window._uniones[b]}); // si queda solo 1 pedido en el grupo, el grupo se disuelve
+    var cnt={}; resto.forEach(function(b){cnt[window._uniones[b]]=(cnt[window._uniones[b]]||0)+1}); var solos=resto.filter(function(b){return cnt[window._uniones[b]]<2});
+    if(solos.length){ await scriptGETjson({action:'guardarUnion',bases:solos.join(','),grupo:'',usuario:''},15000); solos.forEach(function(b){delete window._uniones[b]}); }
+    uniRefrescar();
+  }catch(e){ alert('✗ '+e.message); }
+}
+function uniRefrescar(){ try{ var t=document.querySelector('[id^="tab-"]:not([style*="display: none"]):not([style*="display:none"])'); }catch(e){}
+  ['cargarAprobacionesCashea','cargarSolicitudes','cargarCola'].forEach(function(f){ try{ var el={cargarAprobacionesCashea:'cashea-apro-list',cargarSolicitudes:'solicitudes-list',cargarCola:'cola-list'}[f]; var e=document.getElementById(el); if(e&&e.offsetParent!==null&&typeof window[f]==='function')window[f](); }catch(x){} });
+  try{ var tl=document.getElementById('taller-lista'); if(tl&&tl.offsetParent!==null)cargarTaller(); }catch(x){}
 }
 async function cargarAprobacionesCashea(){
   const listEl=document.getElementById('cashea-apro-list');
@@ -5474,7 +5579,7 @@ async function cargarAprobacionesCashea(){
           </div>
           <div style="font-size:10px;color:var(--muted);margin-top:8px;">💱 Tasa BCV: Bs ${tasaBCV.toFixed(2)}</div>
         </div>
-        ${facturaChk(packs[0][0])}
+        ${facturaChk(packs[0][0])}${uniChip(packs[0][0],v(9),v(7),'Cashea')}
         <div style="margin-top:8px;margin-bottom:12px;">
           <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
           <div style="display:flex;gap:6px;">
@@ -6644,7 +6749,7 @@ async function cargarCola(){
             </div>
           </div>`;
         }
-        html+=facturaChk(packs[0][0]);
+        html+=facturaChk(packs[0][0])+uniChip(packs[0][0],v(9),v(7),'Cola');
         html+=`<div style="margin-top:8px;">
           <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
           <div style="display:flex;gap:6px;">
@@ -6813,14 +6918,47 @@ async function guardarEdicionCola(){
   }
 }
 
-function abrirModalPlanificacion(data){
+/* Une, bajo UN solo COD, los pedidos de "envío conjunto" que también estén en Cola. Datos de envío = los del pedido principal (el que se tocó). */
+/* Correo del acople: misma persona (varios pedidos) -> un correo con todos sus pedidos; personas distintas -> cada una recibe solo lo suyo + aviso de que sale junto con otros */
+async function acopleNotificar(allPacks,cod,agencia){
+  const porPersona={}, bases={};
+  allPacks.forEach(pk=>{ const k=String(pk._correo||'').toLowerCase().trim()||('ced:'+(pk._cedula||pk._base)); bases[pk._base]=1;
+    const g=porPersona[k]=porPersona[k]||{correo:pk._correo||'',nombre:pk._nombre||'',peds:{}};
+    const det=[(pk.pack||''),(pk.modelo||''),(pk.manga||''),(pk.capucha&&pk.capucha!=='Sin Capucha'?pk.capucha:'')].filter(Boolean).join(' ')+' · Tela '+(pk.tela||'')+' / Vinil '+(pk.vinil||'')+(pk.piezas?'\n'+String(pk.piezas).split(' | ').map(x=>'• '+x).join('\n'):'');
+    (g.peds[pk._base]=g.peds[pk._base]||[]).push(det); });
+  const total=Object.keys(bases).length, dest=[]; let sin=0;
+  Object.values(porPersona).forEach(g=>{ const bs=Object.keys(g.peds); if(!g.correo){sin++;return;}
+    dest.push({correo:g.correo,nombre:g.nombre,otros:total-bs.length,otrosNombres:Object.values(porPersona).filter(o=>o!==g).map(o=>o.nombre).filter((n,i,arr)=>n&&arr.indexOf(n)===i),pedidos:bs.map(b=>({base:b,detalle:g.peds[b].map((d,i)=>g.peds[b].length>1?'Pack '+(i+1)+': '+d:d).join('\n')}))}); });
+  if(!dest.length) return {ok:0,sin:sin,fallo:0};
+  const f=new FormData(); f.append('action','notificarAcople'); f.append('cod',String(cod||'')); f.append('agencia',agencia||''); f.append('destinatarios',JSON.stringify(dest));
+  const r=await (await fetch(SCRIPT_URL,{method:'POST',body:f})).json(); if(!r.ok)throw new Error(r.error||'sin detalle');
+  const ok=(r.resultados||[]).filter(x=>x.enviado).length; return {ok:ok,sin:sin,fallo:(r.resultados||[]).length-ok};
+}
+function colaUnirConjuntos(data){
+  const base0=facturaBase((data.allPacks&&data.allPacks[0]&&data.allPacks[0].codigoS)||data.codigoCBase);
+  const pago=d=>({moneda:d.pagoMoneda,monto:d.pagoMonto,tasa:d.tasa,codpago:d.codpago,banco:d.banco,cashea:d.cashea,casheaPct:d.casheaPct,codCashea:d.codCashea});
+  const etiquetar=(d,b)=>(d.allPacks||[]).map((pk,i)=>Object.assign({},pk,{_base:b,_nombre:d.nombre,_correo:d.correo,_cedula:d.cedula,_pago:pago(d),_primero:i===0}));
+  let allPacks=etiquetar(data,base0), allCodigosC=(data.allCodigosC||[data.codigoC]).slice(), unidos=[], fuera=[];
+  const miembros=uniMiembros(base0), vistos={};
+  Object.keys(window).filter(k=>k.indexOf('_colaData_')===0).forEach(k=>{
+    const d=window[k]; if(!d||!d.allPacks||!d.allPacks.length||d===data)return;
+    const b=facturaBase(d.allPacks[0].codigoS); if(b===base0||vistos[b]||miembros.indexOf(b)<0)return; vistos[b]=1;
+    unidos.push({base:b,nombre:d.nombre}); allPacks=allPacks.concat(etiquetar(d,b)); allCodigosC=allCodigosC.concat(d.allCodigosC||[]);
+  });
+  miembros.forEach(m=>{ if(!vistos[m]) fuera.push({base:m,ub:uniUbicDe(m)}); });
+  return Object.assign({},data,{allPacks,allCodigosC,unidos,fuera,baseConjunto:base0});
+}
+function abrirModalPlanificacion(data0){
+  const data=colaUnirConjuntos(data0);
   pendingCola=data;
   const packs=data.allPacks||[];
+  const conj=(data.unidos&&data.unidos.length)?`<div style="background:rgba(80,140,255,.12);border:1.5px solid var(--accent2);border-radius:8px;padding:8px 10px;margin:6px 0;font-weight:700;color:var(--accent2)">🔗 ENVÍO CONJUNTO: ${[data.baseConjunto].concat(data.unidos.map(u=>u.base)).join(' + ')} saldrán bajo <u>UN solo COD</u> (${packs.length} packs).</div>`:'';
+  const fuera=(data.fuera&&data.fuera.length)?`<div style="background:#2a1f0a;border:1px solid var(--warn);border-radius:8px;padding:8px 10px;margin:6px 0;color:var(--warn);font-weight:700">⏳ ${data.fuera.map(f=>f.base+(f.ub?' ('+f.ub+')':'')).join(', ')} está unido pero aún no está en Cola: saldrá con otro COD si envías ahora.</div>`:'';
   document.getElementById('plan-resumen').innerHTML=`
     <b style="color:var(--text)">${data.nombre}</b><br>
     <span style="color:var(--text);">${data.codigoCBase||''}</span> · <b>${packs.length} pack(s)</b><br>
-    Agencia: <span>${data.agencia}</span><br>
-    ${packs.map((pk,i)=>`Pack ${i+1}: ${pk.pack} · ${pk.tela}/${pk.vinil}`).join('<br>')}`;
+    Agencia: <span>${data.agencia}</span><br>${conj}${fuera}
+    ${packs.map((pk,i)=>`Pack ${i+1}${pk._base&&data.unidos&&data.unidos.length?' ['+pk._base+']':''}: ${pk.pack} · ${pk.tela}/${pk.vinil}`).join('<br>')}`;
   document.getElementById('plan-unlock').value='';
   document.getElementById('plan-error').textContent='';
   document.getElementById('modal-planificacion').classList.remove('hidden');
@@ -7208,7 +7346,7 @@ async function confirmarPlanificacion(){
     const packsTexto=allPacks.map((pk,i)=>{
       const piezasLineas=(pk.piezas||'').split(' | ').map(p=>`  • ${p}`).join('\n');
       const capuchaInfo=pk.capucha&&pk.capucha!=='Sin Capucha'?' '+String(pk.capucha).toUpperCase():'';
-      return `── Pack ${i+1} ──\n${pk.pack} ${pk.modelo||''} ${pk.manga||''}${capuchaInfo}\nColor de Tela: ${pk.tela}\nColor de Vinil: ${pk.vinil}\nPiezas:\n${piezasLineas}`;
+      return `── Pack ${i+1}${pk._nombre&&pendingCola.unidos&&pendingCola.unidos.length?' · '+pk._nombre+' ('+pk._base+')':''} ──\n${pk.pack} ${pk.modelo||''} ${pk.manga||''}${capuchaInfo}\nColor de Tela: ${pk.tela}\nColor de Vinil: ${pk.vinil}\nPiezas:\n${piezasLineas}`;
     }).join('\n\n');
 
     const agenciaRaw=pendingCola.agencia||'';
@@ -7278,7 +7416,7 @@ async function confirmarPlanificacion(){
     }
 
     const descripcionPacks=allPacks.map((pk,i)=>{
-      const encabezado=`Pack ${i+1}: ${pk.pack||''} ${pk.modelo||''} ${pk.manga||''}${pk.capucha&&pk.capucha!=='Sin Capucha'?' '+pk.capucha:''} - Tela ${pk.tela||''}/Vinil ${pk.vinil||''}`.replace(/\s+/g,' ').trim();
+      const encabezado=`Pack ${i+1}${pk._nombre&&pendingCola.unidos&&pendingCola.unidos.length?' ['+pk._nombre+']':''}: ${pk.pack||''} ${pk.modelo||''} ${pk.manga||''}${pk.capucha&&pk.capucha!=='Sin Capucha'?' '+pk.capucha:''} - Tela ${pk.tela||''}/Vinil ${pk.vinil||''}`.replace(/\s+/g,' ').trim();
       const detalle=(pk.piezas||'').trim();
       return detalle ? `${encabezado} :: ${detalle}` : encabezado;
     }).join('  ||  ');
@@ -7330,22 +7468,22 @@ async function confirmarPlanificacion(){
           retira_nombre:pendingCola.retira||'',
           retira_ci:pendingCola.retiraCi||'',
           retira_cel:pendingCola.retiraCel||'',
-          banco:pendingCola.banco||'',
-          cod_pago:pendingCola.codpago||'',
+          banco:(pk._pago&&pk._pago.banco)||pendingCola.banco||'',
+          cod_pago:(pk._pago&&pk._pago.codpago)||pendingCola.codpago||'',
           // El monto/moneda/tasa es del PEDIDO completo, no de cada parte —
           // solo se registra en la primera fila para no sumarlo varias veces en Ventas.
-          moneda:idx===0?(pendingCola.pagoMoneda||''):'',
-          monto:idx===0?(pendingCola.pagoMonto||''):'',
-          tasa:idx===0?(pendingCola.tasa||TASAS.BCV||''):'',
-          referencia:pendingCola.codpago||'',
+          moneda:(pk._pago?pk._primero:idx===0)?((pk._pago?pk._pago.moneda:pendingCola.pagoMoneda)||''):'',
+          monto:(pk._pago?pk._primero:idx===0)?((pk._pago||{}).monto!==undefined?pk._pago.monto:pendingCola.pagoMonto)||'':'',
+          tasa:(pk._pago?pk._primero:idx===0)?(((pk._pago||{}).tasa)||pendingCola.tasa||TASAS.BCV||''):'',
+          referencia:(pk._pago&&pk._pago.codpago)||pendingCola.codpago||'',
           usuario:USUARIOS[unlock],
           fecha_apro:fechaProd,
           fecha_produccion:fechaProd,
           usuario_produccion:USUARIOS[unlock],
           urgente:pendingCola.urgente||'',
-          cashea_flag:pendingCola.cashea||'NO',
-          cashea_pct_aplicado:pendingCola.casheaPct||'',
-          monto_cashea_usd:pendingCola.codCashea||'',
+          cashea_flag:(pk._pago&&pk._pago.cashea)||pendingCola.cashea||'NO',
+          cashea_pct_aplicado:(pk._pago&&pk._pago.casheaPct)||pendingCola.casheaPct||'',
+          monto_cashea_usd:(pk._pago&&pk._pago.codCashea)||pendingCola.codCashea||'',
           fuente:'Cola',
           necesita_arte:pendingCola.necesitaArte?'si':'no',
           cod_arte:pendingCola.necesitaArte?codMake:''
@@ -7357,6 +7495,7 @@ async function confirmarPlanificacion(){
       msgEl.style.border='1px solid #1a4a2a';
       msgEl.style.color='var(--accent)';
       msgEl.innerHTML=`✅ Enviado a producción · <b>${lastCodigoP}</b> · COD: ${codMake||'—'} · ${USUARIOS[unlock]}`;
+      if(pendingCola.unidos&&pendingCola.unidos.length){ try{ const na=await acopleNotificar(allPacks,codMake,pendingCola.agencia); msgEl.innerHTML+=`<br>📧 Acople notificado a ${na.ok} cliente(s)${na.sin?' · sin correo: '+na.sin:''}${na.fallo?' · falló: '+na.fallo:''}`; }catch(e){ msgEl.innerHTML+='<br>⚠️ No se pudo avisar el acople por correo: '+e.message; } }
       // Buscar automáticamente el archivo de Imprenta que Make.com genera para este COD,
       // y mostrarlo listo para imprimir apenas esté disponible — sin ocultar el mensaje mientras tanto.
       try{ ikoaImprimirTicket(ikoaTicketDatos(codMake,pendingCola.agencia,pendingCola.nombre,pendingCola.cedula,pendingCola.celular,pendingCola.retira,pendingCola.retiraCi,pendingCola.retiraCel)); }catch(e){ console.warn('ticket:',e); }
@@ -7569,7 +7708,7 @@ async function cargarSolicitudes(filtro){
           agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),
           pagoMoneda:pagoMoneda,pagoMonto:pagoMonto,pagoRef:pagoRef
         };
-        html+=facturaChk(packs[0][0]);
+        html+=facturaChk(packs[0][0])+uniChip(packs[0][0],v(9),v(7),'Pendiente');
         html+=`<div style="margin-top:8px;">
           <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
           <div style="display:flex;gap:6px;">
@@ -9257,6 +9396,7 @@ async function tallerEscanerCod(cod){
     (est?'<div style="color:var(--warn);font-weight:700;font-size:13px;margin-bottom:8px">⚠ Este pedido ya se escaneó el '+prodEsc(est.fecha)+' (correo: '+prodEsc(est.correo||'—')+').<label style="display:flex;gap:8px;align-items:center;margin-top:6px;cursor:pointer;color:var(--text)"><input type="checkbox" id="scan-reenv" style="width:18px;height:18px"> Volver a enviar el correo con la nueva foto</label></div>':'')+
     (fab?'<div style="color:var(--accent);font-weight:800;margin-bottom:8px">✅ Fabricado al 100% ('+hechas+'/'+ks.length+')</div>'
         :'<div style="color:var(--warn);font-weight:800;margin-bottom:4px">⚠ Faltan piezas por marcar en Producción ('+hechas+'/'+ks.length+')</div><label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer;margin-bottom:8px"><input type="checkbox" id="scan-force" style="width:18px;height:18px"> Confirmo que el pedido está COMPLETO y quiero marcarlo como fabricado</label>')+
+    (function(){var u=uniEstadoGrupo(g); return u.cods.length?'<div style="color:var(--accent2);font-weight:700;font-size:13px;margin-bottom:8px">🔗 Sale junto con '+u.cods.map(function(c){return 'COD '+c}).join(', ')+': también se marcarán como en proceso de envío.</div>':'';})()+
     '<label style="display:block;border:2px dashed var(--accent);border-radius:10px;padding:14px;text-align:center;cursor:pointer;font-weight:700;color:var(--accent)">📷 Tomar foto del paquete<input type="file" accept="image/*" capture="environment" style="display:none" onchange="tallerEscanerFoto(this.files[0])"></label>'+
     '<div id="scan-prev" style="margin-top:8px"></div><div id="scan-res" style="margin-top:8px;font-size:13px"></div>'+
     '<button id="scan-btn" onclick="tallerEscanerConfirmar()" disabled style="width:100%;margin-top:8px;padding:13px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:10px;color:#000;font-size:15px;font-weight:800;cursor:pointer;opacity:.4">🚚 Fabricado · en proceso de envío · avisar al cliente</button>';
@@ -9278,6 +9418,10 @@ async function tallerEscanerConfirmar(){
     f.append('done',JSON.stringify(prodKeys(gk))); f.append('reenviar',reenviar); f.append('imagen_base64',S.jpg.split(',')[1]);
     var r=await fetch(SCRIPT_URL,{method:'POST',body:f}), j=await r.json(); if(!j.ok)throw new Error(j.error||'no se pudo guardar');
     if(j.ya){ res.innerHTML='<span style="color:var(--warn)">Ya estaba escaneado el '+prodEsc(j.fecha||'')+'</span>'; return; }
+    var sociosEsc=uniDeGrupo(g).cods;
+    for(var si=0;si<sociosEsc.length;si++){ var gs2=tallerGrupos[sociosEsc[si]]; if(!gs2)continue; var gk2={packs:gs2.packs.map(function(p){return {codigoS:p.codigoS,piezas:p.piezasProd}})};
+      try{ var f2=new FormData(); f2.append('action','escanearPedido'); f2.append('cod',sociosEsc[si]); f2.append('nombre',gs2.nombre||''); f2.append('correo',''); f2.append('agencia',gs2.agencia||''); f2.append('usuario','Escáner Taller'); f2.append('done',JSON.stringify(prodKeys(gk2))); f2.append('reenviar','SI'); f2.append('imagen_base64',S.jpg.split(',')[1]);
+        var r2=await fetch(SCRIPT_URL,{method:'POST',body:f2}), j2=await r2.json(); if(j2&&j2.ok){ window.prodAvance[sociosEsc[si]]={done:prodKeys(gk2),completo:true}; (window._estadoEnvio=window._estadoEnvio||{})[sociosEsc[si]]={estado:'EN PROCESO DE ENVÍO',fecha:j2.fecha||'',correo:''}; } }catch(e){ console.warn('socio',e); } }
     window.prodAvance=window.prodAvance||{}; window.prodAvance[S.cod]={done:prodKeys(gk),completo:true};
     (window._estadoEnvio=window._estadoEnvio||{})[S.cod]={estado:'EN PROCESO DE ENVÍO',fecha:j.fecha||'',correo:j.correo_enviado?'ENVIADO':''};
     res.innerHTML='<div style="color:var(--accent);font-weight:800;font-size:15px">✅ '+prodEsc(g.nombre)+' · fabricado y en proceso de envío</div>'+(j.correo_enviado?'<div style="font-size:13px;color:var(--text)">📧 Correo enviado al cliente con la foto.</div>':'<div style="font-size:13px;color:var(--warn)">⚠ El pedido quedó marcado, pero el correo no salió ('+prodEsc(j.aviso||'')+').</div>')+
@@ -9287,6 +9431,10 @@ async function tallerEscanerConfirmar(){
 }
 /* ===== TALLER: pedido 100% fabricado -> Cargar guía de envío (foto -> verifica nombre -> clave -> sube COD.JPG y ejecuta TODO el envío) ===== */
 window._tg={cod:'',ped:null,jpg:'',okNombre:false,texto:''};
+function uniEstadoGrupo(g){   // {cods, pend, faltan:[COD aún sin fabricar al 100%]}
+  var u=uniDeGrupo(g), faltan=[]; u.cods.forEach(function(c){ var gp=tallerGrupos[c]; if(!gp)return; var gk={packs:gp.packs.map(function(p){return {codigoS:p.codigoS,piezas:p.piezasProd}})}; if(!prodFabricado(c,gk))faltan.push(c); });
+  return {cods:u.cods,pend:u.pend,faltan:faltan};
+}
 function tallerLlevaFactura(g){ return !!(g&&g.packs&&g.packs.some(function(p){return window._facturaFlags&&window._facturaFlags[facturaBase(p.codigoS)];})); }
 function tallerCerrarGuia(){var o=document.getElementById('tg-overlay'); if(o)o.remove(); document.body.style.overflow='';}
 async function tallerAbrirGuia(cod){
@@ -9324,6 +9472,7 @@ async function tallerGuiaFoto(file){
     form.innerHTML=(ok?'':'<label style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--warn);margin-bottom:10px;cursor:pointer"><input type="checkbox" id="tg-force" style="width:18px;height:18px"> Confirmo que esta guía SÍ es de '+prodEsc(g.nombre)+'</label>')+
       (necesita?'<div class="field-label">N° de guía / cupón</div><input id="tg-num" class="field-input" type="text" placeholder="Número de guía" style="text-transform:uppercase;margin-bottom:10px">'
                :'<div style="font-size:12px;color:var(--muted);margin-bottom:10px">📦 Guía automática: <b style="color:var(--text)">GUIA-'+prodEsc(g.cod)+'</b></div>')+
+      (function(){var u=uniEstadoGrupo(g); if(!u.cods.length&&!u.pend.length)return ''; return '<div style="border:2px solid var(--accent2);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:#12202a"><div style="font-weight:800;color:var(--accent2);margin-bottom:4px">🔗 Envío conjunto: esta guía sale con '+u.cods.map(function(c){return 'COD '+c}).concat(u.pend).join(', ')+'</div><div style="font-size:12px;color:var(--muted)">Se registrará el envío de todos los COD con esta misma guía, y el cliente recibe UN solo correo.</div>'+((u.faltan.length||u.pend.length)?'<label style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--warn);margin-top:8px;cursor:pointer"><input type="checkbox" id="tg-junto" style="width:18px;height:18px"> Aún falta '+u.faltan.map(function(c){return 'COD '+c}).concat(u.pend).join(', ')+': confirmo enviar igual</label>':'')+'</div>';})()+
       (tallerLlevaFactura(g)?'<div style="border:2px solid var(--accent2);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:#12122a"><div style="font-weight:800;color:var(--accent2);margin-bottom:6px">🧾 Este cliente lleva FACTURA</div><label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer;margin-bottom:8px"><input type="checkbox" id="tg-fac" style="width:18px;height:18px"> Confirmo que la factura del cliente va incluida con el pedido</label><input id="tg-facnum" class="field-input" type="text" placeholder="N° de factura (opcional)" style="text-transform:uppercase"></div>':'')+
       '<div class="field-label">Tu código personal</div><input id="tg-clave" class="field-input" type="password" inputmode="numeric" autocomplete="off" placeholder="Código de autorización" style="margin-bottom:10px">'+
       '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">Al cargar: se guarda la foto como '+prodEsc(g.cod)+'.JPG, se registra como Enviado, se manda el correo al cliente con la guía y sale de Taller.</div>'+
@@ -9338,6 +9487,7 @@ async function tallerGuiaConfirmar(){
   var clave=String(document.getElementById('tg-clave').value||'').trim().toUpperCase(); if(!USUARIOS[clave]){err('❌ Código incorrecto');return;}
   var usuario=USUARIOS[clave], necesita=['MRW','TEALCA','ZOOM'].some(function(a){return String(p.agencia||g.agencia||'').toUpperCase().indexOf(a)>=0});
   var facNum=''; if(tallerLlevaFactura(g)){ var fc=document.getElementById('tg-fac'); if(!fc||!fc.checked){err('🧾 Este pedido lleva factura: confirma que va incluida con el pedido');return;} var fn=document.getElementById('tg-facnum'); facNum=fn?fn.value.trim().toUpperCase():''; }
+  var uni=uniEstadoGrupo(g); if((uni.faltan.length||uni.pend.length)){ var tj=document.getElementById('tg-junto'); if(!tj||!tj.checked){err('🔗 Faltan pedidos unidos por terminar: confirma enviar igual');return;} }
   var numEl=document.getElementById('tg-num'), cupon=numEl?numEl.value.trim().toUpperCase():'';
   if(necesita&&!cupon){err('Ingresa el número de guía');return;}
   var guia=necesita?cupon:'GUIA-'+t.cod, agU=String(p.agencia||g.agencia||'').toUpperCase(), direccion=p.direccion||DIRECCIONES_AUTO[agU]||p.agencia||g.agencia, fecha=getFechaHora();
@@ -9355,8 +9505,20 @@ async function tallerGuiaConfirmar(){
     mb.append('tipo_operacion','Enviado'); mb.append('status','Enviado'); mb.append('nombre',p.nombre); mb.append('correo',p.correo||''); mb.append('cedula',p.cedula); mb.append('celular',p.celular);
     mb.append('agencia',p.agencia); mb.append('direccion_agencia',direccion); mb.append('diferente_envio',p.esMismo?'no':'si'); mb.append('nombre_envio',p.esMismo?'':p.retiraNombre);
     mb.append('ci_envio',p.esMismo?'':p.retiraCi); mb.append('cel_envio',p.esMismo?'':p.retiraCel); mb.append('codigo',t.cod); mb.append('numero_guia',guia);
-    mb.append('descripcion',(p.descripcion||'Envio desde Taller')+(tallerLlevaFactura(g)?' · CON FACTURA'+(facNum?' '+facNum:''):'')); mb.append('urgente','NO'); mb.append('selector_agregar_arte','no'); mb.append('nombre_arte',''); mb.append('usuario',usuario); mb.append('fecha',fecha);
+    if(uni.cods.length)mb.append('cods_extra',uni.cods.join(' + '));
+    mb.append('descripcion',(p.descripcion||'Envio desde Taller')+(uni.cods.length?' · ENVÍO CONJUNTO con COD '+uni.cods.join(' + '):'')+(tallerLlevaFactura(g)?' · CON FACTURA'+(facNum?' '+facNum:''):'')); mb.append('urgente','NO'); mb.append('selector_agregar_arte','no'); mb.append('nombre_arte',''); mb.append('usuario',usuario); mb.append('fecha',fecha);
     var pr=await enviarAProceso(mb,'Enviado'); if(!pr.ok)throw new Error('No se pudo enviar la guía: '+(pr.error||'sin detalle'));
+    for(var ui=0;ui<uni.cods.length;ui++){   // pedidos unidos: mismo envío y misma guía, sin segundo correo
+      var cs=uni.cods[ui], gs=tallerGrupos[cs]; if(!gs)continue; msg.innerHTML='<span class="spinner">↻</span> Registrando también el COD '+prodEsc(cs)+'...';
+      var ps=null; try{ var dd=await scriptGETjson({action:'buscarPedido',cod:cs},20000); if(dd&&dd.ok)ps=dd; }catch(e){}
+      if(!ps){ var em=!gs.retira||gs.retira===gs.nombre; ps={cod:cs,nombre:gs.nombre,cedula:gs.cedula,correo:gs.correo||'',celular:gs.celular,agencia:gs.agencia,direccion:'',descripcion:'',retiraNombre:gs.retira||gs.nombre,retiraCi:gs.retiraCi||gs.cedula,retiraCel:gs.retiraCel||gs.celular,esMismo:em}; }
+      var dsc='Envio conjunto con COD '+t.cod+' desde Taller '+usuario;
+      var r1=await scriptGETjson({action:'addPedido',nombre:ps.nombre,cedula:ps.cedula,correo:ps.correo||'',cod:cs,numero_guia:guia,agencia:ps.agencia,status:'Enviado',celular:ps.celular,fecha:fecha,descripcion:dsc,nombre_envio:ps.esMismo?'':ps.retiraNombre,cel_envio:ps.esMismo?'':ps.retiraCel,ci_envio:ps.esMismo?'':ps.retiraCi,direccion:direccion,usuario:usuario});
+      if(!r1.ok)throw new Error('COD '+cs+': no se pudo guardar en PEDIDOS: '+(r1.error||''));
+      try{ await eliminarDeProduccion(cs); }catch(e){ console.warn('eliminarProduccion error:',e); }
+      var mb2=new FormData(); [['tipo_operacion','Enviado'],['status','Enviado'],['nombre',ps.nombre],['correo',ps.correo||''],['cedula',ps.cedula],['celular',ps.celular],['agencia',ps.agencia],['direccion_agencia',direccion],['diferente_envio',ps.esMismo?'no':'si'],['nombre_envio',ps.esMismo?'':ps.retiraNombre],['ci_envio',ps.esMismo?'':ps.retiraCi],['cel_envio',ps.esMismo?'':ps.retiraCel],['codigo',cs],['numero_guia',guia],['descripcion',dsc],['urgente','NO'],['selector_agregar_arte','no'],['nombre_arte',''],['usuario',usuario],['fecha',fecha],['sin_correo','si']].forEach(function(kv){mb2.append(kv[0],kv[1])});
+      var pr2=await enviarAProceso(mb2,'Enviado'); if(!pr2.ok)throw new Error('COD '+cs+': '+(pr2.error||'no se pudo registrar el envío'));
+    }
     try{ if(p.celular){ var wa=new FormData(); wa.append('celular',p.celular||''); wa.append('nombre',p.nombre||''); wa.append('mensaje','Hola '+(p.nombre||'')+' Somos IKOA BeKate. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias'); await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:wa,mode:'no-cors'}); } }catch(e){ console.warn('WhatsApp webhook error:',e); }
     msg.innerHTML='<span style="color:var(--accent);font-weight:800">✅ Enviado · COD '+prodEsc(t.cod)+' · '+prodEsc(usuario)+'</span>';
     setTimeout(function(){ tallerCerrarGuia(); cargarTaller(); },2500);
@@ -9425,7 +9587,7 @@ function prodPackTexto(p,i,n){
 }
 function prodTicket(cod){
   var g=(window.prodGrupos||{})[cod]; if(!g)return;
-  ikoaImprimirTicket(ikoaTicketDatos(cod,g.agencia,g.nombre,g.cedula,g.celular,g.retira,g.retiraCI,g.retiraCel));
+  ikoaImprimirTicket(ikoaTicketDatos(cod,g.agencia,g.nombre,g.cedula,g.celular,g.retira,g.retiraCI,g.retiraCel,uniDeGrupo(g).cods));
 }
 
 /* ═══ LIMITADOR (Producción) ═══ */
@@ -9755,6 +9917,7 @@ async function cargarTaller(){
             <span style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;">${g.nombre}</span>
             <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;">${cod}</span>
             ${(window._estadoEnvio&&window._estadoEnvio[String(cod).toUpperCase()])?`<span style="background:#1a2a1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">🚚 EN PROCESO DE ENVÍO · mensajero · ${prodEsc(window._estadoEnvio[String(cod).toUpperCase()].fecha||'')}</span>`:''}
+            ${(function(){var u=uniEstadoGrupo(g); if(!u.cods.length&&!u.pend.length)return ''; return '<span style="background:#12202a;border:1px solid var(--accent2);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent2);">🔗 SALE JUNTO CON '+u.cods.map(function(c){return 'COD '+c}).concat(u.pend).join(' · ')+'</span>'+((u.faltan.length||u.pend.length)?'<span style="background:#2a1f0a;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">⏳ esperando '+u.faltan.map(function(c){return 'COD '+c}).concat(u.pend.map(function(b){return b+' (aún sin COD)'})).join(', ')+'</span>':'');})()}
             ${_fac?`<span style="background:#1a1a2a;border:1px solid var(--accent2);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent2);">🧾 LLEVA FACTURA</span>`:''}
             ${_fab?`<span style="background:#0a2a0a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">✅ FABRICADO 100% · en espera de guía de envío</span>`:''}
             ${g.urgente?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">⚡ ${g.urgente}</span>`:''}
@@ -9951,11 +10114,11 @@ async function tallerConstruirCortadorHTML(codigos){
       Object.values(grupos).forEach(gr=>{
         const colorTxt=(gr.tela||p.tela||'—').split('-')[0].trim();
         const obs=gr.largo?gr.largo.toUpperCase():(gr.capucha?'CON CAPUCHA':(gr.cuelloAlto?'CON CUELLO ALTO':'SIN CAPUCHA'));
-        add(colorTxt,{cod,urg:!!g.urgente,desc,talla:(gr.talla||'—').toUpperCase(),genero:(gr.genero||'—').toUpperCase(),unds:gr.unds,obs},gr.unds);
+        add(colorTxt,{cod,junto:uniDeGrupo(g).cods,urg:!!g.urgente,desc,talla:(gr.talla||'—').toUpperCase(),genero:(gr.genero||'—').toUpperCase(),unds:gr.unds,obs},gr.unds);
       });
       if(sinFormato>0){
         const mNum=String(p.pack||'').match(/(\d+)/), undsAprox=mNum?mNum[1]:'';
-        add(String(p.tela||'—').split('-')[0].trim(),{cod,urg:!!g.urgente,desc,talla:'—',genero:'—',unds:undsAprox,obsHtml:tallerReformatearTexto(p.piezas)+' <span style="color:#666;font-weight:400;">(sin desglose exacto por talla)</span>'},parseInt(undsAprox)||0);
+        add(String(p.tela||'—').split('-')[0].trim(),{cod,junto:uniDeGrupo(g).cods,urg:!!g.urgente,desc,talla:'—',genero:'—',unds:undsAprox,obsHtml:tallerReformatearTexto(p.piezas)+' <span style="color:#666;font-weight:400;">(sin desglose exacto por talla)</span>'},parseInt(undsAprox)||0);
       }
     });
   });
@@ -9980,7 +10143,7 @@ async function tallerConstruirCortadorHTML(codigos){
         const bg=r.urg?(z%2?'#ffd9d9':'#ffc9c9'):(z%2?'#fff':'#e9e9e9');
         const td=`padding:3px 8px;border-bottom:1px solid #888;${nw?'border-top:4px solid #000;':''}font-size:15px;font-weight:800;background:${bg};`;
         const big=`${td}font-size:26px;font-weight:900;text-align:center;width:80px;border-left:1px solid #000;border-right:1px solid #000;`;
-        return `<tr><td style="${td}font-size:18px;font-weight:900;">${r.cod}${r.urg?' <b style="color:#c00;font-size:10px;">URGENTE</b>':''}<div style="font-size:9px;font-weight:400;color:#444;">${r.desc}</div></td><td style="${big}">${r.talla}</td><td style="${td}">${r.genero}</td><td style="${big}">${r.unds}</td><td style="${td}">${r.obsHtml||r.obs}</td></tr>`;
+        return `<tr><td style="${td}font-size:18px;font-weight:900;">${r.cod}${r.urg?' <b style="color:#c00;font-size:10px;">URGENTE</b>':''}${r.junto&&r.junto.length?'<div style="font-size:10px;font-weight:900;color:#0050a0;">🔗 SALE JUNTO CON COD '+r.junto.join(' + ')+'</div>':''}<div style="font-size:9px;font-weight:400;color:#444;">${r.desc}</div></td><td style="${big}">${r.talla}</td><td style="${td}">${r.genero}</td><td style="${big}">${r.unds}</td><td style="${td}">${r.obsHtml||r.obs}</td></tr>`;
       }).join('');
       cuerpo+=`<div style="page-break-inside:avoid;margin:6px 0 10px;">
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:3px;"><tr>
@@ -10161,7 +10324,7 @@ function tallerConstruirEstampadorHTML(codigos, rec){
           </td></tr>
         </table>
         <p style="font-size:11px;font-weight:700;margin:0 0 3px 0;">CLIENTE : ${(g.nombre||'').toUpperCase()} / C.I: ${g.cedula||''} / AGENCIA: ${(g.agencia||'').split('—')[0].trim().toUpperCase()}</p>
-        ${tallerLlevaFactura(g)?'<div style="border:3px solid #000;background:#fff6c8;padding:6px 10px;margin:4px 0 8px 0;font-size:15px;font-weight:900;text-align:center;">🧾 ENVIAR FACTURA — ANEXAR LA FACTURA DEL CLIENTE A ESTE PEDIDO <span style="display:inline-block;width:16px;height:16px;border:2px solid #000;margin-left:10px;vertical-align:middle;"></span> <span style="font-size:11px;">FACTURA ANEXADA</span></div>':''}
+        ${uniDeGrupo(g).cods.length?'<div style="border:3px solid #000;background:#dff0ff;padding:6px 10px;margin:4px 0 8px 0;font-size:15px;font-weight:900;text-align:center;">🔗 SALE JUNTO CON COD '+uniDeGrupo(g).cods.join(' + ')+' — ENVIAR TODO EN UN SOLO PAQUETE</div>':''}${tallerLlevaFactura(g)?'<div style="border:3px solid #000;background:#fff6c8;padding:6px 10px;margin:4px 0 8px 0;font-size:15px;font-weight:900;text-align:center;">🧾 ENVIAR FACTURA — ANEXAR LA FACTURA DEL CLIENTE A ESTE PEDIDO <span style="display:inline-block;width:16px;height:16px;border:2px solid #000;margin-left:10px;vertical-align:middle;"></span> <span style="font-size:11px;">FACTURA ANEXADA</span></div>':''}
         <div style="border-top:1px dashed #999;margin-bottom:6px;"></div>
         ${packsHtml}
       </div>`;
@@ -16231,6 +16394,12 @@ var qrcode = function() {
     return qrcode;
 }));
 
+</script>
+<script>
+(function(){ var mapa={cargarAprobacionesCashea:['cashea-apro-list','Cashea'],cargarSolicitudes:['solicitudes-list','Pendiente'],cargarCola:['cola-list','Cola']};
+  Object.keys(mapa).forEach(function(n){ var orig=window[n]; if(typeof orig!=='function')return;
+    window[n]=async function(){ var r=await orig.apply(this,arguments); try{ uniAcoplar(document.getElementById(mapa[n][0]),mapa[n][1]); }catch(e){} return r; }; });
+})();
 </script>
 </body>
 </html>
