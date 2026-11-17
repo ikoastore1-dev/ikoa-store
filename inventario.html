@@ -9402,6 +9402,34 @@ function tallerGrupoDe(cod){   // pedido desde Taller o, si no está cargado, de
   var pg=(window.prodGrupos||{})[cod]; if(!pg)return null;
   return Object.assign({},pg,{packs:(pg.packs||[]).map(function(p){return Object.assign({},p,{piezasProd:p.piezas})})});
 }
+
+/* Detalle del pedido para la tarjeta del Taller (qué lleva cada pack, tallas, datos de entrega) + botón del pedido completo con mockups */
+function tallerResumenTallas(piezasStr){
+  var c={}, ord=[]; tallerParsearPiezas(piezasStr).forEach(function(pz){ if(pz.raw)return; var k=((pz.genero||'')+' '+(pz.talla||'')).trim().toUpperCase(); if(!k)return; if(!c[k]){c[k]=0;ord.push(k);} c[k]++; });
+  return ord.map(function(k){return k+' ×'+c[k]}).join(' · ');
+}
+function tallerDetalleHTML(g,cod){
+  var e=prodEsc, ag=String(g.agencia||'').split('—'), gk={packs:g.packs.map(function(p){return {codigoS:p.codigoS,piezas:p.piezasProd}})}, ks=prodKeys(gk), av=(window.prodAvance||{})[String(cod).toUpperCase()]||{done:[]}, hechas=ks.filter(function(k){return (av.done||[]).indexOf(k)>=0}).length;
+  var packs=g.packs.map(function(p,i){
+    var np=tallerParsearPiezas(p.piezas).filter(function(x){return !x.raw}).length, tallas=tallerResumenTallas(p.piezas), cap=p.capucha&&!/^sin/i.test(p.capucha)?' · '+e(p.capucha):'';
+    return '<div style="border-left:3px solid var(--accent);padding:3px 0 3px 8px;margin:5px 0;font-size:12px;line-height:1.45"><b style="color:var(--text)">'+(g.packs.length>1?'Pack '+(i+1)+': ':'')+e(p.pack||'—')+'</b> · '+e(p.modelo||'—')+' · '+e(p.manga||'')+cap+
+      '<br><span style="color:var(--muted)">Tela</span> <b>'+e(p.tela||'—')+'</b> · <span style="color:var(--muted)">Vinil</span> <b>'+e(p.vinil||'—')+'</b>'+(np?' · <b>'+np+' pieza'+(np>1?'s':'')+'</b>':'')+
+      (tallas?'<br><span style="color:var(--muted)">Tallas:</span> '+e(tallas):'')+'</div>';
+  }).join('');
+  var ent=[]; if(g.correo)ent.push('✉ '+e(g.correo)); if(g.celular)ent.push('📱 '+e(g.celular));
+  var retira=(g.retira&&g.retira!==g.nombre)?'<div><span style="color:var(--muted)">Retira:</span> <b>'+e(g.retira)+'</b>'+(g.retiraCi?' · CI '+e(g.retiraCi):'')+(g.retiraCel?' · '+e(g.retiraCel):'')+'</div>':'';
+  return packs+'<div style="font-size:12px;line-height:1.5;margin-top:6px;background:var(--surface2);border-radius:8px;padding:7px 10px">'+
+    '<div><span style="color:var(--muted)">Cliente:</span> <b>'+e(g.nombre)+'</b> · CI '+e(g.cedula||'—')+(ent.length?' · '+ent.join(' · '):'')+'</div>'+
+    '<div><span style="color:var(--muted)">Envío:</span> <b>'+e((ag[0]||'—').trim())+'</b>'+(ag.length>1?' — '+e(ag.slice(1).join('—').trim()):'')+'</div>'+retira+
+    '<div><span style="color:var(--muted)">Pedido:</span> '+e(g.fecha||'—')+' · <span style="color:var(--muted)">Avance:</span> <b style="color:'+(ks.length&&hechas>=ks.length?'var(--accent)':'var(--warn)')+'">'+hechas+'/'+ks.length+' piezas</b></div></div>';
+}
+function tallerVerPedidoCompleto(cod){   // abre el pedido completo con mockups y detalle (el mismo visor de Gestión → Producción)
+  window.prodGrupos=window.prodGrupos||{};
+  if(!window.prodGrupos[cod]){ var g=tallerGrupos[cod]; if(!g){alert('Pedido no encontrado');return;}
+    window.prodGrupos[cod]={cod:g.cod,nombre:g.nombre,correo:g.correo,cedula:g.cedula,celular:g.celular,agencia:g.agencia,retira:g.retira,retiraCI:g.retiraCi,retiraCel:g.retiraCel,fecha:g.fecha,urgente:g.urgente,
+      packs:g.packs.map(function(p){return {modelo:p.modelo,manga:p.manga,capucha:p.capucha,pack:p.pack,tela:p.tela,vinil:p.vinil,piezas:p.piezasProd,codigoS:p.codigoS,codigoC:p.codigoC}})}; }
+  abrirProduccionTablet(cod);
+}
 function tallerNotificarMensajero(cod){
   tallerCerrarEscaner(); var S=window._scan; S.cod=''; S.jpg='';
   var o=document.createElement('div'); o.id='scan-overlay';
@@ -9425,15 +9453,22 @@ async function tallerEscanerCod(cod){
     (function(){var u=uniEstadoGrupo(g); return u.cods.length?'<div style="color:var(--accent2);font-weight:700;font-size:13px;margin-bottom:8px">🔗 Sale junto con '+u.cods.map(function(c){return 'COD '+c}).join(', ')+': también se marcarán como en proceso de envío.</div>':'';})()+
     '<div style="display:flex;gap:8px;flex-wrap:wrap"><label style="flex:1;min-width:150px;display:block;border:2px dashed var(--accent);border-radius:10px;padding:14px;text-align:center;cursor:pointer;font-weight:700;color:var(--accent)">📷 Tomar foto<input type="file" accept="image/*" capture="environment" style="display:none" onchange="tallerEscanerFoto(this.files[0])"></label><label style="flex:1;min-width:150px;display:block;border:2px dashed var(--accent2);border-radius:10px;padding:14px;text-align:center;cursor:pointer;font-weight:700;color:var(--accent2)">🖼️ Cargar del celular<input type="file" accept="image/*" style="display:none" onchange="tallerEscanerFoto(this.files[0])"></label></div>'+
     '<div id="scan-prev" style="margin-top:8px"></div><div id="scan-res" style="margin-top:8px;font-size:13px"></div>'+
-    '<button id="scan-btn" onclick="tallerEscanerConfirmar()" disabled style="width:100%;margin-top:8px;padding:13px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:10px;color:#000;font-size:15px;font-weight:800;cursor:pointer;opacity:.4">🚚 Fabricado · en proceso de envío · avisar al cliente</button>';
+    '<button id="scan-btn" onclick="tallerEscanerConfirmar()" style="position:sticky;bottom:0;width:100%;margin-top:10px;padding:14px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:10px;color:#000;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 -6px 14px var(--surface)">🚚 ENVIAR NOTIFICACIÓN · en proceso de envío · avisar al cliente</button>';
 }
 async function tallerEscanerFoto(file){
-  if(!file)return; var S=window._scan, pv=document.getElementById('scan-prev');
-  try{ var cv=await enviosReducir(file,1400); S.jpg=cv.toDataURL('image/jpeg',0.82); pv.innerHTML='<img src="'+S.jpg+'" style="max-width:100%;max-height:220px;border-radius:8px;display:block;margin:0 auto">'; var b=document.getElementById('scan-btn'); b.disabled=false; b.style.opacity=1; }
-  catch(e){ pv.innerHTML='<span style="color:var(--danger)">✗ '+prodEsc(e.message)+'</span>'; }
+  if(!file)return; var S=window._scan, pv=document.getElementById('scan-prev'), b=document.getElementById('scan-btn');
+  pv.innerHTML='<span class="spinner">↻</span> Procesando la foto...';
+  var jpg='';
+  try{ var cv=await enviosReducir(file,1400); jpg=cv.toDataURL('image/jpeg',0.82); }
+  catch(e){   // si el celular da una imagen que no se puede reducir, se usa tal cual (si no es enorme)
+    try{ if(file.size<6*1024*1024){ jpg=await new Promise(function(ok,no){ var fr=new FileReader(); fr.onload=function(){ok(fr.result)}; fr.onerror=function(){no(new Error('no se pudo leer la imagen'))}; fr.readAsDataURL(file); }); } }catch(e2){}
+    if(!jpg){ pv.innerHTML='<span style="color:var(--danger)">✗ No pude leer esa imagen ('+prodEsc(e.message||'')+'). Prueba con otra foto o toma una nueva.</span>'; return; } }
+  S.jpg=jpg; pv.innerHTML='<img src="'+jpg+'" style="max-width:100%;max-height:220px;border-radius:8px;display:block;margin:0 auto"><div style="color:var(--accent);font-weight:800;text-align:center;margin-top:6px">✅ Foto cargada · ahora toca el botón verde para enviar la notificación</div>';
+  if(b){ b.disabled=false; b.style.opacity=1; try{ b.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(e){} }
 }
 async function tallerEscanerConfirmar(){
-  var S=window._scan, g=tallerGrupoDe(S.cod), res=document.getElementById('scan-res'), btn=document.getElementById('scan-btn'); if(!g||!S.jpg)return;
+  var S=window._scan, g=tallerGrupoDe(S.cod), res=document.getElementById('scan-res'), btn=document.getElementById('scan-btn'); if(!g)return;
+  if(!S.jpg){ res.innerHTML='<span style="color:var(--warn);font-weight:700">📷 Primero toma o carga la foto del paquete.</span>'; return; }
   var gk={packs:g.packs.map(function(p){return {codigoS:p.codigoS,piezas:p.piezasProd}})};
   var fc=document.getElementById('scan-force'); if(!prodFabricado(S.cod,gk)&&!(fc&&fc.checked)){ res.innerHTML='<span style="color:var(--danger)">Marca la casilla para confirmar que el pedido está completo</span>'; return; }
   var re=document.getElementById('scan-reenv'), reenviar=re&&re.checked?'SI':'';
@@ -10025,9 +10060,9 @@ async function cargarTaller(){
             ${g.urgente?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">⚡ ${g.urgente}</span>`:''}
             ${g.packs.some(p=>!p.fuenteConfiable)?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:10px;color:var(--warn);">⚠ sin match COLA.P</span>`:''}
           </div>
-          <div style="font-size:12px;color:var(--muted);">${resumenPacks||'—'}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Cédula: ${g.cedula||'—'} · Fecha: ${g.fecha||'—'}</div>
+          ${tallerDetalleHTML(g,cod)}
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">
+            <button type="button" onclick="event.preventDefault();event.stopPropagation();tallerVerPedidoCompleto('${cod}')" style="padding:7px 14px;background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:12px;font-weight:800;cursor:pointer;">🖼 Ver pedido completo (mockups)</button>
             ${tallerWaBtn(g)}
             <button type="button" onclick="event.preventDefault();event.stopPropagation();tallerImprimirTicket('${cod}')" style="padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🖨 Ticket de envío</button>
             ${_fab?`<button type="button" onclick="event.preventDefault();event.stopPropagation();tallerNotificarMensajero('${cod}')" style="padding:7px 14px;background:${(window._estadoEnvio||{})[cod]?'var(--surface2)':'#ffb020'};border:${(window._estadoEnvio||{})[cod]?'1px solid var(--accent)':'none'};border-radius:8px;color:${(window._estadoEnvio||{})[cod]?'var(--accent)':'#000'};font-size:12px;font-weight:800;cursor:pointer;">${(window._estadoEnvio||{})[cod]?'🛵 Mensajero notificado ✓ (reenviar)':'🛵 Notificar mensajero'}</button>`:''}
