@@ -9179,6 +9179,81 @@ async function enviosAceptar(id,cod){
     enviosCargarPendientes();
   }catch(e){res.innerHTML='<span style="color:var(--danger)">✗ '+prodEsc(e.message)+'</span>';}
 }
+
+/* ===== TALLER: pedido 100% fabricado -> Cargar guía de envío (foto -> verifica nombre -> clave -> sube COD.JPG y ejecuta TODO el envío) ===== */
+window._tg={cod:'',ped:null,jpg:'',okNombre:false,texto:''};
+function tallerCerrarGuia(){var o=document.getElementById('tg-overlay'); if(o)o.remove(); document.body.style.overflow='';}
+async function tallerAbrirGuia(cod){
+  var g=(tallerGrupos||{})[cod]; if(!g){alert('Pedido no encontrado');return;}
+  window._tg={cod:cod,ped:null,jpg:'',okNombre:false,texto:''};
+  tallerCerrarGuia();
+  var esc=prodEsc, o=document.createElement('div'); o.id='tg-overlay';
+  o.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto';
+  o.innerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;max-width:520px;width:100%;padding:18px;color:var(--text);max-height:94vh;overflow:auto">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:18px;font-weight:800">📦 Cargar guía de envío</div><button onclick="tallerCerrarGuia()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button></div>'+
+    '<div style="background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px"><b style="font-size:16px">'+esc(g.nombre)+'</b> · COD '+esc(cod)+'<br><span style="color:var(--muted)">Agencia: '+esc(g.agencia||'—')+'</span>'+((g.retira&&g.retira!==g.nombre)?'<br><span style="color:var(--muted)">Retira: '+esc(g.retira)+'</span>':'')+'</div>'+
+    '<label style="display:block;border:2px dashed var(--accent);border-radius:10px;padding:14px;text-align:center;cursor:pointer;font-weight:700;color:var(--accent)">📷 Tomar / elegir foto de la guía<input type="file" accept="image/*" style="display:none" onchange="tallerGuiaFoto(this.files[0])"></label>'+
+    '<div id="tg-res" style="margin-top:10px;font-size:13px"></div>'+
+    '<div id="tg-form" style="display:none;margin-top:10px"></div></div>';
+  document.body.appendChild(o); document.body.style.overflow='hidden';
+  // datos completos del pedido (correo, dirección, retira) desde PEDIDOS; si falla se usan los de Producción
+  try{ var d=await scriptGETjson({action:'buscarPedido',cod:cod},20000); if(d&&d.ok) window._tg.ped=d; }catch(e){}
+  if(!window._tg.ped){ var esM=!g.retira||g.retira===g.nombre; window._tg.ped={cod:cod,nombre:g.nombre,cedula:g.cedula,correo:g.correo||'',celular:g.celular,agencia:g.agencia,direccion:'',descripcion:'',retiraNombre:g.retira||g.nombre,retiraCi:g.retiraCi||g.cedula,retiraCel:g.retiraCel||g.celular,esMismo:esM}; }
+}
+async function tallerGuiaFoto(file){
+  if(!file)return; var res=document.getElementById('tg-res'), form=document.getElementById('tg-form'), g=tallerGrupos[window._tg.cod];
+  form.style.display='none'; res.innerHTML='<span class="spinner">↻</span> Leyendo la guía y comprobando el nombre... (la primera vez tarda un poco más)';
+  try{
+    var cv=await enviosReducir(file,1600), thumb=cv.toDataURL('image/jpeg',0.6); window._tg.jpg=cv.toDataURL('image/jpeg',0.85);
+    var texto=''; try{ texto=await enviosLeerTexto(cv); }catch(e){ console.warn('OCR:',e); }
+    window._tg.texto=texto;
+    var r=enviosPuntaje({cod:g.cod,nombre:g.nombre,retira:g.retira,cedula:g.cedula,celular:g.celular},texto), pct=Math.round(r.sc*100), ok=r.sc>=0.7;
+    window._tg.okNombre=ok;
+    res.innerHTML='<div style="display:flex;gap:12px;flex-wrap:wrap"><img src="'+thumb+'" style="width:120px;max-height:160px;object-fit:contain;border-radius:8px;background:#000"><div style="flex:1;min-width:180px">'+
+      (ok?'<div style="color:var(--accent);font-weight:800;font-size:15px">✅ El nombre coincide ('+pct+'%)</div><div style="font-size:12px;color:var(--muted)">'+(r.extra.length?'También coincide: '+r.extra.join(', ')+'. ':'')+'Esta guía es de '+prodEsc(g.nombre)+'.</div>'
+          :'<div style="color:var(--danger);font-weight:800;font-size:15px">⚠ No pude confirmar el nombre ('+pct+'%)</div><div style="font-size:12px;color:var(--muted)">Revisa que la guía sea de <b>'+prodEsc(g.nombre)+'</b>'+((g.retira&&g.retira!==g.nombre)?' o de <b>'+prodEsc(g.retira)+'</b>':'')+'. Puede ser que la foto esté borrosa.</div>')+
+      '<details style="margin-top:6px;font-size:11px;color:var(--muted)"><summary style="cursor:pointer">Texto leído</summary><pre style="white-space:pre-wrap;margin:4px 0 0">'+prodEsc(texto||'(no se pudo leer texto)')+'</pre></details></div></div>';
+    var p=window._tg.ped, necesita=['MRW','TEALCA','ZOOM'].some(function(a){return String(p.agencia||g.agencia||'').toUpperCase().indexOf(a)>=0});
+    form.style.display='block';
+    form.innerHTML=(ok?'':'<label style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--warn);margin-bottom:10px;cursor:pointer"><input type="checkbox" id="tg-force" style="width:18px;height:18px"> Confirmo que esta guía SÍ es de '+prodEsc(g.nombre)+'</label>')+
+      (necesita?'<div class="field-label">N° de guía / cupón</div><input id="tg-num" class="field-input" type="text" placeholder="Número de guía" style="text-transform:uppercase;margin-bottom:10px">'
+               :'<div style="font-size:12px;color:var(--muted);margin-bottom:10px">📦 Guía automática: <b style="color:var(--text)">GUIA-'+prodEsc(g.cod)+'</b></div>')+
+      '<div class="field-label">Tu código personal</div><input id="tg-clave" class="field-input" type="password" inputmode="numeric" autocomplete="off" placeholder="Código de autorización" style="margin-bottom:10px">'+
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">Al cargar: se guarda la foto como '+prodEsc(g.cod)+'.JPG, se registra como Enviado, se manda el correo al cliente con la guía y sale de Taller.</div>'+
+      '<button id="tg-btn" onclick="tallerGuiaConfirmar()" style="width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:10px;color:#000;font-size:15px;font-weight:800;cursor:pointer">📦 Cargar guía y enviar</button><div id="tg-msg" style="margin-top:10px;font-size:13px"></div>';
+  }catch(e){ res.innerHTML='<span style="color:var(--danger)">✗ '+prodEsc(e.message)+'</span>'; }
+}
+async function tallerGuiaConfirmar(){
+  var t=window._tg, g=tallerGrupos[t.cod], p=t.ped, msg=document.getElementById('tg-msg'), btn=document.getElementById('tg-btn');
+  var err=function(m){msg.innerHTML='<span style="color:var(--danger)">'+m+'</span>';};
+  if(!t.jpg){err('Primero sube la foto de la guía');return;}
+  var force=document.getElementById('tg-force'); if(!t.okNombre&&!(force&&force.checked)){err('Marca la casilla para confirmar que la guía es de este cliente');return;}
+  var clave=String(document.getElementById('tg-clave').value||'').trim().toUpperCase(); if(!USUARIOS[clave]){err('❌ Código incorrecto');return;}
+  var usuario=USUARIOS[clave], necesita=['MRW','TEALCA','ZOOM'].some(function(a){return String(p.agencia||g.agencia||'').toUpperCase().indexOf(a)>=0});
+  var numEl=document.getElementById('tg-num'), cupon=numEl?numEl.value.trim().toUpperCase():'';
+  if(necesita&&!cupon){err('Ingresa el número de guía');return;}
+  var guia=necesita?cupon:'GUIA-'+t.cod, agU=String(p.agencia||g.agencia||'').toUpperCase(), direccion=p.direccion||DIRECCIONES_AUTO[agU]||p.agencia||g.agencia, fecha=getFechaHora();
+  btn.disabled=true; btn.style.opacity=.5;
+  try{
+    msg.innerHTML='<span class="spinner">↻</span> Subiendo la guía a la carpeta de envíos...';
+    var form=new FormData(); form.append('action','subirGuiaEnvio'); form.append('codigo',t.cod); form.append('usuario',usuario); form.append('imagen_base64',t.jpg.split(',')[1]);
+    var r0=await fetch(SCRIPT_URL,{method:'POST',body:form}), j0=await r0.json(); if(!j0.ok)throw new Error('No se pudo subir la foto: '+(j0.error||''));
+    msg.innerHTML='<span class="spinner">↻</span> Registrando el envío y avisando al cliente...';
+    var resP=await scriptGETjson({action:'addPedido',nombre:p.nombre,cedula:p.cedula,correo:p.correo||'',cod:t.cod,numero_guia:guia,agencia:p.agencia,status:'Enviado',celular:p.celular,fecha:fecha,descripcion:'Envio desde Taller '+usuario,
+      nombre_envio:p.esMismo?'':p.retiraNombre,cel_envio:p.esMismo?'':p.retiraCel,ci_envio:p.esMismo?'':p.retiraCi,direccion:direccion,usuario:usuario});
+    if(!resP.ok)throw new Error('No se pudo guardar en PEDIDOS: '+(resP.error||''));
+    try{ await eliminarDeProduccion(t.cod); }catch(e){ console.warn('eliminarProduccion error:',e); }
+    var mb=new FormData();
+    mb.append('tipo_operacion','Enviado'); mb.append('status','Enviado'); mb.append('nombre',p.nombre); mb.append('correo',p.correo||''); mb.append('cedula',p.cedula); mb.append('celular',p.celular);
+    mb.append('agencia',p.agencia); mb.append('direccion_agencia',direccion); mb.append('diferente_envio',p.esMismo?'no':'si'); mb.append('nombre_envio',p.esMismo?'':p.retiraNombre);
+    mb.append('ci_envio',p.esMismo?'':p.retiraCi); mb.append('cel_envio',p.esMismo?'':p.retiraCel); mb.append('codigo',t.cod); mb.append('numero_guia',guia);
+    mb.append('descripcion',p.descripcion||'Envio desde Taller'); mb.append('urgente','NO'); mb.append('selector_agregar_arte','no'); mb.append('nombre_arte',''); mb.append('usuario',usuario); mb.append('fecha',fecha);
+    var pr=await enviarAProceso(mb,'Enviado'); if(!pr.ok)throw new Error('No se pudo enviar la guía: '+(pr.error||'sin detalle'));
+    try{ if(p.celular){ var wa=new FormData(); wa.append('celular',p.celular||''); wa.append('nombre',p.nombre||''); wa.append('mensaje','Hola '+(p.nombre||'')+' Somos IKOA BeKate. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias'); await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:wa,mode:'no-cors'}); } }catch(e){ console.warn('WhatsApp webhook error:',e); }
+    msg.innerHTML='<span style="color:var(--accent);font-weight:800">✅ Enviado · COD '+prodEsc(t.cod)+' · '+prodEsc(usuario)+'</span>';
+    setTimeout(function(){ tallerCerrarGuia(); cargarTaller(); },2500);
+  }catch(e){ msg.innerHTML='<span style="color:var(--danger)">✗ '+prodEsc(e.message)+'</span>'; btn.disabled=false; btn.style.opacity=1; }
+}
 /* ===== Aprobaciones: botón "Ver pedido" (vista previa estilo COD, sin aprobar) ===== */
 window._aproVer=window._aproVer||{};
 function aproVerBtn(base,packs,r){
@@ -9577,6 +9652,7 @@ async function cargarTaller(){
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">
             ${tallerWaBtn(g)}
             <button type="button" onclick="event.preventDefault();event.stopPropagation();tallerImprimirTicket('${cod}')" style="padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🖨 Ticket de envío</button>
+            ${_fab?`<button type="button" onclick="event.preventDefault();event.stopPropagation();tallerAbrirGuia('${cod}')" style="padding:7px 14px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:8px;color:#000;font-size:12px;font-weight:800;cursor:pointer;">📦 Cargar guía de envío</button>`:''}
           </div>
         </div>`;
       lista.appendChild(card);
