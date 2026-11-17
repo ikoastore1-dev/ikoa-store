@@ -6970,7 +6970,7 @@ async function generar(datos){
   document.body.removeChild(r.host);
   var uri=pdf.output('datauristring');return {base64:uri.split(',')[1],paginas:r.pages.length};
 }
-window.CODPDF={telaConocida:function(n){return !!K_TELA[slug(String(n||'').replace(/^\d+\s*[·.\-]\s*/,''))]},BASE_ALTO:BASE_ALTO,FOTO_ALTO:FOTO_ALTO,lib:cargarLib,vinilHex:function(n){return 'rgb('+colorVinil(n).join(',')+')'},generar:generar,armarPaginas:armarPaginas,slug:slug,secciones:function(d){d.soloSecciones=true;return armarPaginas(d)}};
+window.CODPDF={telaConocida:function(n){return !!K_TELA[slug(String(n||'').replace(/^\d+\s*[·.\-]\s*/,''))]},BASE_ALTO:BASE_ALTO,FOTO_ALTO:FOTO_ALTO,lib:cargarLib,vinilHex:function(n){return 'rgb('+colorVinil(n).join(',')+')'},generar:generar,armarPaginas:armarPaginas,slug:slug,mockup:mockup,mockGen:mockGen,colorTela:colorTela,telaConocida2:function(n){return !!K_TELA[slug(String(n||'').replace(/^\d+\s*[·.\-]\s*/,''))]},secciones:function(d){d.soloSecciones=true;return armarPaginas(d)}};
 })();
 
 
@@ -9719,77 +9719,97 @@ function tallerFechaHoy(){
   return hoy.toLocaleDateString('es-VE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
 }
 
-// ── Construcción HTML: REPORTE CORTADOR (tabla única, todos los COD) ──
-function tallerConstruirCortadorHTML(codigos){
+// ── Construcción HTML: REPORTE CORTADOR — ordenado por TELA (Comfy / Licra / Colecciones) → COLOR → urgentes primero, con mockup coloreado ──
+var _tallerMkCache={};
+async function tallerMockupColor(pk,telaTxt){
+  try{
+    if(!window.CODPDF||!CODPDF.mockup) return null;
+    const key=(pk.modelo||'')+'|'+(pk.manga||'')+'|'+telaTxt; if(key in _tallerMkCache) return _tallerMkCache[key];
+    const tr=CODPDF.colorTela(telaTxt), vr=[255,255,255]; let m=null;
+    if(codEsLarga(pk)){ m=await CODPDF.mockup(/LICRA/i.test(pk.modelo||'')?'licra':'comfy','normal','frente',tr,vr); }
+    else{ const gen=codMockGenerico(pk,telaTxt); const mm=gen?await CODPDF.mockGen(gen,tr,vr):[]; m=mm&&mm[0]; }
+    let out=null;
+    if(m&&m.url){ out=await new Promise(ok=>{ const im=new Image(); im.onload=()=>{ const H=130,W=Math.max(1,Math.round(im.width*H/im.height)),c=document.createElement('canvas'); c.width=W;c.height=H; c.getContext('2d').drawImage(im,0,0,W,H); ok(c.toDataURL('image/png')); }; im.onerror=()=>ok(null); im.src=m.url; }); }
+    _tallerMkCache[key]=out; return out;
+  }catch(e){ return null; }
+}
+function tallerFamiliaTela(p){
+  const m=String(p.modelo||'').toUpperCase();
+  if(/LICRA/.test(m)) return {o:2,n:'LICRA'};
+  if(/COMFY/.test(m)) return {o:1,n:'COMFY'};
+  return {o:3,n:'COLECCIONES Y OTROS'};
+}
+async function tallerConstruirCortadorHTML(codigos){
   const fecha=tallerFechaHoy();
-  let filas='';
+  const fams={};   // familia -> color -> {rows[], unds, urgUnds, cods:Set, pk, telaTxt}
   codigos.forEach(cod=>{
-    const g=tallerGrupos[cod];
-    if(!g) return;
+    const g=tallerGrupos[cod]; if(!g) return;
     g.packs.forEach(p=>{
-      const desc=tallerDescripcionPack(p);
-      const piezas=tallerParsearPiezas(p.piezas);
-      // Agrupar por Genero+Talla+Tela (si varía por pieza) para el cortador
-      const grupos={};
-      let sinFormato=0;
+      const desc=tallerDescripcionPack(p), fam=tallerFamiliaTela(p), piezas=tallerParsearPiezas(p.piezas), grupos={}; let sinFormato=0;
       piezas.forEach(pz=>{
         if(pz.raw){ sinFormato++; return; }
-        const telaPz=pz.tela||''; // solo se llena cuando el pack tiene colores mezclados (Opción B)
-        const largoPz=pz.largo||''; // solo se llena para Short Unicolor (Largo Playero/Sport)
+        const telaPz=pz.tela||'', largoPz=pz.largo||'';
         const key=(pz.genero||'—')+'||'+(pz.talla||'—')+(pz.capucha?'||CAP':'')+(pz.cuelloAlto?'||CUA':'')+(telaPz?'||'+telaPz:'')+(largoPz?'||'+largoPz:'');
-        if(!grupos[key]) grupos[key]={genero:pz.genero||'—', talla:pz.talla||'—', capucha:pz.capucha, cuelloAlto:pz.cuelloAlto, tela:telaPz, largo:largoPz, unds:0};
+        if(!grupos[key]) grupos[key]={genero:pz.genero||'—',talla:pz.talla||'—',capucha:pz.capucha,cuelloAlto:pz.cuelloAlto,tela:telaPz,largo:largoPz,unds:0};
         grupos[key].unds++;
       });
+      const add=(colorTxt,row,unds)=>{
+        const color=String(colorTxt||'SIN COLOR').replace(/^\d+\s*[·.]\s*/,'').trim().toUpperCase()||'SIN COLOR';
+        const F=fams[fam.n]||(fams[fam.n]={o:fam.o,colores:{}});
+        const C=F.colores[color]||(F.colores[color]={rows:[],unds:0,urgUnds:0,cods:new Set(),pk:p,telaTxt:String(colorTxt||'').split('/')[0].trim()});
+        C.rows.push(row); C.unds+=unds; C.cods.add(cod); if(g.urgente) C.urgUnds+=unds;
+      };
       Object.values(grupos).forEach(gr=>{
-        filas+=`<tr>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${cod}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${desc}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${(gr.talla||'—').toUpperCase()}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${(gr.genero||'—').toUpperCase()}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${gr.unds}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${(gr.tela||p.tela||'—').split('-')[0].trim().toUpperCase()}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${gr.largo?gr.largo.toUpperCase():(gr.capucha?'CON CAPUCHA':(gr.cuelloAlto?'CON CUELLO ALTO':'SIN CAPUCHA'))}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;color:#b00;font-weight:700;">${g.urgente?'URGENTE':''}</td>
-        </tr>`;
+        const colorTxt=(gr.tela||p.tela||'—').split('-')[0].trim();
+        const obs=gr.largo?gr.largo.toUpperCase():(gr.capucha?'CON CAPUCHA':(gr.cuelloAlto?'CON CUELLO ALTO':'SIN CAPUCHA'));
+        add(colorTxt,{cod,urg:!!g.urgente,desc,talla:(gr.talla||'—').toUpperCase(),genero:(gr.genero||'—').toUpperCase(),unds:gr.unds,obs},gr.unds);
       });
       if(sinFormato>0){
-        // Intentar extraer una cantidad numérica del campo pack (ej: "4PACK" -> 4)
-        const mNum=String(p.pack||'').match(/(\d+)/);
-        const undsAprox=mNum?mNum[1]:'';
-        filas+=`<tr>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${cod}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${desc}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">—</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">—</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;">${undsAprox}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;">${(p.tela||'—').toUpperCase()}</td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;font-style:italic;line-height:1.5;">${tallerReformatearTexto(p.piezas)} <span style="color:#888;font-style:normal;">(sin desglose exacto por talla)</span></td>
-          <td style="border:1px solid #999;padding:5px 6px;font-size:10.5px;text-align:center;color:#b00;font-weight:700;">${g.urgente?'URGENTE':''}</td>
-        </tr>`;
+        const mNum=String(p.pack||'').match(/(\d+)/), undsAprox=mNum?mNum[1]:'';
+        add(String(p.tela||'—').split('-')[0].trim(),{cod,urg:!!g.urgente,desc,talla:'—',genero:'—',unds:undsAprox,obsHtml:tallerReformatearTexto(p.piezas)+' <span style="color:#666;font-weight:400;">(sin desglose exacto por talla)</span>'},parseInt(undsAprox)||0);
       }
     });
   });
+  const TH='background:#000;color:#fff;font-size:12px;padding:4px;border:1px solid #000;';
+  const head=`<tr>${['COD','TALLA','GÉNERO','UNDS','OBSERVACIÓN'].map(h=>`<th style="${TH}">${h}</th>`).join('')}</tr>`;
+  let cuerpo='', resumen='';
+  // Colores con más urgentes primero (en toda la hoja); sin urgentes: Comfy, Licra, Colecciones y por orden alfabético
+  const famUrg=f=>Math.max(0,...Object.values(fams[f].colores).map(c=>c.urgUnds));
+  const famNombres=Object.keys(fams).sort((a,b)=>(famUrg(b)-famUrg(a))||(fams[a].o-fams[b].o));
+  for(const fn of famNombres){
+    const F=fams[fn], colores=Object.keys(F.colores).sort((a,b)=>(F.colores[b].urgUnds-F.colores[a].urgUnds)||a.localeCompare(b,'es'));
+    const totFam=colores.reduce((t,c)=>t+F.colores[c].unds,0);
+    cuerpo+=`<div style="page-break-inside:avoid;margin:10px 0 4px;background:#000;color:#fff;padding:4px 10px;font-size:18px;font-weight:900;">TELA ${fn} <span style="font-weight:400;font-size:12px;">· ${colores.length} color(es) · ${totFam} unds</span></div>`;
+    resumen+=`<div style="font-size:11px;margin:2px 0;"><b>${fn}:</b> ${colores.map(c=>(F.colores[c].urgUnds?'⚡':'')+c+' ('+F.colores[c].unds+')').join(' · ')}</div>`;
+    for(const c of colores){
+      const C=F.colores[c], rgb=(window.CODPDF&&CODPDF.colorTela)?CODPDF.colorTela(C.telaTxt||c):[154,154,154];
+      const mk=await tallerMockupColor(C.pk,C.telaTxt||c);
+      C.rows.sort((a,b)=>(b.urg-a.urg)||((parseInt(a.cod)||0)-(parseInt(b.cod)||0)));
+      let prev=null, z=0;
+      const filas=C.rows.map(r=>{
+        const nw=prev!==null&&prev!==r.cod; prev=r.cod; z++;
+        const bg=r.urg?(z%2?'#ffd9d9':'#ffc9c9'):(z%2?'#fff':'#e9e9e9');
+        const td=`padding:3px 8px;border-bottom:1px solid #888;${nw?'border-top:4px solid #000;':''}font-size:15px;font-weight:800;background:${bg};`;
+        const big=`${td}font-size:26px;font-weight:900;text-align:center;width:80px;border-left:1px solid #000;border-right:1px solid #000;`;
+        return `<tr><td style="${td}font-size:18px;font-weight:900;">${r.cod}${r.urg?' <b style="color:#c00;font-size:10px;">URGENTE</b>':''}<div style="font-size:9px;font-weight:400;color:#444;">${r.desc}</div></td><td style="${big}">${r.talla}</td><td style="${td}">${r.genero}</td><td style="${big}">${r.unds}</td><td style="${td}">${r.obsHtml||r.obs}</td></tr>`;
+      }).join('');
+      cuerpo+=`<div style="page-break-inside:avoid;margin:6px 0 10px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:3px;"><tr>
+          <td style="width:50px;vertical-align:middle;">${mk?`<img src="${mk}" style="height:46px;">`:''}</td>
+          <td style="vertical-align:middle;"><span style="display:inline-block;width:18px;height:18px;border:2px solid #000;border-radius:4px;vertical-align:middle;background:rgb(${rgb.join(',')});"></span>
+            <span style="font-size:22px;font-weight:900;vertical-align:middle;margin-left:6px;">${c}</span>
+            <span style="font-size:12px;color:#444;vertical-align:middle;"> · ${C.unds} unds · ${C.cods.size} pedido(s)${C.urgUnds?' · <b style="color:#b00;">⚡ '+C.urgUnds+' URGENTES (primero)</b>':''}</span></td></tr></table>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #000;border-collapse:collapse;table-layout:fixed;"><colgroup><col style="width:36%"><col style="width:9%"><col style="width:20%"><col style="width:9%"><col style="width:26%"></colgroup><thead>${head}</thead><tbody>${filas}</tbody></table></div>`;
+    }
+  }
   return `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>Reporte Cortador - ${fecha}</title>
 <style>table{border-collapse:collapse;}@page{margin:8mm;size:A4 landscape;}</style>
 </head>
-<body style="font-family:Arial,sans-serif;color:#1a1a1a;margin:0;padding:6px;">
-<p style="font-size:14px;font-weight:700;margin:0 0 10px 0;text-transform:capitalize;">${fecha}</p>
-<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #999;">
-  <thead>
-    <tr style="background:#000;color:#fff;">
-      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">COD</th>
-      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">DESCRIPCION</th>
-      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">TALLA</th>
-      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">GENERO</th>
-      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">UNDS</th>
-      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">COLOR</th>
-      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">OBSERVACION</th>
-      <th style="border:1px solid #999;padding:6px;font-size:10.5px;">URGENTE</th>
-    </tr>
-  </thead>
-  <tbody>${filas}</tbody>
-</table>
+<body style="font-family:Arial,sans-serif;color:#000;margin:0;padding:6px;">
+<p style="font-size:13px;font-weight:700;margin:0 0 4px 0;text-transform:capitalize;">${fecha} · Reporte del cortador por tela y color</p>
+<div style="border:1px solid #999;padding:4px 10px;margin-bottom:4px;">${resumen}</div>
+${cuerpo}
 </body></html>`;
 }
 
@@ -10250,7 +10270,7 @@ async function generarReportesTaller(){
   resWrap.style.display='none';
   try{
     btn.textContent='⏳ Generando Cortador...';
-    const htmlCortador=tallerConstruirCortadorHTML(codigos);
+    const htmlCortador=await tallerConstruirCortadorHTML(codigos);
     const infoCortador=await cotGenerarPDFViaAppsScript(htmlCortador, 'Taller_Cortador_'+Date.now());
 
     btn.textContent='⏳ Generando Estampador...';
