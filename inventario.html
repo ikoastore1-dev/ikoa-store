@@ -4302,8 +4302,8 @@ function ikoaTicketHTML(t){
     agLogo='';
   }
   var fNom=fs(t.nombre,[[16,27],[22,23],[30,19],[40,16],[999,14]]), fAg=fs(propio?propio[1]:t.agencia,[[8,40],[12,36],[18,30],[26,24],[999,19]]), fDir=fs(propio?propio[2]:t.direccion,[[30,19],[60,16],[100,14],[150,12.5],[999,11.5]]);
-  /* etiqueta 100 mm x 150 mm vertical (área útil 92 x 142 mm): el cliente y la agencia de destino son lo principal */
-  return '<!doctype html><html><head><meta charset="utf-8"><title>Ticket COD '+e(t.cod)+'</title><style>@page{size:100mm 150mm;margin:4mm}*{box-sizing:border-box}html{height:141mm;overflow:hidden}html,body{margin:0;background:#fff}body{width:92mm;height:141mm;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#000;display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+  /* etiqueta 95 mm x 145 mm vertical (área útil 89 x 139 mm): el cliente y la agencia de destino son lo principal */
+  return '<!doctype html><html><head><meta charset="utf-8"><title>Ticket COD '+e(t.cod)+'</title><style>@page{size:95mm 145mm;margin:3mm}*{box-sizing:border-box}html{height:139mm;overflow:hidden}html,body{margin:0;background:#fff}body{width:89mm;height:139mm;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#000;display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
    '.ban{text-align:center;padding:2px 0 7px;border-bottom:4px solid #000;flex:none}.ban img{height:27px;width:auto;display:inline-block;margin:0}'+
    '.env{display:flex;justify-content:space-between;align-items:flex-end;font-size:9.5px;font-weight:700;line-height:1.35;margin:4px 0 4px;color:#222;flex:none}.env span:last-child{text-align:right}'+
    '.cod{border:3px solid #000;color:#000;display:flex;align-items:center;justify-content:space-between;padding:2px 12px;flex:none}.cod small{font-size:12px;font-weight:900;letter-spacing:.35em}.cod b{font-size:46px;line-height:1.1;font-weight:900;letter-spacing:.02em}.cod svg{width:14mm;height:14mm;display:block;flex:none}'+
@@ -4322,13 +4322,13 @@ function ikoaTicketHTML(t){
    '<div class="pie"><div class="ctb"><span>¿DUDAS? ESCRÍBENOS</span></div>'+
    '<div class="ctg"><div><i>WHATSAPP</i><b>0414-9450742</b></div><div><i>INSTAGRAM</i><b>@ikoabrand</b></div><div><i>FACEBOOK</i><b>IKOA BRAND</b></div></div>'+
    '<div class="ctl"><i>CORREO</i><b>ikoa@ikoastore.com</b></div><div class="ctl"><i>TIENDA</i><b>C.C. Híper Jumbo, Maracay, Edo. Aragua</b></div>'+
-   '<div class="vs">Los que confían en Dios levantarán sus alas como las águilas<br><b>Isaías 40:31</b></div></div></body></html>';
+   '<div class="vs">Los que confían en Dios levantarán sus alas como las águilas<br><b>Isaías 40:31</b></div></div><scr'+'ipt>function ikoaFit(){var b=document.body,H=139/25.4*96;b.style.zoom=1;b.style.width=\'89mm\';b.style.height=\'auto\';var h=b.scrollHeight,z=h>H?(H/h)*0.985:1;b.style.zoom=z;b.style.height=(139/z)+\'mm\';b.style.width=(89/z)+\'mm\';b.setAttribute(\'data-z\',z.toFixed(3))}window.addEventListener(\'load\',ikoaFit);[].forEach.call(document.images,function(i){i.addEventListener(\'load\',ikoaFit);i.addEventListener(\'error\',ikoaFit)});ikoaFit();</scr'+'ipt></body></html>';
 }
 function ikoaImprimirTicket(t){
   var fr=document.createElement('iframe'); fr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
   document.body.appendChild(fr);
   var d=fr.contentWindow.document; d.open(); d.write(ikoaTicketHTML(t)); d.close();
-  var go=function(){try{fr.contentWindow.focus();fr.contentWindow.print()}catch(x){alert('No se pudo abrir la impresión: '+x.message)}
+  var go=function(){try{fr.contentWindow.ikoaFit&&fr.contentWindow.ikoaFit();fr.contentWindow.focus();fr.contentWindow.print()}catch(x){alert('No se pudo abrir la impresión: '+x.message)}
     setTimeout(function(){try{document.body.removeChild(fr)}catch(x){}},60000)};
   var im=d.getElementById('ct'), lg=d.getElementById('lg'), ag=d.getElementById('ag'), done=false, once=function(){if(!done){done=true;setTimeout(go,200)}};
   var pend=[im,lg,ag].filter(function(x){return x&&!x.complete}), n=pend.length;
