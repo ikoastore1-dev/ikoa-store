@@ -10101,6 +10101,40 @@ function tallerFamiliaTela(p){
   if(/COMFY/.test(m)) return {o:1,n:'COMFY'};
   return {o:3,n:'COLECCIONES Y OTROS'};
 }
+
+/* ===== Paginación controlada de los reportes del Taller (Cortador / Estampador) =====
+   El PDF lo arma Google (HTML -> Doc -> PDF) y no respeta cortes de página ni repite encabezados. Por eso la hoja se arma aquí:
+   se mide cada bloque, se llena la hoja, y si lo siguiente no cabe se pasa a la hoja siguiente con su encabezado de CONTINUACIÓN.
+   Si en tu PDF sobra mucho espacio abajo o aún se corta, ajusta estas dos medidas (en píxeles CSS a 96 dpi). */
+const TALLER_PAG_ALTO=640;    // alto útil por hoja (carta/A4 con márgenes de 1") ya con margen de seguridad
+const TALLER_PAG_ANCHO=620;   // ancho útil
+function tallerMedirHTML(html){
+  let d=document.getElementById('taller-medidor');
+  if(!d){ d=document.createElement('div'); d.id='taller-medidor'; d.style.cssText='position:absolute;left:-10000px;top:0;visibility:hidden;font-family:Arial,sans-serif;display:flow-root;'; document.body.appendChild(d); }
+  d.style.width=TALLER_PAG_ANCHO+'px'; d.innerHTML=html; const h=d.getBoundingClientRect().height; d.innerHTML=''; return h;
+}
+/* secciones: [{head, cont, rows:[html], wrap(rowsHtml)->html, nuevaHoja, gap}]  ·  intro: html opcional que va al inicio de la hoja 1 */
+function tallerPaginar(secciones,intro){
+  const H=TALLER_PAG_ALTO, paginas=[[]]; let y=0;
+  const nueva=()=>{ paginas.push([]); y=0; };
+  const push=(h)=>paginas[paginas.length-1].push(h);
+  if(intro){ push(intro); y+=tallerMedirHTML(intro); }
+  secciones.forEach(sec=>{
+    const wrap=sec.wrap||(x=>x), gap=sec.gap==null?10:sec.gap;
+    const base=tallerMedirHTML(wrap('')), hHead=tallerMedirHTML(sec.head+wrap(''))-base+base, hCont=tallerMedirHTML(sec.cont+wrap(''));
+    const hRows=sec.rows.map(r=>Math.max(8,tallerMedirHTML(wrap(r))-base));
+    const need=hHead+hRows.slice(0,2).reduce((a,b)=>a+b,0);
+    if(paginas[paginas.length-1].length&&(sec.nuevaHoja||y+need>H)) nueva();      // no empezar un reporte casi al final de la hoja
+    let chunk={hdr:sec.head,rows:[]}; y+=hHead;
+    const cerrar=()=>{ push(chunk.hdr+wrap(chunk.rows.join(''))); };
+    sec.rows.forEach((r,i)=>{
+      if(chunk.rows.length&&y+hRows[i]>H){ cerrar(); nueva(); chunk={hdr:sec.cont,rows:[]}; y=hCont; }   // continúa en la hoja siguiente con su título
+      chunk.rows.push(r); y+=hRows[i];
+    });
+    cerrar(); y+=gap;
+  });
+  return paginas.map((pg,i)=>i?'<div style="page-break-before:always;">'+pg.join('')+'</div>':pg.join('')).join('');
+}
 async function tallerConstruirCortadorHTML(codigos){
   const fecha=tallerFechaHoy();
   const fams={};   // familia -> color -> {rows[], unds, urgUnds, cods:Set, pk, telaTxt}
@@ -10134,44 +10168,44 @@ async function tallerConstruirCortadorHTML(codigos){
   });
   const TH='background:#000;color:#fff;font-size:12px;padding:4px;border:1px solid #000;';
   const head=`<tr>${['COD','TALLA','GÉNERO','UNDS','OBSERVACIÓN'].map(h=>`<th style="${TH}">${h}</th>`).join('')}</tr>`;
-  let cuerpo='', resumen='';
+  const secs=[]; let resumen='';
   // Colores con más urgentes primero (en toda la hoja); sin urgentes: Comfy, Licra, Colecciones y por orden alfabético
   const famUrg=f=>Math.max(0,...Object.values(fams[f].colores).map(c=>c.urgUnds));
   const famNombres=Object.keys(fams).sort((a,b)=>(famUrg(b)-famUrg(a))||(fams[a].o-fams[b].o));
   for(const fn of famNombres){
     const F=fams[fn], colores=Object.keys(F.colores).sort((a,b)=>(F.colores[b].urgUnds-F.colores[a].urgUnds)||a.localeCompare(b,'es'));
     const totFam=colores.reduce((t,c)=>t+F.colores[c].unds,0);
-    cuerpo+=`<div style="page-break-inside:avoid;margin:10px 0 4px;background:#000;color:#fff;padding:4px 10px;font-size:18px;font-weight:900;">TELA ${fn} <span style="font-weight:400;font-size:12px;">· ${colores.length} color(es) · ${totFam} unds</span></div>`;
+    let bannerTela=`<div style="margin:10px 0 4px;background:#000;color:#fff;padding:4px 10px;font-size:18px;font-weight:900;">TELA ${fn} <span style="font-weight:400;font-size:12px;">· ${colores.length} color(es) · ${totFam} unds</span></div>`;
     resumen+=`<div style="font-size:11px;margin:2px 0;"><b>${fn}:</b> ${colores.map(c=>(F.colores[c].urgUnds?'⚡':'')+c+' ('+F.colores[c].unds+')').join(' · ')}</div>`;
     for(const c of colores){
       const C=F.colores[c], rgb=(window.CODPDF&&CODPDF.colorTela)?CODPDF.colorTela(C.telaTxt||c):[154,154,154];
       const mk=await tallerMockupColor(C.pk,C.telaTxt||c);
       C.rows.sort((a,b)=>(b.urg-a.urg)||((parseInt(a.cod)||0)-(parseInt(b.cod)||0)));
       let prev=null, z=0;
-      const filas=C.rows.map(r=>{
+      const filasArr=C.rows.map(r=>{
         const nw=prev!==null&&prev!==r.cod; prev=r.cod; z++;
         const bg=r.urg?(z%2?'#ffd9d9':'#ffc9c9'):(z%2?'#fff':'#e9e9e9');
         const td=`padding:3px 8px;border-bottom:1px solid #888;${nw?'border-top:4px solid #000;':''}font-size:15px;font-weight:800;background:${bg};`;
         const big=`${td}font-size:26px;font-weight:900;text-align:center;width:80px;border-left:1px solid #000;border-right:1px solid #000;`;
         return `<tr><td style="${td}font-size:18px;font-weight:900;">${r.cod}${r.urg?' <b style="color:#c00;font-size:10px;">URGENTE</b>':''}${r.junto&&r.junto.length?'<div style="font-size:10px;font-weight:900;color:#0050a0;">🔗 SALE JUNTO CON COD '+r.junto.join(' + ')+'</div>':''}<div style="font-size:9px;font-weight:400;color:#444;">${r.desc}</div></td><td style="${big}">${r.talla}</td><td style="${td}">${r.genero}</td><td style="${big}">${r.unds}</td><td style="${td}">${r.obsHtml||r.obs}</td></tr>`;
-      }).join('');
-      cuerpo+=`<div style="page-break-inside:avoid;margin:6px 0 10px;">
+      });
+      const headColor=bannerTela+`<div style="margin:6px 0 0;">
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:3px;"><tr>
           <td style="width:50px;vertical-align:middle;">${mk?`<img src="${mk}" style="height:46px;">`:''}</td>
           <td style="vertical-align:middle;"><span style="display:inline-block;width:18px;height:18px;border:2px solid #000;border-radius:4px;vertical-align:middle;background:rgb(${rgb.join(',')});"></span>
             <span style="font-size:22px;font-weight:900;vertical-align:middle;margin-left:6px;">${c}</span>
-            <span style="font-size:12px;color:#444;vertical-align:middle;"> · ${C.unds} unds · ${C.cods.size} pedido(s)${C.urgUnds?' · <b style="color:#b00;">⚡ '+C.urgUnds+' URGENTES (primero)</b>':''}</span></td></tr></table>
-        <table width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #000;border-collapse:collapse;table-layout:fixed;"><colgroup><col style="width:36%"><col style="width:9%"><col style="width:20%"><col style="width:9%"><col style="width:26%"></colgroup><thead>${head}</thead><tbody>${filas}</tbody></table></div>`;
+            <span style="font-size:12px;color:#444;vertical-align:middle;"> · ${C.unds} unds · ${C.cods.size} pedido(s)${C.urgUnds?' · <b style="color:#b00;">⚡ '+C.urgUnds+' URGENTES (primero)</b>':''}</span></td></tr></table></div>`;
+      bannerTela='';
+      const contColor=`<div style="margin:8px 0 3px;border-top:3px solid #000;padding-top:3px;"><span style="font-size:15px;font-weight:900;">TELA ${fn} · ${c}</span> <span style="font-size:12px;font-weight:900;background:#000;color:#fff;padding:1px 8px;">CONTINUACIÓN</span> <span style="font-size:11px;color:#444;">· ${C.unds} unds · ${C.cods.size} pedido(s)</span></div>`;
+      secs.push({head:headColor,cont:contColor,rows:filasArr,gap:12,wrap:rs=>`<table width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #000;border-collapse:collapse;table-layout:fixed;margin-bottom:6px;"><colgroup><col style="width:36%"><col style="width:9%"><col style="width:20%"><col style="width:9%"><col style="width:26%"></colgroup><thead>${head}</thead><tbody>${rs}</tbody></table>`});
     }
   }
   return `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>Reporte Cortador - ${fecha}</title>
-<style>table{border-collapse:collapse;}@page{margin:8mm;size:A4 landscape;}</style>
+<style>table{border-collapse:collapse;}@page{margin:8mm;}</style>
 </head>
 <body style="font-family:Arial,sans-serif;color:#000;margin:0;padding:6px;">
-<p style="font-size:13px;font-weight:700;margin:0 0 4px 0;text-transform:capitalize;">${fecha} · Reporte del cortador por tela y color</p>
-<div style="border:1px solid #999;padding:4px 10px;margin-bottom:4px;">${resumen}</div>
-${cuerpo}
+${tallerPaginar(secs,`<p style="font-size:13px;font-weight:700;margin:0 0 4px 0;text-transform:capitalize;">${fecha} · Reporte del cortador por tela y color</p><div style="border:1px solid #999;padding:4px 10px;margin-bottom:4px;">${resumen}</div>`)}
 </body></html>`;
 }
 
@@ -10276,11 +10310,11 @@ function tallerHtmlStickersEstampador(gr,rec){
 
 function tallerConstruirEstampadorHTML(codigos, rec){
   const fecha=tallerFechaHoy();
-  let bloques='';
+  const secs=[];
   codigos.forEach((cod,idx)=>{
     const g=tallerGrupos[cod];
     if(!g) return;
-    let packsHtml='';
+    const packsArr=[];
     g.packs.forEach(p=>{
       const desc=tallerDescripcionPack(p);
       const piezas=tallerParsearPiezas(p.piezas);
@@ -10301,7 +10335,7 @@ function tallerConstruirEstampadorHTML(codigos, rec){
         grupos[key].unds++;
       });
       let hayVisual=false;
-      const lineasTalla=Object.values(grupos).map(gr=>{
+      const lineasArr=Object.values(grupos).map(gr=>{
         if(gr.raw) return `${tallerReformatearTexto(gr.texto)} <span style="color:#888;">(texto original del pedido — sin desglose exacto por talla)</span>`;
         const vis=tallerHtmlStickersEstampador(gr,rec);                 // Ikoa You: figuritas en su color (si hay recursos)
         if(vis.html) hayVisual=true;
@@ -10311,15 +10345,21 @@ function tallerConstruirEstampadorHTML(codigos, rec){
         if(gr.logoManga&&!vis.cub.m)   logosPieza.push('MANGA: '+gr.logoManga.toUpperCase());
         const logosTxt=(logosPieza.length?`<br><span style="font-weight:700;color:#a00;">${logosPieza.join(' · ')}</span>`:'')+vis.html;
         return `${gr.tela?'<span style="color:#555;">COLOR: '+gr.tela.toUpperCase()+'</span><br>':''}${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()} (${gr.capucha?'CON CAPUCHA':(gr.cuelloAlto?'CON CUELLO ALTO':'SIN CAPUCHA')})${gr.nombre?' - <span style="font-weight:700;font-size:15px;">'+gr.nombre.toUpperCase()+'</span>':''} (${gr.unds} UNDS)${logosTxt}`;
-      }).join('<br><br>');
-      packsHtml+=`
+      });
+      const lineasTalla=lineasArr.join('<br><br>');
+      const _hd=`
+        <p style="font-size:11px;font-weight:700;margin:10px 0 2px 0;">${desc}</p>
+        <p style="font-size:10.5px;margin:0 0 4px 0;">TELA ${(p.tela||'—').toUpperCase()} - VINIL ${(p.vinil||'—').toUpperCase()}</p>`;
+      if(!lineasArr.length) packsArr.push(_hd);
+      lineasArr.forEach((ln,li)=>packsArr.push((li===0?_hd:'')+`<div style="font-size:10.5px;margin:0 0 6px 0;">${ln}</div>`));
+      if(false) packsArr.push(`
         <p style="font-size:11px;font-weight:700;margin:10px 0 2px 0;">${desc}</p>
         <p style="font-size:10.5px;margin:0 0 4px 0;">TELA ${(p.tela||'—').toUpperCase()} - VINIL ${(p.vinil||'—').toUpperCase()}</p>
         ${hayVisual?`<div style="font-size:10.5px;margin:0 0 4px 0;">${lineasTalla}</div>`:`<p style="font-size:10.5px;margin:0 0 4px 0;">${lineasTalla}</p>`}
-      `;
+      `);
     });
-    bloques+=`
-      <div style="${idx>0?'page-break-before:always;':''}padding-top:${idx>0?'10px':'0'};">
+    const headHtml=`
+      <div>
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
           <tr><td width="170" valign="middle">${COT_LOGO_HTML}</td>
           <td valign="middle" align="center" style="text-align:center;">
@@ -10336,15 +10376,16 @@ function tallerConstruirEstampadorHTML(codigos, rec){
         <p style="font-size:11px;font-weight:700;margin:0 0 3px 0;">CLIENTE : ${(g.nombre||'').toUpperCase()} / C.I: ${g.cedula||''} / AGENCIA: ${(g.agencia||'').split('—')[0].trim().toUpperCase()}</p>
         ${uniDeGrupo(g).cods.length?'<div style="border:3px solid #000;background:#dff0ff;padding:6px 10px;margin:4px 0 8px 0;font-size:15px;font-weight:900;text-align:center;">🔗 SALE JUNTO CON COD '+uniDeGrupo(g).cods.join(' + ')+' — ENVIAR TODO EN UN SOLO PAQUETE</div>':''}${tallerLlevaFactura(g)?'<div style="border:3px solid #000;background:#fff6c8;padding:6px 10px;margin:4px 0 8px 0;font-size:15px;font-weight:900;text-align:center;">🧾 ENVIAR FACTURA — ANEXAR LA FACTURA DEL CLIENTE A ESTE PEDIDO <span style="display:inline-block;width:16px;height:16px;border:2px solid #000;margin-left:10px;vertical-align:middle;"></span> <span style="font-size:11px;">FACTURA ANEXADA</span></div>':''}
         <div style="border-top:1px dashed #999;margin-bottom:6px;"></div>
-        ${packsHtml}
       </div>`;
+    const contHtml=`<div style="border:2px solid #000;padding:4px 10px;margin:0 0 6px 0;"><span style="font-size:17px;font-weight:900;">COD - ${cod}</span> <span style="font-size:12px;font-weight:900;background:#000;color:#fff;padding:1px 8px;">CONTINUACIÓN</span> <span style="font-size:11px;font-weight:700;">· CLIENTE: ${(g.nombre||'').toUpperCase()}${g.urgente?' · ⚡ URGENTE: '+g.urgente.toUpperCase():''}${uniDeGrupo(g).cods.length?' · 🔗 SALE JUNTO CON COD '+uniDeGrupo(g).cods.join(' + '):''}${tallerLlevaFactura(g)?' · 🧾 ENVIAR FACTURA':''}</span></div>`;
+    secs.push({head:headHtml,cont:contHtml,rows:packsArr,nuevaHoja:true,gap:0});
   });
   return `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>Reporte Estampador - ${fecha}</title>
-<style>@page{margin:10mm;size:A4;}</style>
+<style>@page{margin:10mm;}</style>
 </head>
 <body style="font-family:Arial,sans-serif;color:#1a1a1a;margin:0;padding:6px;">
-${bloques}
+${tallerPaginar(secs,'')}
 </body></html>`;
 }
 
