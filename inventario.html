@@ -582,7 +582,6 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <button class="main-tab tab" data-tab="precios" onclick="switchTab('precios')">💲 Precios</button>
     <button class="main-tab tab" data-tab="stock" onclick="switchTab('stock')">📦 Stock</button>
     <button class="main-tab tab" data-tab="aprobaciones" onclick="switchTab('aprobaciones')">✅ Aprobaciones</button>
-    <button class="main-tab tab" data-tab="respaldo" onclick="switchTab('respaldo')">💬 Respaldo</button>
     <button class="main-tab tab" data-tab="gestion" onclick="switchTab('gestion')">📋 Gestión</button>
     <button class="main-tab tab" data-tab="ventas" onclick="switchTab('ventas')">📊 Ventas</button>
     <button class="main-tab tab" data-tab="gastos" onclick="switchTab('gastos')">💸 Gastos</button>
@@ -4365,9 +4364,10 @@ function confirmarVentasLock(){
   cargarCuentaActiva();
 }
 
-/* Menú agrupado: Productos Nuevos va dentro de Stock; Factura, Taller y Programación dentro de Gestión */
-const GRUPO_TAB={etiquetas:'stock',factura:'gestion',taller:'gestion',programacion:'gestion'};
+/* Menú agrupado: Respaldo dentro de Aprobaciones; Productos Nuevos va dentro de Stock; Factura, Taller y Programación dentro de Gestión */
+const GRUPO_TAB={respaldo:'aprobaciones',etiquetas:'stock',factura:'gestion',taller:'gestion',programacion:'gestion'};
 const SUBNAV_GRUPOS={
+  aprobaciones:[['aprobaciones','✅ Aprobaciones'],['respaldo','💬 Respaldo']],
   stock:[['stock','📦 Stock'],['etiquetas','🆕 Productos Nuevos']],
   gestion:[['gestion','📋 Gestión'],['factura','🧾 Factura'],['taller','🏭 Taller'],['programacion','📅 Programación']]
 };
