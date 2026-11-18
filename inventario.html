@@ -10296,7 +10296,7 @@ async function tallerMockupColor(pk,telaTxt){
     if(codEsLarga(pk)){ m=await CODPDF.mockup(/LICRA/i.test(pk.modelo||'')?'licra':'comfy','normal','frente',tr,vr); }
     else{ const gen=codMockGenerico(pk,telaTxt); const mm=gen?await CODPDF.mockGen(gen,tr,vr):[]; m=mm&&mm[0]; }
     let out=null;
-    if(m&&m.url){ out=await new Promise(ok=>{ const im=new Image(); im.onload=()=>{ const H=130,W=Math.max(1,Math.round(im.width*H/im.height)),c=document.createElement('canvas'); c.width=W;c.height=H; c.getContext('2d').drawImage(im,0,0,W,H); ok(c.toDataURL('image/png')); }; im.onerror=()=>ok(null); im.src=m.url; }); }
+    if(m&&m.url){ out=await new Promise(ok=>{ const im=new Image(); im.onload=()=>{ const H=130,W=Math.max(1,Math.round(im.width*H/im.height)),c=document.createElement('canvas'); c.width=W;c.height=H; const cx=c.getContext('2d'); cx.fillStyle='#dcdfe4'; cx.fillRect(0,0,W,H); cx.drawImage(im,0,0,W,H); ok(c.toDataURL('image/jpeg',0.92));   /* fondo gris claro: Google convierte lo transparente en NEGRO y una franela negra se perdía */ }; im.onerror=()=>ok(null); im.src=m.url; }); }
     _tallerMkCache[key]=out; return out;
   }catch(e){ return null; }
 }
@@ -10338,7 +10338,8 @@ function tallerPaginar(secciones,intro){
     });
     cerrar(); y+=gap;
   });
-  return paginas.map((pg,i)=>i?'<div style="page-break-before:always;">'+pg.join('')+'</div>':pg.join('')).join('');
+  /* El salto va en un PÁRRAFO propio: Google Docs ignora el salto de página cuando lo trae un <div> o una tabla */
+  return paginas.map((pg,i)=>i?'<p style="page-break-before:always;margin:0;padding:0;font-size:2px;line-height:2px;">&nbsp;</p>'+pg.join(''):pg.join('')).join('');
 }
 async function tallerConstruirCortadorHTML(codigos){
   const fecha=tallerFechaHoy();
