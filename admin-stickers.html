@@ -18,9 +18,13 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
 .btn:disabled{opacity:.5}.link{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:13px;margin-top:8px}
 .code{font-size:34px;font-weight:800;text-align:center;padding:10px;border:2px dashed var(--line);border-radius:12px}
 .prev{display:flex;justify-content:center;margin-top:10px}.prev img{max-height:160px;background:repeating-conic-gradient(var(--line) 0 25%,var(--card) 0 50%) 0/16px 16px;border-radius:8px}
+.item{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.item:first-child{border-top:0}
+.item img{width:64px;height:64px;object-fit:contain;border-radius:8px;background:repeating-conic-gradient(var(--line) 0 25%,var(--card) 0 50%) 0/12px 12px;flex:none}
+.item .t{flex:1;min-width:0;font-size:13px;color:var(--muted)}.item .t b{display:block;font-size:17px;color:var(--ink)}
+.del{padding:10px 12px;border:1px solid var(--err);border-radius:10px;background:var(--card);color:var(--err);font-weight:700;font-size:14px}.del:disabled{opacity:.5}
 .msg{font-size:14px;margin-top:10px}.ok{color:var(--ok)}.err{color:var(--err)}.hide{display:none}
 </style></head><body>
-<header>IKOA · Cargar stickers <small style="opacity:.6;font-weight:400">v5</small></header>
+<header>IKOA · Cargar stickers <small style="opacity:.6;font-weight:400">v7</small></header>
 <main>
 <section class="card" id="cfg">
  <h2>Conexión con GitHub</h2>
@@ -29,6 +33,17 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
  <label>Token personal de GitHub (solo se guarda en este teléfono)</label><input id="token" type="password" placeholder="github_pat_...">
  <button class="btn" id="save">Guardar y conectar</button>
  <div class="msg" id="cfgMsg"></div>
+</section>
+
+<div class="seg hide" id="tabs" style="margin-bottom:14px"><button data-t="up" class="on">➕ Cargar sticker</button><button data-t="del">🗑️ Eliminar sticker</button></div>
+
+<section class="card hide" id="del">
+ <h2>Eliminar sticker</h2>
+ <div style="font-size:13px;color:var(--muted)">Úsalo si se guardó uno incorrecto. Se quita del catálogo y se borran sus archivos. Su código no se vuelve a usar.</div>
+ <label>Buscar por código o nombre</label><input id="dq" placeholder="Ej: S.V.90 o León">
+ <label>Técnica</label><select id="dtec"><option value="">Todas</option><option value="vinil">Vinil</option><option value="dtf">DTF</option></select>
+ <div id="dlist" style="margin-top:8px"></div>
+ <div class="msg" id="dmsg"></div>
 </section>
 
 <section class="card hide" id="up">
@@ -68,7 +83,7 @@ async function loadCatalog(){
 }
 function nextCode(){
  const pre=S.tec==="dtf"?`S.${$("cat").value}.D`:`S.${$("cat").value}.`;
- const nums=S.catalog.stickers.filter(s=>s.codigo.startsWith(pre)).map(s=>+s.codigo.slice(pre.length)||0);
+ const nums=[...S.catalog.stickers.map(s=>s.codigo),...(S.catalog.retirados||[])].filter(c=>c.startsWith(pre)).map(c=>+c.slice(pre.length)||0);
  const base=S.tec==="vinil"?({V:85,N:83,A:0}[$("cat").value]||0):0;
  return pre+(Math.max(base,...nums)+1);
 }
@@ -76,12 +91,12 @@ const refresh=()=>{if(S.catalog){themesUI();$("code").textContent=nextCode()}};
 async function connect(){
  $("cfgMsg").textContent="Conectando…";$("cfgMsg").className="msg";
  try{const r=await gh("");if(!r.ok)throw new Error(r.status===401?"Token inválido":`No se encontró el repositorio (${r.status})`);
-  await loadCatalog();$("cfg").classList.add("hide");$("up").classList.remove("hide");refresh();
+  await loadCatalog();$("cfg").classList.add("hide");$("tabs").classList.remove("hide");showTab("up");refresh();
  }catch(e){$("cfgMsg").textContent=e.message;$("cfgMsg").className="msg err"}
 }
 $("save").onclick=()=>{if($("token").value)localStorage.setItem("ikoaGhToken",$("token").value.trim());
  localStorage.setItem("ikoaGh_repo",$("repo").value.trim());localStorage.setItem("ikoaGh_branch",$("branch").value.trim());connect()};
-$("logout").onclick=()=>{localStorage.removeItem("ikoaGhToken");$("up").classList.add("hide");$("cfg").classList.remove("hide")};
+$("logout").onclick=()=>{localStorage.removeItem("ikoaGhToken");$("up").classList.add("hide");$("del").classList.add("hide");$("tabs").classList.add("hide");$("cfg").classList.remove("hide")};
 $("tec").onclick=e=>{const b=e.target.closest("button");if(!b)return;S.tec=b.dataset.v;
  [...$("tec").children].forEach(x=>x.classList.toggle("on",x===b));
  $("prodLbl").textContent=S.tec==="dtf"?"PNG alta resolución 300 DPI para imprimir (opcional)":"Archivo de corte para Silhouette (SVG/DXF/studio3, opcional)";
@@ -93,24 +108,69 @@ function themesUI(){const sel=$("theme"),cur=sel.value,have=[...sel.options].map
  extra.forEach(n=>{if(!have.includes(n.toLowerCase())){const o=new Option(n,n);sel.insertBefore(o,sel.querySelector('option[value="__new"]'));have.push(n.toLowerCase())}});
  if(cur)sel.value=cur}
 $("web").onchange=()=>{const f=$("web").files[0];if(f){$("pv").src=URL.createObjectURL(f);$("pv").classList.remove("hide")}};
-async function put(path,content,msg,sha){const c=conf();
- const r=await gh(`contents/${path}`,{method:"PUT",body:JSON.stringify({message:msg,content,branch:c.branch,...(sha?{sha}:{})})});
- if(!r.ok)throw new Error(`Error al guardar ${path}: ${r.status} ${(await r.json()).message||""}`);return r.json()}
+async function put(path,content,msg,sha){const c=conf(),body=s2=>JSON.stringify({message:msg,content,branch:c.branch,...(s2?{sha:s2}:{})});
+ let r=await gh(`contents/${path}`,{method:"PUT",body:body(sha)});
+ if(r.status===422&&!sha){   // el archivo ya existe (p. ej. un intento anterior que falló a medias): se reemplaza, no se bloquea el código
+  const ex=await gh(`contents/${path}?ref=${c.branch}`);
+  if(ex.ok){const j=await ex.json();r=await gh(`contents/${path}`,{method:"PUT",body:body(j.sha)})}}
+ if(!r.ok)throw new Error(`Error al guardar ${path}: ${r.status} ${(await r.json().catch(()=>({}))).message||""}`);return r.json()}
+// Prepara la imagen que ve el cliente: valida que sea PNG, que el vinil tenga fondo transparente, y la reduce a 600 px (se dibuja a ~50 px)
+function leerImagen(f){return new Promise((res,rej)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("No se pudo leer la imagen. Usa un PNG válido."))};im.src=u})}
+async function prepararWeb(f,tec){
+ if(f.type!=="image/png")throw new Error("La imagen debe ser un PNG.");
+ if(f.size>8*1024*1024)throw new Error("La imagen pesa más de 8 MB. Reduce su tamaño e inténtalo de nuevo.");
+ const im=await leerImagen(f),MAX=600,ow=im.naturalWidth,oh=im.naturalHeight,k=Math.min(1,MAX/Math.max(ow,oh)),w=Math.max(1,Math.round(ow*k)),h=Math.max(1,Math.round(oh*k));
+ const cv=document.createElement("canvas");cv.width=w;cv.height=h;const x=cv.getContext("2d");x.drawImage(im,0,0,w,h);
+ if(tec==="vinil"){const d=x.getImageData(0,0,w,h).data;let t=0;for(let i=3;i<d.length;i+=4)if(d[i]<250)t++;
+  if(t/(w*h)<0.02)throw new Error("Este PNG no tiene fondo transparente. Un sticker de vinil necesita fondo transparente; si no, se vería como un cuadro de color. Quita el fondo e inténtalo de nuevo.")}
+ return {b64:cv.toDataURL("image/png").split(",")[1],reducida:k<1,ow,oh}}
 $("send").onclick=async()=>{
  const web=$("web").files[0],prod=$("prod").files[0];
  if(!web){$("msg").textContent="Elige la imagen PNG del sticker.";$("msg").className="msg err";return}
  let tema=$("theme").value;if(tema==="__new"){tema=$("newTheme").value.trim();if(!tema){$("msg").textContent="Escribe el nombre de la nueva temática.";$("msg").className="msg err";return}}
  $("send").disabled=true;$("msg").className="msg";$("msg").textContent="Subiendo…";
- try{await loadCatalog();const codigo=nextCode(),dir=`stickers/${S.tec}`;
+ try{if(prod&&prod.size>20*1024*1024)throw new Error("El archivo de producción pesa más de 20 MB.");
+  const img=await prepararWeb(web,S.tec);   // si algo está mal con la imagen, avisa aquí y no se sube nada
+  await loadCatalog();const codigo=nextCode(),dir=`stickers/${S.tec}`;
   const item={codigo,tecnica:S.tec,catalogo:$("cat").value,tematica:tema,nombre:$("nombre").value.trim()||null,web:`${dir}/web/${codigo}.png`,fecha:new Date().toISOString().slice(0,10)};
-  await put(item.web,await fileB64(web),`Sticker ${codigo} (web)`);
+  await put(item.web,img.b64,`Sticker ${codigo} (web)`);
   if(prod){const ext=prod.name.split(".").pop().toLowerCase(),sub=S.tec==="dtf"?"print":"corte";
    item.produccion=`${dir}/${sub}/${codigo}.${ext}`;await put(item.produccion,await fileB64(prod),`Sticker ${codigo} (${sub})`)}
   S.catalog.stickers.push(item);S.catalog.tematicas=S.catalog.tematicas||[];if(!S.catalog.tematicas.some(n=>n.toLowerCase()===tema.toLowerCase()))S.catalog.tematicas.push(tema);
   await put("stickers/catalog.json",b64(JSON.stringify(S.catalog,null,2)),`Catálogo: agrega ${codigo}`,S.sha);
-  await loadCatalog();$("msg").textContent=`✓ ${codigo} cargado. Aparecerá en Ikoa You en 1–2 minutos.`;$("msg").className="msg ok";
+  await loadCatalog();$("msg").textContent=`✓ ${codigo} cargado${img.reducida?` (imagen reducida de ${img.ow}×${img.oh} a 600 px para la web)`:""}. Aparecerá en Ikoa You en 1–2 minutos.`;$("msg").className="msg ok";
   $("web").value="";$("prod").value="";$("nombre").value="";$("newTheme").value="";$("newTheme").classList.add("hide");$("pv").classList.add("hide");refresh();$("theme").value=tema;
- }catch(e){$("msg").textContent=e.message;$("msg").className="msg err"}
+ }catch(e){$("msg").textContent=e.message;$("msg").className="msg err";
+  try{await loadCatalog();refresh()}catch(_){}   // tras un error se vuelve a leer el catálogo real de GitHub: así el código mostrado es el que realmente se usará
+ }
  $("send").disabled=false};
+
+function showTab(t){$("up").classList.toggle("hide",t!=="up");$("del").classList.toggle("hide",t!=="del");
+ [...$("tabs").children].forEach(b=>b.classList.toggle("on",b.dataset.t===t));if(t==="del")renderDel()}
+$("tabs").onclick=e=>{const b=e.target.closest("button");if(b)showTab(b.dataset.t)};
+const esc=x=>String(x==null?"":x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function imgUrl(path){const [o,n]=conf().repo.split("/");return `https://${o}.github.io/${n}/${path}`}
+function renderDel(){
+ const q=$("dq").value.trim().toLowerCase(),t=$("dtec").value;
+ const list=[...S.catalog.stickers].reverse().filter(s=>(!t||s.tecnica===t)&&(!q||s.codigo.toLowerCase().includes(q)||String(s.nombre||"").toLowerCase().includes(q)||String(s.tematica||"").toLowerCase().includes(q))).slice(0,60);
+ $("dlist").innerHTML=list.length?list.map(s=>`<div class="item"><img src="${esc(imgUrl(s.web))}" alt="" loading="lazy"><div class="t"><b>${esc(s.codigo)}</b>${esc(s.nombre||"Sin nombre")} · ${esc(s.tematica||"")}<br>${s.tecnica==="dtf"?"DTF":"Vinil"} · ${esc(s.fecha||"")}</div><button class="del" data-c="${esc(s.codigo)}">Eliminar</button></div>`).join(""):'<div class="msg">No hay stickers con ese filtro.</div>';
+}
+$("dq").oninput=renderDel;$("dtec").onchange=renderDel;
+$("dlist").onclick=e=>{const b=e.target.closest(".del");if(b)delSticker(b.dataset.c,b)};
+async function delFile(path){const c=conf(),ex=await gh(`contents/${path}?ref=${c.branch}`);if(ex.status===404)return true;if(!ex.ok)return false;
+ const j=await ex.json(),r=await gh(`contents/${path}`,{method:"DELETE",body:JSON.stringify({message:`Elimina ${path}`,sha:j.sha,branch:c.branch})});return r.ok||r.status===404}
+async function delSticker(codigo,btn){
+ if(!confirm(`¿Eliminar el sticker ${codigo}?\n\nSe quita del catálogo de Ikoa You y se borran sus archivos. No se puede deshacer.`))return;
+ const m=$("dmsg");m.className="msg";m.textContent="Eliminando "+codigo+"…";btn.disabled=true;
+ try{await loadCatalog();   // catálogo real y actual de GitHub antes de tocarlo
+  const it=S.catalog.stickers.find(x=>x.codigo===codigo);if(!it){m.textContent="Ese sticker ya no está en el catálogo.";renderDel();return}
+  S.catalog.stickers=S.catalog.stickers.filter(x=>x.codigo!==codigo);
+  S.catalog.retirados=S.catalog.retirados||[];if(!S.catalog.retirados.includes(codigo))S.catalog.retirados.push(codigo);   // el código no se reutiliza (evita imágenes viejas en caché)
+  await put("stickers/catalog.json",b64(JSON.stringify(S.catalog,null,2)),`Catálogo: elimina ${codigo}`,S.sha);
+  const fallos=[];for(const f of [it.web,it.produccion].filter(Boolean)){if(!(await delFile(f)))fallos.push(f)}
+  await loadCatalog();refresh();renderDel();
+  m.textContent=fallos.length?`✓ ${codigo} quitado del catálogo, pero no se pudo borrar el archivo: ${fallos.join(", ")} (bórralo a mano en GitHub).`:`✓ ${codigo} eliminado. Dejará de verse en Ikoa You en 1–2 minutos.`;m.className=fallos.length?"msg err":"msg ok";
+ }catch(e){m.textContent=e.message;m.className="msg err";try{await loadCatalog();renderDel()}catch(_){}}
+ btn.disabled=false}
 if(localStorage.getItem("ikoaGhToken"))connect();
 </script></body></html>
