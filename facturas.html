@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ikoa · Cargar facturas</title>
+<meta name="description" content="Panel privado para cargar las facturas de ventas a clientes de Ikoa.">
+<meta name="theme-color" content="#111111"><meta name="robots" content="noindex">
+<style>
+:root{--bg:#f4f1ec;--card:#fff;--ink:#141414;--muted:#6b6b6b;--line:#e3ded6;--acc:#e5007e;--ok:#1f8a4c;--err:#b3261e;--warn:#b26a00}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--ink);color:var(--bg);padding:16px 18px;font-weight:700;letter-spacing:.04em;display:flex;justify-content:space-between;align-items:center}
+header small{opacity:.6;font-weight:400}header button{background:none;border:0;color:var(--bg);opacity:.7;text-decoration:underline;font-size:13px}
+main{max-width:560px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+h2{font-size:15px;margin:0 0 10px}label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:var(--card);color:var(--ink)}
+.seg{display:flex;gap:8px;margin-bottom:14px}.seg button{flex:1;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:15px;color:var(--ink)}
+.seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn{width:100%;padding:14px;border:0;border-radius:12px;background:var(--acc);color:#fff;font-size:16px;font-weight:700;margin-top:16px}
+.btn.sec{background:var(--card);color:var(--ink);border:1px solid var(--ink);margin-top:8px}
+.btn:disabled{opacity:.5}.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.msg{font-size:14px;margin-top:10px;line-height:1.45}.ok{color:var(--ok)}.err{color:var(--err)}.warn{color:var(--warn)}.hide{display:none}
+.prev{margin-top:10px;text-align:center}.prev img,.prev canvas{max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--line)}
+.cand{display:block;width:100%;text-align:left;padding:12px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);margin-top:8px;font-size:14px;color:var(--ink)}
+.cand.on{border-color:var(--acc);background:#fff3fa}.cand b{font-size:16px}.cand span{color:var(--muted);font-size:12px;display:block;margin-top:2px}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px;background:#eee;color:var(--ink)}.tag.p{background:#fde7f3;color:var(--acc)}.tag.f{background:#e3f4ea;color:var(--ok)}
+.item{padding:12px 0;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}.item:first-child{border-top:0}.item b{display:block;font-size:16px;color:var(--ink)}.item a{color:var(--acc);font-weight:700}
+.hint{font-size:12px;color:var(--muted);margin-top:4px}
+</style></head><body>
+<header><span>IKOA · Cargar facturas <small>v1</small></span><button id="logout" class="hide">Salir</button></header>
+<main>
+
+<section class="card" id="login">
+ <h2>Acceso</h2>
+ <label>Código de usuario</label><input id="clave" type="password" placeholder="Tu código personal" autocomplete="off">
+ <button class="btn" id="entrar">Entrar</button>
+ <div class="msg err" id="loginMsg"></div>
+</section>
+
+<div id="app" class="hide">
+ <div class="seg" id="tabs"><button data-t="cargar" class="on">➕ Cargar factura</button><button data-t="lista">📋 Cargadas</button></div>
+
+ <section id="t-cargar">
+  <div class="card">
+   <h2>1. Foto o PDF de la factura</h2>
+   <div class="row2">
+    <button class="btn sec" id="bFoto" style="margin-top:0">📷 Tomar foto</button>
+    <button class="btn sec" id="bArch" style="margin-top:0">🖼️ Galería / PDF</button>
+   </div>
+   <input id="fFoto" type="file" accept="image/*" capture="environment" class="hide">
+   <input id="fArch" type="file" accept="image/*,application/pdf" class="hide">
+   <div class="prev" id="prev"></div>
+   <div class="msg" id="leyendo"></div>
+  </div>
+
+  <div class="card hide" id="c2">
+   <h2>2. Datos de la factura <small style="font-weight:400;color:var(--muted)">(revisa lo que leyó el sistema)</small></h2>
+   <label>N° de factura *</label><input id="num" inputmode="numeric" placeholder="Ej: 00001234">
+   <div class="row2">
+    <div><label>Fecha</label><input id="fecha" placeholder="dd/mm/aaaa"></div>
+    <div><label>Monto total (Bs)</label><input id="monto" inputmode="decimal" placeholder="0,00"></div>
+   </div>
+   <div class="row2">
+    <div><label>Cédula / RIF del cliente</label><input id="ced" inputmode="numeric" placeholder="Solo números"></div>
+    <div><label>Nombre en la factura</label><input id="nom" placeholder="Cliente"></div>
+   </div>
+   <details style="margin-top:10px"><summary style="font-size:13px;color:var(--muted)">Ver texto leído de la factura</summary><pre id="ocrTxt" style="white-space:pre-wrap;font-size:11px;color:var(--muted);max-height:160px;overflow:auto"></pre></details>
+  </div>
+
+  <div class="card hide" id="c3">
+   <h2>3. ¿A qué pedido pertenece?</h2>
+   <div id="cands"></div>
+   <label>O busca otro pedido (cédula, nombre o código S-)</label>
+   <div class="row2" style="grid-template-columns:1fr auto"><input id="q" placeholder="Buscar pedido…"><button class="btn sec" id="bBuscar" style="margin:0;width:auto;padding:0 18px">🔍</button></div>
+   <button class="btn" id="guardar" disabled>Guardar factura</button>
+   <div class="msg" id="msg"></div>
+  </div>
+ </section>
+
+ <section id="t-lista" class="hide">
+  <div class="card">
+   <h2>Facturas cargadas</h2>
+   <input id="lq" placeholder="Buscar por número, cliente, cédula o pedido">
+   <div id="lista" style="margin-top:8px"></div>
+  </div>
+ </section>
+</div>
+</main>
+
+<script>
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbw39K95bn14-yZcvd8kXuKnyD2BAqLjOg6rFNIBkuZRHQP7z_s1FFOV3P2EOyNtqz9ikw/exec';
+const USUARIOS={'271010':'Director Johan','3006':'Gaby'};
+const $=id=>document.getElementById(id);
+const esc=x=>String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const S={usuario:'',archivo:null,sel:'',lista:[]};
+try{const u=sessionStorage.getItem('ikoaFacUser');if(u)S.usuario=u}catch(e){}
+
+/* ---------- Apps Script ---------- */
+function gas(params,ms){return new Promise((ok,ko)=>{const cb='_cb_'+Date.now()+Math.random().toString(36).slice(2,6);
+ const qs=Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v==null?'':v)).join('&');
+ const s=document.createElement('script');window[cb]=d=>{delete window[cb];s.remove();ok(d)};
+ s.onerror=()=>{delete window[cb];s.remove();ko(new Error('Error de red'))};s.src=SCRIPT_URL+'?'+qs+'&callback='+cb;document.body.appendChild(s);
+ setTimeout(()=>{if(window[cb]){delete window[cb];s.remove();ko(new Error('Tiempo de espera agotado'))}},ms||20000)})}
+async function gasPost(obj){const f=new FormData();Object.entries(obj).forEach(([k,v])=>f.append(k,v==null?'':v));
+ const r=await fetch(SCRIPT_URL,{method:'POST',body:f});return r.json()}
+
+/* ---------- acceso ---------- */
+function entrar(){const u=USUARIOS[$('clave').value.trim()];if(!u){$('loginMsg').textContent='Código incorrecto';return}
+ S.usuario=u;try{sessionStorage.setItem('ikoaFacUser',u)}catch(e){}mostrarApp()}
+function mostrarApp(){$('login').classList.add('hide');$('app').classList.remove('hide');$('logout').classList.remove('hide')}
+$('entrar').onclick=entrar;$('clave').onkeydown=e=>{if(e.key==='Enter')entrar()};
+$('logout').onclick=()=>{try{sessionStorage.removeItem('ikoaFacUser')}catch(e){}location.reload()};
+if(S.usuario)mostrarApp();
+
+/* ---------- pestañas ---------- */
+$('tabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+ [...$('tabs').children].forEach(x=>x.classList.toggle('on',x===b));
+ $('t-cargar').classList.toggle('hide',b.dataset.t!=='cargar');$('t-lista').classList.toggle('hide',b.dataset.t!=='lista');
+ if(b.dataset.t==='lista')cargarLista()};
+
+/* ---------- archivo + lectura ---------- */
+$('bFoto').onclick=()=>$('fFoto').click();$('bArch').onclick=()=>$('fArch').click();
+$('fFoto').onchange=e=>procesarArchivo(e.target.files[0]);$('fArch').onchange=e=>procesarArchivo(e.target.files[0]);
+function cargarLib(src,test){return new Promise((ok,ko)=>{if(test()){ok();return}const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>ko(new Error('No se pudo cargar el lector. Revisa tu internet.'));document.head.appendChild(s)})}
+function imgACanvas(file,max){return new Promise((ok,ko)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement('canvas');c.width=Math.round(im.naturalWidth*k);c.height=Math.round(im.naturalHeight*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c)};im.onerror=()=>{URL.revokeObjectURL(u);ko(new Error('No se pudo abrir la imagen'))};im.src=u})}
+async function pdfACanvas(file){
+ await cargarLib('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',()=>!!window.pdfjsLib);
+ window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+ const pdf=await window.pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise,pg=await pdf.getPage(1),vp0=pg.getViewport({scale:1}),sc=Math.min(2.5,1800/Math.max(vp0.width,vp0.height)),vp=pg.getViewport({scale:sc});
+ const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;return c}
+async function leerTexto(canvas){
+ if(window.__ocrStub)return window.__ocrStub(canvas);
+ await cargarLib('https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js',()=>!!window.Tesseract);
+ const w=await window.Tesseract.createWorker('spa',1);try{const r=await w.recognize(canvas);return(r&&r.data&&r.data.text)||''}finally{try{await w.terminate()}catch(e){}}}
+const fileB64=f=>new Promise((r,j)=>{const fr=new FileReader();fr.onload=()=>r(String(fr.result).split(',')[1]);fr.onerror=j;fr.readAsDataURL(f)});
+
+async function procesarArchivo(file){
+ if(!file)return;resetCarga(false);
+ const esPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name);
+ if(file.size>10*1024*1024){$('leyendo').textContent='El archivo pesa más de 10 MB.';$('leyendo').className='msg err';return}
+ $('leyendo').className='msg';$('leyendo').innerHTML='⏳ Leyendo la factura… (puede tardar unos segundos)';
+ try{
+  let canvas,b64,mime;
+  if(esPdf){canvas=await pdfACanvas(file);b64=await fileB64(file);mime='application/pdf'}
+  else{canvas=await imgACanvas(file,1800);b64=canvas.toDataURL('image/jpeg',0.85).split(',')[1];mime='image/jpeg'}
+  S.archivo={b64,mime,nombre:file.name||'factura'};
+  const pv=document.createElement('canvas');pv.width=Math.min(600,canvas.width);pv.height=Math.round(canvas.height*pv.width/canvas.width);pv.getContext('2d').drawImage(canvas,0,0,pv.width,pv.height);$('prev').innerHTML='';$('prev').appendChild(pv);
+  let texto='';try{const cr=document.createElement('canvas');cr.width=canvas.width;cr.height=canvas.height;cr.getContext('2d').drawImage(canvas,0,0);texto=await leerTexto(realzar(cr))}catch(e){$('leyendo').className='msg warn';$('leyendo').textContent='No se pudo leer automáticamente ('+e.message+'). Escribe los datos a mano.'}
+  const d=parsearFactura(texto);$('ocrTxt').textContent=texto||'(sin texto)';
+  $('num').value=d.num||'';$('fecha').value=d.fecha||'';$('monto').value=d.monto||'';$('ced').value=d.ced||'';$('nom').value=d.nom||'';
+  $('c2').classList.remove('hide');$('c3').classList.remove('hide');
+  if(texto){$('leyendo').className='msg ok';$('leyendo').textContent=d.num?'✓ Leída. Revisa los datos antes de guardar.':'Leída, pero no encontré el número de factura. Escríbelo.'}
+  await sugerir();
+ }catch(e){$('leyendo').className='msg err';$('leyendo').textContent=e.message}
+}
+
+/* Interpreta el texto de una factura (formato venezolano: 1.234,56) */
+function parsearFactura(t){
+ const o={num:'',fecha:'',monto:'',ced:'',nom:''};t=String(t||'').replace(/\r/g,'');
+ // Ticket fiscal (SENIAT): "FACTURA:   00002354". Se exige los dos puntos para no confundir con el título "FACTURA" ni con "Ref. Interna"
+ let m=t.match(/FACTURA\s*[:;.]\s*N?[°º]?\s*0*(\d{3,12})/i)||t.match(/(?:n[°º]|nro\.?|no\.)\s*(?:de\s*)?factura[\s:.#-]*0*(\d{3,12})/i);
+ if(m)o.num=m[1];
+ m=t.match(/FECHA\s*[:;.]?\s*(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4}|\d{2})/i)||t.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4}|\d{2})\b/);
+ if(m){let a=m[3];if(a.length===2)a='20'+a;o.fecha=m[1].padStart(2,'0')+'/'+m[2].padStart(2,'0')+'/'+a}
+ // Cliente: línea "RIF/CI:V11053975". El RIF de IKOA (J-505031716) sale arriba en el ticket y se ignora
+ const EMPRESA='505031716';
+ m=t.match(/RIF\s*[\/|]\s*CI\s*[:;.]?\s*([VEJGP])?[\s-]*([\d.]{6,11})/i);
+ if(m&&m[2].replace(/\D/g,'')!==EMPRESA)o.ced=m[2].replace(/\D/g,'');
+ if(!o.ced){const re=/\b([VEJGP])[\s.:-]*([\d.]{6,11})(?:[\s-]*\d)?\b/gi;let x;while((x=re.exec(t))){const d=x[2].replace(/\D/g,'');if(d&&d!==EMPRESA){o.ced=d;break}}}
+ m=t.match(/(?:R\.?\s*S\.?|raz[oó]n social|nombre|cliente|se[ñn]or(?:es)?)\s*[:;]\s*([^\n]{3,60})/i);
+ if(m)o.nom=m[1].replace(/\s{2,}/g,' ').replace(/(rif|c\.?i\.?|c[ée]dula).*$/i,'').trim();
+ const nums=[];const re2=/\btotal\b[^\d\n]{0,28}([\d][\d.,]*)/gi;let y;while((y=re2.exec(t))){const v=aNumero(y[1]);if(v>0)nums.push(v)}
+ if(!nums.length){const re3=/(?:tran\.?\s*bancaria|efectivo|divisa)[^\d\n]{0,20}([\d][\d.,]*)/gi;while((y=re3.exec(t))){const v=aNumero(y[1]);if(v>0)nums.push(v)}}
+ if(nums.length){const v=Math.max(...nums);o.monto=v.toFixed(2).replace('.',',')}
+ return o}
+// Realza el contraste (tickets térmicos salen grises y pálidos en foto): gris + estirado de niveles
+function realzar(c){const x=c.getContext('2d'),im=x.getImageData(0,0,c.width,c.height),d=im.data,h=new Uint32Array(256);
+ for(let i=0;i<d.length;i+=4){const g=(d[i]*.299+d[i+1]*.587+d[i+2]*.114)|0;d[i]=d[i+1]=d[i+2]=g;h[g]++}
+ const tot=c.width*c.height;let lo=0,hi=255,a=0;while(lo<255&&(a+=h[lo])<tot*.01)lo++;a=0;while(hi>0&&(a+=h[hi])<tot*.01)hi--;
+ const k=255/Math.max(1,hi-lo);for(let i=0;i<d.length;i+=4){const v=Math.max(0,Math.min(255,(d[i]-lo)*k));d[i]=d[i+1]=d[i+2]=v}x.putImageData(im,0,0);return c}
+function aNumero(s){s=String(s||'').trim();if(!s)return 0;const ult=Math.max(s.lastIndexOf(','),s.lastIndexOf('.'));
+ if(ult<0)return parseFloat(s)||0;const dec=s.length-ult-1;
+ if(dec===2||dec===1){return parseFloat(s.slice(0,ult).replace(/[.,]/g,'')+'.'+s.slice(ult+1))||0}return parseFloat(s.replace(/[.,]/g,''))||0}
+
+/* ---------- pedidos candidatos ---------- */
+const fmtBs=n=>Number(n||0).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2});
+function pintarCands(lista,vacio){
+ S.sel='';$('guardar').disabled=true;S.cands=lista;
+ $('cands').innerHTML=lista.length?lista.map((c,i)=>`<button type="button" class="cand" data-i="${i}"><b>${esc(c.base)} · ${esc(c.nombre)}</b>${c.enCola?'<span class="tag p">POR FACTURAR</span>':''}${c.coincide?'<span class="tag f">✓ MONTO COINCIDE</span>':''}${c.facturado?'<span class="tag f">YA TIENE FACTURA</span>':''}<span>Cédula ${esc(c.cedula||'—')} · ${c.monto?(c.moneda==='Bs'||!c.moneda?'Bs ':'$ ')+esc(c.monto):''} · ${esc(c.fecha||'')}</span></button>`).join(''):`<div class="hint">${vacio||'Sin coincidencias.'}</div>`}
+$('cands').onclick=e=>{const b=e.target.closest('.cand');if(!b)return;const c=S.cands[+b.dataset.i];S.sel=c.base;
+ [...$('cands').children].forEach(x=>x.classList.toggle('on',x===b));$('guardar').disabled=false;
+ if(c.facturado){$('msg').className='msg warn';$('msg').textContent='⚠️ Este pedido ya tiene una factura marcada. Si guardas, se agrega esta como registro adicional.'}else{$('msg').textContent=''}};
+async function buscarPedidos(q){const r=await gas({action:'buscarPedidoFactura',q});if(!r||!r.ok)throw new Error((r&&r.error)||'No se pudo buscar');return r.pedidos||[]}
+async function sugerir(){
+ const ced=$('ced').value.replace(/\D/g,''),nom=$('nom').value.trim();
+ try{let l=[];if(ced.length>=5)l=await buscarPedidos(ced);if(!l.length&&nom.length>=4)l=await buscarPedidos(nom);
+  if(!l.length){const r=await gas({action:'buscarPedidoFactura',q:'',solo_cola:'SI'});l=(r&&r.pedidos)||[]}
+  const mf=aNumero($('monto').value);
+  l.forEach(c=>{const m=aNumero(c.monto);c.coincide=!!(mf&&m&&(Math.abs(m-mf)/mf<0.01||Math.abs(m*1.16-mf)/mf<0.01))});
+  l.sort((a,b)=>(b.coincide-a.coincide)||(b.enCola-a.enCola));
+  pintarCands(l,'No encontré pedidos. Busca por cédula, nombre o código S-.');
+  if(l.length&&l[0].coincide){S.sel=l[0].base;$('cands').firstChild.classList.add('on');$('guardar').disabled=false}
+ }catch(e){pintarCands([],e.message)}}
+$('ced').onchange=sugerir;
+$('bBuscar').onclick=async()=>{const q=$('q').value.trim();if(q.length<3){return}try{pintarCands(await buscarPedidos(q),'Sin resultados para “'+esc(q)+'”.')}catch(e){pintarCands([],e.message)}};
+$('q').onkeydown=e=>{if(e.key==='Enter')$('bBuscar').click()};
+
+/* ---------- guardar ---------- */
+$('guardar').onclick=async()=>{
+ let num=$('num').value.replace(/\s/g,'');if(/^\d+$/.test(num))num=num.replace(/^0+/,'')||'0';   // se guarda sin ceros a la izquierda
+ $('num').value=num;
+ if(!/^[A-Za-z0-9-]{3,20}$/.test(num)){return aviso('Escribe un número de factura válido.')}
+ if(!S.sel)return aviso('Elige el pedido al que pertenece la factura.');
+ if(!S.archivo)return aviso('Falta la foto o el PDF.');
+ $('guardar').disabled=true;aviso('Guardando…','');
+ try{const r=await gasPost({action:'guardarFacturaArchivo',num_factura:num,fecha_factura:$('fecha').value.trim(),monto:aNumero($('monto').value)||'',cedula:$('ced').value.replace(/\D/g,''),nombre:$('nom').value.trim(),base:S.sel,usuario:S.usuario,mime:S.archivo.mime,archivo_base64:S.archivo.b64});
+  if(!r||!r.ok){if(r&&r.error==='duplicada')throw new Error('La factura N° '+num+' ya fue cargada antes (pedido '+(r.con||'?')+'). No se guardó para evitar duplicados.');throw new Error((r&&r.error)||'No se pudo guardar')}
+  aviso('✓ Factura '+num+' guardada y ligada al pedido '+S.sel+(r.movida?' · salió de la cola por facturar.':'.'),'ok');
+  resetCarga(true);
+ }catch(e){aviso(e.message,'err');$('guardar').disabled=false}};
+function aviso(t,c){$('msg').textContent=t;$('msg').className='msg '+(c===undefined?'err':c)}
+function resetCarga(limpiarMsg){S.archivo=null;S.sel='';['num','fecha','monto','ced','nom','q'].forEach(i=>$(i).value='');$('prev').innerHTML='';$('cands').innerHTML='';
+ $('c2').classList.add('hide');$('c3').classList.add('hide');$('guardar').disabled=true;$('fFoto').value='';$('fArch').value='';if(limpiarMsg!==false){}else{$('msg').textContent='';$('leyendo').textContent=''}}
+
+/* ---------- lista ---------- */
+async function cargarLista(){$('lista').innerHTML='<div class="hint">Cargando…</div>';
+ try{const r=await gas({action:'leerFacturasCargadas'});S.lista=(r&&r.rows)||[];pintarLista()}catch(e){$('lista').innerHTML='<div class="msg err">'+esc(e.message)+'</div>'}}
+function pintarLista(){const q=$('lq').value.trim().toLowerCase();
+ const l=S.lista.filter(f=>!q||[f.num,f.nombre,f.cedula,f.base].some(v=>String(v||'').toLowerCase().includes(q))).slice(0,80);
+ $('lista').innerHTML=l.length?l.map(f=>`<div class="item"><b>Factura ${esc(f.num)} · ${esc(f.base)}</b>${esc(f.nombre||'')} · C.I ${esc(f.cedula||'—')}<br>${f.monto?'Bs '+esc(fmtBs(f.monto))+' · ':''}${esc(f.fecha||'')} · cargada por ${esc(f.usuario||'')} el ${esc(f.cargada||'')}${f.url?`<br><a href="${esc(f.url)}" target="_blank" rel="noopener">Ver archivo</a>`:''}</div>`).join(''):'<div class="hint">No hay facturas cargadas.</div>'}
+$('lq').oninput=pintarLista;
+</script></body></html>
