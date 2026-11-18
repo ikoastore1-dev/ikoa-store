@@ -277,6 +277,21 @@ button[style*="background:linear-gradient"] { background: var(--accent) !importa
 /* Tamaño único en el showroom (el mismo que pedidosfull.html: 8 prendas por fila), sin importar cuántas prendas tenga la pestaña */
 @media (min-width:641px){#ikoa-perchero .showroom-item{flex:0 0 10.75%}}
 </style>
+<style id="ikoa-movil">
+/* Mejoras para celular: botones Atrás/Siguiente siempre visibles, inputs sin zoom en iPhone, encabezado compacto */
+@media (max-width:640px){
+  header{padding:14px 18px!important;gap:6px!important}
+  main{padding:16px 18px 20px!important}
+  .progress-bar{margin-bottom:14px!important;gap:5px!important}
+  .step-header{padding-bottom:12px!important;margin-bottom:16px!important}
+  .step-title{font-size:24px!important;line-height:1.15!important}
+  .card{padding:16px!important}
+  .field-input,input.field-input,select.field-input{font-size:16px!important;min-height:48px}
+  .nav-row{position:sticky;bottom:0;z-index:60;margin:16px -18px 0!important;padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px))!important;background:#fff;border-top:1px solid var(--border);box-shadow:0 -6px 14px rgba(0,0,0,.06)}
+  .btn-next,.btn-back{min-height:52px}
+  #ikoa-wa{bottom:calc(98px + env(safe-area-inset-bottom,0px))}
+}
+</style>
 </head>
 <body>
 <!-- SPLASH SCREEN -->
@@ -548,7 +563,7 @@ window.addEventListener('load',function(){
   <!-- STEP 4: PIEZAS -->
   <div class="step" id="step4">
     <div class="step-header"><div class="step-num">Paso 4 de 7</div><div class="step-title">Tallas y nombres</div></div>
-    <div class="nota" style="margin-bottom:14px;">📌 Nombre estampado en <b>manga derecha</b>, sin iniciales ni logos.<br>Completa las <b id="pack-total-lbl">—</b> franelas de tu pack.<br>Usa el contador <b>+/−</b> para repetir franelas iguales.</div>
+    <div class="nota" style="margin-bottom:14px;">📌 Nombre estampado en <b>manga derecha</b>, sin iniciales ni logos.<br>Completa <span id="nota-art">las</span> <b id="pack-total-lbl">—</b> de tu pack.<br>Usa el contador <b>+/−</b> para repetir <span id="nota-etq2">franelas</span> iguales.</div>
     <div id="franelas-progreso" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;color:var(--warn);"></div>
     <div class="alerta-min" id="alerta-min"></div>
     <div id="piezas-container"></div>
@@ -690,7 +705,7 @@ window.addEventListener('load',function(){
       </div>
       <div class="field-group" style="margin-top:14px;margin-bottom:0;">
         <div class="field-label">Número de referencia * <span style="color:var(--danger);">(obligatorio)</span></div>
-        <input class="field-input" type="text" id="pago-ref-bs" placeholder="Ingresa el número de referencia" inputmode="numeric" oninput="validarRef()">
+        <input class="field-input" type="text" id="pago-ref-bs" placeholder="Número de referencia (mínimo 6 dígitos)" inputmode="numeric" maxlength="20" oninput="validarRef()">
       </div>
     </div>
 
@@ -709,7 +724,7 @@ window.addEventListener('load',function(){
       </div>
       <div class="field-group" style="margin-top:14px;margin-bottom:0;">
         <div class="field-label">Código de confirmación * <span style="color:var(--danger);">(obligatorio)</span></div>
-        <input class="field-input" type="text" id="pago-ref-usd" placeholder="Ingresa el código de confirmación" oninput="validarRef()">
+        <input class="field-input" type="text" id="pago-ref-usd" placeholder="Código de confirmación (mínimo 6 caracteres)" maxlength="30" oninput="validarRef()">
       </div>
     </div>
 
@@ -1328,11 +1343,11 @@ function renderFranelasB(){
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
         <input type="checkbox" id="capucha-check-b${i}" onchange="exclusivoExtraB(${i},'capucha')" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
-        <label for="capucha-check-b${i}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🧢 Con Capucha (esta franela)</label>
+        <label for="capucha-check-b${i}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🧢 Con Capucha (${prendaTxt().este})</label>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
         <input type="checkbox" id="cuello-check-b${i}" onchange="exclusivoExtraB(${i},'cuello')" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
-        <label for="cuello-check-b${i}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🧣 Con Cuello alto (esta franela)</label>
+        <label for="cuello-check-b${i}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🧣 Con Cuello alto (${prendaTxt().este})</label>
       </div>
       <div style="margin-top:12px;">
         <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Logos (opcional)</div>
@@ -1684,9 +1699,16 @@ function setMismoEnvio(val){
 }
 
 // ── PIEZAS ────────────────────────────────────────────────────
+// Nombre de la prenda actual con su género: franela, vestido o short
+function prendaTxt(){
+  var e=(typeof mangaTipoActual!=='undefined'&&mangaTipoActual==='short')?'short':((typeof pedido!=='undefined'&&pedido.esDress)?'vestido':'franela');
+  var fem=(e==='franela');
+  return {e:e, pl:(e==='franela'?'franelas':e+'s'), fem:fem, este:(fem?'esta ':'este ')+e, las:fem?'las':'los'};
+}
 function inicializarPiezas(){
   if(!pedido.pack||pedido.pack<1){ alert('Selecciona el tamaño del pack primero'); goStep(2); return; }
-  document.getElementById('pack-total-lbl').textContent=pedido.pack+' franelas';
+  document.getElementById('pack-total-lbl').textContent=pedido.pack+' '+prendaTxt().pl;
+  (function(){ var pt=prendaTxt(); var a=document.getElementById('nota-art'), b=document.getElementById('nota-etq2'); if(a)a.textContent=pt.las; if(b)b.textContent=pt.pl; })();
   const container=document.getElementById('piezas-container');
   // Limpiar siempre para el pack actual
   container.innerHTML='';
@@ -1765,11 +1787,11 @@ function addPieza(copiarDe=null){
     `}
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <input type="checkbox" id="pz-capucha-${id}" onchange="exclusivoExtra(${id},'capucha')" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
-      <label for="pz-capucha-${id}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🧢 Con Capucha (esta franela)</label>
+      <label for="pz-capucha-${id}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🧢 Con Capucha (${prendaTxt().este})</label>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <input type="checkbox" id="pz-cuello-${id}" onchange="exclusivoExtra(${id},'cuello')" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
-      <label for="pz-cuello-${id}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🧣 Con Cuello alto (esta franela)</label>
+      <label for="pz-cuello-${id}" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🧣 Con Cuello alto (${prendaTxt().este})</label>
     </div>
     <div style="margin-top:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;">
       <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Logos (opcional, con costo adicional):</div>
@@ -1795,7 +1817,7 @@ function addPieza(copiarDe=null){
     </div>
     `}
     <div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 10px;background:var(--surface2);border-radius:8px;">
-      <div style="font-size:12px;color:var(--muted);flex:1;">Repetir esta franela:</div>
+      <div style="font-size:12px;color:var(--muted);flex:1;">Repetir ${prendaTxt().este}:</div>
       <button onclick="cambiarRepeticion(${id},-1)" style="width:32px;height:32px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
       <span id="rep-count-${id}" style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);min-width:28px;text-align:center;">1</span>
       <button onclick="cambiarRepeticion(${id},+1)" style="width:32px;height:32px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface3);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
@@ -1905,7 +1927,7 @@ function savePiezas(){
     const t=document.getElementById('pz-talla-'+id)?.value||'';
     const largo=esShort?(document.getElementById('pz-largo-'+id)?.value||''):'';
     const sinNombre=(esShort||esMangaCero||esMangaCorta)?true:(document.getElementById('pz-sinombre-'+id)?.checked||false);
-    const n=(esShort||esMangaCero||esMangaCorta)?'':(sinNombre?'SIN NOMBRE EN MANGA':(document.getElementById('pz-nombre-'+id)?.value.trim()||''));
+    const n=(esShort||esMangaCero||esMangaCorta)?'SIN NOMBRE EN MANGA':(sinNombre?'SIN NOMBRE EN MANGA':(document.getElementById('pz-nombre-'+id)?.value.trim()||'SIN NOMBRE EN MANGA'));
     const rep=parseInt(document.getElementById('rep-count-'+id)?.textContent||'1');
     const logoPecho=esShort?'':(document.getElementById('pz-logo-pecho-'+id)?.checked?(document.getElementById('pz-logo-pecho-txt-'+id)?.value.trim()||'SI'):'');
     const logoEspalda=esShort?'':(document.getElementById('pz-logo-espalda-'+id)?.checked?(document.getElementById('pz-logo-espalda-txt-'+id)?.value.trim()||'SI'):'');
@@ -2143,6 +2165,8 @@ function seleccionarPago(tipo){
   validarRef();
 }
 
+function refPagoValida(ref,moneda){ ref=String(ref||'').trim(); return (moneda==='bs'||moneda==='Bs')?/^\d{6,}$/.test(ref):/^[A-Za-z0-9]{6,}$/.test(ref); }
+function refPagoMsg(moneda){ return (moneda==='bs'||moneda==='Bs')?'La referencia debe tener mínimo 6 números (solo dígitos, sin letras ni espacios).':'El código de confirmación debe tener mínimo 6 caracteres (letras o números, sin espacios).'; }
 function validarRef(){
   if(pagoMoneda==='cashea'){
     const btn=document.getElementById('btn-ir-resumen');
@@ -2161,7 +2185,7 @@ function validarRef(){
     :'';
   const btn=document.getElementById('btn-ir-resumen');
   const montoActual=(pagoMoneda==='bs')?pagoTotalBs:pagoTotalUsd;
-  const ok=precioCargadoOk&&pagoMoneda&&ref&&ref.length>3&&montoActual>0;
+  const ok=precioCargadoOk&&pagoMoneda&&refPagoValida(ref,pagoMoneda)&&montoActual>0;
   btn.disabled=!ok;
   btn.style.opacity=ok?'1':'0.4';
   btn.style.cursor=ok?'pointer':'not-allowed';
@@ -2185,7 +2209,7 @@ function irAlResumen(){
   } else {
     const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim()
       :document.getElementById('pago-ref-usd')?.value.trim();
-    if(!ref||ref.length<3){ alert('Ingresa la referencia o código de confirmación'); return; }
+    if(!refPagoValida(ref,pagoMoneda)){ alert(refPagoMsg(pagoMoneda)); return; }
     pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
     pedido.pagoRef=ref;
     pedido.pagoMonto=(pagoMoneda==='bs')?pagoTotalBs:pagoTotalUsd;
@@ -2984,7 +3008,7 @@ function ampliarEstiloPieza(kind,key,ini){
  var tb=document.createElement('input'); tb.type='checkbox'; tb.id=tbId; tb.style.display='none'; rc.parentNode.insertBefore(tb,rc);
  var box=document.createElement('div'); box.className='estilo-opciones'; box.style.cssText='margin:8px 0;padding:8px 10px;border:1px solid var(--border);border-radius:8px;';
  var nm='est-'+kind+'-'+key, ops=['Cuello normal','🧣 Cuello alto','🧢 Capucha','🎭 Capucha con tapaboca'];
- box.innerHTML='<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Cuello / capucha (esta franela)</div>'+ops.map(function(t,v){return '<label style="display:flex;align-items:center;gap:8px;margin:4px 0;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;"><input type="radio" name="'+nm+'" value="'+v+'" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);"> '+t+'</label>';}).join('');
+ box.innerHTML='<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Cuello / capucha ('+prendaTxt().este+')</div>'+ops.map(function(t,v){return '<label style="display:flex;align-items:center;gap:8px;margin:4px 0;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;"><input type="radio" name="'+nm+'" value="'+v+'" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);"> '+t+'</label>';}).join('');
  rc.parentNode.insertBefore(box,rc);
  function fijar(v){cap.checked=(v===2||v===3);cu.checked=(v===1);tb.checked=(v===3);}
  [].forEach.call(box.querySelectorAll('input'),function(r){r.onchange=function(){fijar(+r.value);};});
@@ -3316,8 +3340,8 @@ if(typeof _p45==='function')window.intentarPaso45=async function(){
     pk.vinil=diseno.vinilA+(diseno.vinilB&&diseno.vinilB!==diseno.vinilA?' + '+diseno.vinilB:'');
     pk.piezas.forEach(function(p){
       p.logoPecho=diseno.pecho;p.logoManga=diseno.manga;p.logoEspalda=diseno.espalda;
-      if(!p.nombre||p.nombre==='SIN NOMBRE EN MANGA'){p.nombre=diseno.nombre?diseno.nombre:p.nombre;}
-      if(p.nombre&&p.nombre!=='SIN NOMBRE EN MANGA')p.nombre=p.nombre+' (vinil '+diseno.nombreColor+')';
+      if(!p.nombre||/^\s*sin nombre/i.test(p.nombre)){p.nombre=diseno.nombre?diseno.nombre:p.nombre;}
+      if(p.nombre&&!/^\s*sin nombre/i.test(p.nombre))p.nombre=p.nombre+' (vinil '+diseno.nombreColor+')';
     });
     if(typeof renderPacksResumen==='function')renderPacksResumen();
     cfgYou=null;yaYou=false;

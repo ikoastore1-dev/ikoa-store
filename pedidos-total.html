@@ -457,24 +457,24 @@ window.addEventListener('load',function(){
           <span><span style="color:var(--muted);">Banco:</span> <b>Banesco</b></span>
         </div>
         <div style="display:none;">
-          <span><span style="color:var(--muted);">Titular:</span> <b id="pm-nombre">Johan Cazorla</b></span>
+          <span><span style="color:var(--muted);">Titular:</span> <b id="pm-nombre">Blanca Celis</b></span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
-          <span><span style="color:var(--muted);">Celular:</span> <b id="pm-cel">04149450742</b></span>
+          <span><span style="color:var(--muted);">Celular:</span> <b id="pm-cel">04243274955</b></span>
           <div style="display:flex;gap:4px;">
             <button onclick="copiarDato(document.getElementById('pm-cel').textContent,'btn-copy-cel')" id="btn-copy-cel" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Completo</button>
             <button onclick="copiarDato(document.getElementById('pm-cel').textContent.slice(-7),'btn-copy-cel2')" id="btn-copy-cel2" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Sin código</button>
           </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">
-          <span><span style="color:var(--muted);">Cédula:</span> <b id="pm-ci">18265345</b></span>
+          <span><span style="color:var(--muted);">Cédula:</span> <b id="pm-ci">7280585</b></span>
           <button onclick="copiarDato(document.getElementById('pm-ci').textContent,'btn-copy-ci')" id="btn-copy-ci" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;"><span><span style="color:var(--muted);">Monto:</span> <b id="pm-monto-bs" style="color:var(--accent);">—</b></span><button onclick="copiarMonto('bs','btn-copy-monto-bs')" id="btn-copy-monto-bs" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--accent);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">📋 Copiar</button></div>
       </div>
       <div class="field-group" style="margin-top:14px;margin-bottom:0;">
         <div class="field-label">Número de referencia * <span style="color:var(--danger);">(obligatorio)</span></div>
-        <input class="field-input" type="text" id="pago-ref-bs" placeholder="Ingresa el número de referencia" inputmode="numeric" oninput="validarRef()">
+        <input class="field-input" type="text" id="pago-ref-bs" placeholder="Número de referencia (mínimo 6 dígitos)" inputmode="numeric" maxlength="20" oninput="validarRef()">
       </div>
     </div>
 
@@ -493,7 +493,7 @@ window.addEventListener('load',function(){
       </div>
       <div class="field-group" style="margin-top:14px;margin-bottom:0;">
         <div class="field-label">Código de confirmación * <span style="color:var(--danger);">(obligatorio)</span></div>
-        <input class="field-input" type="text" id="pago-ref-usd" placeholder="Ingresa el código de confirmación" oninput="validarRef()">
+        <input class="field-input" type="text" id="pago-ref-usd" placeholder="Código de confirmación (mínimo 6 caracteres)" maxlength="30" oninput="validarRef()">
       </div>
     </div>
 
@@ -1563,6 +1563,7 @@ function addPieza(copiarDe=null){
   const mostrarLogos=esChaqueta||esSerieConLogo||esFullComfyOLicra||(esEmpresarial&&pedido._empresarialLogos);
   const ocultarCapuchaCheckbox=(esComfyFamilia||esEmpresarial)&&!pedido._modeloTieneCapucha;
   const esTrajeBano=pedido.variante==='Traje de Baño';
+  const esVestido=pedido.variante==='Dress'||/dress/i.test(pedido.nombreProducto||'');
   const esToalla=pedido.variante==='Toalla';
   const labelPrenda=esShort?'Short':esChaqueta?'Chaqueta':esTrajeBano?'Traje de baño':esToalla?'Toalla':'Franela';
   div.innerHTML=`
@@ -1576,7 +1577,7 @@ function addPieza(copiarDe=null){
           <option value="">Seleccionar</option>
           <option value="Kids"${genCopy==='Kids'?' selected':''}>Kids</option>
           <option value="Dama"${genCopy==='Dama'?' selected':''}>Dama</option>
-          ${esTrajeBano?'':`<option value="Caballero"${genCopy==='Caballero'?' selected':''}>Caballero</option>`}
+          ${(esTrajeBano||esVestido)?'':`<option value="Caballero"${genCopy==='Caballero'?' selected':''}>Caballero</option>`}
         </select>
       </div>
       <div class="field-group">
@@ -1778,15 +1779,27 @@ const CUENTAS_BANCARIAS={
   personal:{nombre:'Johan Cazorla', cel:'04149450742', cedula:'18265345'},
   blanca:{nombre:'Blanca Celis', cel:'04243274955', cedula:'7280585'}
 };
+function esClienteEmpresa(){
+  var c=String((typeof pedido!=='undefined'&&pedido&&pedido.cedula)||'').trim().toUpperCase();
+  if(!c){var t=document.getElementById('p-cedula-tipo'),n=document.getElementById('p-cedula-num');c=((t?t.value:'')+(n?n.value:'')).trim().toUpperCase();}
+  return /^J[-\s]?\d/.test(c);   /* RIF de empresa (J-) */
+}
 async function aplicarCuentaActiva(){
-  try{
-    const data=await scriptGETjson({action:'leerCuentaActiva'});
-    const cuenta=CUENTAS_BANCARIAS[data.cuenta]||CUENTAS_BANCARIAS.personal;
-    const elNombre=document.getElementById('pm-nombre'), elCel=document.getElementById('pm-cel'), elCi=document.getElementById('pm-ci');
-    if(elNombre) elNombre.textContent=cuenta.nombre;
-    if(elCel) elCel.textContent=cuenta.cel;
-    if(elCi) elCi.textContent=cuenta.cedula;
-  }catch(e){ console.warn('Error al leer cuenta activa:', e); }
+  /* Si no se puede leer la cuenta activa (falla de conexión o respuesta inválida), se usa la cuenta de Blanca */
+  let clave='blanca';
+  if(esClienteEmpresa()){ clave='empresa'; }
+  else for(let intento=0;intento<3;intento++){
+    try{
+      const data=await scriptGETjson({action:'leerCuentaActiva'});
+      if(data&&data.ok&&CUENTAS_BANCARIAS[data.cuenta]){ clave=data.cuenta; break; }
+    }catch(e){ console.warn('Error al leer cuenta activa (intento '+(intento+1)+'):', e); }
+    if(intento<2) await new Promise(r=>setTimeout(r,700));
+  }
+  const cuenta=CUENTAS_BANCARIAS[clave]||CUENTAS_BANCARIAS.blanca;
+  const elNombre=document.getElementById('pm-nombre'), elCel=document.getElementById('pm-cel'), elCi=document.getElementById('pm-ci');
+  if(elNombre) elNombre.textContent=cuenta.nombre;
+  if(elCel) elCel.textContent=cuenta.cel;
+  if(elCi) elCi.textContent=cuenta.cedula;
 }
 
 async function calcularPago(){
@@ -1903,7 +1916,10 @@ async function calcularPago(){
     const cfgDelPack=(window._casheaConfigPorLinea||{})[lineaDelPack];
     const pctDelPack=parseFloat(cfgDelPack?.cashea_pct)||0;
     const activoDelPack=cfgDelPack&&(cfgDelPack.cashea_activo===true||cfgDelPack.cashea_activo==='true');
-    totalCasheaBs+=activoDelPack?Math.round(subtotalPackBs*(1+pctDelPack/100)*100)/100:subtotalPackBs;
+    // Recargos (capucha / talla plus / logos): SIEMPRE con el % de Cashea de Comfy; la base con el % de la línea del pack
+    const pctRecargos=parseFloat(((window._casheaConfigPorLinea||{}).comfy||{}).cashea_pct)||0;
+    const recargosPackBs=capuchaBs+recargaBs+logosBs;
+    totalCasheaBs+=activoDelPack?Math.round((packBs*(1+pctDelPack/100)+recargosPackBs*(1+pctRecargos/100))*100)/100:subtotalPackBs;
     desglose.push(`${pk.modelo||codigoProd}${pk.largo?' · '+pk.largo:''}${pk.capucha&&pk.capucha!=='Sin Capucha'?' · Con capucha':''}`);
   });
 
@@ -1911,6 +1927,7 @@ async function calcularPago(){
   pagoTotalUsd=Math.round(totalUsd*100)/100;
   pagoTotalCasheaBs=Math.round(totalCasheaBs*100)/100;
   pagoTotalCasheaUsd=tasaBcvActual>0?Math.round((pagoTotalCasheaBs/tasaBcvActual)*100)/100:0;
+  if(esClienteEmpresa()){ pagoTotalBs=pagoTotalCasheaBs; pagoTotalUsd=pagoTotalCasheaUsd; }   /* RIF de empresa: precio tipo Cashea como precio normal */
   document.getElementById('pago-desglose').innerHTML=desglose.join('<br>');
   document.getElementById('pago-total-bs').textContent='Bs '+pagoTotalBs.toFixed(2);
   document.getElementById('pago-total-usd').textContent='$'+pagoTotalUsd.toFixed(2);
@@ -1918,6 +1935,15 @@ async function calcularPago(){
   document.getElementById('pm-monto-usd').textContent='$'+pagoTotalUsd.toFixed(2);
   const elCasheaTotal=document.getElementById('pm-monto-cashea');
   if(elCasheaTotal) elCasheaTotal.textContent='Bs '+pagoTotalCasheaBs.toFixed(2)+' ($'+pagoTotalCasheaUsd.toFixed(2)+')';
+  if(esClienteEmpresa()){
+    var _bc=document.getElementById('btn-pago-cashea'); if(_bc){_bc.style.display='none';var _gp=_bc.parentNode;if(_gp){_gp.classList.remove('cols3');_gp.classList.add('cols2');}}
+    var _bu=document.getElementById('btn-pago-usd'); if(_bu)_bu.style.display='none';   /* RIF de empresa: solo pago en Bs */
+    var _gq=_bc?_bc.parentNode:(_bu?_bu.parentNode:null); if(_gq){_gq.classList.remove('cols3','cols2');_gq.classList.add('cols1');_gq.style.gridTemplateColumns='1fr';}
+    var _cu=document.getElementById('pago-usd-card'); if(_cu)_cu.style.display='none';
+    var _cc=document.getElementById('pago-cashea-card'); if(_cc)_cc.style.display='none';
+    document.getElementById('pago-desglose').innerHTML=desglose.join('<br>');   /* sin precios unitarios ni mención a Cashea */
+    if(pagoMoneda!=='bs'){ pagoMoneda='bs'; var _bb=document.getElementById('btn-pago-bs'); if(_bb)_bb.classList.add('selected'); var _cb=document.getElementById('pago-bs-card'); if(_cb)_cb.style.display='block'; }
+  }
   const totalGeneral=pagoTotalBs+pagoTotalUsd+pagoTotalCasheaBs;
   if(totalGeneral<=0){
     precioCargadoOk=false;
@@ -1940,6 +1966,8 @@ function seleccionarPago(tipo){
   validarRef();
 }
 
+function refPagoValida(ref,moneda){ ref=String(ref||'').trim(); return (moneda==='bs'||moneda==='Bs')?/^\d{6,}$/.test(ref):/^[A-Za-z0-9]{6,}$/.test(ref); }
+function refPagoMsg(moneda){ return (moneda==='bs'||moneda==='Bs')?'La referencia debe tener mínimo 6 números (solo dígitos, sin letras ni espacios).':'El código de confirmación debe tener mínimo 6 caracteres (letras o números, sin espacios).'; }
 function validarRef(){
   if(pagoMoneda==='cashea'){
     const btn=document.getElementById('btn-ir-resumen');
@@ -1952,7 +1980,7 @@ function validarRef(){
   const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim():document.getElementById('pago-ref-usd')?.value.trim();
   const btn=document.getElementById('btn-ir-resumen');
   const montoActual=(pagoMoneda==='bs')?pagoTotalBs:pagoTotalUsd;
-  const ok=precioCargadoOk&&pagoMoneda&&ref&&ref.length>3&&montoActual>0;
+  const ok=precioCargadoOk&&pagoMoneda&&refPagoValida(ref,pagoMoneda)&&montoActual>0;
   btn.disabled=!ok; btn.style.opacity=ok?'1':'0.4'; btn.style.cursor=ok?'pointer':'not-allowed';
   if(ok){
     pagoRef=ref;
@@ -1971,7 +1999,7 @@ function irAlResumen(){
     pedido.pagoMoneda='Cashea'; pedido.pagoRef='CASHEA'; pedido.pagoMonto=pagoTotalCasheaBs;
   } else {
     const ref=pagoMoneda==='bs'?document.getElementById('pago-ref-bs')?.value.trim():document.getElementById('pago-ref-usd')?.value.trim();
-    if(!ref||ref.length<3){ alert('Ingresa la referencia o código de confirmación'); return; }
+    if(!refPagoValida(ref,pagoMoneda)){ alert(refPagoMsg(pagoMoneda)); return; }
     pedido.pagoMoneda=pagoMoneda==='bs'?'Bs':'Divisa';
     pedido.pagoRef=ref;
     pedido.pagoMonto=(pagoMoneda==='bs')?pagoTotalBs:pagoTotalUsd;

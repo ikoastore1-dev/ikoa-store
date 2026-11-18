@@ -272,14 +272,14 @@ main{max-width:480px;margin:0 auto;padding:16px;}
               <button onclick="copiarDato('Banesco',this)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">📋 Copiar</button>
             </div>
             <div style="display:none;">
-              <div><div style="font-size:11px;color:var(--muted);">Titular</div><div id="r-pm-nombre" style="font-size:14px;font-weight:700;color:var(--text);">Johan Cazorla</div></div>
+              <div><div style="font-size:11px;color:var(--muted);">Titular</div><div id="r-pm-nombre" style="font-size:14px;font-weight:700;color:var(--text);">Blanca Celis</div></div>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <div><div style="font-size:11px;color:var(--muted);">Teléfono</div><div id="r-pm-cel" style="font-size:14px;font-weight:700;color:var(--text);">04149450742</div></div>
+              <div><div style="font-size:11px;color:var(--muted);">Teléfono</div><div id="r-pm-cel" style="font-size:14px;font-weight:700;color:var(--text);">04243274955</div></div>
               <button onclick="copiarDato(document.getElementById('r-pm-cel').textContent,this)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">📋 Copiar</button>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-              <div><div style="font-size:11px;color:var(--muted);">Cédula</div><div id="r-pm-ci" style="font-size:14px;font-weight:700;color:var(--text);">V-18265345</div></div>
+              <div><div style="font-size:11px;color:var(--muted);">Cédula</div><div id="r-pm-ci" style="font-size:14px;font-weight:700;color:var(--text);">V-7280585</div></div>
               <button onclick="copiarDato(document.getElementById('r-pm-ci').textContent,this)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer;">📋 Copiar</button>
             </div>
             <div style="background:var(--surface);border-radius:8px;padding:10px;text-align:center;">
@@ -652,6 +652,9 @@ main{max-width:480px;margin:0 auto;padding:16px;}
 </div>
 
 <script>
+function refPagoValida(ref,moneda){ ref=String(ref||'').trim(); return (moneda==='bs'||moneda==='Bs')?/^\d{6,}$/.test(ref):/^[A-Za-z0-9]{6,}$/.test(ref); }
+function refPagoMsg(moneda){ return (moneda==='bs'||moneda==='Bs')?'La referencia debe tener mínimo 6 números (solo dígitos, sin letras ni espacios).':'El código de confirmación debe tener mínimo 6 caracteres (letras o números, sin espacios).'; }
+
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbw39K95bn14-yZcvd8kXuKnyD2BAqLjOg6rFNIBkuZRHQP7z_s1FFOV3P2EOyNtqz9ikw/exec';
 const WHATSAPP_NUM='584149450742';
 const WEBHOOK_NOTIFY='https://hook.us2.make.com/f3mbneb3oliah6tv4ut64rb6x1pamiwa';
@@ -1037,7 +1040,7 @@ function validarStep6(){
   const ref=pagoSeleccionado==='bs'
     ? document.getElementById('s6-ref-bs').value.trim()
     : document.getElementById('s6-ref-usd').value.trim();
-  if(!ref||ref.length<3){ alert('Ingresa el número de referencia'); return; }
+  if(!refPagoValida(ref,pagoSeleccionado)){ alert(refPagoMsg(pagoSeleccionado)); return; }
   gc.pagoMoneda=pagoSeleccionado==='bs'?'Bs':'Divisa';
   gc.pagoRef=ref;
   gc.pagoMonto=pagoSeleccionado==='bs'?gc.totalBs:gc.totalUsd;
@@ -1474,14 +1477,20 @@ const CUENTAS_BANCARIAS_GC={
   blanca:{nombre:'Blanca Celis', cel:'04243274955', cedula:'V-7280585'}
 };
 async function aplicarCuentaActivaGC(){
-  try{
-    const data=await scriptGETjson({action:'leerCuentaActiva'});
-    const cuenta=CUENTAS_BANCARIAS_GC[data.cuenta]||CUENTAS_BANCARIAS_GC.personal;
-    const elNombre=document.getElementById('r-pm-nombre'), elCel=document.getElementById('r-pm-cel'), elCi=document.getElementById('r-pm-ci');
-    if(elNombre) elNombre.textContent=cuenta.nombre;
-    if(elCel) elCel.textContent=cuenta.cel;
-    if(elCi) elCi.textContent=cuenta.cedula;
-  }catch(e){ console.warn('Error al leer cuenta activa:', e); }
+  /* Si no se puede leer la cuenta activa (falla de conexión o respuesta inválida), se usa la cuenta de Blanca */
+  let clave='blanca';
+  for(let intento=0;intento<3;intento++){
+    try{
+      const data=await scriptGETjson({action:'leerCuentaActiva'});
+      if(data&&data.ok&&CUENTAS_BANCARIAS_GC[data.cuenta]){ clave=data.cuenta; break; }
+    }catch(e){ console.warn('Error al leer cuenta activa (intento '+(intento+1)+'):', e); }
+    if(intento<2) await new Promise(r=>setTimeout(r,700));
+  }
+  const cuenta=CUENTAS_BANCARIAS_GC[clave]||CUENTAS_BANCARIAS_GC.blanca;
+  const elNombre=document.getElementById('r-pm-nombre'), elCel=document.getElementById('r-pm-cel'), elCi=document.getElementById('r-pm-ci');
+  if(elNombre) elNombre.textContent=cuenta.nombre;
+  if(elCel) elCel.textContent=cuenta.cel;
+  if(elCi) elCi.textContent=cuenta.cedula;
 }
 
 function rSelectPago(tipo){

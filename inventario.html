@@ -514,6 +514,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <div><span style="color:var(--muted);">Moneda:</span> <b id="apro-pago-moneda">—</b></div>
       <div><span style="color:var(--muted);">Monto:</span> <b id="apro-pago-monto">—</b></div>
       <div><span style="color:var(--muted);">Referencia:</span> <b id="apro-pago-ref">—</b></div>
+      <div id="apro-ref-alerta" style="display:none;margin-top:6px;background:#2a1010;border:1.5px solid var(--danger);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.5;color:var(--danger);font-weight:700;"></div>
     </div>
     <div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div>
     <input class="modal-cod-input" type="password" id="apro-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key==='Enter')confirmarAprobacion()">
@@ -577,18 +578,14 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
 <main>
   <div class="tabs">
-    <button class="main-tab tab" onclick="switchTab('tasa')">💱 Tasa</button>
-    <button class="main-tab tab" onclick="switchTab('precios')">💲 Precios</button>
-    <button class="main-tab tab" onclick="switchTab('stock')">📦 Stock</button>
-    <button class="main-tab tab" onclick="switchTab('etiquetas')">🆕 Productos Nuevos</button>
-    <button class="main-tab tab" onclick="switchTab('aprobaciones')">✅ Aprobaciones</button>
-    <button class="main-tab tab" onclick="switchTab('factura')">🧾 Factura</button>
-    <button class="main-tab tab" onclick="switchTab('respaldo')">💬 Respaldo</button>
-    <button class="main-tab tab" onclick="switchTab('gestion')">📋 Gestión</button>
-    <button class="main-tab tab" onclick="switchTab('taller')">🏭 Taller</button>
-    <button class="main-tab tab" onclick="switchTab('programacion')">📅 Programación</button>
-    <button class="main-tab tab" onclick="switchTab('ventas')">📊 Ventas</button>
-    <button class="main-tab tab" onclick="switchTab('gastos')">💸 Gastos</button>
+    <button class="main-tab tab" data-tab="tasa" onclick="switchTab('tasa')">💱 Tasa</button>
+    <button class="main-tab tab" data-tab="precios" onclick="switchTab('precios')">💲 Precios</button>
+    <button class="main-tab tab" data-tab="stock" onclick="switchTab('stock')">📦 Stock</button>
+    <button class="main-tab tab" data-tab="aprobaciones" onclick="switchTab('aprobaciones')">✅ Aprobaciones</button>
+    <button class="main-tab tab" data-tab="respaldo" onclick="switchTab('respaldo')">💬 Respaldo</button>
+    <button class="main-tab tab" data-tab="gestion" onclick="switchTab('gestion')">📋 Gestión</button>
+    <button class="main-tab tab" data-tab="ventas" onclick="switchTab('ventas')">📊 Ventas</button>
+    <button class="main-tab tab" data-tab="gastos" onclick="switchTab('gastos')">💸 Gastos</button>
   </div>
 
   <!-- TAB TASA -->
@@ -4368,14 +4365,32 @@ function confirmarVentasLock(){
   cargarCuentaActiva();
 }
 
+/* Menú agrupado: Productos Nuevos va dentro de Stock; Factura, Taller y Programación dentro de Gestión */
+const GRUPO_TAB={etiquetas:'stock',factura:'gestion',taller:'gestion',programacion:'gestion'};
+const SUBNAV_GRUPOS={
+  stock:[['stock','📦 Stock'],['etiquetas','🆕 Productos Nuevos']],
+  gestion:[['gestion','📋 Gestión'],['factura','🧾 Factura'],['taller','🏭 Taller'],['programacion','📅 Programación']]
+};
+function montarSubnav(){
+  Object.keys(SUBNAV_GRUPOS).forEach(g=>{
+    SUBNAV_GRUPOS[g].forEach(([sec])=>{
+      const el=document.getElementById('tab-'+sec); if(!el||el.querySelector(':scope > .subnav')) return;
+      const bar=document.createElement('div'); bar.className='subnav';
+      bar.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px;padding:6px;background:var(--surface3);border-radius:12px;';
+      SUBNAV_GRUPOS[g].forEach(([t,lab])=>{ const b=document.createElement('button'); b.className='tab subnav-btn'+(t===sec?' active':''); b.dataset.sub=t; b.textContent=lab; b.style.cssText='flex:1;min-width:110px;padding:9px 8px;font-size:13px;'; b.onclick=()=>switchTab(t); bar.appendChild(b); });
+      el.insertBefore(bar,el.firstChild);
+    });
+  });
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',montarSubnav); else montarSubnav();
 function switchTab(tab){
   ['tasa','precios','stock','etiquetas','aprobaciones','factura','respaldo','gestion','taller','programacion','ventas','gastos'].forEach(t=>{
     const el=document.getElementById('tab-'+t);
     if(el) el.style.display=t===tab?'block':'none';
   });
-  document.querySelectorAll('.main-tab').forEach((b,i)=>{
-    b.classList.toggle('active',['tasa','precios','stock','etiquetas','aprobaciones','factura','respaldo','gestion','taller','programacion','ventas','gastos'][i]===tab);
-  });
+  const grupoTab=GRUPO_TAB[tab]||tab;
+  document.querySelectorAll('.main-tab').forEach(b=>{ b.classList.toggle('active',b.dataset.tab===grupoTab); });
+  document.querySelectorAll('.subnav-btn').forEach(b=>{ b.classList.toggle('active',b.dataset.sub===tab); });
   ['product-area','msg-area','historial-list','solicitudes-list','cola-list',
    'rv-list','rv-historial-list','apro-msg','cola-msg'].forEach(id=>{
     const el=document.getElementById(id);
@@ -4406,6 +4421,7 @@ function switchTab(tab){
   if(tab==='etiquetas') switchEtiqueta('nuevo');
   if(tab==='taller'){ switchTallerSub('produccion'); cargarTaller(); }
   if(tab==='programacion'){ switchProg('comfy'); }
+  montarSubnav();
 }
 
 // ── TASAS ─────────────────────────────────────────────────────
@@ -4503,6 +4519,11 @@ async function eliminarCelApi(celular, fecha){
 }
 
 // ── CASHEA (Comfy Mega Promo) ───────────────────────────────────
+function copiarDatoCashea(btn,txt){
+  const ok=()=>{ const t=btn.textContent; btn.textContent='✓ Copiado'; setTimeout(()=>{btn.textContent=t;},1300); };
+  const viejo=()=>{ try{ const ta=document.createElement('textarea'); ta.value=txt; ta.style.cssText='position:fixed;left:-9999px;'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); ok(); }catch(e){ alert('Copia manual: '+txt); } };
+  if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(txt).then(ok).catch(viejo); else viejo();
+}
 async function cargarCashea(){
   const cont=document.getElementById('prog-content');
   cont.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">⏳ Cargando...</div>';
@@ -5581,7 +5602,7 @@ async function cargarAprobacionesCashea(){
           <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px;">🛒 Pago Cashea</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
             <div><span style="color:var(--muted);">Moneda:</span> <b>Cashea</b></div>
-            <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent);">Bs ${v(29)||'—'}</b></div>
+            <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent);">Bs ${v(29)||'—'}</b>${v(29)?`<button type="button" onclick="copiarDatoCashea(this,'${String(v(29)).replace(/[^0-9.,]/g,'')}')" style="margin-left:6px;padding:2px 9px;background:#0a2a1a;border:1px solid var(--accent);border-radius:6px;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;vertical-align:middle;" >📋</button>`:''}</div>
             <div><span style="color:var(--muted);">% Cashea:</span> <b>${casheaPct||'—'}%</b></div>
             <div><span style="color:var(--muted);">Ref:</span> <b style="color:var(--warn);">${v(30)||'—'}</b></div>
           </div>
@@ -5591,12 +5612,13 @@ async function cargarAprobacionesCashea(){
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <div>
               <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">🪪 Cédula</div>
-              <div style="font-size:18px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif;">${v(9)||'—'}</div>
+              <div style="font-size:18px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif;">${v(9)||'—'}${v(9)?`<button type="button" onclick="copiarDatoCashea(this,'${String(v(9)).replace(/\D/g,'')}')" style="margin-left:6px;padding:2px 9px;background:#0a2a1a;border:1px solid var(--accent);border-radius:6px;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;vertical-align:middle;" >📋 Copiar</button>`:''}</div>
             </div>
             <div>
               <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">💵 Monto USD (Tasa BCV)</div>
               <div style="font-size:18px;font-weight:700;color:#00ff88;font-family:'Barlow Condensed',sans-serif;" id="cashea-usd-${base.replace(/[^a-zA-Z0-9]/g,'_')}">
                 ${tasaBCV>0 ? '$'+(Math.round((parseFloat(v(29)||0)/tasaBCV)*100)/100).toFixed(2) : '—'}
+                ${tasaBCV>0 ? `<button type="button" onclick="copiarDatoCashea(this,'${(Math.round((parseFloat(v(29)||0)/tasaBCV)*100)/100).toFixed(2)}')" style="margin-left:6px;padding:2px 9px;background:#0a2a1a;border:1px solid var(--accent);border-radius:6px;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;vertical-align:middle;" >📋 Copiar</button>` : ''}
               </div>
             </div>
           </div>
@@ -7794,6 +7816,7 @@ async function cargarSolicitudes(filtro){
           agencia:v(18),retira:v(19),retiraCi:v(20),retiraCel:v(21),
           pagoMoneda:pagoMoneda,pagoMonto:pagoMonto,pagoRef:pagoRef
         };
+        if(String(r[37]||'').trim()){ html+=`<div style="margin-top:8px;background:#2a1010;border:1.5px solid var(--danger);border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700;color:var(--danger);">⚠️ ${String(r[37]).replace(/</g,'&lt;')} · revisa el pago antes de aprobar</div>`; }
         html+=facturaChk(packs[0][0])+uniChip(packs[0][0],v(9),v(7),'Pendiente');
         html+=`<div style="margin-top:8px;">
           <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
@@ -8028,6 +8051,13 @@ function abrirModalAprobacion(data){
   document.getElementById('apro-pago-moneda').textContent=data.pago_moneda||'—';
   document.getElementById('apro-pago-monto').textContent=data.pago_monto||'—';
   document.getElementById('apro-pago-ref').textContent=data.pago_ref||'—';
+  // Revisión en vivo contra la base de pagos (PAGOS_REGISTRO): avisa si esta referencia ya se usó en otro pedido
+  const alertaRef=document.getElementById('apro-ref-alerta'); alertaRef.style.display='none'; alertaRef.textContent='';
+  if(data.pago_ref && String(data.pago_ref).toUpperCase()!=='CASHEA'){
+    scriptGETjson({action:'verificarReferencia',ref:data.pago_ref,codigo:data.codigo||''},15000).then(r=>{
+      if(r&&r.ok&&r.repetida){ alertaRef.innerHTML='⚠️ REFERENCIA REPETIDA — este pago ya fue reportado en el pedido '+r.con.join(', ')+'. Verifica en el banco antes de aprobar.'; alertaRef.style.display='block'; }
+    }).catch(()=>{});
+  }
   document.getElementById('apro-unlock').value='';
   document.getElementById('apro-error').textContent='';
   document.getElementById('modal-aprobacion').classList.remove('hidden');
@@ -10311,8 +10341,8 @@ function tallerFamiliaTela(p){
    El PDF lo arma Google (HTML -> Doc -> PDF) y no respeta cortes de página ni repite encabezados. Por eso la hoja se arma aquí:
    se mide cada bloque, se llena la hoja, y si lo siguiente no cabe se pasa a la hoja siguiente con su encabezado de CONTINUACIÓN.
    Si en tu PDF sobra mucho espacio abajo o aún se corta, ajusta estas dos medidas (en píxeles CSS a 96 dpi). */
-const TALLER_PAG_ALTO=640;    // alto útil por hoja (carta/A4 con márgenes de 1") ya con margen de seguridad
-const TALLER_PAG_ANCHO=620;   // ancho útil
+const TALLER_PAG_ALTO=900;    // alto útil por hoja (carta/A4 con márgenes de 1") ya con margen de seguridad
+const TALLER_PAG_ANCHO=700;   // ancho útil
 function tallerMedirHTML(html){
   let d=document.getElementById('taller-medidor');
   if(!d){ d=document.createElement('div'); d.id='taller-medidor'; d.style.cssText='position:absolute;left:-10000px;top:0;visibility:hidden;font-family:Arial,sans-serif;display:flow-root;'; document.body.appendChild(d); }
@@ -10339,7 +10369,7 @@ function tallerPaginar(secciones,intro){
     cerrar(); y+=gap;
   });
   /* El salto va en un PÁRRAFO propio: Google Docs ignora el salto de página cuando lo trae un <div> o una tabla */
-  return paginas.map((pg,i)=>i?'<p style="page-break-before:always;margin:0;padding:0;font-size:2px;line-height:2px;">&nbsp;</p>'+pg.join(''):pg.join('')).join('');
+  return paginas.map((pg,i)=>i?'<p class="pgbrk" style="page-break-before:always;margin:0;padding:0;font-size:2px;line-height:2px;">&nbsp;</p>'+pg.join(''):pg.join('')).join('');
 }
 async function tallerConstruirCortadorHTML(codigos){
   const fecha=tallerFechaHoy();
@@ -10869,6 +10899,40 @@ async function tallerEnviarDXFVinil(grupos, nombres, filename, formas){
   finally{ clearTimeout(t); }
 }
 
+
+/* ===== PDF de los reportes del Taller armado AQUÍ (navegador): cada hoja se dibuja tal cual se ve y se une en un PDF carta.
+   Así los saltos de hoja y los encabezados de continuación quedan exactos (la conversión de Google los ignoraba). ===== */
+async function tallerHTMLaPDF(html,nombre){
+  await cargarLibGen('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',()=>!!window.html2canvas);
+  await cargarLibGen('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',()=>!!(window.jspdf&&window.jspdf.jsPDF));
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  const host=document.createElement('div'); host.style.cssText='position:fixed;left:-20000px;top:0;';
+  doc.head.querySelectorAll('style').forEach(st=>{ if(!/@page/.test(st.textContent)||/table/.test(st.textContent)) host.appendChild(st.cloneNode(true)); });
+  const pages=[]; let cur=null;
+  const nueva=()=>{ cur=document.createElement('div'); cur.style.cssText='width:816px;height:1056px;box-sizing:border-box;padding:58px;background:#fff;overflow:hidden;font-family:Arial,sans-serif;color:#1a1a1a;'; host.appendChild(cur); pages.push(cur); };
+  nueva();
+  [].slice.call(doc.body.childNodes).forEach(n=>{ if(n.nodeType===1&&n.classList&&n.classList.contains('pgbrk')){ nueva(); return; } cur.appendChild(document.importNode(n,true)); });
+  document.body.appendChild(host);
+  try{
+    const pdf=new window.jspdf.jsPDF({unit:'pt',format:'letter',orientation:'portrait',compress:true});
+    for(let i=0;i<pages.length;i++){
+      const cv=await window.html2canvas(pages[i],{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
+      if(i)pdf.addPage(); pdf.addImage(cv.toDataURL('image/jpeg',0.9),'JPEG',0,0,612,792);
+    }
+    const blob=pdf.output('blob'), localUrl=URL.createObjectURL(blob);
+    let url=localUrl, id='';
+    try{   // se guarda también en Drive (si el Apps Script ya tiene la acción); si no, se usa el enlace local de esta sesión
+      const b64=await new Promise((ok,no)=>{ const fr=new FileReader(); fr.onload=()=>ok(String(fr.result).split(',')[1]); fr.onerror=no; fr.readAsDataURL(blob); });
+      const r=await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'guardarPDFBase64',titulo:nombre,pdf_base64:b64})}).then(x=>x.json());
+      if(r&&r.ok){ url=r.pdf_url; id=r.pdf_id; }
+    }catch(e){ console.warn('PDF a Drive:',e); }
+    return {pdf_url:url,pdf_id:id,filename:nombre+'.pdf',paginas:pages.length};
+  } finally { host.remove(); }
+}
+async function tallerGenerarPDF(html,nombre){
+  try{ return await tallerHTMLaPDF(html,nombre); }
+  catch(e){ console.warn('PDF en el navegador falló, se usa el método anterior:',e); return await cotGenerarPDFViaAppsScript(html,nombre); }
+}
 async function generarReportesTaller(){
   const codigos=[...tallerSeleccionados].sort((a,b)=>(parseInt(a)||0)-(parseInt(b)||0));
   if(!codigos.length) return;
@@ -10881,13 +10945,13 @@ async function generarReportesTaller(){
   try{
     btn.textContent='⏳ Generando Cortador...';
     const htmlCortador=await tallerConstruirCortadorHTML(codigos);
-    const infoCortador=await cotGenerarPDFViaAppsScript(htmlCortador, 'Taller_Cortador_'+Date.now());
+    const infoCortador=await tallerGenerarPDF(htmlCortador, 'Taller_Cortador_'+Date.now());
 
     btn.textContent='⏳ Generando Estampador...';
     let recursosEst=null;
     try{ recursosEst=await tallerPrepararVisualesEstampador(codigos); }catch(e){ console.warn('Figuritas del Estampador no disponibles:', e); }   // si falla, el reporte sale como siempre
     const htmlEstampador=tallerConstruirEstampadorHTML(codigos, recursosEst);
-    const infoEstampador=await cotGenerarPDFViaAppsScript(htmlEstampador, 'Taller_Estampador_'+Date.now());
+    const infoEstampador=await tallerGenerarPDF(htmlEstampador, 'Taller_Estampador_'+Date.now());
 
     btn.textContent='⏳ Generando DXF de Vinil...';
     let dxfLinkHtml='', dxfResumenHtml='', dtfLinkHtml='', dtfResumenHtml='';
