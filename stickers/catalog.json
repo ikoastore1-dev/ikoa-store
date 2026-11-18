@@ -71,9 +71,20 @@
       "nombre": null,
       "web": "stickers/vinil/web/S.V.88.png",
       "fecha": "2026-11-18"
+    },
+    {
+      "codigo": "S.V.D1",
+      "tecnica": "dtf",
+      "catalogo": "V",
+      "tematica": "Banderas",
+      "nombre": null,
+      "web": "stickers/dtf/web/S.V.D1.png",
+      "fecha": "2026-11-18",
+      "produccion": "stickers/dtf/print/S.V.D1.png"
     }
   ],
   "tematicas": [
-    "Chef"
+    "Chef",
+    "Banderas"
   ]
 }
