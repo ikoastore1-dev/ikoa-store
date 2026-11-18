@@ -69,6 +69,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
   <div class="card hide" id="c3">
    <h2>3. ¿A qué pedido pertenece?</h2>
    <div id="cands"></div>
+   <button type="button" class="cand" id="sinPedido"><b>📄 Sin pedido</b><span>La factura no pertenece a ningún pedido (venta directa en tienda, etc.). Solo se archiva.</span></button>
    <label>O busca otro pedido (cédula, nombre o código S-)</label>
    <div class="row2" style="grid-template-columns:1fr auto"><input id="q" placeholder="Buscar pedido…"><button class="btn sec" id="bBuscar" style="margin:0;width:auto;padding:0 18px">🔍</button></div>
    <button class="btn" id="guardar" disabled>Guardar factura</button>
@@ -184,9 +185,10 @@ function aNumero(s){s=String(s||'').trim();if(!s)return 0;const ult=Math.max(s.l
 /* ---------- pedidos candidatos ---------- */
 const fmtBs=n=>Number(n||0).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2});
 function pintarCands(lista,vacio){
- S.sel='';$('guardar').disabled=true;S.cands=lista;
+ S.sel='';$('sinPedido').classList.remove('on');$('guardar').disabled=true;S.cands=lista;
  $('cands').innerHTML=lista.length?lista.map((c,i)=>`<button type="button" class="cand" data-i="${i}"><b>${esc(c.base)} · ${esc(c.nombre)}</b>${c.enCola?'<span class="tag p">POR FACTURAR</span>':''}${c.coincide?'<span class="tag f">✓ MONTO COINCIDE</span>':''}${c.facturado?'<span class="tag f">YA TIENE FACTURA</span>':''}<span>Cédula ${esc(c.cedula||'—')} · ${c.monto?(c.moneda==='Bs'||!c.moneda?'Bs ':'$ ')+esc(c.monto):''} · ${esc(c.fecha||'')}</span></button>`).join(''):`<div class="hint">${vacio||'Sin coincidencias.'}</div>`}
-$('cands').onclick=e=>{const b=e.target.closest('.cand');if(!b)return;const c=S.cands[+b.dataset.i];S.sel=c.base;
+$('sinPedido').onclick=()=>{S.sel='SIN PEDIDO';[...$('cands').children].forEach(x=>x.classList.remove('on'));$('sinPedido').classList.add('on');$('guardar').disabled=false;$('msg').textContent=''};
+$('cands').onclick=e=>{$('sinPedido').classList.remove('on');const b=e.target.closest('.cand');if(!b)return;const c=S.cands[+b.dataset.i];S.sel=c.base;
  [...$('cands').children].forEach(x=>x.classList.toggle('on',x===b));$('guardar').disabled=false;
  if(c.facturado){$('msg').className='msg warn';$('msg').textContent='⚠️ Este pedido ya tiene una factura marcada. Si guardas, se agrega esta como registro adicional.'}else{$('msg').textContent=''}};
 async function buscarPedidos(q){const r=await gas({action:'buscarPedidoFactura',q});if(!r||!r.ok)throw new Error((r&&r.error)||'No se pudo buscar');return r.pedidos||[]}
@@ -214,18 +216,18 @@ $('guardar').onclick=async()=>{
  $('guardar').disabled=true;aviso('Guardando…','');
  try{const r=await gasPost({action:'guardarFacturaArchivo',num_factura:num,fecha_factura:$('fecha').value.trim(),monto:aNumero($('monto').value)||'',cedula:$('ced').value.replace(/\D/g,''),nombre:$('nom').value.trim(),base:S.sel,usuario:S.usuario,mime:S.archivo.mime,archivo_base64:S.archivo.b64});
   if(!r||!r.ok){if(r&&r.error==='duplicada')throw new Error('La factura N° '+num+' ya fue cargada antes (pedido '+(r.con||'?')+'). No se guardó para evitar duplicados.');throw new Error((r&&r.error)||'No se pudo guardar')}
-  aviso('✓ Factura '+num+' guardada y ligada al pedido '+S.sel+(r.movida?' · salió de la cola por facturar.':'.'),'ok');
+  aviso('✓ Factura '+num+(S.sel==='SIN PEDIDO'?' guardada sin pedido.':' guardada y ligada al pedido '+S.sel+(r.movida?' · salió de la cola por facturar.':'.')),'ok');
   resetCarga(true);
  }catch(e){aviso(e.message,'err');$('guardar').disabled=false}};
 function aviso(t,c){$('msg').textContent=t;$('msg').className='msg '+(c===undefined?'err':c)}
 function resetCarga(limpiarMsg){S.archivo=null;S.sel='';['num','fecha','monto','ced','nom','q'].forEach(i=>$(i).value='');$('prev').innerHTML='';$('cands').innerHTML='';
- $('c2').classList.add('hide');$('c3').classList.add('hide');$('guardar').disabled=true;$('fFoto').value='';$('fArch').value='';if(limpiarMsg!==false){}else{$('msg').textContent='';$('leyendo').textContent=''}}
+ $('sinPedido').classList.remove('on');$('c2').classList.add('hide');$('c3').classList.add('hide');$('guardar').disabled=true;$('fFoto').value='';$('fArch').value='';if(limpiarMsg!==false){}else{$('msg').textContent='';$('leyendo').textContent=''}}
 
 /* ---------- lista ---------- */
 async function cargarLista(){$('lista').innerHTML='<div class="hint">Cargando…</div>';
  try{const r=await gas({action:'leerFacturasCargadas'});S.lista=(r&&r.rows)||[];pintarLista()}catch(e){$('lista').innerHTML='<div class="msg err">'+esc(e.message)+'</div>'}}
 function pintarLista(){const q=$('lq').value.trim().toLowerCase();
  const l=S.lista.filter(f=>!q||[f.num,f.nombre,f.cedula,f.base].some(v=>String(v||'').toLowerCase().includes(q))).slice(0,80);
- $('lista').innerHTML=l.length?l.map(f=>`<div class="item"><b>Factura ${esc(f.num)} · ${esc(f.base)}</b>${esc(f.nombre||'')} · C.I ${esc(f.cedula||'—')}<br>${f.monto?'Bs '+esc(fmtBs(f.monto))+' · ':''}${esc(f.fecha||'')} · cargada por ${esc(f.usuario||'')} el ${esc(f.cargada||'')}${f.url?`<br><a href="${esc(f.url)}" target="_blank" rel="noopener">Ver archivo</a>`:''}</div>`).join(''):'<div class="hint">No hay facturas cargadas.</div>'}
+ $('lista').innerHTML=l.length?l.map(f=>`<div class="item"><b>Factura ${esc(f.num)} · ${f.base==='SIN PEDIDO'?'Sin pedido':esc(f.base)}</b>${esc(f.nombre||'')} · C.I ${esc(f.cedula||'—')}<br>${f.monto?'Bs '+esc(fmtBs(f.monto))+' · ':''}${esc(f.fecha||'')} · cargada por ${esc(f.usuario||'')} el ${esc(f.cargada||'')}${f.url?`<br><a href="${esc(f.url)}" target="_blank" rel="noopener">Ver archivo</a>`:''}</div>`).join(''):'<div class="hint">No hay facturas cargadas.</div>'}
 $('lq').oninput=pintarLista;
 </script></body></html>
