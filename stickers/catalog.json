@@ -62,6 +62,15 @@
       "nombre": null,
       "web": "stickers/vinil/web/S.V.87.png",
       "fecha": "2026-11-18"
+    },
+    {
+      "codigo": "S.V.88",
+      "tecnica": "vinil",
+      "catalogo": "V",
+      "tematica": "Chef",
+      "nombre": null,
+      "web": "stickers/vinil/web/S.V.88.png",
+      "fecha": "2026-11-18"
     }
   ],
   "tematicas": [
