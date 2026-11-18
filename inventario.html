@@ -125,6 +125,15 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
+<div id="ses-overlay" style="position:fixed;inset:0;z-index:99999;background:#0b0b0b;display:flex;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#161616;border:1px solid #333;border-radius:14px;padding:24px;width:100%;max-width:340px;text-align:center;font-family:Arial,sans-serif">
+    <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:6px">IKOA · Gestión</div>
+    <div style="font-size:13px;color:#aaa;margin-bottom:14px">Ingresa tu código</div>
+    <input id="ses-cod" type="password" inputmode="numeric" autocomplete="off" onkeydown="if(event.key==='Enter')sesEntrar()" style="width:100%;box-sizing:border-box;padding:12px;font-size:18px;text-align:center;border-radius:8px;border:1px solid #444;background:#0b0b0b;color:#fff">
+    <button onclick="sesEntrar()" style="width:100%;margin-top:12px;padding:12px;font-size:16px;border:0;border-radius:8px;background:#c8f542;color:#000;font-weight:700;cursor:pointer">Entrar</button>
+    <div id="ses-msg" style="margin-top:10px;font-size:13px;color:#ff6b6b;min-height:16px"></div>
+  </div>
+</div>
 
 <!-- SPLASH -->
 <div id="splash-inv" style="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
@@ -2422,6 +2431,26 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw39K95bn14-yZcvd8kXuKnyD2BAqLjOg6rFNIBkuZRHQP7z_s1FFOV3P2EOyNtqz9ikw/exec';
 
+// ── SESIÓN (la validación de códigos ocurre en el servidor; aquí no hay códigos guardados) ──
+let SESION=null;
+function sesLeer(){ try{ const s=JSON.parse(sessionStorage.getItem('ikoa_ses')||'null'); if(s&&s.token&&s.exp>Date.now()) return s; }catch(e){} return null; }
+function sesAplicar(s){
+  SESION=s; USUARIOS={}; USUARIOS_RESPALDO={};
+  USUARIOS_RESPALDO[s.codigo]=s.nombre; if(s.rol!=='respaldo') USUARIOS[s.codigo]=s.nombre;
+  const o=document.getElementById('ses-overlay'); if(o) o.style.display='none';
+}
+function urlAuth(u){ if(SESION&&typeof u==='string'&&u.indexOf(SCRIPT_URL)===0&&u.indexOf('token=')<0) u+=(u.indexOf('?')<0?'?':'&')+'token='+encodeURIComponent(SESION.token); return u; }
+(function(){ const f0=window.fetch.bind(window); window.fetch=function(u,o){ if(typeof u==='string') u=urlAuth(u); return f0(u,o); }; })();
+async function sesEntrar(){
+  const inp=document.getElementById('ses-cod'), msg=document.getElementById('ses-msg'), cod=inp.value.trim();
+  if(!cod) return; msg.textContent='Verificando…';
+  try{
+    const r=await scriptGETjson({action:'login',codigo:cod});
+    if(r&&r.ok){ const s={token:r.token,nombre:r.nombre,rol:r.rol,codigo:cod,exp:Date.now()+(r.horas||12)*3600000-60000}; try{sessionStorage.setItem('ikoa_ses',JSON.stringify(s));}catch(e){} sesAplicar(s); inp.value=''; msg.textContent=''; }
+    else msg.textContent=r&&r.error==='demasiados_intentos'?'Demasiados intentos. Espera 10 minutos.':'❌ Código incorrecto';
+  }catch(e){ msg.textContent='Error de conexión, intenta de nuevo'; }
+}
+
 // Enviar datos via GET (evita problemas CORS con no-cors)
 function scriptGET(params){
   const qs=Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v??'')).join('&');
@@ -2434,8 +2463,9 @@ const TALLAS_ROPA = ['XS','S','M','L','XL','XXL','3XL'];
 const TALLAS_DAMA = ['Dama XS','Dama S','Dama M','Dama L','Dama XL','Dama XXL','Dama 3XL'];
 const TALLAS_CAB  = ['Caballero XS','Caballero S','Caballero M','Caballero L','Caballero XL','Caballero XXL','Caballero 3XL'];
 const TALLAS_ZAP  = ['30','30½','31','31½','32','32½','33','33½','34','34½','35','35½','36','36½','37','37½','38','38½','39','39½','40','40½','41','41½','42','42½','43','43½','44','44½','45'];
-const USUARIOS    = {'271010':'Director Johan'};
-const USUARIOS_RESPALDO = {'271010':'Director Johan','3006':'Gaby'};
+let USUARIOS    = {};
+let USUARIOS_RESPALDO = {};
+(function(){const s=sesLeer(); if(s) sesAplicar(s); else setTimeout(function(){var i=document.getElementById('ses-cod'); if(i) i.focus();},300);})();
 
 let PRODUCTOS=[], STOCK={}, TASAS={BCV:null,Shoes:null,IKOA:null,BeKate:null};
 let currentProduct=null, selectedTalla=null, selectedColor='', selectedDeposito='Tienda';
@@ -2475,7 +2505,7 @@ function enviarAlScript(data){
   return new Promise(resolve=>{
     const form=document.createElement('form');
     form.method='POST';
-    form.action=SCRIPT_URL;
+    form.action=urlAuth(SCRIPT_URL);
     form.target='_script_iframe';
     form.style.display='none';
     const input=document.createElement('input');
@@ -8903,9 +8933,9 @@ function scriptGETjson(params, timeoutMs){
   return new Promise((resolve,reject)=>{
     const cb='_cb_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
     const qs=Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v??'')).join('&');
-    const url=SCRIPT_URL+'?'+qs+'&callback='+cb;
+    const url=urlAuth(SCRIPT_URL+'?'+qs)+'&callback='+cb;
     const script=document.createElement('script');
-    window[cb]=(data)=>{ delete window[cb]; try{document.body.removeChild(script);}catch(e){} resolve(data); };
+    window[cb]=(data)=>{ delete window[cb]; try{document.body.removeChild(script);}catch(e){} if(data&&data.error==='no_autorizado'&&SESION){ try{sessionStorage.removeItem('ikoa_ses');}catch(e){} alert('Tu sesión venció. Inicia sesión de nuevo.'); location.reload(); } resolve(data); };
     script.onerror=()=>{ delete window[cb]; try{document.body.removeChild(script);}catch(e){} reject(new Error('Error de red')); };
     script.src=url;
     document.body.appendChild(script);
