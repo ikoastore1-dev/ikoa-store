@@ -4340,6 +4340,18 @@ function ikoaImprimirTicket(t){
   var pend=[im,lg,ag].filter(function(x){return x&&!x.complete}), n=pend.length;
   if(n){pend.forEach(function(x){x.onload=x.onerror=function(){if(--n<=0)once()}});setTimeout(once,4000)} else once();
 }
+/* Imprime VARIOS tickets en un solo trabajo de impresión (una etiqueta 95x145 por hoja) */
+function ikoaImprimirTickets(lista){
+  if(!lista||!lista.length)return; if(lista.length===1)return ikoaImprimirTicket(lista[0]);
+  var fr=document.createElement('iframe'); fr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0'; document.body.appendChild(fr);
+  var d=fr.contentWindow.document; d.open();
+  d.write('<!doctype html><html><head><meta charset="utf-8"><style>@page{size:95mm 145mm;margin:3mm}html,body{margin:0;padding:0}.pg{width:89mm;height:139mm;overflow:hidden;page-break-after:always;break-after:page}.pg:last-child{page-break-after:auto;break-after:auto}.pg iframe{width:89mm;height:139mm;border:0;display:block}</style></head><body>'+lista.map(function(){return '<div class="pg"><iframe></iframe></div>'}).join('')+'</body></html>'); d.close();
+  var ifs=[].slice.call(d.querySelectorAll('iframe')), faltan=ifs.length, hecho=false;
+  var go=function(){ if(hecho)return; hecho=true; try{ ifs.forEach(function(f){ try{f.contentWindow.ikoaFit&&f.contentWindow.ikoaFit()}catch(e){} }); fr.contentWindow.focus(); fr.contentWindow.print(); }catch(x){ alert('No se pudo abrir la impresión: '+x.message); }
+    setTimeout(function(){try{document.body.removeChild(fr)}catch(x){}},120000); };
+  ifs.forEach(function(f,i){ f.addEventListener('load',function(){ if(--faltan===0)setTimeout(go,1800); }); f.srcdoc=ikoaTicketHTML(lista[i]); });
+  setTimeout(go,9000);
+}
 function tallerImprimirTicket(cod){
   var g=tallerGrupos[cod]; if(!g){alert('Pedido no encontrado');return}
   ikoaImprimirTicket(ikoaTicketDatos(g.cod,g.agencia,g.nombre,g.cedula,g.celular,g.retira,g.retiraCi,g.retiraCel,uniDeGrupo(g).cods));
@@ -6642,6 +6654,7 @@ function toggleArteCola(colaKey, checkboxId){
 }
 
 async function cargarCola(){
+  window._colaEnviados={};
   const listEl=document.getElementById('cola-list');
   listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando cola...</div>`;
   try{
@@ -6953,7 +6966,7 @@ function colaUnirConjuntos(data){
   const miembros=uniMiembros(base0), vistos={};
   Object.keys(window).filter(k=>k.indexOf('_colaData_')===0).forEach(k=>{
     const d=window[k]; if(!d||!d.allPacks||!d.allPacks.length||d===data)return;
-    const b=facturaBase(d.allPacks[0].codigoS); if(b===base0||vistos[b]||miembros.indexOf(b)<0)return; vistos[b]=1;
+    const b=facturaBase(d.allPacks[0].codigoS); if(b===base0||vistos[b]||miembros.indexOf(b)<0||(window._colaEnviados||{})[b])return; vistos[b]=1;
     unidos.push({base:b,nombre:d.nombre}); allPacks=allPacks.concat(etiquetar(d,b)); allCodigosC=allCodigosC.concat(d.allCodigosC||[]);
   });
   miembros.forEach(m=>{ if(!vistos[m]) fuera.push({base:m,ub:uniUbicDe(m)}); });
@@ -6976,9 +6989,69 @@ function abrirModalPlanificacion(data0){
   setTimeout(()=>document.getElementById('plan-unlock').focus(),100);
 }
 
-/* ===== COD PDF v8 (se arma en el navegador de inventario y se envía a Apps Script) ===== */
-/* ===== COD PDF v8 (se arma en el navegador de inventario y se envía a Apps Script) ===== */
-/* ===== COD PDF v8 (se arma en el navegador de inventario y se envía a Apps Script) ===== */
+
+/* ===== COLA · PROCESAR TODOS: un botón envía a producción todos los pedidos de Cola con la misma clave y manda todos los tickets en UNA sola impresión ===== */
+function colaPedidosListos(){   // lee de la pantalla los pedidos de Cola que tienen botón PRODUCCIÓN; une los de "envío conjunto" en uno solo
+  var keys=[], vistos={};
+  [].forEach.call(document.querySelectorAll('#cola-list button[onclick*="abrirModalPlanificacion"]'),function(b){ var m=(b.getAttribute('onclick')||'').match(/_colaData_([A-Za-z0-9_]+)/); if(m&&!vistos[m[1]]){vistos[m[1]]=1; keys.push(m[1]);} });
+  var abs={}, lista=[];
+  keys.forEach(function(k){ var d=window['_colaData_'+k]; if(!d||!d.allPacks||!d.allPacks.length)return; var base=facturaBase(d.allPacks[0].codigoS||d.codigoCBase); if(abs[base])return;
+    var m=colaUnirConjuntos(d); (m.unidos||[]).forEach(function(u){abs[u.base]=1}); lista.push({key:k,base:base,data:d,merged:m}); });
+  return lista;
+}
+function colaBarraLote(){
+  var el=document.getElementById('cola-list'); if(!el)return; var old=document.getElementById('cola-barra-lote'); if(old)old.remove();
+  var L=colaPedidosListos(); if(L.length<2)return;
+  var b=document.createElement('div'); b.id='cola-barra-lote'; b.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:linear-gradient(135deg,#0f2b1a,#12202a);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;margin-bottom:14px';
+  b.innerHTML='<div style="flex:1;min-width:180px"><div style="font-weight:800;font-size:15px;color:var(--accent)">🚀 '+L.length+' pedido'+(L.length>1?'s':'')+' listo'+(L.length>1?'s':'')+' en Cola</div><div style="font-size:12px;color:var(--muted)">Envía todos a producción con un solo código y una sola impresión de tickets.</div></div>'+
+    '<button type="button" onclick="colaAbrirLote()" style="padding:12px 18px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:10px;color:#000;font-size:15px;font-weight:800;cursor:pointer">🚀 PROCESAR TODOS ('+L.length+')</button>';
+  el.insertBefore(b,el.firstChild);
+}
+function colaAbrirLote(){
+  var L=colaPedidosListos(); if(!L.length)return; window._lote={lista:L,corriendo:false};
+  var o=document.getElementById('modal-lote'); if(o)o.remove();
+  o=document.createElement('div'); o.id='modal-lote'; o.className='modal-overlay'; 
+  o.innerHTML='<div class="modal" style="max-width:520px;max-height:92vh;overflow:auto"><div class="modal-icon">🚀</div><div class="modal-title">Procesar todos los pedidos</div>'+
+    '<div class="modal-subtitle" id="lote-sub">Se enviarán '+L.length+' pedido(s) a producción, uno tras otro, y al final se imprimen todos los tickets juntos.</div>'+
+    '<div id="lote-lista" style="text-align:left;font-size:13px;margin:8px 0;max-height:42vh;overflow:auto">'+L.map(function(x,i){ var m=x.merged, un=(m.unidos&&m.unidos.length)?' <span style="color:var(--accent2);font-weight:700">🔗 junto con '+m.unidos.map(function(u){return prodEsc(u.base)}).join(' + ')+' (UN COD)</span>':'';
+      return '<label id="lote-it-'+i+'" style="display:block;cursor:pointer;padding:7px 9px;border:1px solid var(--border);border-radius:8px;margin-bottom:5px"><input type="checkbox" class="lote-chk" data-i="'+i+'" checked onchange="colaLoteContar()" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;accent-color:var(--accent)"><span id="lote-ic-'+i+'"></span> <b>'+prodEsc(x.data.nombre)+'</b> · '+prodEsc(x.base)+' · '+m.allPacks.length+' pack(s)'+un+'<div style="font-size:11px;color:var(--muted)">'+prodEsc(x.data.agencia||'')+(x.data.necesitaArte?' · 🎨 Arte':'')+'</div><div id="lote-st-'+i+'" style="font-size:12px"></div></label>'; }).join('')+'</div>'+
+    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 8px;cursor:pointer" id="lote-todos-w"><input type="checkbox" id="lote-todos" checked onchange="colaLoteTodos(this.checked)" style="width:18px;height:18px;accent-color:var(--accent)"> Seleccionar todos · desmarca los que NO quieres enviar ahora</label><div id="lote-clave"><div class="field-label" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;">Código de autorización</div><input class="modal-cod-input" type="password" id="lote-unlock" placeholder="Tu código personal" maxlength="20" onkeydown="if(event.key===\'Enter\')colaProcesarLote()"><div class="modal-error" id="lote-error"></div></div>'+
+    '<div class="modal-btns" id="lote-btns"><button class="modal-cancel" onclick="colaCerrarLote()">Cancelar</button><button class="modal-confirm" id="lote-go" onclick="colaProcesarLote()">🚀 PROCESAR</button></div></div>';
+  document.body.appendChild(o); colaLoteContar(); setTimeout(function(){var u=document.getElementById('lote-unlock'); if(u)u.focus();},100);
+}
+function colaLoteTodos(v){ [].forEach.call(document.querySelectorAll('.lote-chk'),function(c){c.checked=v}); colaLoteContar(); }
+function colaLoteContar(){ var n=document.querySelectorAll('.lote-chk:checked').length, t=document.querySelectorAll('.lote-chk').length, g=document.getElementById('lote-go'), sb=document.getElementById('lote-sub');
+  if(g){ g.textContent='🚀 PROCESAR '+(n===t?'TODOS ':'')+'('+n+')'; g.disabled=n===0; g.style.opacity=n===0?.5:1; }
+  if(sb&&!(window._lote&&window._lote.corriendo))sb.textContent=n+' de '+t+' pedido(s) se enviarán a producción, uno tras otro, y al final se imprimen sus tickets juntos.'; }
+function colaCerrarLote(){ var o=document.getElementById('modal-lote'); if(window._lote&&window._lote.corriendo&&!confirm('Hay un proceso en marcha. ¿Cerrar la ventana? (el proceso continúa)'))return; if(o)o.remove(); cargarCola(); }
+async function colaProcesarLote(){
+  var Lt=window._lote; if(!Lt||Lt.corriendo)return; var unlock=(document.getElementById('lote-unlock').value||'').trim().toUpperCase(), er=document.getElementById('lote-error');
+  if(!USUARIOS[unlock]){ er.textContent='❌ Código incorrecto — acceso denegado'; document.getElementById('lote-unlock').value=''; return; }
+  var sel=[].map.call(document.querySelectorAll('.lote-chk:checked'),function(c){return +c.getAttribute('data-i')}); if(!sel.length){ er.textContent='Marca al menos un pedido'; return; }
+  [].forEach.call(document.querySelectorAll('.lote-chk'),function(c){ c.disabled=true; if(!c.checked){ var it=document.getElementById('lote-it-'+c.getAttribute('data-i')); if(it)it.style.opacity=.35; } });
+  document.getElementById('lote-todos-w').style.display='none';
+  Lt.lista=sel.map(function(i){return Lt.lista[i]}); var idx=sel.slice();
+  Lt.corriendo=true; var tickets=[], ok=0, falla=null;
+  document.getElementById('lote-clave').style.display='none'; document.getElementById('lote-btns').innerHTML='';
+  document.getElementById('lote-sub').innerHTML='<span class="spinner">↻</span> Procesando… no cierres esta ventana.';
+  for(var i=0;i<Lt.lista.length;i++){
+    var x=Lt.lista[i], ic=document.getElementById('lote-ic-'+idx[i]), st=document.getElementById('lote-st-'+idx[i]);
+    ic.innerHTML='<span class="spinner">↻</span>'; st.textContent='Enviando…';
+    try{
+      var data=colaUnirConjuntos(x.data); pendingCola=data;     // recalcula por si un compañero ya salió
+      await confirmarPlanificacion({lote:true,unlock:unlock});
+      var r=window._envioCola||{};
+      if(r.ok){ ok++; if(r.ticket)tickets.push(r.ticket); ic.textContent='✅'; st.innerHTML='<b style="color:var(--accent)">COD '+prodEsc(r.codMake||'—')+'</b>'; }
+      else { throw new Error((document.getElementById('cola-msg').textContent||'No se pudo enviar').replace(/^✗\s*/,'')); }
+    }catch(e){ ic.textContent='❌'; st.innerHTML='<span style="color:var(--danger)">'+prodEsc(e.message)+'</span>'; falla=x; break; }
+    await new Promise(function(r){setTimeout(r,1500)});      // deja que el COD siguiente se actualice
+  }
+  Lt.corriendo=false; Lt.tickets=tickets;
+  var sub=document.getElementById('lote-sub');
+  sub.innerHTML=falla?'⚠️ Se detuvo en <b>'+prodEsc(falla.data.nombre)+'</b>. Enviados: '+ok+' de '+Lt.lista.length+'. Los demás quedaron en Cola, sin tocar.':'✅ Listo: '+ok+' pedido(s) enviados a producción.';
+  document.getElementById('lote-btns').innerHTML=(tickets.length?'<button class="modal-confirm" onclick="ikoaImprimirTickets(window._lote.tickets)">🖨 Imprimir '+tickets.length+' ticket'+(tickets.length>1?'s':'')+'</button>':'')+'<button class="modal-cancel" onclick="colaCerrarLote()">Cerrar</button>';
+  if(tickets.length){ try{ ikoaImprimirTickets(tickets); }catch(e){ console.warn(e); } }
+}
 /* ===== COD PDF v8 (se arma en el navegador de inventario y se envía a Apps Script) ===== */
 (function(){
 var BASE='cod-mockups/', K_TELA={"vino-tinto": "#6f191a", "naranja": "#ef632e", "fucsia": "#f451c8", "morado": "#8952fb", "amarillo-bb": "#fdfac4", "amarillo-neon": "#e8fe05", "blanco": "#f7f6fc", "negro": "#040d1b", "azul-rey": "#0101ef", "azul-marino": "#060a32", "menta": "#69d5d3", "azul-bb": "#c3e9f4", "beige": "#c2bfaf", "gris": "#8f969e", "rojo": "#a32a25", "rosa-bb": "#eac3ca", "rosa-vieja": "#d29fa8", "verde-militar": "#535433", "naranja-neon": "#e2500e", "lila": "#e09df5", "marron": "#35231c"}, K_VIN={"blanco": "#f4f5fa", "negro": "#060d1a", "azul-rey": "#0f04b0", "azul-marino": "#060b2f", "turquesa": "#65bbb2", "beige": "#c7c4b6", "verde-neon": "#72f460", "amarillo-neon": "#e2f353", "amarillo-cat": "#eaaf41", "rojo": "#ad3d40", "coral-neon": "#d73958", "vino-tinto": "#5a201b", "fucsia": "#ce58b0", "lila": "#d7a4ec", "morado": "#6233de", "azul-indigo": "#508cea", "gris": "#9aa0a6", "naranja": "#f37021", "dorado": "#c9a13b", "plateado": "#c0c3c8", "amarillo": "#f7d117", "rosado": "#f29bc0", "verde": "#1e8c3a"};
@@ -7326,12 +7399,14 @@ async function vistaPreviaCOD(){
     window.open(URL.createObjectURL(new Blob([u8],{type:'application/pdf'})),'_blank'); el.textContent='';
   }catch(e){ el.style.color='var(--danger)'; el.textContent='✗ '+e.message; }
 }
-async function confirmarPlanificacion(){
-  const unlock=document.getElementById('plan-unlock').value.trim().toUpperCase();
+async function confirmarPlanificacion(opts){
+  const lote=opts&&opts.lote?opts:null;   // modo "PROCESAR TODOS": misma clave para todos, sin imprimir cada ticket por separado
+  window._envioCola={ok:false,codMake:'',ticket:null};
+  const unlock=lote?lote.unlock:document.getElementById('plan-unlock').value.trim().toUpperCase();
   const errEl=document.getElementById('plan-error');
   if(!USUARIOS[unlock]){errEl.textContent='❌ Código incorrecto — acceso denegado';document.getElementById('plan-unlock').value='';return;}
 
-  document.getElementById('modal-planificacion').classList.add('hidden');
+  if(!lote)document.getElementById('modal-planificacion').classList.add('hidden');
   const msgEl=document.getElementById('cola-msg');
   msgEl.style.display='block';
   msgEl.style.background='var(--surface2)';
@@ -7509,9 +7584,9 @@ async function confirmarPlanificacion(){
       if(pendingCola.unidos&&pendingCola.unidos.length){ try{ const na=await acopleNotificar(allPacks,codMake,pendingCola.agencia); msgEl.innerHTML+=`<br>📧 Acople notificado a ${na.ok} cliente(s)${na.sin?' · sin correo: '+na.sin:''}${na.fallo?' · falló: '+na.fallo:''}`; }catch(e){ msgEl.innerHTML+='<br>⚠️ No se pudo avisar el acople por correo: '+e.message; } }
       // Buscar automáticamente el archivo de Imprenta que Make.com genera para este COD,
       // y mostrarlo listo para imprimir apenas esté disponible — sin ocultar el mensaje mientras tanto.
-      try{ ikoaImprimirTicket(ikoaTicketDatos(codMake,pendingCola.agencia,pendingCola.nombre,pendingCola.cedula,pendingCola.celular,pendingCola.retira,pendingCola.retiraCi,pendingCola.retiraCel)); }catch(e){ console.warn('ticket:',e); }
+      try{ const _tk=ikoaTicketDatos(codMake,pendingCola.agencia,pendingCola.nombre,pendingCola.cedula,pendingCola.celular,pendingCola.retira,pendingCola.retiraCi,pendingCola.retiraCel); window._envioCola={ok:true,codMake:codMake,ticket:_tk}; (window._colaEnviados=window._colaEnviados||{}); allPacks.forEach(pk=>{ if(pk._base)window._colaEnviados[pk._base]=1; }); window._colaEnviados[pendingCola.baseConjunto||facturaBase(pendingCola.codigoCBase)]=1; if(!lote)ikoaImprimirTicket(_tk); }catch(e){ console.warn('ticket:',e); }
       /* El COD (PDF) ya se genera aquí mismo; no hace falta buscarlo en Imprenta */
-      setTimeout(()=>{msgEl.style.display='none';cargarCola();},5000);
+      if(!lote)setTimeout(()=>{msgEl.style.display='none';cargarCola();},5000);
     } else {
       throw new Error('Error del servidor');
     }
@@ -16579,7 +16654,7 @@ var qrcode = function() {
 <script>
 (function(){ var mapa={cargarAprobacionesCashea:['cashea-apro-list','Cashea'],cargarSolicitudes:['solicitudes-list','Pendiente'],cargarCola:['cola-list','Cola']};
   Object.keys(mapa).forEach(function(n){ var orig=window[n]; if(typeof orig!=='function')return;
-    window[n]=async function(){ var r=await orig.apply(this,arguments); try{ uniAcoplar(document.getElementById(mapa[n][0]),mapa[n][1]); }catch(e){} return r; }; });
+    window[n]=async function(){ var r=await orig.apply(this,arguments); try{ uniAcoplar(document.getElementById(mapa[n][0]),mapa[n][1]); if(n==='cargarCola')colaBarraLote(); }catch(e){} return r; }; });
 })();
 </script>
 </body>
