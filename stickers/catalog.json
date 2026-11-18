@@ -46,15 +46,6 @@
       "fecha": "2026-11-03"
     },
     {
-      "codigo": "S.V.86",
-      "tecnica": "vinil",
-      "catalogo": "V",
-      "tematica": "Chef",
-      "nombre": null,
-      "web": "stickers/vinil/web/S.V.86.png",
-      "fecha": "2026-11-18"
-    },
-    {
       "codigo": "S.V.87",
       "tecnica": "vinil",
       "catalogo": "V",
@@ -86,5 +77,8 @@
   "tematicas": [
     "Chef",
     "Banderas"
+  ],
+  "retirados": [
+    "S.V.86"
   ]
 }
