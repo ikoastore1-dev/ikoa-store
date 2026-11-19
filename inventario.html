@@ -120,6 +120,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 .not-found{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;text-align:center;}
 .spinner{display:inline-block;animation:spin 1s linear infinite}
 @media(max-width:600px){.fields-row{grid-template-columns:1fr}.tallas-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr))}}
+
+.taller-acts>*{flex:1 1 150px;text-align:center;justify-content:center;padding-top:10px!important;padding-bottom:10px!important}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -5546,8 +5548,13 @@ async function completarEnvioCOD(){
     var rows=d.rows, r0=rows[0], v=function(r,i){return String(r[i]||'').trim()};
     var faltaPed=!d.enPedidos, faltaProd=rows.filter(function(r){return d.enProduccion.indexOf(v(r,1))<0;}), faltaVenta=rows.filter(function(r){return d.enVenta.indexOf(v(r,1))<0;});
     var resumen='COD '+cod+' · '+v(r0,7)+' · '+rows.length+' pack(s)\n\nLo que YA está: '+(d.enPedidos?'Pedidos ✔ ':'')+(d.enProduccion.length?'Producción ✔ ':'')+(d.enVenta.length?'Ventas ✔':'')+'\nLo que FALTA: '+(faltaPed?'Pedidos ':'')+(faltaProd.length?'Producción ':'')+(faltaVenta.length?'Ventas':'');
-    if(!faltaPed&&!faltaProd.length&&!faltaVenta.length){ msg.textContent='✅ El COD '+cod+' ya está completo (Pedidos, Producción y Ventas). No hay nada que corregir.'; msg.style.color='var(--accent)'; return; }
+    // monto real del pago (de las aprobaciones) y revisión del monto ya guardado en Ventas
+    var pago0=(d.pagos||{})[v(r0,0)]||null, ventaMala=(d.ventaRows||[]).filter(function(x){return x.codigoC===v(r0,1)&&(isNaN(parseFloat(x.monto))||x.monto==='');})[0];
+    if(!faltaPed&&!faltaProd.length&&!faltaVenta.length&&!ventaMala){ msg.textContent='✅ El COD '+cod+' ya está completo (Pedidos, Producción y Ventas). No hay nada que corregir.'; msg.style.color='var(--accent)'; return; }
+    if(!pago0&&(faltaVenta.length||ventaMala)){ var mm=prompt('No encontré el pago de '+v(r0,0)+'. Escribe el monto pagado (solo número):',''); if(mm===null||isNaN(parseFloat(mm))) throw new Error('Cancelado: sin monto no se registra en Ventas.'); var mo=prompt('Moneda: escribe Bs o Divisa','Divisa'); pago0={moneda:(String(mo||'').toLowerCase().indexOf('bs')===0?'Bs':'Divisa'),monto:mm,ref:'',tasa:''}; }
+    if(pago0) resumen+='\n\nPago encontrado: '+(pago0.moneda==='Bs'?'Bs ':'$')+pago0.monto+(ventaMala?'\n⚠️ En Ventas está mal el monto ("'+ventaMala.monto+'"): lo corrijo.':'');
     if(!confirm(resumen+'\n\n¿Completar lo que falta?')){ msg.style.display='none'; return; }
+    if(ventaMala&&pago0&&!faltaVenta.length){ var cr=await scriptGETjson({action:'corregirVentaMonto',cod:cod,codigoC:ventaMala.codigoC,moneda:pago0.moneda,monto:pago0.monto,tasa:pago0.tasa||ventaMala.tasa||TASAS.BCV||''}); if(!cr||!cr.ok) throw new Error((cr&&cr.error)||'no se corrigió Ventas'); }
     var fecha=v(r0,6)||getFechaHora();
     if(faltaPed){
       var desc=rows.map(function(r,i){var det=v(r,17); var enc='Pack '+(i+1)+': '+v(r,14)+' '+v(r,11)+' '+v(r,12)+(v(r,13)&&v(r,13)!=='Sin Capucha'?' '+v(r,13).toUpperCase():''); return det?enc+' :: '+det:enc;}).join('  ||  ');
@@ -5560,7 +5567,7 @@ async function completarEnvioCOD(){
       if(enProd&&enVen) continue;
       if(enProd&&!enVen){ msg.textContent='⚠️ '+codC+' está en Producción pero no en Ventas: lo registro en Ventas igual.'; }
       await registrarEnProduccion({codigoP:v(r,2),codigoC:codC,cod:cod,fecha:fecha,nombre:v(r,7),correo:v(r,8),cedula:v(r,9),celular:v(r,10),modelo:v(r,11),manga:v(r,12),capucha:v(r,13),pack:v(r,14),tela:v(r,15),vinil:v(r,16),piezas:v(r,17),agencia:v(r,18),retira_nombre:v(r,19),retira_ci:v(r,20),retira_cel:v(r,21),banco:v(r,22),cod_pago:v(r,23),
-        moneda:i===0?v(r,22):'',monto:i===0?v(r,29):'',tasa:i===0?(v(r,36)||TASAS.BCV||''):'',referencia:v(r,23),usuario:quien,fecha_apro:fecha,fecha_produccion:fecha,usuario_produccion:v(r,25)||quien,urgente:v(r,31),cashea_flag:v(r,32)||'NO',cashea_pct_aplicado:v(r,33),monto_cashea_usd:v(r,23),fuente:'Cola',necesita_arte:nec?'si':'no',cod_arte:nec?cod:''});
+        moneda:i===0?((pago0&&pago0.moneda)||v(r,22)):'',monto:i===0?(pago0?pago0.monto:''):'',tasa:i===0?((pago0&&pago0.tasa)||v(r,36)||TASAS.BCV||''):'',referencia:v(r,23),usuario:quien,fecha_apro:fecha,fecha_produccion:fecha,usuario_produccion:v(r,25)||quien,urgente:v(r,31),cashea_flag:v(r,32)||'NO',cashea_pct_aplicado:v(r,33),monto_cashea_usd:v(r,23),fuente:'Cola',necesita_arte:nec?'si':'no',cod_arte:nec?cod:''});
       hechos++;
     }
     msg.style.background='var(--surface2)'; msg.style.border='1px solid #1a4a2a'; msg.style.color='var(--accent)';
@@ -6765,9 +6772,10 @@ function renderEnviados(rows){
           <div>Agencia: ${v(18)} · Fecha: ${v(6)}</div>
         </div>
         <div style="background:var(--surface2);border:1px solid #1a4a2a;border-radius:8px;padding:6px 12px;font-size:12px;margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:4px;">
-          <div><span style="color:var(--muted);">Moneda:</span> <b>${v(28)||'—'}</b></div>
-          <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent2);">${v(28)==='Bs'?'Bs':'$'}${v(29)||'—'}</b></div>
-          <div style="grid-column:1/-1;"><span style="color:var(--muted);">Ref:</span> <b style="color:var(--warn);">${v(30)||'—'}</b></div>
+          <div><span style="color:var(--muted);">Moneda:</span> <b>${v(38)||'—'}</b></div>
+          <div><span style="color:var(--muted);">Monto:</span> <b style="color:var(--accent2);">${v(39)?((v(38)==='Bs'?'Bs ':'$')+v(39)):'—'}</b></div>
+          <div><span style="color:var(--muted);">Ref:</span> <b style="color:var(--warn);">${v(40)||'—'}</b></div>
+          <div><span style="color:var(--muted);">COD:</span> <b style="color:var(--text);">${v(28)||'—'}</b></div>
         </div>
       </div>`;
     }).join('');
@@ -7095,8 +7103,9 @@ function ajusteLegacy(t){
     return g+' '+a.toUpperCase()+'/'+l.toUpperCase()+(gen&&gen.toLowerCase()!==String(g).toLowerCase()?'.'+gen:'');
   });
 }
-function ajusteBtn(key,tipo,items,recarga){
+function ajusteBtn(key,tipo,items,recarga,compacto){
   window._ajData[key]={tipo,items,recarga};
+  if(compacto) return `<button type="button" onclick="event.preventDefault();event.stopPropagation();ajusteAbrir('${key}')" style="margin-left:auto;padding:5px 12px;background:transparent;border:1px solid var(--warn);border-radius:20px;color:var(--warn);font-size:12px;font-weight:700;cursor:pointer;">✏️ Ajustar tallas</button>`;
   return `<button type="button" onclick="event.preventDefault();event.stopPropagation();ajusteAbrir('${key}')" style="width:100%;margin-top:8px;padding:10px;background:var(--surface2);border:1.5px solid var(--warn);border-radius:10px;color:var(--warn);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📏 AJUSTAR TALLAS (ancho ≠ largo)</button>`;
 }
 function ajusteToks(str){
@@ -9837,20 +9846,29 @@ function tallerResumenTallas(piezasStr){
   var c={}, ord=[]; tallerParsearPiezas(piezasStr).forEach(function(pz){ if(pz.raw)return; var k=((pz.genero||'')+' '+(pz.talla||'')).trim().toUpperCase(); if(!k)return; if(!c[k]){c[k]=0;ord.push(k);} c[k]++; });
   return ord.map(function(k){return k+' ×'+c[k]}).join(' · ');
 }
+function tallerSwatch(nombre,tipo){
+  try{ var n=String(nombre||'').split(/\s*\+\s*/)[0], c=(tipo==='vin')?window.CODPDF.vinilHex(n):'rgb('+window.CODPDF.colorTela(n).join(',')+')'; return '<span style="width:11px;height:11px;border-radius:50%;display:inline-block;background:'+c+';border:1px solid rgba(255,255,255,.35);margin-right:6px;vertical-align:-1px"></span>'; }catch(e){ return ''; }
+}
 function tallerDetalleHTML(g,cod){
   var e=prodEsc, ag=String(g.agencia||'').split('—'), gk={packs:g.packs.map(function(p){return {codigoS:p.codigoS,piezas:p.piezasProd}})}, ks=prodKeys(gk), av=(window.prodAvance||{})[String(cod).toUpperCase()]||{done:[]}, hechas=ks.filter(function(k){return (av.done||[]).indexOf(k)>=0}).length;
-  var packs=g.packs.map(function(p,i){
-    var np=tallerParsearPiezas(p.piezas).filter(function(x){return !x.raw}).length, tallas=tallerResumenTallas(p.piezas), cap=p.capucha&&!/^sin/i.test(p.capucha)?' · '+e(p.capucha):'';
-    return '<div style="border-left:3px solid var(--accent);padding:3px 0 3px 8px;margin:5px 0;font-size:12px;line-height:1.45"><b style="color:var(--text)">'+(g.packs.length>1?'Pack '+(i+1)+': ':'')+e(p.pack||'—')+'</b> · '+e(p.modelo||'—')+' · '+e(p.manga||'')+cap+
-      '<br><span style="color:var(--muted)">Tela</span> <b>'+e(p.tela||'—')+'</b> · <span style="color:var(--muted)">Vinil</span> <b>'+e(p.vinil||'—')+'</b>'+(np?' · <b>'+np+' pieza'+(np>1?'s':'')+'</b>':'')+
-      (tallas?'<br><span style="color:var(--muted)">Tallas:</span> '+e(tallas):'')+'</div>';
+  var pct=ks.length?Math.round(hechas/ks.length*100):0, okAv=ks.length&&hechas>=ks.length;
+  var chip='display:inline-flex;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 11px;font-size:12px;';
+  var chips=g.packs.map(function(p,i){
+    var tallas=tallerResumenTallas(p.piezas), cap=p.capucha&&!/^sin/i.test(p.capucha)?' · '+e(p.capucha):'';
+    return '<span style="'+chip+'"><b>'+(g.packs.length>1?'Pack '+(i+1)+' · ':'')+e(p.pack||'—')+'</b>&nbsp;· '+e(p.modelo||'—')+' · '+e(p.manga||'')+cap+'</span>'+
+      '<span style="'+chip+'">'+tallerSwatch(p.tela,'tela')+'Tela&nbsp;<b>'+e(p.tela||'—')+'</b></span>'+
+      '<span style="'+chip+'">'+tallerSwatch(p.vinil,'vin')+'Vinil&nbsp;<b>'+e(p.vinil||'—')+'</b></span>'+
+      (tallas?tallas.split(' · ').map(function(t){return '<span style="'+chip+'border-color:var(--accent);color:var(--accent);font-weight:800;">'+e(t)+'</span>'}).join(''):'');
   }).join('');
-  var ent=[]; if(g.correo)ent.push('✉ '+e(g.correo)); if(g.celular)ent.push('📱 '+e(g.celular));
-  var retira=(g.retira&&g.retira!==g.nombre)?'<div><span style="color:var(--muted)">Retira:</span> <b>'+e(g.retira)+'</b>'+(g.retiraCi?' · CI '+e(g.retiraCi):'')+(g.retiraCel?' · '+e(g.retiraCel):'')+'</div>':'';
-  return packs+ajusteBtn('t_'+cod,'C',g.packs.map(function(p,i){return {codigo:p.codigoC,piezas:p.piezas,label:'Pack '+(i+1)}}).filter(function(x){return x.codigo}),'cargarTaller')+'<div style="font-size:12px;line-height:1.5;margin-top:6px;background:var(--surface2);border-radius:8px;padding:7px 10px">'+
-    '<div><span style="color:var(--muted)">Cliente:</span> <b>'+e(g.nombre)+'</b> · CI '+e(g.cedula||'—')+(ent.length?' · '+ent.join(' · '):'')+'</div>'+
-    '<div><span style="color:var(--muted)">Envío:</span> <b>'+e((ag[0]||'—').trim())+'</b>'+(ag.length>1?' — '+e(ag.slice(1).join('—').trim()):'')+'</div>'+retira+
-    '<div><span style="color:var(--muted)">Pedido:</span> '+e(g.fecha||'—')+' · <span style="color:var(--muted)">Avance:</span> <b style="color:'+(ks.length&&hechas>=ks.length?'var(--accent)':'var(--warn)')+'">'+hechas+'/'+ks.length+' piezas</b></div></div>';
+  var ent=[]; if(g.correo)ent.push(e(g.correo)); if(g.celular)ent.push('📱 '+e(g.celular));
+  var retira=(g.retira&&g.retira!==g.nombre)?'<div><span style="color:var(--muted)">Retira:</span> <b style="color:var(--text)">'+e(g.retira)+'</b>'+(g.retiraCi?' · CI '+e(g.retiraCi):'')+(g.retiraCel?' · '+e(g.retiraCel):'')+'</div>':'';
+  var aj=ajusteBtn('t_'+cod,'C',g.packs.map(function(p,i){return {codigo:p.codigoC,piezas:p.piezas,label:'Pack '+(i+1)}}).filter(function(x){return x.codigo}),'cargarTaller',true);
+  return '<div style="height:6px;background:var(--surface3);border-radius:6px;overflow:hidden;margin:8px 0 4px"><div style="height:100%;width:'+Math.max(pct,3)+'%;background:'+(okAv?'var(--accent)':'var(--warn)')+'"></div></div>'+
+    '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>Avance <b style="color:'+(okAv?'var(--accent)':'var(--warn)')+'">'+hechas+'/'+ks.length+' piezas</b></span><span>🕐 '+e(g.fecha||'—')+'</span></div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;align-items:center">'+chips+aj+'</div>'+
+    '<div style="font-size:12.5px;line-height:1.7;color:var(--muted);background:var(--surface2);border-radius:10px;padding:10px 12px">'+
+    '<div><b style="color:var(--text)">'+e(g.nombre)+'</b> · CI '+e(g.cedula||'—')+(ent.length?' · '+ent.join(' · '):'')+'</div>'+
+    '<div>📦 <b style="color:var(--text)">'+e((ag[0]||'—').trim())+'</b>'+(ag.length>1?' — '+e(ag.slice(1).join('—').trim()):'')+'</div>'+retira+'</div>';
 }
 function tallerVerPedidoCompleto(cod){   // abre el pedido completo con mockups y detalle (el mismo visor de Gestión → Producción)
   window.prodGrupos=window.prodGrupos||{};
@@ -10568,7 +10586,7 @@ async function cargarTaller(){
       const resumenPacks=g.packs.map(p=>`${p.pack||'—'}× ${p.modelo||''} ${p.manga||''}`.trim()).join(' · ');
       const _gk={packs:g.packs.map(p=>({codigoS:p.codigoS,piezas:p.piezasProd}))}, _fab=prodFabricado(cod,_gk), _fac=tallerLlevaFactura(g);
       const card=document.createElement('label');
-      card.style.cssText=`display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid ${_fab?'var(--accent)':(g.urgente?'var(--warn)':'var(--border)')};border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;`;
+      card.style.cssText=`display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid ${_fab?'var(--accent)':(g.urgente?'var(--warn)':'var(--border)')};border-left:4px solid ${_fab?'var(--accent)':(g.urgente?'var(--warn)':'var(--accent)')};border-radius:14px;padding:16px 18px;margin-bottom:14px;cursor:pointer;`;
       card.innerHTML=`
         <input type="checkbox" class="taller-check-item" data-cod="${cod}" onchange="toggleTallerSel('${cod}',this.checked)" style="width:20px;height:20px;margin-top:2px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;">
         <div style="flex:1;">
@@ -10583,7 +10601,7 @@ async function cargarTaller(){
             ${g.packs.some(p=>!p.fuenteConfiable)?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:10px;color:var(--warn);">⚠ sin match COLA.P</span>`:''}
           </div>
           ${tallerDetalleHTML(g,cod)}
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">
+          <div class="taller-acts" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:stretch;">
             <button type="button" onclick="event.preventDefault();event.stopPropagation();tallerVerPedidoCompleto('${cod}')" style="padding:7px 14px;background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:12px;font-weight:800;cursor:pointer;">🖼 Ver pedido completo (mockups)</button>
             ${tallerWaBtn(g)}
             <button type="button" onclick="event.preventDefault();event.stopPropagation();tallerImprimirTicket('${cod}')" style="padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🖨 Ticket de envío</button>
@@ -10849,7 +10867,8 @@ async function tallerConstruirCortadorHTML(codigos){
       const headColor=bannerTela+`<div style="margin:6px 0 0;">
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:3px;"><tr>
           <td style="width:50px;vertical-align:middle;">${mk?`<img src="${mk}" style="height:46px;">`:''}</td>
-          <td style="vertical-align:middle;"><span style="display:inline-block;width:18px;height:18px;border:2px solid #000;border-radius:4px;vertical-align:middle;background:${rgbCss};"></span>
+          <td style="vertical-align:middle;"><span style="font-size:13px;font-weight:900;background:#000;color:#fff;padding:3px 8px;vertical-align:middle;">TELA ${fn}</span>
+            <span style="display:inline-block;width:18px;height:18px;border:2px solid #000;border-radius:4px;vertical-align:middle;background:${rgbCss};margin-left:8px;"></span>
             <span style="font-size:22px;font-weight:900;vertical-align:middle;margin-left:6px;">${c}</span>
             <span style="font-size:12px;color:#444;vertical-align:middle;"> · ${C.unds} unds · ${C.cods.size} pedido(s)${C.urgUnds?' · <b style="color:#b00;">⚡ '+C.urgUnds+' URGENTES (primero)</b>':''}</span></td></tr></table></div>`;
       bannerTela='';
@@ -11011,14 +11030,28 @@ function tallerConstruirEstampadorHTML(codigos, rec){
         if(gr.logoEspalda&&!vis.cub.e) logosPieza.push('ESPALDA: '+gr.logoEspalda.toUpperCase()+' (EN GRANDE)');
         if(gr.logoManga&&!vis.cub.m)   logosPieza.push('MANGA: '+gr.logoManga.toUpperCase());
         const logosTxt=(logosPieza.length?`<br><span style="font-weight:700;color:#a00;">${logosPieza.join(' · ')}</span>`:'')+vis.html;
-        return `${gr.tela?'<span style="color:#555;">COLOR: '+gr.tela.toUpperCase()+'</span><br>':''}${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()}${gr.ajuste?' <b style="color:#a00;">⚠ AJUSTADA (ANCHO '+gr.ajuste.ancho+' / LARGO '+gr.ajuste.largo+')</b>':''} (${gr.capucha?'CON CAPUCHA':(gr.cuelloAlto?'CON CUELLO ALTO':'SIN CAPUCHA')})${gr.nombre?' - <span style="font-weight:700;font-size:15px;">'+gr.nombre.toUpperCase()+'</span>':''} (${gr.unds} UNDS)${logosTxt}`;
+        return `${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()}${gr.ajuste?' <b style="color:#a00;">⚠ AJUSTADA (ANCHO '+gr.ajuste.ancho+' / LARGO '+gr.ajuste.largo+')</b>':''} (${gr.capucha?'CON CAPUCHA':(gr.cuelloAlto?'CON CUELLO ALTO':'SIN CAPUCHA')})${gr.nombre?' - <span style="font-weight:700;font-size:15px;">'+gr.nombre.toUpperCase()+'</span>':''} (${gr.unds} UNDS)${logosTxt}`;
       });
       const lineasTalla=lineasArr.join('<br><br>');
+      const telaDe=Object.values(grupos).map(gr=>gr.raw?'':String(gr.tela||'').trim().toUpperCase());
+      const fam=tallerFamiliaTela(p).n, limpia=s=>String(s||'').replace(/^\d+\s*[·.\-]\s*/,'').trim().toUpperCase();
+      const coloresPack=[]; String(p.tela||'').split('/').map(limpia).filter(Boolean).forEach(c=>{ if(coloresPack.indexOf(c)<0) coloresPack.push(c); });
+      const mezclado=telaDe.some(Boolean);
+      const telaTxt=(fam==='COLECCIONES Y OTROS'?'':fam+' ')+coloresPack.join(' / ');
       const _hd=`
-        <p style="font-size:11px;font-weight:700;margin:10px 0 2px 0;">${desc}</p>
-        <p style="font-size:10.5px;margin:0 0 4px 0;">TELA ${(p.tela||'—').toUpperCase()} - VINIL ${(p.vinil||'—').toUpperCase()}</p>`;
+        <p style="font-size:11px;font-weight:700;margin:6px 0 1px 0;">${desc}</p>
+        <p style="font-size:11px;margin:0 0 3px 0;"><b>TELA ${telaTxt||'—'}</b> - VINIL ${(p.vinil||'—').toUpperCase()}</p>`;
+      const tituloColor=c=>`<div style="font-size:11px;font-weight:700;margin:5px 0 2px 0;padding:1px 6px;border-left:5px solid #000;background:#ececec;">${fam==='COLECCIONES Y OTROS'?'TELA':'TELA '+fam} · COLOR ${c}</div>`;
       if(!lineasArr.length) packsArr.push(_hd);
-      lineasArr.forEach((ln,li)=>packsArr.push((li===0?_hd:'')+`<div style="font-size:10.5px;margin:0 0 6px 0;">${ln}</div>`));
+      if(mezclado){
+        const idxs=lineasArr.map((_,i)=>i); const ord=c=>{const k=coloresPack.indexOf(limpia(c)); return k<0?999:k;};
+        idxs.sort((a,b)=>ord(telaDe[a])-ord(telaDe[b])||a-b);          // agrupa por color, en el orden de la tela del pack
+        let ultimo=null;
+        idxs.forEach((i,n)=>{ const c=limpia(telaDe[i]); let pre=(n===0?_hd:''); if(c!==ultimo){ pre+=tituloColor(c||'SIN COLOR'); ultimo=c; }
+          packsArr.push(pre+`<div style="font-size:10.5px;margin:0 0 3px 8px;">${lineasArr[i]}</div>`); });
+      } else {
+        lineasArr.forEach((ln,li)=>packsArr.push((li===0?_hd:'')+`<div style="font-size:10.5px;margin:0 0 3px 0;">${ln}</div>`));
+      }
       if(false) packsArr.push(`
         <p style="font-size:11px;font-weight:700;margin:10px 0 2px 0;">${desc}</p>
         <p style="font-size:10.5px;margin:0 0 4px 0;">TELA ${(p.tela||'—').toUpperCase()} - VINIL ${(p.vinil||'—').toUpperCase()}</p>
@@ -11027,25 +11060,25 @@ function tallerConstruirEstampadorHTML(codigos, rec){
     });
     const headHtml=`
       <div>
-        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
-          <tr><td width="170" valign="middle">${COT_LOGO_HTML}</td>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0 4px 0;">
+          <tr><td width="110" valign="middle">${COT_LOGO_HTML.replace('width:160px','width:100px')}</td>
           <td valign="middle" align="center" style="text-align:center;">
-            <p style="font-size:22px;font-weight:700;margin:0 0 2px 0;">COD - ${cod}</p>
+            <p style="font-size:18px;font-weight:700;margin:0 0 1px 0;">COD - ${cod}</p>
             ${g.urgente?`<p style="font-size:13px;font-weight:700;color:#d10000;margin:0;">⚡ URGENTE : ${g.urgente.toUpperCase()}</p>`:''}
           </td>
           <td width="150" valign="middle" align="center">
-            <div style="display:inline-block;border:2px solid #1a1a1a;border-radius:4px;padding:6px 10px;">
+            <div style="display:inline-block;border:2px solid #1a1a1a;border-radius:4px;padding:3px 8px;">
               <span style="display:inline-block;width:16px;height:16px;border:2px solid #1a1a1a;margin-right:6px;vertical-align:middle;"></span>
               <span style="font-size:11px;font-weight:700;vertical-align:middle;">VINIL FABRICADO</span>
             </div>
           </td></tr>
         </table>
-        <p style="font-size:11px;font-weight:700;margin:0 0 3px 0;">CLIENTE : ${(g.nombre||'').toUpperCase()} / C.I: ${g.cedula||''} / AGENCIA: ${(g.agencia||'').split('—')[0].trim().toUpperCase()}</p>
+        <p style="font-size:11px;font-weight:700;margin:0 0 2px 0;">CLIENTE : ${(g.nombre||'').toUpperCase()} / C.I: ${g.cedula||''} / AGENCIA: ${(g.agencia||'').split('—')[0].trim().toUpperCase()}</p>
         ${uniDeGrupo(g).cods.length?'<div style="border:3px solid #000;background:#dff0ff;padding:6px 10px;margin:4px 0 8px 0;font-size:15px;font-weight:900;text-align:center;">🔗 SALE JUNTO CON COD '+uniDeGrupo(g).cods.join(' + ')+' — ENVIAR TODO EN UN SOLO PAQUETE</div>':''}${tallerLlevaFactura(g)?'<div style="border:3px solid #000;background:#fff6c8;padding:6px 10px;margin:4px 0 8px 0;font-size:15px;font-weight:900;text-align:center;">🧾 ENVIAR FACTURA — ANEXAR LA FACTURA DEL CLIENTE A ESTE PEDIDO <span style="display:inline-block;width:16px;height:16px;border:2px solid #000;margin-left:10px;vertical-align:middle;"></span> <span style="font-size:11px;">FACTURA ANEXADA</span></div>':''}
-        <div style="border-top:1px dashed #999;margin-bottom:6px;"></div>
+        <div style="border-top:1px dashed #999;margin-bottom:3px;"></div>
       </div>`;
     const contHtml=`<div style="border:2px solid #000;padding:4px 10px;margin:0 0 6px 0;"><span style="font-size:17px;font-weight:900;">COD - ${cod}</span> <span style="font-size:12px;font-weight:900;background:#000;color:#fff;padding:1px 8px;">CONTINUACIÓN</span> <span style="font-size:11px;font-weight:700;">· CLIENTE: ${(g.nombre||'').toUpperCase()}${g.urgente?' · ⚡ URGENTE: '+g.urgente.toUpperCase():''}${uniDeGrupo(g).cods.length?' · 🔗 SALE JUNTO CON COD '+uniDeGrupo(g).cods.join(' + '):''}${tallerLlevaFactura(g)?' · 🧾 ENVIAR FACTURA':''}</span></div>`;
-    secs.push({head:headHtml,cont:contHtml,rows:packsArr,nuevaHoja:true,gap:0});
+    secs.push({head:headHtml,cont:contHtml,rows:packsArr,nuevaHoja:false,gap:16});
   });
   return `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>Reporte Estampador - ${fecha}</title>
