@@ -124,6 +124,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>.tabla-scroll{overflow:auto;max-height:70vh;-webkit-overflow-scrolling:touch}.tabla-scroll thead th{position:sticky;top:0;z-index:2;background:var(--surface2)}</style>
 </head>
 <body>
 <div id="ses-overlay" style="position:fixed;inset:0;z-index:99999;background:#0b0b0b;display:flex;align-items:center;justify-content:center;padding:16px">
@@ -2195,6 +2196,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <option value="Cola">Cola</option>
         <option value="Gestión">Gestión</option>
         <option value="Respaldo">Respaldo</option>
+        <option value="Cambio">🔄 Cambio</option>
       </select>
       <button onclick="cargarVentas()" style="padding:6px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer;">↻ Actualizar</button>
     </div>
@@ -2230,6 +2232,16 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Ticket Prom.</div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--warn);" id="kpi-ticket">—</div>
       </div>
+      <div style="background:var(--surface);border:1px solid #ff8a3d;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">🔄 Por cambio</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:#ff8a3d;" id="kpi-cambios">—</div>
+        <div style="font-size:11px;color:var(--muted);" id="kpi-cambios-pct">—</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid #ff8a3d;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">🔄 Valor ref. cambios ($)</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:#ff8a3d;" id="kpi-cambios-usd">—</div>
+        <div style="font-size:11px;color:var(--muted);">no suma a ingresos</div>
+      </div>
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Total Gastos</div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--danger);" id="kpi-gastos">—</div>
@@ -2264,7 +2276,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     <!-- Tabla de ventas -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;">
       <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">📋 Detalle de ventas</div>
-      <div style="overflow-x:auto;">
+      <div class="tabla-scroll">
         <table id="ventas-tabla" style="width:100%;border-collapse:collapse;font-size:12px;">
           <thead>
             <tr style="background:var(--surface2);">
@@ -2298,7 +2310,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       </div>
       <div id="car-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px;"></div>
       <div id="car-aviso" style="font-size:11px;color:var(--muted);margin-bottom:8px;">“Sin concretar” = llegó al pago y pasaron más de 30 min sin enviar el pedido. “Navegó” = entró y no llegó al pago (se ve el último paso). “↻” = el mismo navegador o celular volvió a entrar.</div>
-      <div style="overflow-x:auto;">
+      <div class="tabla-scroll">
         <table style="width:100%;border-collapse:collapse;font-size:12px;">
           <thead><tr>
             <th style="padding:8px;text-align:left;color:var(--muted);border-bottom:1px solid var(--border);">Última actividad</th>
@@ -4024,8 +4036,14 @@ function filtrarVentas(){
   });
 }
 
+function esCambioVenta(r){ return String(r.fuente||'')==='Cambio' || /^CAMBIO\|/i.test(String(r.mensaje||'')); }
 function renderVentas(){
-  const rows = filtrarVentas();
+  const todas = filtrarVentas();
+  const rows = todas.filter(r=>!esCambioVenta(r));      // ingresos reales: los cambios no suman
+  const cambios = todas.filter(esCambioVenta);
+  const cambioRefUsd = cambios.reduce((s,r)=>{ const pt=String(r.mensaje||'').split('|'); const v=parseFloat(pt[3])||0, t=parseFloat(r.tasa)||0; return s + (String(r.moneda||'').trim()==='Divisa' ? v : (t>0 ? v/t : 0)); },0);
+  const cambioPzs = cambios.reduce((s,r)=>s+(String(r.piezas||'').split(/\s\|\s/).filter(t=>t.trim()&&!/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):/i.test(t.trim())).length||0),0);
+  const _kc=document.getElementById('kpi-cambios'); if(_kc){ _kc.textContent=cambios.length; document.getElementById('kpi-cambios-pct').textContent=todas.length?Math.round(cambios.length/todas.length*100)+'% de los pedidos · '+cambioPzs+' pzs':'—'; document.getElementById('kpi-cambios-usd').textContent='$'+cambioRefUsd.toLocaleString('es-VE',{maximumFractionDigits:2}); }
   // KPIs — ojo: r.monto está en la moneda que diga r.moneda (Bs o Divisa/$), no siempre en Bs.
   // Para filas en Divisa, hay que convertir usando la tasa propia de esa fila.
   const totalBs = rows.reduce((s,r)=>{
@@ -4117,8 +4135,8 @@ function renderVentas(){
 
   // Gráfico por fuente
   const fuenteMap={};
-  rows.forEach(r=>{ const f=r.fuente||'—'; fuenteMap[f]=(fuenteMap[f]||0)+1; });
-  const FUENTE_COLORS={'Cola':'var(--accent)','Gestión':'var(--warn)','Respaldo':'#cc66ff'};
+  todas.forEach(r=>{ const f=r.fuente||'—'; fuenteMap[f]=(fuenteMap[f]||0)+1; });
+  const FUENTE_COLORS={'Cola':'var(--accent)','Gestión':'var(--warn)','Respaldo':'#cc66ff','Cambio':'#ff8a3d'};
   const chartFuente = document.getElementById('chart-fuente');
   if(chartFuente) chartFuente.innerHTML = Object.entries(fuenteMap).map(([f,n])=>`
     <div style="display:flex;align-items:center;gap:8px;">
@@ -4126,9 +4144,9 @@ function renderVentas(){
       <div style="font-size:12px;color:var(--text);flex:1;">${f}</div>
       <div style="font-size:12px;font-weight:700;color:var(--text);">${n}</div>
       <div style="flex:2;background:var(--surface2);border-radius:4px;height:8px;">
-        <div style="height:8px;border-radius:4px;background:${FUENTE_COLORS[f]||'var(--muted)'};width:${Math.round(n/totalPed*100)||0}%;"></div>
+        <div style="height:8px;border-radius:4px;background:${FUENTE_COLORS[f]||'var(--muted)'};width:${Math.round(n/(todas.length||1)*100)||0}%;"></div>
       </div>
-      <div style="font-size:11px;color:var(--muted);min-width:30px;">${Math.round(n/totalPed*100)||0}%</div>
+      <div style="font-size:11px;color:var(--muted);min-width:30px;">${Math.round(n/(todas.length||1)*100)||0}%</div>
     </div>`).join('') || '<div style="color:var(--muted);font-size:12px;">Sin datos</div>';
 
   // Top productos
@@ -4148,13 +4166,13 @@ function renderVentas(){
 
   // Tabla
   const tbody = document.getElementById('ventas-tabla-body');
-  if(tbody) tbody.innerHTML = rows.length ? rows.slice().reverse().map(r=>`
+  if(tbody) tbody.innerHTML = todas.length ? todas.slice().reverse().map(r=>`
     <tr style="border-bottom:1px solid var(--border);">
       <td style="padding:7px 8px;color:var(--accent);font-weight:700;">${r.codigoC||r.codigo||'—'}</td>
       <td style="padding:7px 8px;color:var(--muted);">${(()=>{const fd=parsearFechaVenta(r.fecha);return fd?`${String(fd.getDate()).padStart(2,'0')}/${String(fd.getMonth()+1).padStart(2,'0')}/${fd.getFullYear()}`:(r.fecha||'—');})()}</td>
       <td style="padding:7px 8px;">${r.nombre||'—'}</td>
       <td style="padding:7px 8px;color:var(--muted);">${r.modelo||r.pack||'—'}</td>
-      <td style="padding:7px 8px;text-align:right;font-weight:700;">${String(r.moneda||'').trim()==='Divisa'?'$':'Bs'} ${parseFloat(r.monto||0).toLocaleString('es-VE',{maximumFractionDigits:2})}</td>
+      <td style="padding:7px 8px;text-align:right;font-weight:700;">${esCambioVenta(r)?'<span style="color:#ff8a3d;">🔄 CAMBIO</span><br><span style="font-weight:400;font-size:10px;color:var(--muted);">'+String(r.mensaje||'').split('|').slice(1,3).filter(Boolean).join(' · ').replace(/</g,'&lt;')+'</span>':''}${esCambioVenta(r)?'':String(r.moneda||'').trim()==='Divisa'?'$':'Bs'} ${esCambioVenta(r)?'':parseFloat(r.monto||0).toLocaleString('es-VE',{maximumFractionDigits:2})}</td>
       <td style="padding:7px 8px;text-align:center;">${String(r.cashea||'').toUpperCase()==='SI'?'🛒':''}</td>
       <td style="padding:7px 8px;text-align:center;"><span style="background:var(--surface2);border-radius:10px;padding:2px 8px;font-size:11px;">${r.fuente||'—'}</span></td>
     </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted);">Sin ventas en este período</td></tr>';
@@ -5455,7 +5473,7 @@ async function confirmarPagarCuota(){
 
 /* ===== FACTURA DEL CLIENTE: casilla en Cashea / Pendiente / Cola; se exige al enviar desde Taller ===== */
 window._facturaFlags={};
-async function facturaCargarFlags(){ await uniCargar(); try{ var d=await scriptGETjson({action:'leerFacturaCliente'},15000); if(d&&d.ok) window._facturaFlags=d.bases||{}; }catch(e){} }
+async function facturaCargarFlags(){ await uniCargar(); try{ var d=await scriptGETjson({action:'leerFacturaCliente'},15000); if(d&&d.ok) window._facturaFlags=d.bases||{}; }catch(e){} try{ var c=await scriptGETjson({action:'leerCambios'},15000); if(c&&c.ok) window._cambioFlags=c.bases||{}; }catch(e){} }
 function facturaBase(cod){ return String(cod||'').trim().toUpperCase().split('.')[0]; }
 function facturaChk(codigoS){   // codigoS: código S de cualquier pack del pedido
   var b=facturaBase(codigoS); if(!b) return '';
@@ -5471,6 +5489,33 @@ async function facturaGuardar(base,el){
     if(val) window._facturaFlags[base]={}; else delete window._facturaFlags[base];
     el.parentNode.style.borderColor=val?'var(--accent)':'var(--border)';
   }catch(e){ el.checked=!val; alert('✗ No se pudo guardar la factura: '+e.message); }
+  el.disabled=false;
+}
+
+/* ===== PRODUCTO POR CAMBIO: casilla 🔄 (sin costo de cobro; va a Ventas con monto 0 y fuente "Cambio") ===== */
+window._cambioFlags={};
+function cambioChk(codigoS,nombre,cedula){
+  var b=facturaBase(codigoS); if(!b) return '';
+  var f=window._cambioFlags[b], on=!!f, id='cmb-'+b.replace(/[^A-Z0-9]/g,'_');
+  return '<div style="display:flex;align-items:center;gap:8px;margin:8px 0;background:var(--surface2);border:1.5px solid '+(on?'var(--warn)':'var(--border)')+';border-radius:10px;padding:10px 12px;flex-wrap:wrap;">'+
+    '<input type="checkbox" id="'+id+'" '+(on?'checked':'')+' onchange="cambioGuardar(\''+b+'\',this,\''+String(nombre||'').replace(/[\'"\\]/g,'')+'\',\''+String(cedula||'').replace(/[\'"\\]/g,'')+'\')" style="width:18px;height:18px;cursor:pointer;accent-color:var(--warn);">'+
+    '<label for="'+id+'" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🔄 Producto por cambio (sin costo de cobro)</label>'+
+    (on?'<span style="font-size:11px;color:var(--warn);">'+String(f.motivo||'').replace(/</g,'&lt;')+(f.original?' · orig. '+String(f.original).replace(/</g,'&lt;'):'')+'</span>':'<span style="font-size:11px;color:var(--muted);">(entra a Ventas con monto 0 y cuenta aparte en el KPI)</span>')+'</div>';
+}
+async function cambioGuardar(base,el,nombre,cedula){
+  var val=el.checked, motivo='', original='', ref='';
+  if(val){
+    motivo=prompt('Motivo del cambio (ej: talla incorrecta, defecto, error de diseño):','');
+    if(motivo===null||!String(motivo).trim()){ el.checked=false; return; }
+    original=prompt('Pedido original que se cambia (ej: S-480) — opcional:','')||'';
+    ref=prompt('Valor referencial de la prenda en $ (lo que costaría) — opcional:','')||'';
+  }
+  el.disabled=true;
+  try{ var d=await scriptGETjson({action:'guardarCambio',base:base,valor:val?'SI':'',motivo:motivo,original:original,valor_ref:ref,nombre:nombre,cedula:cedula,usuario:(typeof USUARIOS!=='undefined'&&typeof unlock!=='undefined'&&USUARIOS[unlock])||''},15000);
+    if(!d||!d.ok)throw new Error((d&&d.error)||'no se guardó');
+    if(val) window._cambioFlags[base]={motivo:motivo,original:original,valor:ref}; else delete window._cambioFlags[base];
+    el.parentNode.style.borderColor=val?'var(--warn)':'var(--border)';
+  }catch(e){ el.checked=!val; alert('✗ No se pudo guardar el cambio: '+e.message); }
   el.disabled=false;
 }
 
@@ -5660,7 +5705,7 @@ async function cargarAprobacionesCashea(){
           </div>
           <div style="font-size:10px;color:var(--muted);margin-top:8px;">💱 Tasa BCV: Bs ${tasaBCV.toFixed(2)}</div>
         </div>
-        ${facturaChk(packs[0][0])}${uniChip(packs[0][0],v(9),v(7),'Cashea')}
+        ${facturaChk(packs[0][0])+cambioChk(packs[0][0],v(7),v(9))}${uniChip(packs[0][0],v(9),v(7),'Cashea')}
         ${(function(){window._etData=window._etData||{}; window._etData['cashea_'+base]={hoja:'APROBACIONES',rows:packs,recarga:'cargarAprobacionesCashea'}; return '<button type="button" onclick="editarTodoAbrir(\'cashea_'+base+'\')" style="width:100%;margin-top:8px;padding:10px;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:10px;color:var(--accent2);font-family:\'Barlow\',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✏️ EDITAR PEDIDO COMPLETO</button>';})()}
         ${ajusteBtn('cashea_'+base,'S',packs.map((pk,ix)=>({codigo:String(pk[0]||'').trim(),piezas:String(pk[17]||''),label:'Part '+(ix+1)})),'cargarAprobacionesCashea')}
         <div style="margin-top:8px;margin-bottom:12px;">
@@ -6834,7 +6879,7 @@ async function cargarCola(){
             </div>
           </div>`;
         }
-        html+=facturaChk(packs[0][0])+uniChip(packs[0][0],v(9),v(7),'Cola');
+        html+=facturaChk(packs[0][0])+cambioChk(packs[0][0],v(7),v(9))+uniChip(packs[0][0],v(9),v(7),'Cola');
         window._etData=window._etData||{}; window._etData['cola_'+base]={hoja:'COLA.P',rows:packs,recarga:'cargarCola'};
         html+=ajusteBtn('cola_'+base,'C',packs.map((pk,ix)=>({codigo:String(pk[1]||'').trim(),piezas:String(pk[17]||''),label:'Part '+(ix+1)})),'cargarCola');
         html+=`<div style="margin-top:8px;">
@@ -8027,7 +8072,7 @@ async function cargarSolicitudes(filtro){
           pagoMoneda:pagoMoneda,pagoMonto:pagoMonto,pagoRef:pagoRef
         };
         if(String(r[37]||'').trim()){ html+=`<div style="margin-top:8px;background:#2a1010;border:1.5px solid var(--danger);border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700;color:var(--danger);">⚠️ ${String(r[37]).replace(/</g,'&lt;')} · revisa el pago antes de aprobar</div>`; }
-        html+=facturaChk(packs[0][0])+uniChip(packs[0][0],v(9),v(7),'Pendiente');
+        html+=facturaChk(packs[0][0])+cambioChk(packs[0][0],v(7),v(9))+uniChip(packs[0][0],v(9),v(7),'Pendiente');
         window._etData=window._etData||{}; window._etData['pend_'+base]={hoja:'APROBACIONES',rows:packs,recarga:'cargarSolicitudes'};
         html+=ajusteBtn('pend_'+base,'S',packs.map((pk,ix)=>({codigo:String(pk[0]||'').trim(),piezas:String(pk[17]||''),label:'Part '+(ix+1)})),'cargarSolicitudes');
         html+=`<div style="margin-top:8px;">
@@ -9980,7 +10025,100 @@ async function tallerGuiaConfirmar(){
 window._aproVer=window._aproVer||{};
 function aproVerBtn(base,packs,r){
   window._aproVer[base]={packs:packs,r:r};
-  return '<button onclick="aproVerPedido(\''+String(base).replace(/'/g,"\\'")+'\')" title="Ver pedido con mockups" style="background:var(--surface2);color:var(--text);border:1px solid var(--accent);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;">👁 Ver pedido</button>';
+  return '<button onclick="aproVerPedido(\''+String(base).replace(/'/g,"\\'")+'\')" title="Ver pedido con mockups" style="background:var(--surface2);color:var(--text);border:1px solid var(--accent);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;">👁 Ver pedido</button> <button onclick="pedidoCapturaWA(\''+String(base).replace(/'/g,"\\\\'")+'\')" title="Enviar imagen del pedido al cliente por WhatsApp" style="background:#128c4a;color:#fff;border:none;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">📤 Enviar captura</button>';
+}
+
+/* ===== CAPTURA DEL PEDIDO PARA EL CLIENTE (imagen sin precios -> WhatsApp) ===== */
+function pedidoCapturaCanvas(base){
+  var d=window._aproVer[base]; if(!d) return null;
+  var r=d.r, v=function(i){return String(r[i]||'').trim()};
+  var W=1080, P=48, lines=[]; // {t,f,c,g}
+  function add(t,f,c,g){ lines.push({t:t,f:f,c:c||'#111',g:g||0}); }
+  var cv=document.createElement('canvas'), x=cv.getContext('2d');
+  function wrap(txt,font,maxW){ x.font=font; var out=[],cur=''; String(txt).split(' ').forEach(function(w){ var tt=cur?cur+' '+w:w; if(x.measureText(tt).width>maxW&&cur){out.push(cur);cur=w;} else cur=tt; }); if(cur)out.push(cur); return out; }
+  var F='Arial, Helvetica, sans-serif';
+  add('IKOA · Resumen de tu pedido','bold 40px '+F,'#0a7d4a',6);
+  add('Por favor verifica que todo esté correcto','26px '+F,'#555',18);
+  add('Pedido: '+base+'   ·   '+v(4),'bold 28px '+F,'#111',10);
+  add('Cliente: '+v(7),'28px '+F); add('Cédula: '+v(9)+'   ·   Celular: '+v(10),'26px '+F,'#333');
+  add('Entrega: '+v(18),'26px '+F,'#333');
+  if(v(19)) add('Retira: '+v(19)+(v(20)?' · C.I: '+v(20):'')+(v(21)?' · Cel: '+v(21):''),'26px '+F,'#333',10);
+  d.packs.forEach(function(pk,idx){
+    var q=function(i){return String(pk[i]||'').trim()};
+    add('','10px '+F,'#111',8);
+    add('PARTE '+(idx+1)+' · '+q(14)+'  ('+q(0)+')','bold 30px '+F,'#0a7d4a',6);
+    add('Modelo: '+(q(11)||'—'),'26px '+F); add('Manga: '+q(12)+(q(13)?'   ·   Capucha: '+q(13):''),'26px '+F);
+    add('Tela: '+q(15)+'   ·   Vinil: '+q(16),'26px '+F,'#111',6);
+    q(17).split(' | ').forEach(function(t){ if(t.trim()) add('• '+t.trim(),'bold 26px '+F,'#222'); });
+  });
+  add('','10px '+F,'#111',10);
+  add('Responde por este chat con tu confirmación, o dinos qué hay que corregir.','24px '+F,'#555');
+  // medir
+  var rows=[]; lines.forEach(function(l){ wrap(l.t,l.f,W-2*P).forEach(function(w){ rows.push({t:w,f:l.f,c:l.c,g:l.g}); }); if(!l.t) rows.push({t:'',f:l.f,c:l.c,g:l.g}); });
+  var H=P*2; rows.forEach(function(rw){ var px=parseInt(rw.f.match(/(\d+)px/)[1],10); H+=Math.round(px*1.35)+rw.g; });
+  cv.width=W; cv.height=H; x=cv.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,W,H);
+  x.fillStyle='#0a7d4a'; x.fillRect(0,0,W,14);
+  var y=P; rows.forEach(function(rw){ var px=parseInt(rw.f.match(/(\d+)px/)[1],10); y+=Math.round(px*1.35); x.font=rw.f; x.fillStyle=rw.c; x.textBaseline='alphabetic'; x.fillText(rw.t,P,y-Math.round(px*0.25)); y+=rw.g; });
+  return cv;
+}
+function pedidoCargarH2C(){
+  return new Promise(function(res,rej){ if(window.html2canvas) return res(); var s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; s.onload=function(){res()}; s.onerror=function(){rej(new Error('no cargó html2canvas'))}; document.head.appendChild(s); });
+}
+// Captura con mockups: arma el pedido (sin pago) fuera de pantalla y lo convierte a imagen
+async function pedidoCapturaMock(base){
+  var d=window._aproVer[base]; if(!d) throw new Error('pedido no encontrado');
+  var r=d.r, v=function(i){return String(r[i]||'').trim()}, esc=prodEsc;
+  var packs=d.packs.map(function(pk){var q=function(i){return String(pk[i]||'').trim()};
+    return {codigoS:q(0),codigoC:q(1),modelo:q(11),manga:q(12),capucha:q(13),pack:q(14),tela:q(15),vinil:q(16),piezas:q(17)};});
+  await Promise.all([pedidoCargarH2C(), aproLogoPrecargar()]);
+  var ag=v(18).split('—'), W=760;
+  var box=document.createElement('div'); box.style.cssText='position:fixed;left:-20000px;top:0;width:'+W+'px;background:#fff;color:#111;padding:24px;box-sizing:border-box;font-family:Montserrat,Barlow,Arial,sans-serif';
+  box.innerHTML='<div style="border-top:10px solid #0a7d4a;padding-top:12px"><div style="font-size:26px;font-weight:800;color:#0a7d4a">IKOA · Resumen de tu pedido</div><div style="font-size:14px;color:#555;margin:4px 0 12px">Por favor verifica que todo esté correcto</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:6px 22px;font-size:13px;line-height:1.5;border:1px solid #111;padding:10px 14px">'+
+    '<div><span style="color:#888">Pedido</span> <b>'+esc(base)+'</b></div><div><span style="color:#888">Fecha</span> <b>'+esc(v(4))+'</b></div><div><span style="color:#888">Cliente</span> <b>'+esc(v(7))+'</b></div><div><span style="color:#888">Cédula</span> <b>'+esc(v(9))+'</b></div>'+
+    '<div><span style="color:#888">Entrega</span> <b>'+esc(v(18))+'</b></div><div><span style="color:#888">Retira</span> <b>'+esc(v(19)||v(7))+'</b>'+(v(20)?' · '+esc(v(20)):'')+'</div></div></div><div id="cap-packs"></div>'+
+    '<div style="font-size:12px;color:#555;margin-top:14px">Responde por este chat con tu confirmación, o dinos qué hay que corregir.</div>';
+  document.body.appendChild(box);
+  try{
+    var host=box.querySelector('#cap-packs'), html='', css='';
+    var extras={}; try{var dd=await scriptGETjson({action:'leerPackCOD',codigos:packs.map(function(p){return p.codigoS}).filter(Boolean).join(',')},20000);if(dd&&dd.ok&&dd.packs)extras=dd.packs;}catch(e){}
+    for(var k=0;k<packs.length;k++){
+      var pk=packs[k], parte='';
+      if(codDisenoNuevo(pk)){
+        var pks=await codConstruirPacks([pk],extras,k);
+        var rr=await CODPDF.secciones({off:k,chk:false,cod:String(base),fecha:v(4),nombre:v(7),cedula:v(9),celular:v(10),correo:v(8),agencia:(ag[0]||'').trim(),direccion:'',retira:'',retiraCi:'',retiraCel:'',urgente:'',packs:pks});
+        css=rr.css; parte=rr.secs.join('');
+      }else parte=aproPackTexto(pk,k,packs.length);
+      html+=parte;
+    }
+    host.innerHTML='<style>'+css+'.cp{width:'+(W-48)+'px!important}</style><div class="cp">'+html+'</div>';
+    var imgs=[].slice.call(host.querySelectorAll('img'));
+    await Promise.all(imgs.map(function(im){return im.complete?1:new Promise(function(ok){im.onload=im.onerror=ok;});}));
+    await new Promise(function(ok){setTimeout(ok,300)});
+    var cv=await html2canvas(box,{scale:2,backgroundColor:'#fff',useCORS:true,logging:false});
+    return cv;
+  } finally { box.remove(); }
+}
+async function pedidoCapturaWA(base){
+  var d=window._aproVer[base]; if(!d){alert('Pedido no encontrado');return;}
+  var cel=String(d.r[10]||'').replace(/\D/g,''); if(cel.length===11&&cel[0]==='0')cel='58'+cel.slice(1); else if(cel.length===10)cel='58'+cel;
+  var msg='Hola '+(d.r[7]||'')+', te enviamos el resumen de tu pedido '+base+' para que verifiques los detalles. ¡Gracias por elegir IKOA!';
+  var esMovil=/Android|iPhone|iPad/i.test(navigator.userAgent);
+  var win=(!esMovil&&cel.length>=10)?window.open('about:blank','_blank'):null;   // abrir ya, antes de los await (evita bloqueo de ventanas)
+  var btn=document.activeElement; var txt0=btn&&btn.textContent; if(btn&&btn.tagName==='BUTTON'){btn.disabled=true;btn.textContent='⏳ Armando imagen…';}
+  var cv=null;
+  try{ cv=await pedidoCapturaMock(base); }catch(e){ console.warn('captura con mockups falló, uso la simple:',e); cv=pedidoCapturaCanvas(base); }
+  if(btn&&btn.tagName==='BUTTON'){btn.disabled=false;btn.textContent=txt0;}
+  if(!cv){ if(win)win.close(); alert('No se pudo armar la captura'); return; }
+  var blob=await new Promise(function(ok){cv.toBlob(ok,'image/png')});
+  var file=new File([blob],'Pedido_'+base+'.png',{type:'image/png'});
+  try{ if(esMovil&&navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],text:msg}); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
+  var copiado=false;
+  try{ await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]); copiado=true; }catch(e){}
+  if(!copiado){ var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=file.name; document.body.appendChild(a); a.click(); a.remove(); }
+  var url=cel.length>=10?'https://wa.me/'+cel+'?text='+encodeURIComponent(msg):'https://wa.me/?text='+encodeURIComponent(msg);
+  if(win) win.location.href=url; else window.open(url,'_blank');
+  setTimeout(function(){ alert(copiado?'📋 Imagen copiada. En el chat de WhatsApp pega con Ctrl+V y envía.':'⬇ Imagen descargada. Adjúntala en el chat de WhatsApp.'); },400);
 }
 async function aproVerPedido(base){
   var d=window._aproVer[base]; if(!d){alert('Pedido no encontrado');return;}
