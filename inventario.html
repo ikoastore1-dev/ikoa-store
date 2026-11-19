@@ -6992,25 +6992,36 @@ async function editarTodoGuardar(){
    Se guarda dentro del texto de la pieza: "Dama L/S - Nombre"  (Ancho L / Largo S).
    tipo 'S' = APROBACIONES (por CodigoS) · tipo 'C' = COLA.P / R.COLA.P / PRODUCCION (por CodigoC). */
 const AJ_TALLAS=['XS','S','M','L','XL','XXL','XXXL','2','4','6','8','10','12','14','16'];
+const AJ_GENEROS=['Caballero','Dama','Kids'];
 window._ajData={}; let _aj=null;
+/* Formato viejo escrito a mano ("Caballero ANCHO 2XL LARGO KIDS 14 - NOMBRE") -> formato nuevo ("Caballero 2XL/14.Kids - NOMBRE") */
+function ajusteLegacy(t){
+  return String(t||'').replace(/^(\S+)\s+ANCHO\s+(\S+)\s+LARGO\s+(?:(KIDS|DAMA|CABALLERO)\s+)?(\S+)/i,function(m,g,a,g2,l){
+    var gen=g2?(g2.charAt(0).toUpperCase()+g2.slice(1).toLowerCase()):'';
+    return g+' '+a.toUpperCase()+'/'+l.toUpperCase()+(gen&&gen.toLowerCase()!==String(g).toLowerCase()?'.'+gen:'');
+  });
+}
 function ajusteBtn(key,tipo,items,recarga){
   window._ajData[key]={tipo,items,recarga};
   return `<button type="button" onclick="event.preventDefault();event.stopPropagation();ajusteAbrir('${key}')" style="width:100%;margin-top:8px;padding:10px;background:var(--surface2);border:1.5px solid var(--warn);border-radius:10px;color:var(--warn);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📏 AJUSTAR TALLAS (ancho ≠ largo)</button>`;
 }
 function ajusteToks(str){
-  return String(str||'').split(' | ').map(x=>x.trim()).filter(Boolean).map(t=>{
+  return String(str||'').split(' | ').map(x=>ajusteLegacy(x.trim())).filter(Boolean).map(t=>{
     if(/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):/.test(t)) return {t,cont:true};
     const m=t.match(/^(\S+)(\s+)(\S+)(.*)$/);
     if(!m) return {t,cont:true};   // sin talla reconocible: no se toca
+    const gen=AJ_GENEROS.find(g=>g.toLowerCase()===m[1].toLowerCase())||null;
     const sl=m[3].match(/^([^\/]+)\/([^\/]+)$/);
-    return {t,cont:false,pre:m[1]+m[2],resto:m[4],base:sl?sl[1].toUpperCase():m[3].toUpperCase(),largo:sl?sl[2].toUpperCase():'',orig:m[3]};
+    let largoT='',largoG='';
+    if(sl){ const p=sl[2].split('.'); largoT=p[0].toUpperCase(); largoG=p[1]?(AJ_GENEROS.find(g=>g.toLowerCase()===p[1].toLowerCase())||''):''; }
+    return {t,cont:false,gen,sp:m[2],resto:m[4],base:(sl?sl[1]:m[3]).toUpperCase(),largoT,largoG,primero:m[1]};
   });
 }
 function ajusteAbrir(key){
   const d=window._ajData[key]; if(!d) return;
   _aj={key,d,packs:d.items.map(it=>({it,toks:ajusteToks(it.piezas)}))};
   document.getElementById('aj-sub').textContent=d.items.map(i=>i.codigo).join(' · ');
-  const opt=(sel,base)=>`<option value="">igual (${base})</option>`+AJ_TALLAS.filter(x=>x!==base).map(x=>`<option value="${x}"${x===sel?' selected':''}>${x}</option>`).join('');
+  const optT=(sel,base)=>`<option value="">igual (${base})</option>`+AJ_TALLAS.filter(x=>x!==base).map(x=>`<option value="${x}"${x===sel?' selected':''}>${x}</option>`).join('');
   let html='';
   _aj.packs.forEach((pk,pi)=>{
     html+=`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px;">
@@ -7018,11 +7029,16 @@ function ajusteAbrir(key){
     pk.toks.forEach((k,ti)=>{
       if(k.cont) return;
       const x=/\sx\d+\s*$|\sx\d+\s/i.test(k.resto);
-      html+=`<div style="padding:6px 0;border-top:1px solid var(--border);">
-        <div style="font-size:13px;margin-bottom:4px;">${k.t.replace(/</g,'&lt;')}</div>
+      const genSel=k.gen?`<div style="display:flex;gap:8px;align-items:center;font-size:12px;margin-bottom:6px;"><span style="color:var(--muted);width:46px;">Género</span><select class="field-input" id="aj-g-${pi}-${ti}" style="flex:1;">${AJ_GENEROS.map(g=>`<option value="${g}"${g===k.gen?' selected':''}>${g}</option>`).join('')}</select></div>`:'';
+      html+=`<div style="padding:8px 0;border-top:1px solid var(--border);">
+        <div style="font-size:13px;margin-bottom:6px;font-weight:600;">${k.t.replace(/</g,'&lt;')}</div>${genSel}
+        <div style="display:flex;gap:8px;align-items:center;font-size:12px;margin-bottom:6px;">
+          <span style="color:var(--muted);width:46px;">Ancho</span><select class="field-input" id="aj-a-${pi}-${ti}" style="flex:1;">${optT('',k.base)}</select>
+        </div>
         <div style="display:flex;gap:8px;align-items:center;font-size:12px;">
-          <span style="color:var(--muted);">Ancho</span><select class="field-input" id="aj-a-${pi}-${ti}" style="flex:1;">${opt('',k.base)}</select>
-          <span style="color:var(--muted);">Largo</span><select class="field-input" id="aj-l-${pi}-${ti}" style="flex:1;">${opt(k.largo,k.base)}</select>
+          <span style="color:var(--muted);width:46px;">Largo</span>
+          <select class="field-input" id="aj-lg-${pi}-${ti}" style="flex:1;"><option value="">género igual</option>${AJ_GENEROS.map(g=>`<option value="${g}"${g===k.largoG?' selected':''}>${g}</option>`).join('')}</select>
+          <select class="field-input" id="aj-l-${pi}-${ti}" style="flex:1;">${optT(k.largoT,k.base)}</select>
         </div>${x?'<div style="font-size:11px;color:var(--warn);margin-top:3px;">Esta línea trae varias unidades: el ajuste se aplica a todas.</div>':''}</div>`;
     });
     html+='</div>';
@@ -7040,10 +7056,14 @@ async function ajusteGuardar(){
       const pk=_aj.packs[pi]; let cambio=false;
       const out=pk.toks.map((k,ti)=>{
         if(k.cont) return k.t;
-        const a=(document.getElementById('aj-a-'+pi+'-'+ti)||{}).value||k.base, l=(document.getElementById('aj-l-'+pi+'-'+ti)||{}).value||k.base;
-        const talla=(a===l)?a:(a+'/'+l);
-        if(talla.toUpperCase()!==String(k.orig).toUpperCase()) cambio=true;
-        return k.pre+talla+k.resto;
+        const val=id=>((document.getElementById(id)||{}).value||'');
+        const gen=val('aj-g-'+pi+'-'+ti)||k.gen||k.primero;
+        const a=val('aj-a-'+pi+'-'+ti)||k.base, l=val('aj-l-'+pi+'-'+ti)||k.base, lg=val('aj-lg-'+pi+'-'+ti);
+        const lgDif=lg&&lg.toLowerCase()!==String(gen).toLowerCase();
+        const talla=(a===l&&!lgDif)?a:(a+'/'+l+(lgDif?'.'+lg:''));
+        const nuevo=gen+k.sp+talla+k.resto;
+        if(nuevo!==k.t) cambio=true;
+        return nuevo;
       });
       if(!cambio) continue;
       const r=await scriptGETjson({action:'ajustarPiezas',tipo:_aj.d.tipo,codigo:pk.it.codigo,piezas:out.join(' | ')},30000);
@@ -7452,10 +7472,10 @@ function codListaColores(txt,n){
 function codUnico(txt){const a=codListaColores(txt,1);return a[0]||String(txt||'').trim()}
 function codParsePiezasSuave(txt){
   const out=[]; let last=null;
-  String(txt||'').split(' | ').map(x=>x.trim()).filter(Boolean).forEach(seg=>{
+  String(txt||'').split(' | ').map(x=>ajusteLegacy(x.trim())).filter(Boolean).forEach(seg=>{
     const mm=seg.match(/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):\s*(.*)$/);
     if(mm){ if(last)last[mm[1]]=mm[2]; return; }
-    const m=seg.match(/^(.+?)\s+(XS|S|M|L|XL|[2-9]XL|\d{1,2}(?![\d/])|[A-Z0-9]{1,3}\/[A-Z0-9]{1,3})(\s+CAPUCHA CON TAPABOCA|\s+CON CAPUCHA)?(\s+CON CUELLO ALTO)?(?:\s+-\s+(.*))?$/i);
+    const m=seg.match(/^(.+?)\s+(XS|S|M|L|XL|[2-9]XL|\d{1,2}(?![\d/])|[A-Z0-9]{1,4}\/[A-Z0-9.]{1,12})(\s+CAPUCHA CON TAPABOCA|\s+CON CAPUCHA)?(\s+CON CUELLO ALTO)?(?:\s+-\s+(.*))?$/i);
     last = m ? {genero:m[1],talla:m[2].toUpperCase(),capucha:!!m[3],tapaboca:/TAPABOCA/i.test(m[3]||''),cuelloAlto:!!m[4],nombre:(m[5]||'').trim()}
              : (()=>{const m2=seg.match(/^(.+?)\s+-\s+(.*)$/); return m2?{genero:m2[1],talla:'',capucha:false,tapaboca:false,cuelloAlto:false,nombre:m2[2].trim()}:{genero:'',talla:'',capucha:false,tapaboca:false,cuelloAlto:false,nombre:seg};})();
     out.push(last);
@@ -7504,10 +7524,10 @@ function codPackGenerico(pk,k,offset,etq){
 }
 function codParsePiezas(txt,etq){
   const out=[]; let last=null;
-  String(txt||'').split(' | ').map(x=>x.trim()).filter(Boolean).forEach(seg=>{
+  String(txt||'').split(' | ').map(x=>ajusteLegacy(x.trim())).filter(Boolean).forEach(seg=>{
     const mm=seg.match(/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):\s*(.*)$/);
     if(mm){ if(!last)throw new Error(etq+': dato "'+seg+'" sin pieza'); last[mm[1]]=mm[2]; return; }
-    const m=seg.match(/^(.+?)\s+(XS|S|M|L|XL|[2-9]XL|\d{1,2}(?![\d/])|[A-Z0-9]{1,3}\/[A-Z0-9]{1,3})(\s+CAPUCHA CON TAPABOCA|\s+CON CAPUCHA)?(\s+CON CUELLO ALTO)?(?:\s+-\s+(.*))?$/i);
+    const m=seg.match(/^(.+?)\s+(XS|S|M|L|XL|[2-9]XL|\d{1,2}(?![\d/])|[A-Z0-9]{1,4}\/[A-Z0-9.]{1,12})(\s+CAPUCHA CON TAPABOCA|\s+CON CAPUCHA)?(\s+CON CUELLO ALTO)?(?:\s+-\s+(.*))?$/i);
     if(!m)throw new Error(etq+': no se entiende la pieza "'+seg+'" (formato: Género Talla [CON CAPUCHA|CAPUCHA CON TAPABOCA] [CON CUELLO ALTO] - Nombre)');
     last={genero:m[1],talla:m[2].toUpperCase(),tapaboca:/TAPABOCA/i.test(m[3]||''),capucha:!!m[3],cuelloAlto:!!m[4],nombre:(m[5]||'').trim()};
     out.push(last);
@@ -10430,7 +10450,7 @@ function tallerActualizarContador(){
 //  C) Talla suelta sin genero (ej: productos sin distinción, "XS x4")
 function tallerParsearPiezas(piezasStr){
   if(!piezasStr) return [];
-  const tokens=piezasStr.split('|').map(t=>t.trim()).filter(Boolean);
+  const tokens=piezasStr.split('|').map(t=>ajusteLegacy(t.trim())).filter(Boolean);
   const piezas=[];
   const GENEROS=['Dama','Caballero','Kids','Toalla']; // 'Toalla' = pieza de talla única de la serie Tiburón Ballena ("Toalla Única")
   const generoRegex=new RegExp('^('+GENEROS.join('|')+')\\b','i');
@@ -10487,7 +10507,7 @@ function tallerParsearPiezas(piezasStr){
     piezas.push({genero:'', talla:'', capucha:false, nombre:tok, raw:true});
   });
   // Talla ajustada: "L/S" = Ancho L / Largo S (acuerdo con el vendedor). Queda como talla propia: no se suma con las L normales.
-  piezas.forEach(pz=>{ const m=String(pz.talla||'').match(/^([^\/\s]+)\/([^\/\s]+)$/); if(m) pz.ajuste={ancho:m[1].toUpperCase(), largo:m[2].toUpperCase()}; });
+  piezas.forEach(pz=>{ const m=String(pz.talla||'').match(/^([^\/\s]+)\/([^\/\s]+)$/); if(m) pz.ajuste={ancho:m[1].toUpperCase().replace(/\./g,' '), largo:m[2].toUpperCase().replace(/\./g,' ')}; });
   return piezas;
 }
 
