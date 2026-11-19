@@ -7622,7 +7622,7 @@ function codPackGenerico(pk,k,offset,etq){
   const grupos={};
   piezas.forEach(p=>{const kk=p.telaP||'';(grupos[kk]=grupos[kk]||[]).push(p)});
   const bloques=Object.keys(grupos).map(kk=>({tela:String(kk).trim()||'—',estilo:'normal',etq:titulo.toUpperCase(),
-    piezas:grupos[kk].map(p=>({id:(pk.codigoS||('P'+(k+offset)))+'#'+p.idx,talla:p.talla,genero:p.genero,nombre:p.nombre,
+    piezas:grupos[kk].map(p=>({id:(pk._kp||pk.codigoS||('P'+(k+offset)))+'#'+p.idx,talla:p.talla,genero:p.genero,nombre:p.nombre,
       extra:[flag(p),p.LogoPecho?'Logo pecho: '+p.LogoPecho:'',p.LogoManga?'Logo manga: '+p.LogoManga:'',p.LogoEspalda?'Logo espalda: '+p.LogoEspalda:'',p.Largo?'Largo: '+p.Largo:''].filter(Boolean).join(' · ')})),
     you:null,gen:codMockGenerico(pk,kk)}));
   return {titulo:titulo||'Pack',linea:/LICRA/i.test(pk.modelo||'')?'licra':'comfy',vinil:codUnico(pk.vinil)||'—',bloques:bloques};
@@ -7703,7 +7703,7 @@ async function codConstruirPacks(allPacks,extras,offset){
     const bloques=[];
     const claves=Object.keys(grupos).sort((a,b)=>orden.indexOf(a.split('|')[0])-orden.indexOf(b.split('|')[0]));
     for(const kk of claves){ const e=kk.split('|')[0];
-      const bl={tela:grupos[kk][0].telaP,estilo:e,piezas:grupos[kk].map(p=>({id:(pk.codigoS||('P'+(k+offset)))+'#'+p.idx,talla:p.talla,genero:p.genero,nombre:p.nombre,extra:esYou?'Diseño Ikoa You':[p.LogoPecho?'Logo pecho: '+p.LogoPecho:'',p.LogoManga?'Logo manga: '+p.LogoManga:'',p.LogoEspalda?'Logo espalda: '+p.LogoEspalda:''].filter(Boolean).join(' · ')})),you:null};
+      const bl={tela:grupos[kk][0].telaP,estilo:e,piezas:grupos[kk].map(p=>({id:(pk._kp||pk.codigoS||('P'+(k+offset)))+'#'+p.idx,talla:p.talla,genero:p.genero,nombre:p.nombre,extra:esYou?'Diseño Ikoa You':[p.LogoPecho?'Logo pecho: '+p.LogoPecho:'',p.LogoManga?'Logo manga: '+p.LogoManga:'',p.LogoEspalda?'Logo espalda: '+p.LogoEspalda:''].filter(Boolean).join(' · ')})),you:null};
       if(esYou) bl.you={img:await codRenderYou(linea,dis,orden.indexOf(e),etq),lineas:lineas};
       bloques.push(bl);
     }
@@ -9514,7 +9514,7 @@ function costuraColor(n){ var i=(window.COSTURERAS||[]).indexOf(n); return COSTU
 function costuraEnt(v){ if(!v) return null; if(typeof v==='string') return {c:v}; return v; }
 function costuraAhora(){ var d=new Date(),z=function(n){return ('0'+n).slice(-2)}; return z(d.getDate())+'/'+z(d.getMonth()+1)+' '+z(d.getHours())+':'+z(d.getMinutes()); }
 function costuraEstado(e){ return e.pag?'pag':(e.est==='ok'?'ok':(e.est==='rep'?'rep':'taller')); }
-function prodInfoPieza(g,key){ var r={t:'',m:''}; (g&&g.packs||[]).forEach(function(p,k){ prodKeysPack(p,k).forEach(function(x){ if(x.key===key){ r.t=x.txt; r.m=((p.pack||'')+' '+(p.modelo||'')).trim(); } }); }); return r; }
+function prodInfoPieza(g,key){ var r={t:'',m:''}; prodPrefijos(g&&g.packs); (g&&g.packs||[]).forEach(function(p,k){ prodKeysPack(p,k).forEach(function(x){ if(x.key===key){ r.t=x.txt; r.m=((p.pack||'')+' '+(p.modelo||'')).trim(); } }); }); return r; }
 function prodPintarCostura(host){
   if(!host) return;
   var nombres=window.COSTURERAS||[], g=(window.prodGrupos||{})[prodCodAbierto];
@@ -9670,11 +9670,13 @@ function prodEsc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){re
 /* claves de las piezas de un pedido: <codigoS>#<n° de pieza en el pack> */
 function prodKeysPack(p,k){
   var out=[],n=0; String(p.piezas||'').split(' | ').map(function(x){return x.trim()}).filter(Boolean).forEach(function(seg){
-    if(/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):/.test(seg))return; out.push({key:(p.codigoS||('P'+k))+'#'+n,txt:seg}); n++; });
+    if(/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):/.test(seg))return; out.push({key:(p._kp||p.codigoS||('P'+k))+'#'+n,txt:seg}); n++; });
   return out;
 }
 function prodFabricado(cod,g){var av=(window.prodAvance||{})[String(cod).toUpperCase()]; if(!av)return false; if(av.completo)return true; var ks=prodKeys(g); return ks.length>0 && ks.every(function(k){return (av.done||[]).indexOf(k)>=0;});}
-function prodKeys(g){var o=[];g.packs.forEach(function(p,k){prodKeysPack(p,k).forEach(function(x){o.push(x.key)})});return o;}
+/* Si dos packs del mismo pedido comparten el código S, el 2º usa 'S~1' para que sus piezas no se confundan con las del 1º (el 1º conserva su clave de siempre) */
+function prodPrefijos(packs){ var vistos={}; (packs||[]).forEach(function(p,k){ var b=p.codigoS||('P'+k), n=vistos[b]||0; vistos[b]=n+1; p._kp=n?b+'~'+n:b; }); }
+function prodKeys(g){var o=[];prodPrefijos(g.packs);g.packs.forEach(function(p,k){prodKeysPack(p,k).forEach(function(x){o.push(x.key)})});return o;}
 function prodPedirClave(titulo,detalle){
   return new Promise(function(ok){
     var m=document.createElement('div'); m.style.cssText='position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px';
@@ -9730,6 +9732,7 @@ async function prodGuardar(completo,reabrir){
 }
 async function abrirProduccionTablet(cod){
   var g=(window.prodGrupos||{})[cod]; if(!g){alert('Pedido no encontrado');return;}
+  prodPrefijos(g.packs);
   var o0=document.getElementById('prod-overlay'); if(o0)o0.remove();
   prodCodAbierto=cod; prodDirty=false;
   var av=window.prodAvance[String(cod).toUpperCase()]||{done:[],completo:false}; prodSel=new Set(av.done||[]); prodVinil=new Set(av.vinil||[]); prodCostura={}; Object.keys(av.costura||{}).forEach(function(k){ prodCostura[k]=costuraEnt(av.costura[k]); }); await costurasCargar();
