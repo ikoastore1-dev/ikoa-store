@@ -9584,7 +9584,14 @@ async function prodEditarCosturas(){
 }
 
 /* ===== PANEL DE COSTURERAS: cuánto tiene cada una, cuánto entregó OK, cuánto devolvió y cortes de pago ===== */
-var CSTR={cortes:[],abierto:{},corte:null,sel:{},hist:{},nombres:[]};
+var CSTR={cortes:[],abierto:{},corte:null,sel:{},hist:{},nombres:[],precios:{},tasa:'',mods:[]};
+try{ CSTR.precios=JSON.parse(localStorage.getItem('cstr_precios')||'{}')||{}; }catch(e){ CSTR.precios={}; }
+function costuraModelo(e){ var m=String((e&&e.m)||'').replace(/^\s*\d+\s*PACK\s*/i,'').replace(/\(\s*opci[oó]n\s*\w+\s*\)/ig,'').replace(/COMFY\s+MEGA\s+PROMO/ig,'COMFY').replace(/^\s*(IKOA\s+)+/i,'').replace(/\s+/g,' ').trim().toUpperCase(); return m||'SIN MODELO'; }
+function costurasAgg(lista){ var a={}; lista.forEach(function(e){ var k=costuraModelo(e); a[k]=(a[k]||0)+1; }); return Object.keys(a).sort(function(x,y){return a[y]-a[x]}).map(function(k){return {k:k,q:a[k]}}); }
+function costurasSelOk(i){ var por=costurasPorNombre(), n=CSTR.nombres[i]; return (por[n]||[]).filter(function(e){ return costuraEstado(e)==='ok' && CSTR.sel[e.cod+'|'+e.key]!==false; }); }
+function costurasTotales(i){ var ag=costurasAgg(costurasSelOk(i)), usd=0; ag.forEach(function(x){ var p=parseFloat(CSTR.precios[x.k]); x.p=isNaN(p)?0:p; x.sub=Math.round(x.q*x.p*100)/100; usd+=x.sub; }); usd=Math.round(usd*100)/100; var tasa=parseFloat((document.getElementById('cstr-tasa')||{}).value||CSTR.tasa||0)||0; return {ag:ag,usd:usd,tasa:tasa,bs:Math.round(usd*tasa*100)/100}; }
+function costurasPrecio(j,v){ var k=CSTR.mods[j]; CSTR.precios[k]=v; try{ localStorage.setItem('cstr_precios',JSON.stringify(CSTR.precios)); }catch(e){} costurasRecalc(CSTR.corte); }
+function costurasRecalc(i){ if(i==null) return; var t=costurasTotales(i); t.ag.forEach(function(x,j){ var el=document.getElementById('cstr-sub-'+j); if(el) el.textContent='$'+x.sub.toFixed(2); }); var u=document.getElementById('cstr-tot-usd'), b=document.getElementById('cstr-tot-bs'); if(u) u.textContent='$'+t.usd.toFixed(2); if(b) b.textContent='Bs '+t.bs.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2}); CSTR.tasa=(document.getElementById('cstr-tasa')||{}).value||CSTR.tasa; }
 async function costurasAbrirPanel(){
   var o=document.getElementById('cstr-panel'); if(o) o.remove();
   o=document.createElement('div'); o.id='cstr-panel'; o.style.cssText='position:fixed;inset:0;z-index:10000;background:#f4f4f4;overflow:auto;color:#111;font-family:Barlow,Arial,sans-serif';
@@ -9609,6 +9616,7 @@ function costurasPintarPanel(){
     var L=por[n], col=costuraColor(n), c={taller:0,rep:0,ok:0,pag:0}; L.forEach(function(e){ c[costuraEstado(e)]++; });
     h+='<div style="background:#fff;border:1px solid #ddd;border-radius:14px;padding:14px;margin-bottom:14px"><div style="font-size:20px;font-weight:900;color:'+col+';margin-bottom:8px">🧵 '+esc(n)+' <span style="font-size:13px;color:#777;font-weight:700">· '+L.length+' piezas en total</span></div>'+
       '<div style="display:flex;gap:8px;flex-wrap:wrap">'+pill(c.taller,'EN COSTURA','#2563eb')+pill(c.rep,'DEVUELTAS','#dc2626')+pill(c.ok,'OK POR PAGAR','#059669')+pill(c.pag,'PAGADAS','#777')+'</div>'+
+      (c.ok?'<div style="margin-top:10px;font-size:14px;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:10px;padding:8px 12px"><b style="color:#059669">✅ OK por pagar, por modelo:</b> '+costurasAgg(L.filter(function(e){return costuraEstado(e)==='ok'})).map(function(x){return '<b>'+x.q+'</b> '+esc(x.k)}).join(' · ')+'</div>':'')+
       '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button onclick="CSTR.abierto['+i+']=!CSTR.abierto['+i+'];costurasPintarPanel()" style="'+bs+'background:#eee;color:#111">'+(CSTR.abierto[i]?'▲ Ocultar piezas':'▼ Ver piezas')+'</button>'+
       (c.ok?'<button onclick="CSTR.corte=(CSTR.corte==='+i+'?null:'+i+');costurasPintarPanel()" style="'+bs+'background:#059669;color:#fff">💰 Hacer corte de pago ('+c.ok+')</button>':'')+'</div>';
     if(CSTR.abierto[i]){ h+='<div style="margin-top:10px;font-size:13px;line-height:1.7">'+L.filter(function(e){return !e.pag}).map(lineaPz).join('<br>')+(c.pag?'<div style="color:#888;margin-top:6px">+ '+c.pag+' pagadas (ver historial de cortes abajo)</div>':'')+'</div>'; }
@@ -9616,28 +9624,38 @@ function costurasPintarPanel(){
       var oks=L.filter(function(e){return costuraEstado(e)==='ok'});
       h+='<div style="margin-top:12px;border:2px solid #059669;border-radius:12px;padding:12px"><div style="font-weight:800;margin-bottom:6px">Piezas incluidas en este pago (desmarca las que no quieras pagar):</div>'+
         oks.map(function(e){ var id=e.cod+'|'+e.key; return '<label style="display:block;font-size:13px;padding:4px 0"><input type="checkbox" '+(CSTR.sel[id]===false?'':'checked')+' onchange="CSTR.sel[\''+esc(id)+'\']=this.checked" style="width:20px;height:20px;vertical-align:middle;margin-right:8px">COD '+esc(e.cod)+' · '+esc(e.t||e.key)+(e.m?' <span style="color:#888">('+esc(e.m)+')</span>':'')+'</label>'; }).join('')+
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><input id="cstr-monto" placeholder="Monto pagado (opcional)" style="flex:1;min-width:150px;padding:11px;border:1px solid #bbb;border-radius:10px;font-size:15px"><input id="cstr-nota" placeholder="Nota (opcional)" style="flex:2;min-width:180px;padding:11px;border:1px solid #bbb;border-radius:10px;font-size:15px"></div>'+
-        '<button onclick="costurasConfirmarCorte('+i+')" style="'+bs+'background:#059669;color:#fff;margin-top:10px;width:100%">✅ Confirmar corte y marcar como pagadas</button></div>'; }
+        (function(){ var t=costurasTotales(i); CSTR.mods=t.ag.map(function(x){return x.k});
+          if(!CSTR.tasa&&typeof TASAS!=='undefined'&&TASAS.BCV) CSTR.tasa=String(TASAS.BCV);
+          return '<div style="margin-top:12px;border-top:1px dashed #6ee7b7;padding-top:10px"><div style="font-weight:800;margin-bottom:6px">📋 Resumen del pago (piezas OK incluidas)</div>'+
+          t.ag.map(function(x,j){ return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:5px 0;font-size:14px"><b style="min-width:120px">'+x.q+' '+esc(x.k)+'</b><span style="color:#666">× $</span><input type="number" step="0.01" min="0" inputmode="decimal" placeholder="USD c/u" value="'+esc(CSTR.precios[x.k]||'')+'" oninput="costurasPrecio('+j+',this.value)" style="width:90px;padding:8px;border:1px solid #bbb;border-radius:8px;font-size:15px"><span style="color:#666">=</span><b id="cstr-sub-'+j+'">$'+x.sub.toFixed(2)+'</b></div>'; }).join('')+
+          '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:14px"><label style="font-weight:700">Tasa BCV del día (Bs/$)</label><input id="cstr-tasa" type="number" step="0.01" min="0" inputmode="decimal" value="'+esc(CSTR.tasa||'')+'" oninput="costurasRecalc('+i+')" style="width:110px;padding:8px;border:1px solid #bbb;border-radius:8px;font-size:15px"></div>'+
+          '<div style="margin-top:8px;background:#111;color:#fff;border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span>Total <b id="cstr-tot-usd" style="font-size:18px">$'+t.usd.toFixed(2)+'</b></span><span>A pagar <b id="cstr-tot-bs" style="font-size:18px;color:#6ee7b7">Bs '+t.bs.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})+'</b></span></div>'+
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><input id="cstr-ref" placeholder="N° de pago / referencia (obligatorio)" style="flex:1;min-width:200px;padding:11px;border:1px solid #bbb;border-radius:10px;font-size:15px"><input id="cstr-nota" placeholder="Nota (opcional)" style="flex:1;min-width:160px;padding:11px;border:1px solid #bbb;border-radius:10px;font-size:15px"></div>'+
+          '<div style="font-size:12px;color:#666;margin-top:6px">Al confirmar, las piezas quedan PAGADAS y el monto en Bs se registra como gasto en Ventas.</div>'+
+          '<button onclick="costurasConfirmarCorte('+i+')" style="'+bs+'background:#059669;color:#fff;margin-top:10px;width:100%">💰 Pagar y registrar gasto</button></div>'; })()+'</div>'; }
     h+='</div>';
   });
   h+='<div style="font-size:18px;font-weight:900;margin:22px 0 8px">💰 Historial de cortes de pago</div>';
   if(!CSTR.cortes.length) h+='<div style="color:#777;font-size:14px">Aún no hay cortes.</div>';
   CSTR.cortes.forEach(function(c,j){
     h+='<div style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:12px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:14px"><b>'+esc(c.id)+' · '+esc(c.costurera)+'</b><span>'+esc(c.fecha)+'</span></div>'+
-      '<div style="font-size:13px;color:#444;margin-top:2px">'+c.piezas+' piezas'+(c.monto?' · pagado: <b>'+esc(c.monto)+'</b>':'')+(c.nota?' · '+esc(c.nota):'')+(c.usuario?' · '+esc(c.usuario):'')+'</div>'+
+      '<div style="font-size:13px;color:#444;margin-top:2px">'+c.piezas+' piezas'+(c.bs?' · <b>Bs '+Number(c.bs).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})+'</b> ($'+Number(c.usd||0).toFixed(2)+(c.tasa?' × '+c.tasa:'')+')':(c.monto?' · pagado: <b>'+esc(c.monto)+'</b>':''))+(c.referencia?' · Ref <b>'+esc(c.referencia)+'</b>':'')+(c.nota?' · '+esc(c.nota):'')+(c.usuario?' · '+esc(c.usuario):'')+'</div>'+(c.resumen?'<div style="font-size:12px;color:#666;margin-top:2px">'+esc(c.resumen)+'</div>':'')+
       '<button onclick="CSTR.hist['+j+']=!CSTR.hist['+j+'];costurasPintarPanel()" style="'+bs+'background:#eee;color:#111;margin-top:6px;padding:7px 11px;font-size:12px">'+(CSTR.hist[j]?'▲ Ocultar':'▼ Qué cubrió')+'</button>'+
       (CSTR.hist[j]?'<div style="font-size:13px;line-height:1.7;margin-top:6px">'+(c.items||[]).map(function(e){ return 'COD '+esc(e.cod)+' · '+esc(e.t||e.key)+(e.m?' <span style="color:#888">('+esc(e.m)+')</span>':''); }).join('<br>')+'</div>':'')+'</div>';
   });
   h+='</div>'; var sc=o.scrollTop; o.innerHTML=h; o.scrollTop=sc;
 }
 async function costurasConfirmarCorte(i){
-  var n=CSTR.nombres[i], por=costurasPorNombre(), items=[];
-  (por[n]||[]).forEach(function(e){ if(costuraEstado(e)==='ok' && CSTR.sel[e.cod+'|'+e.key]!==false) items.push({cod:e.cod,key:e.key}); });
-  if(!items.length){ alert('Marca al menos una pieza.'); return; }
-  var monto=(document.getElementById('cstr-monto')||{}).value||'', nota=(document.getElementById('cstr-nota')||{}).value||'';
-  var usr=await prodPedirClave('Corte de pago · '+n, items.length+' piezas'+(monto?' · '+monto:'')+'. Quedarán marcadas como PAGADAS.'); if(!usr) return;
-  try{ var r=await scriptGETjson({action:'guardarCorteCostura',costurera:n,items:JSON.stringify(items),monto:monto,nota:nota,usuario:usr},30000);
-    if(!r||!r.ok) throw new Error((r&&r.error)||'no se guardó'); CSTR.corte=null; CSTR.sel={}; alert('✅ Corte '+r.id+' guardado ('+r.piezas+' piezas)'); costurasAbrirPanel();
+  var n=CSTR.nombres[i], sel=costurasSelOk(i); if(!sel.length){ alert('Marca al menos una pieza.'); return; }
+  var t=costurasTotales(i), ref=((document.getElementById('cstr-ref')||{}).value||'').trim(), nota=((document.getElementById('cstr-nota')||{}).value||'').trim();
+  if(t.ag.some(function(x){return !(x.p>0)})){ alert('Escribe el precio en USD de cada modelo.'); return; }
+  if(!(t.tasa>0)){ alert('Escribe la tasa BCV del día.'); return; }
+  if(!ref){ alert('Escribe el número de pago / referencia.'); return; }
+  var resumen=t.ag.map(function(x){ return x.q+' '+x.k+' × $'+x.p.toFixed(2)+' = $'+x.sub.toFixed(2); }).join(' · ')+' · tasa '+t.tasa;
+  var usr=await prodPedirClave('Pagar a '+n, sel.length+' piezas · $'+t.usd.toFixed(2)+' = Bs '+t.bs.toFixed(2)+' · Ref '+ref+'. Quedarán PAGADAS y se registra como gasto.'); if(!usr) return;
+  var items=sel.map(function(e){ return {cod:e.cod,key:e.key}; });
+  try{ var r=await scriptGETjson({action:'guardarCorteCostura',costurera:n,items:JSON.stringify(items),monto_usd:t.usd,tasa:t.tasa,monto_bs:t.bs,referencia:ref,resumen:resumen,nota:nota,usuario:usr},30000);
+    if(!r||!r.ok) throw new Error((r&&r.error)||'no se guardó'); CSTR.corte=null; CSTR.sel={}; alert('✅ Pago '+r.id+' registrado ('+r.piezas+' piezas · Bs '+t.bs.toFixed(2)+'). Ya aparece como gasto en Ventas.'); costurasAbrirPanel();
   }catch(e){ alert('✗ '+e.message); }
 }
 
