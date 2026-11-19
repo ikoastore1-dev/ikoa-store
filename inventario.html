@@ -6,6 +6,7 @@
 <title>Ikoa & BeKate — Inventario</title>
 <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="stylesheet" href="https://fonts.cdnfonts.com/css/lemon-milk">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -406,6 +407,21 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </div>
 
 <!-- MODAL EDITAR COLA -->
+<div class="modal-overlay hidden" id="modal-editar-todo">
+  <div class="modal" style="max-width:560px;max-height:92vh;overflow-y:auto;">
+    <div class="modal-icon">✏️</div>
+    <div class="modal-title">Editar pedido completo</div>
+    <div class="modal-subtitle" id="et-sub" style="color:var(--accent);font-weight:700;"></div>
+    <div style="font-size:12px;color:var(--muted);margin:6px 0 12px;line-height:1.5;">Todas las columnas del pedido. Solo se guardan los campos que cambies. El código del pedido no se puede cambiar.</div>
+    <div id="et-lista"></div>
+    <div class="field-group" style="margin-top:12px;"><div class="field-label">Tu código</div><input class="field-input" id="et-unlock" type="password" inputmode="numeric" autocomplete="off" style="width:100%;"></div>
+    <div id="et-error" style="color:var(--danger);font-size:12px;min-height:16px;margin-top:6px;"></div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn-modal-cancel" onclick="document.getElementById('modal-editar-todo').classList.add('hidden')" style="flex:1;">Cancelar</button>
+      <button id="et-guardar" onclick="editarTodoGuardar()" style="flex:2;padding:12px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">💾 Guardar cambios</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay hidden" id="modal-ajuste-talla">
   <div class="modal" style="max-width:480px;max-height:90vh;overflow-y:auto;">
     <div class="modal-icon">📏</div>
@@ -5575,6 +5591,7 @@ async function cargarAprobacionesCashea(){
       scriptGETjson({action:'leerTodosLosPrecios'})
     ]);
     if(!data.ok) throw new Error(data.error||'Error');
+    window._hdrApro=data.headers||window._hdrApro||null;
     const rows=data.rows||[];
     const tasaBCV = parseFloat(dataTasa?.tasa_bcv)||0;
     if(!rows.length){
@@ -5644,6 +5661,7 @@ async function cargarAprobacionesCashea(){
           <div style="font-size:10px;color:var(--muted);margin-top:8px;">💱 Tasa BCV: Bs ${tasaBCV.toFixed(2)}</div>
         </div>
         ${facturaChk(packs[0][0])}${uniChip(packs[0][0],v(9),v(7),'Cashea')}
+        ${(function(){window._etData=window._etData||{}; window._etData['cashea_'+base]={hoja:'APROBACIONES',rows:packs,recarga:'cargarAprobacionesCashea'}; return '<button type="button" onclick="editarTodoAbrir(\'cashea_'+base+'\')" style="width:100%;margin-top:8px;padding:10px;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:10px;color:var(--accent2);font-family:\'Barlow\',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✏️ EDITAR PEDIDO COMPLETO</button>';})()}
         ${ajusteBtn('cashea_'+base,'S',packs.map((pk,ix)=>({codigo:String(pk[0]||'').trim(),piezas:String(pk[17]||''),label:'Part '+(ix+1)})),'cargarAprobacionesCashea')}
         <div style="margin-top:8px;margin-bottom:12px;">
           <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
@@ -6702,6 +6720,7 @@ async function cargarCola(){
   try{
     await facturaCargarFlags();
     const data=await scriptGETjson({action:'leerCola',filtro:filtroCola});
+    window._hdrCola=data.headers||window._hdrCola||null;
     const enCola=data.rows||[];
     if(!enCola.length){
       listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
@@ -6816,6 +6835,7 @@ async function cargarCola(){
           </div>`;
         }
         html+=facturaChk(packs[0][0])+uniChip(packs[0][0],v(9),v(7),'Cola');
+        window._etData=window._etData||{}; window._etData['cola_'+base]={hoja:'COLA.P',rows:packs,recarga:'cargarCola'};
         html+=ajusteBtn('cola_'+base,'C',packs.map((pk,ix)=>({codigo:String(pk[1]||'').trim(),piezas:String(pk[17]||''),label:'Part '+(ix+1)})),'cargarCola');
         html+=`<div style="margin-top:8px;">
           <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
@@ -6833,7 +6853,7 @@ async function cargarCola(){
           <span id="cod-guia-${base}" style="font-size:12px;color:var(--accent);font-weight:700;"></span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-          <button onclick='abrirEditarCola(window["_colaData_${colaKey}"])'
+          <button onclick='editarTodoAbrir("cola_${base}")'
             style="padding:13px;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:10px;color:var(--accent2);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">✏️ EDITAR</button>
           <button onclick='abrirModalPlanificacion(window["_colaData_${colaKey}"])'
           style="padding:13px;background:linear-gradient(135deg,var(--warn),#c07010);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">
@@ -6909,6 +6929,64 @@ function guardarUrgenteGrupo(tipo, codigosStr, inputId){
 
 let pendingEditCola=null;
 
+
+/* ── EDITAR PEDIDO COMPLETO (todas las columnas) ──────────────────
+   hoja 'APROBACIONES' (clave = col A, CodigoS) o 'COLA.P' (clave = col B, CodigoC). Cashea y Pendientes viven en APROBACIONES. */
+const ET_NOMBRES={0:'Código S',1:'Código C',2:'Código P',3:'Código COD',4:'Fecha',7:'Nombre',8:'Correo',9:'Cédula',10:'Celular',11:'Modelo',12:'Manga',13:'Capucha',14:'Pack',15:'Tela',16:'Vinil',17:'Piezas',18:'Agencia',19:'Retira nombre',20:'Retira CI',21:'Retira celular',26:'Estado',28:'Pago moneda',29:'Pago monto',30:'Pago referencia',31:'Urgente',32:'Cashea (SI/NO)',33:'% Cashea',34:'% Inicial Cashea',36:'Tasa BCV',37:'Alerta'};
+const ET_CLIENTE=[7,8,9,10,18,19,20,21,28,29,30,31];   // datos del cliente: se muestran una vez y se aplican a todos los packs
+let _et=null;
+function editarTodoAbrir(key){
+  const d=(window._etData||{})[key]; if(!d) return;
+  const hdr=(d.hoja==='COLA.P'?window._hdrCola:window._hdrApro)||[];
+  const colClave=d.hoja==='APROBACIONES'?0:1;
+  _et={key,d,hdr,colClave};
+  const nombre=i=>String(hdr[i]||'').trim()||ET_NOMBRES[i]||('Columna '+(i+1));
+  const campo=(id,i,val,ro)=>{ const v=String(val==null?'':val); const largo=(i===17||v.length>70||v.indexOf('\n')>=0);
+    const shown=(i===17)?v.split(' | ').join('\n'):v;
+    const esc=shown.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    return `<div class="field-group" style="${largo?'grid-column:1/-1;':''}"><div class="field-label">${nombre(i)}</div>`+
+      (largo?`<textarea class="field-input" id="${id}" rows="${i===17?5:3}" style="width:100%;resize:vertical;font-size:12px;"${ro?' readonly':''}>${esc}</textarea>`
+            :`<input class="field-input" id="${id}" type="text" value="${esc}" style="width:100%;"${ro?' readonly':''}>`)+'</div>'; };
+  const r0=d.rows[0]; const n=Math.max(...d.rows.map(r=>r.length));
+  let html=`<div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:10px;margin-bottom:10px;">
+    <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:6px;">Datos del cliente y pago (se aplican a todos los packs)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${ET_CLIENTE.filter(i=>i<n).map(i=>campo('et-c-'+i,i,r0[i])).join('')}</div></div>`;
+  d.rows.forEach((r,pi)=>{
+    html+=`<details ${pi===0?'open':''} style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px;">
+      <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--text);">Pack ${pi+1} · ${r[colClave]}</summary>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">`;
+    for(let i=0;i<n;i++){ if(ET_CLIENTE.indexOf(i)>=0) continue; html+=campo('et-'+pi+'-'+i,i,r[i],i===colClave); }
+    html+='</div></details>';
+  });
+  document.getElementById('et-sub').textContent=d.rows.map(r=>r[colClave]).join(' · ');
+  document.getElementById('et-lista').innerHTML=html;
+  document.getElementById('et-unlock').value=''; document.getElementById('et-error').textContent='';
+  document.getElementById('modal-editar-todo').classList.remove('hidden');
+}
+async function editarTodoGuardar(){
+  const err=document.getElementById('et-error'), unlock=document.getElementById('et-unlock').value.trim().toUpperCase();
+  if(!USUARIOS[unlock]){ err.textContent='❌ Código incorrecto'; return; }
+  const btn=document.getElementById('et-guardar'); btn.disabled=true; btn.textContent='Guardando...';
+  const {d,colClave}=_et;
+  try{
+    const leer=(id,i)=>{ const el=document.getElementById(id); if(!el) return null; let v=el.value; if(i===17) v=v.split('\n').map(s=>s.trim()).filter(Boolean).join(' | '); return v; };
+    for(let pi=0;pi<d.rows.length;pi++){
+      const r=d.rows[pi], cambios={};
+      for(let i=0;i<r.length;i++){
+        if(i===colClave) continue;
+        const id=(ET_CLIENTE.indexOf(i)>=0)?('et-c-'+i):('et-'+pi+'-'+i);
+        const nv=leer(id,i); if(nv===null) continue;
+        if(String(nv)!==String(r[i]==null?'':r[i])) cambios[i]=nv;
+      }
+      if(!Object.keys(cambios).length) continue;
+      const res=await scriptGETjson({action:'editarFila',hoja:d.hoja,clave:r[colClave],cambios:JSON.stringify(cambios)},30000);
+      if(!res||!res.ok) throw new Error((res&&res.error)||'El servidor no respondió (¿falta actualizar Code_Completo.gs?)');
+    }
+    document.getElementById('modal-editar-todo').classList.add('hidden');
+    const f=window[d.recarga]; if(typeof f==='function') f();
+  }catch(e){ err.textContent='✗ '+e.message; }
+  btn.disabled=false; btn.textContent='💾 Guardar cambios';
+}
 
 /* ── AJUSTE DE TALLA (ancho ≠ largo) ──────────────────────────────
    Se guarda dentro del texto de la pieza: "Dama L/S - Nombre"  (Ancho L / Largo S).
@@ -7179,7 +7257,7 @@ var _boxes=null;
 function boxes(){return _boxes||(_boxes=fetch(BASE+'boxes.json').then(function(r){if(!r.ok)throw new Error('No se encontró '+BASE+'boxes.json: sube la carpeta cod-mockups completa junto a inventario.html');return r.json()}).catch(function(e){_boxes=null;throw e}))}
 var AR=362/311;
 /* mockup teñido con la tela + logos del perchero (alitas oficiales / palabra IKOA) en color del vinil */
-async function mockup(linea,estilo,vista,tela,vin){
+async function mockup(linea,estilo,vista,tela,vin,nomTxt){
   var nm=linea+'_'+estilo+'_'+vista, bx=await boxes(), im=await loadImg(BASE+nm+'.png');
   var W=im.width,H=im.height,S=bx.S*(W/561)/(W/561);   /* cajas están en px del original 1122; las imágenes miden 561 -> S=0.5 */
   var c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');x.drawImage(im,0,0);
@@ -7195,6 +7273,8 @@ async function mockup(linea,estilo,vista,tela,vin){
     lx.drawImage(mask,0,0,lc.width,lc.height);lx.globalCompositeOperation='source-in';lx.fillStyle='rgb('+vin.join(',')+')';lx.fillRect(0,0,lc.width,lc.height);
     x.drawImage(lc,Math.round(cx-lw/2),Math.round(cy-lh/2));
   }
+  if(nomTxt&&vista==='frente') await nombreManga(x,c,(function(){var X={comfy:{normal:7.6,alto:9.4,capucha:17.6,capuchatapaboca:17.8},licra:{normal:7.6,alto:7.5,capucha:16.6,capuchatapaboca:15.9}};   /* x de la manga según el estilo (la capucha corre la prenda a la derecha) */
+    return {x:(X[linea]||X.comfy)[estilo]||7.6,y:linea==='licra'?85.5:85,r:-86,s:linea==='licra'?3.6:3.8}})(),nomTxt,vin);
   /* recorte al contenido */
   var q=x.getImageData(0,0,W,H).data,x0=W,x1=0,y0=H,y1=0;
   for(var yy=0;yy<H;yy++)for(var xx=0;xx<W;xx++)if(q[(yy*W+xx)*4+3]>12){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(yy<y0)y0=yy;if(yy>y1)y1=yy}
@@ -7219,12 +7299,24 @@ function imgsMk(list){
   var k=Math.min(1,(190-6*(n-1))/(sum||1));
   return list.map(function(m){return '<img src="'+m.url+'" style="width:'+Math.round(m.w*k)+'px;height:'+Math.round(m.h*k)+'px;max-width:none">'}).join('');
 }
+/* Nombre en la manga derecha, en el color del vinil (igual que el perchero de la app de venta). sl={x,y,r,s} en % de la imagen; s = tamaño en % del ancho */
+async function nombreManga(x,c,sl,txt,vin){
+  if(!sl||!txt) return;
+  try{ await Promise.race([document.fonts.load('400 40px "Lemon Milk"'),new Promise(function(ok){setTimeout(ok,1500)})]); }catch(e){}
+  var fs=c.width*sl.s/100, maxW=c.height*0.30;
+  x.save(); x.translate(c.width*sl.x/100,c.height*sl.y/100); x.rotate(sl.r*Math.PI/180);
+  x.font='400 '+fs+'px "Lemon Milk","Montserrat",Arial,sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillStyle='rgb('+vin.join(',')+')';
+  try{ x.letterSpacing=(fs*.04)+'px'; }catch(e){}
+  var w=x.measureText(txt).width; if(w>maxW){ fs=fs*maxW/w; x.font='400 '+fs+'px "Lemon Milk","Montserrat",Arial,sans-serif'; }
+  x.fillText(txt,0,0); x.restore();
+}
 async function mockGen(g,tela,vin){
   var res=[];
   if(g.foto){
     try{
       var f=g.foto,im=await loadImg(f.img),c=document.createElement('canvas');c.width=im.width;c.height=im.height;var x=c.getContext('2d');x.drawImage(im,0,0);
       if(f.lg&&f.lg[2]){var lw=c.width*f.lg[2]/100,lh=f.ik?lw*200/831:lw*311/362,lc=await logoTeñido(f.ik?'ikoa_logo':'alas',lw,lh,vin);x.drawImage(lc,Math.round(c.width*f.lg[0]/100-lc.width/2),Math.round(c.height*f.lg[1]/100-lc.height/2))}
+      await nombreManga(x,c,g.sleeveFoto,g.nm,vin);
       var r=recorte(c);res.push({url:r.toDataURL('image/png'),h:g.alto,w:Math.round(g.alto*r.width/r.height)});res.leyenda='FOTO DE REFERENCIA'+(f.bk?' · FRENTE · ESPALDA':'');
       if(f.bk){var ib=await loadImg(f.bk),cb=document.createElement('canvas');cb.width=ib.width;cb.height=ib.height;cb.getContext('2d').drawImage(ib,0,0);var rb=recorte(cb);var hb=Math.round(g.alto*rb.height/r.height);res.push({url:rb.toDataURL('image/png'),h:hb,w:Math.round(hb*rb.width/rb.height)})}
       return res;
@@ -7236,6 +7328,7 @@ async function mockGen(g,tela,vin){
     for(var i=0;i<p.length;i+=4){var L=p[i]/255;L=Math.pow(L,1.05)*1.04;p[i]=Math.min(255,tela[0]*L);p[i+1]=Math.min(255,tela[1]*L);p[i+2]=Math.min(255,tela[2]*L)}
     x2.putImageData(d,0,0);
     if(g.logo){var lw2=W*g.logo[2]*1.7/100,lh2=lw2*311/362,lc2=await logoTeñido('alas',lw2,lh2,vin);x2.drawImage(lc2,Math.round(W*g.logo[0]/100-lc2.width/2),Math.round(H*g.logo[1]/100-lc2.height/2))}
+    await nombreManga(x2,c2,g.sleeveBase,g.nm,vin);
     var rc2=recorte(c2),hg=g.altoBase||g.alto;res.push({url:rc2.toDataURL('image/png'),h:hg,w:Math.round(hg*rc2.width/rc2.height)});res.leyenda=g.conocida?'FRENTE':'FORMA DE REFERENCIA · COLOR DE TELA NO REGISTRADO';
   }
   return res;
@@ -7271,11 +7364,14 @@ async function armarPaginas(d){
         left='<div class="mk" style="width:290px"><div class="k" style="font-size:8px;margin-bottom:5px">DISEÑO IKOA YOU</div><img src="'+b.you.img+'" style="width:290px;max-width:none;height:auto;display:block"><small>FRENTE · ESPALDA, TAL COMO LO DISEÑASTE</small></div>';
         extra='<div style="margin:8px 0 2px;font-size:10px;line-height:1.6">'+(b.you.lineas||[]).map(function(l){return '<div><span style="display:inline-block;width:56px;color:#888">'+esc(l[0])+'</span><b>'+esc(l[1])+'</b></div>'}).join('')+'</div>';
       }else if(b.gen){
-        var mm=[];try{mm=await mockGen(b.gen,tr,vr)}catch(e){mm=[]}
+        var mm=[];try{
+          var nms=[];b.piezas.forEach(function(z){var n=String(z.nombre||'').replace(/\s*\(\s*vinil[^)]*\)\s*$/i,'').trim().toUpperCase(); if(n&&!/^SIN NOMBRE/.test(n)&&nms.indexOf(n)<0)nms.push(n)});
+          b.gen.nm=nms.length?'NOMBRE':'';   // solo la palabra NOMBRE, en el color del vinil (como el perchero)
+          mm=await mockGen(b.gen,tr,vr)}catch(e){mm=[]}
         left=mm.length?'<div class="mk"><div class="im">'+imgsMk(mm)+'</div><small>'+esc(mm.leyenda||'')+'</small></div>'
           :'<div class="mk"><div class="im" style="align-items:center;color:#aaa;font-size:9px;letter-spacing:.15em;text-align:center">SIN IMAGEN DE REFERENCIA</div></div>';
       }else{
-        var fr=await mockup(p.linea,b.estilo,'frente',tr,vr),es=await mockup(p.linea,b.estilo,'espalda',tr,vr);
+        var nmC=b.piezas.some(function(z){var n=String(z.nombre||'').trim();return n&&!/^SIN NOMBRE/i.test(n)})?'NOMBRE':'', fr=await mockup(p.linea,b.estilo,'frente',tr,vr,nmC),es=await mockup(p.linea,b.estilo,'espalda',tr,vr);
         left='<div class="mk"><div class="im">'+imgsMk([fr,es])+'</div><small>FRENTE · ESPALDA</small></div>';
       }
       var blk='<div class="blk">'+left+'<div class="bd">'+tl+extra+'<table><tr>'+(CHK?'<th style="width:46px">HECHO</th>':'')+'<th style="white-space:nowrap;width:34px">P'+(pi+1+PO)+'</th><th>TALLA</th><th>GÉNERO</th><th>NOMBRE EN MANGA</th></tr>'+f.h+'</table></div></div>';
@@ -7385,7 +7481,11 @@ function codMockGenerico(pk,telaTxt){
   if(f){ g.foto=f; g.alto=window.CODPDF.FOTO_ALTO[serie]||170; g.leyenda='FOTO DE REFERENCIA'+(f.bk?' · FRENTE · ESPALDA':''); }
   else if(base){ g.alto=window.CODPDF.BASE_ALTO[base]||170; g.leyenda=conocida?'FRENTE':'FORMA DE REFERENCIA (COLOR DE TELA NO REGISTRADO)'; }
   else { g.base=null; g.leyenda=''; }
-  if(f&&base){ g.altoBase=window.CODPDF.BASE_ALTO[base]||170; }   /* si la foto no carga, se usa la base */
+  if(f&&base){ g.altoBase=window.CODPDF.BASE_ALTO[base]||170; }
+  /* manga derecha: mismas posiciones del perchero (foto Tiburón Ballena y bases larga/dress) */
+  const SL_TB={playera:{x:8.2,y:82,r:-82,s:4.2},dress:{x:8.4,y:70,r:-84,s:4.6},cortaviento:{x:9.2,y:79,r:-86,s:4.2}}, SL_BASE={larga:{x:7.6,y:85,r:-86,s:3.8},dress:{x:9.6,y:70,r:-81,s:3.8}};
+  if(f&&SL_TB[serie]&&(serie==='cortaviento'||(serie==='playera'&&tp.manga==='larga')||(serie==='dress'&&tp.manga!=='cero'))) g.sleeveFoto=SL_TB[serie];
+  if(base) g.sleeveBase=SL_BASE[base]||null;   /* si la foto no carga, se usa la base */
   return g;
 }
 function codPackGenerico(pk,k,offset,etq){
@@ -7809,6 +7909,7 @@ async function cargarSolicitudes(filtro){
     }
     // Pendientes → leer de APROBACIONES
     const data=await scriptGETjson({action:'leerAprobaciones',filtro:filtroSolicitudes});
+    window._hdrApro=data.headers||window._hdrApro||null;
     const filtradas=data.rows||[];
     if(!filtradas.length){
       listEl.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);"><div style="font-size:32px;margin-bottom:10px;">${filtroSolicitudes==='Pendiente'?'🎉':'📋'}</div><div style="font-size:15px;">No hay solicitudes ${filtroSolicitudes.toLowerCase()}</div></div>`;
@@ -7907,6 +8008,7 @@ async function cargarSolicitudes(filtro){
         };
         if(String(r[37]||'').trim()){ html+=`<div style="margin-top:8px;background:#2a1010;border:1.5px solid var(--danger);border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700;color:var(--danger);">⚠️ ${String(r[37]).replace(/</g,'&lt;')} · revisa el pago antes de aprobar</div>`; }
         html+=facturaChk(packs[0][0])+uniChip(packs[0][0],v(9),v(7),'Pendiente');
+        window._etData=window._etData||{}; window._etData['pend_'+base]={hoja:'APROBACIONES',rows:packs,recarga:'cargarSolicitudes'};
         html+=ajusteBtn('pend_'+base,'S',packs.map((pk,ix)=>({codigo:String(pk[0]||'').trim(),piezas:String(pk[17]||''),label:'Part '+(ix+1)})),'cargarSolicitudes');
         html+=`<div style="margin-top:8px;">
           <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
@@ -7918,7 +8020,7 @@ async function cargarSolicitudes(filtro){
           </div>
         </div>`;
         html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;">
-          <button onclick='abrirEditarApro(window["_aproData_${aproKey}"])'
+          <button onclick='editarTodoAbrir("pend_${base}")'
             style="padding:10px;background:var(--surface2);border:1.5px solid var(--accent2);border-radius:10px;color:var(--accent2);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✏️ EDITAR</button>
           <button onclick='abrirModalAprobacion(${JSON.stringify({nombre:v(7),cedula:v(9),correo:v(8),celular:v(10),fecha:v(4),codigos:allCodigos,codigo:base,pago_moneda:pagoMoneda,pago_monto:pagoMonto,pago_ref:pagoRef,modelo:v(11),manga:packs[0]?String(packs[0][12]||''):'',capucha:packs[0]?String(packs[0][13]||''):'',pack:packs[0]?String(packs[0][14]||''):'',tela:packs[0]?String(packs[0][15]||''):'',vinil:packs[0]?String(packs[0][16]||''):'',piezas:packs[0]?String(packs[0][17]||''):'',agencia:v(18)})})'
             style="padding:10px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✅ APROBAR</button>
