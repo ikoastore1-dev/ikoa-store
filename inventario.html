@@ -9519,29 +9519,54 @@ function prodPintarCostura(host){
   if(!host) return;
   var nombres=window.COSTURERAS||[], g=(window.prodGrupos||{})[prodCodAbierto];
   function refrescar(){ prodDirty=true; prodPintarCostura(host); prodActualizarBarra(); }
+  host.querySelectorAll('.cstr-row,.cstr').forEach(function(x){ x.remove(); });
+  (function(){
+    var prev=document.getElementById('prod-bulk'); if(prev) prev.remove();
+    if(!g||!host.parentNode) return; var ks=prodKeys(g); if(!ks.length) return;
+    var bar=document.createElement('div'); bar.id='prod-bulk';
+    bar.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#fff;border:1px solid #d4d4d8;border-radius:12px;padding:10px 12px;margin:10px 14px 4px;box-shadow:0 2px 8px rgba(0,0,0,.06);font-family:Barlow,Arial,sans-serif;color:#111';
+    function lab(t){ var s=document.createElement('span'); s.textContent=t; s.style.cssText='font-size:11px;letter-spacing:.1em;font-weight:800;color:#888'; bar.appendChild(s); }
+    function b(txt,col,fn){ var x=document.createElement('button'); x.type='button'; x.textContent=txt; x.style.cssText='padding:8px 13px;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer;border:2px solid '+col+';background:#fff;color:'+col; x.onclick=function(ev){ ev.preventDefault(); fn(); }; bar.appendChild(x); }
+    function ref(){ prodDirty=true; prodPintarCostura(host); prodActualizarBarra(); }
+    lab('TODO EL PEDIDO');
+    var todosVin=ks.every(function(k){return prodVinil.has(k)});
+    b(todosVin?'🎨 Quitar vinil a todas':'🎨 Vinil listo en todas','#7c3aed',function(){ ks.forEach(function(k){ if(todosVin) prodVinil.delete(k); else prodVinil.add(k); }); ref(); });
+    var libres=ks.filter(function(k){return !costuraEnt(prodCostura[k])});
+    if(libres.length){ lab('· ENVIAR '+libres.length+' SIN ASIGNAR A:'); (window.COSTURERAS||[]).forEach(function(n){ b('🧵 '+n,costuraColor(n),function(){ var ahora=costuraAhora(); libres.forEach(function(k){ var inf=prodInfoPieza(g,k); prodCostura[k]={c:n,env:ahora,t:inf.t,m:inf.m}; }); ref(); }); }); }
+    var enc=ks.filter(function(k){ var e=costuraEnt(prodCostura[k]); return e&&!e.est&&!e.pag; });
+    if(enc.length) b('📥 Recibir OK las '+enc.length+' enviadas','#059669',function(){ var ahora=costuraAhora(); enc.forEach(function(k){ var e=costuraEnt(prodCostura[k]); e.est='ok'; e.rec=ahora; prodCostura[k]=e; }); ref(); });
+    host.parentNode.insertBefore(bar,host);
+  })();
   host.querySelectorAll('.pchk').forEach(function(c){
     var k=c.dataset.k, row=c.closest('tr')||c.closest('label'); if(!row) return;
-    var old=row.querySelector('.cstr'); if(old) old.remove();
-    var box=document.createElement(row.tagName==='TR'?'td':'span'); box.className='cstr';
-    box.style.cssText='display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:auto;padding-left:8px;'+(row.tagName==='TR'?'display:table-cell;white-space:nowrap;text-align:right;width:1%;':'');
-    function btn(txt,col,on,fn){ var b=document.createElement('button'); b.type='button'; b.textContent=txt;
-      b.style.cssText='margin-left:4px;padding:7px 11px;border-radius:20px;font-size:13px;font-weight:800;cursor:pointer;border:2px solid '+col+';background:'+(on?col:'#fff')+';color:'+(on?'#fff':col)+';';
+    var e=costuraEnt(prodCostura[k]), vin=prodVinil.has(k), est=e?costuraEstado(e):'';
+    var colEst={pag:'#9ca3af',ok:'#059669',rep:'#dc2626',taller:'#2563eb'}[est]||(vin?'#7c3aed':'transparent');
+    var box=document.createElement('div'); box.className='cstr';
+    box.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 10px;margin:2px 0 8px;background:#f6f6f8;border-radius:10px;border-left:5px solid '+colEst+';';
+    function lab(t){ var s=document.createElement('span'); s.textContent=t; s.style.cssText='font-size:10px;letter-spacing:.12em;font-weight:800;color:#888;margin-right:2px;'; box.appendChild(s); }
+    function btn(txt,col,on,fn,dis){ var b=document.createElement('button'); b.type='button'; b.textContent=txt;
+      b.style.cssText='padding:7px 13px;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer;line-height:1.1;border:2px solid '+col+';background:'+(on?col:'#fff')+';color:'+(on?'#fff':col)+';'+(dis?'opacity:.55;':'');
       b.onclick=function(ev){ ev.preventDefault(); ev.stopPropagation(); fn(); }; box.appendChild(b); return b; }
-    btn('🎨 Vinil'+(prodVinil.has(k)?' ✔':''),'#7c3aed',prodVinil.has(k),function(){ if(prodVinil.has(k)) prodVinil.delete(k); else prodVinil.add(k); refrescar(); });
-    var e=costuraEnt(prodCostura[k]);
+    function sep(){ var s=document.createElement('span'); s.textContent='›'; s.style.cssText='color:#bbb;font-size:18px;font-weight:700;'; box.appendChild(s); }
+    lab('VINIL'); btn(vin?'🎨 Listo ✔':'🎨 Marcar listo','#7c3aed',vin,function(){ if(prodVinil.has(k)) prodVinil.delete(k); else prodVinil.add(k); refrescar(); });
+    var d=document.createElement('span'); d.style.cssText='width:1px;height:24px;background:#d4d4d8;margin:0 6px;'; box.appendChild(d);
+    lab('COSTURA');
     if(e&&e.pag){
-      var s=document.createElement('span'); s.style.cssText='font-size:13px;font-weight:800;color:#555;border:2px solid #999;border-radius:20px;padding:6px 11px;';
-      s.textContent='💰 PAGADO · '+e.c+' · '+e.pag; box.appendChild(s);
+      var s=document.createElement('span'); s.style.cssText='font-size:13px;font-weight:800;color:#555;background:#e5e7eb;border-radius:9px;padding:7px 12px;';
+      s.textContent='💰 Pagado · '+e.c+' · '+e.pag; box.appendChild(s);
     } else if(e){
       var col=costuraColor(e.c);
-      btn('🧵 '+e.c+(e.env?' · '+e.env:''),col,true,function(){ if(e.est){ alert('Primero quita el estado de recibido/devuelto.'); return; } delete prodCostura[k]; refrescar(); });
+      btn('🧵 '+e.c+(e.env?' · '+e.env:'')+(e.est?'':'  ✕'),col,true,function(){ if(e.est){ alert('Primero quita el estado de recibido/devuelto.'); return; } delete prodCostura[k]; refrescar(); });
+      sep();
       btn('📥 Recibido OK','#059669',e.est==='ok',function(){ if(e.est==='ok'){ e.est=''; e.rec=''; } else { e.est='ok'; e.rec=costuraAhora(); } prodCostura[k]=e; refrescar(); });
       btn('🔧 Devuelta'+(e.dev?' ('+e.dev+')':''),'#dc2626',e.est==='rep',function(){ if(e.est==='rep'){ e.est=''; e.rec=''; } else { e.est='rep'; e.rec=costuraAhora(); e.dev=(e.dev||0)+1; } prodCostura[k]=e; refrescar(); });
+      if(e.rec){ var r=document.createElement('span'); r.textContent=(e.est==='rep'?'devuelta ':'recibida ')+e.rec; r.style.cssText='font-size:11px;color:#777;'; box.appendChild(r); }
     } else {
-      nombres.forEach(function(n){ var col=costuraColor(n);
-        btn('➜ '+n,col,false,function(){ var inf=prodInfoPieza(g,k); prodCostura[k]={c:n,env:costuraAhora(),t:inf.t,m:inf.m}; refrescar(); }); });
+      var t=document.createElement('span'); t.textContent='Enviar a:'; t.style.cssText='font-size:12px;color:#666;font-weight:700;'; box.appendChild(t);
+      nombres.forEach(function(n){ btn(n,costuraColor(n),false,function(){ var inf=prodInfoPieza(g,k); prodCostura[k]={c:n,env:costuraAhora(),t:inf.t,m:inf.m}; refrescar(); }); });
     }
-    row.appendChild(box);
+    if(row.tagName==='TR'){ var tr=document.createElement('tr'); tr.className='cstr-row'; var td=document.createElement('td'); td.colSpan=Math.max(row.cells.length,1); td.style.cssText='padding:0 0 4px;border:0;'; td.appendChild(box); tr.appendChild(td); row.parentNode.insertBefore(tr,row.nextSibling); }
+    else { var w=document.createElement('div'); w.className='cstr-row'; w.appendChild(box); row.parentNode.insertBefore(w,row.nextSibling); }
   });
 }
 async function costurasAgregar(){
@@ -9674,7 +9699,10 @@ function prodActualizarBarra(){
   var ks=prodKeys(g), hechas=ks.filter(function(k){return prodSel.has(k)}).length, av=window.prodAvance[prodCodAbierto]||{};
   var c={env:0,ok:0,rep:0,pag:0}; ks.forEach(function(k){ var e=costuraEnt(prodCostura[k]); if(!e) return; var s=costuraEstado(e); if(s==='pag')c.pag++; else if(s==='ok')c.ok++; else if(s==='rep')c.rep++; else c.env++; });
   var vin=ks.filter(function(k){return prodVinil.has(k)}).length; var resumen=[ks.length?'🎨 vinil '+vin+'/'+ks.length:'',c.env?'en costura '+c.env:'',c.ok?'✅ OK '+c.ok:'',c.rep?'🔧 devueltas '+c.rep:'',c.pag?'💰 pagadas '+c.pag:''].filter(Boolean).join(' · ');
-  var t=document.getElementById('prod-prog'); if(t)t.textContent='✔ '+hechas+'/'+ks.length+(av.completo?' · EJECUTADO':'')+(resumen?' · 🧵 '+resumen:'');
+  var t=document.getElementById('prod-prog'); if(t){
+    function chip(txt,bg){ return '<span style="display:inline-block;background:'+bg+';color:#fff;border-radius:20px;padding:3px 10px;margin:3px 6px 0 0;font-size:12px;font-weight:800">'+txt+'</span>'; }
+    t.innerHTML=chip('✔ '+hechas+'/'+ks.length+' hechas'+(av.completo?' · EJECUTADO':''),hechas>=ks.length&&ks.length?'#059669':'#52525b')+chip('🎨 vinil '+vin+'/'+ks.length,vin>=ks.length&&ks.length?'#7c3aed':'#52525b')+(c.env?chip('🧵 en costura '+c.env,'#2563eb'):'')+(c.ok?chip('📥 OK '+c.ok,'#059669'):'')+(c.rep?chip('🔧 devueltas '+c.rep,'#dc2626'):'')+(c.pag?chip('💰 pagadas '+c.pag,'#6b7280'):'');
+  }
   var sv=document.getElementById('prod-save'); if(sv)sv.style.display=prodDirty?'inline-block':'none';
 }
 function prodAplicarChecks(){
