@@ -9524,9 +9524,9 @@ function prodPintarCostura(host){
     var prev=document.getElementById('prod-bulk'); if(prev) prev.remove();
     if(!g||!host.parentNode) return; var ks=prodKeys(g); if(!ks.length) return;
     var bar=document.createElement('div'); bar.id='prod-bulk';
-    bar.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#fff;border:1px solid #d4d4d8;border-radius:12px;padding:10px 12px;margin:10px 14px 4px;box-shadow:0 2px 8px rgba(0,0,0,.06);font-family:Barlow,Arial,sans-serif;color:#111';
+    bar.style.cssText='display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#fff;border:1px solid #d4d4d8;border-radius:10px;padding:6px 10px;margin:8px 14px 4px;box-shadow:0 2px 8px rgba(0,0,0,.06);font-family:Barlow,Arial,sans-serif;color:#111';
     function lab(t){ var s=document.createElement('span'); s.textContent=t; s.style.cssText='font-size:11px;letter-spacing:.1em;font-weight:800;color:#888'; bar.appendChild(s); }
-    function b(txt,col,fn){ var x=document.createElement('button'); x.type='button'; x.textContent=txt; x.style.cssText='padding:8px 13px;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer;border:2px solid '+col+';background:#fff;color:'+col; x.onclick=function(ev){ ev.preventDefault(); fn(); }; bar.appendChild(x); }
+    function b(txt,col,fn){ var x=document.createElement('button'); x.type='button'; x.textContent=txt; x.style.cssText='padding:4px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid '+col+';background:#fff;color:'+col; x.onclick=function(ev){ ev.preventDefault(); fn(); }; bar.appendChild(x); }
     function ref(){ prodDirty=true; prodPintarCostura(host); prodActualizarBarra(); }
     lab('TODO EL PEDIDO');
     var todosVin=ks.every(function(k){return prodVinil.has(k)});
@@ -9542,17 +9542,17 @@ function prodPintarCostura(host){
     var e=costuraEnt(prodCostura[k]), vin=prodVinil.has(k), est=e?costuraEstado(e):'';
     var colEst={pag:'#9ca3af',ok:'#059669',rep:'#dc2626',taller:'#2563eb'}[est]||(vin?'#7c3aed':'transparent');
     var box=document.createElement('div'); box.className='cstr';
-    box.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 10px;margin:2px 0 8px;background:#f6f6f8;border-radius:10px;border-left:5px solid '+colEst+';';
-    function lab(t){ var s=document.createElement('span'); s.textContent=t; s.style.cssText='font-size:10px;letter-spacing:.12em;font-weight:800;color:#888;margin-right:2px;'; box.appendChild(s); }
+    box.style.cssText='display:flex;flex-wrap:wrap;gap:5px;align-items:center;padding:4px 8px;margin:0 0 6px;background:#f6f6f8;border-radius:8px;border-left:4px solid '+colEst+';';
+    function lab(t){ var s=document.createElement('span'); s.textContent=t; s.style.cssText='font-size:9px;letter-spacing:.1em;font-weight:800;color:#888;margin-right:1px;'; box.appendChild(s); }
     function btn(txt,col,on,fn,dis){ var b=document.createElement('button'); b.type='button'; b.textContent=txt;
-      b.style.cssText='padding:7px 13px;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer;line-height:1.1;border:2px solid '+col+';background:'+(on?col:'#fff')+';color:'+(on?'#fff':col)+';'+(dis?'opacity:.55;':'');
+      b.style.cssText='padding:3px 9px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;line-height:1.2;border:1.5px solid '+col+';background:'+(on?col:'#fff')+';color:'+(on?'#fff':col)+';'+(dis?'opacity:.55;':'');
       b.onclick=function(ev){ ev.preventDefault(); ev.stopPropagation(); fn(); }; box.appendChild(b); return b; }
-    function sep(){ var s=document.createElement('span'); s.textContent='›'; s.style.cssText='color:#bbb;font-size:18px;font-weight:700;'; box.appendChild(s); }
+    function sep(){ var s=document.createElement('span'); s.textContent='›'; s.style.cssText='color:#bbb;font-size:13px;font-weight:700;'; box.appendChild(s); }
     lab('VINIL'); btn(vin?'🎨 Listo ✔':'🎨 Marcar listo','#7c3aed',vin,function(){ if(prodVinil.has(k)) prodVinil.delete(k); else prodVinil.add(k); refrescar(); });
-    var d=document.createElement('span'); d.style.cssText='width:1px;height:24px;background:#d4d4d8;margin:0 6px;'; box.appendChild(d);
+    var d=document.createElement('span'); d.style.cssText='width:1px;height:16px;background:#d4d4d8;margin:0 4px;'; box.appendChild(d);
     lab('COSTURA');
     if(e&&e.pag){
-      var s=document.createElement('span'); s.style.cssText='font-size:13px;font-weight:800;color:#555;background:#e5e7eb;border-radius:9px;padding:7px 12px;';
+      var s=document.createElement('span'); s.style.cssText='font-size:11px;font-weight:700;color:#555;background:#e5e7eb;border-radius:7px;padding:3px 9px;';
       s.textContent='💰 Pagado · '+e.c+' · '+e.pag; box.appendChild(s);
     } else if(e){
       var col=costuraColor(e.c);
@@ -9560,9 +9560,9 @@ function prodPintarCostura(host){
       sep();
       btn('📥 Recibido OK','#059669',e.est==='ok',function(){ if(e.est==='ok'){ e.est=''; e.rec=''; } else { e.est='ok'; e.rec=costuraAhora(); } prodCostura[k]=e; refrescar(); });
       btn('🔧 Devuelta'+(e.dev?' ('+e.dev+')':''),'#dc2626',e.est==='rep',function(){ if(e.est==='rep'){ e.est=''; e.rec=''; } else { e.est='rep'; e.rec=costuraAhora(); e.dev=(e.dev||0)+1; } prodCostura[k]=e; refrescar(); });
-      if(e.rec){ var r=document.createElement('span'); r.textContent=(e.est==='rep'?'devuelta ':'recibida ')+e.rec; r.style.cssText='font-size:11px;color:#777;'; box.appendChild(r); }
+      if(e.rec){ var r=document.createElement('span'); r.textContent=(e.est==='rep'?'devuelta ':'recibida ')+e.rec; r.style.cssText='font-size:10px;color:#777;'; box.appendChild(r); }
     } else {
-      var t=document.createElement('span'); t.textContent='Enviar a:'; t.style.cssText='font-size:12px;color:#666;font-weight:700;'; box.appendChild(t);
+      var t=document.createElement('span'); t.textContent='Enviar a:'; t.style.cssText='font-size:10px;color:#666;font-weight:700;'; box.appendChild(t);
       nombres.forEach(function(n){ btn(n,costuraColor(n),false,function(){ var inf=prodInfoPieza(g,k); prodCostura[k]={c:n,env:costuraAhora(),t:inf.t,m:inf.m}; refrescar(); }); });
     }
     if(row.tagName==='TR'){ var tr=document.createElement('tr'); tr.className='cstr-row'; var td=document.createElement('td'); td.colSpan=Math.max(row.cells.length,1); td.style.cssText='padding:0 0 4px;border:0;'; td.appendChild(box); tr.appendChild(td); row.parentNode.insertBefore(tr,row.nextSibling); }
