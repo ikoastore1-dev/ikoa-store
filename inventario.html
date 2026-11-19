@@ -406,6 +406,21 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 </div>
 
 <!-- MODAL EDITAR COLA -->
+<div class="modal-overlay hidden" id="modal-ajuste-talla">
+  <div class="modal" style="max-width:480px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-icon">📏</div>
+    <div class="modal-title">Ajustar tallas</div>
+    <div class="modal-subtitle" id="aj-sub" style="color:var(--accent);font-weight:700;"></div>
+    <div style="font-size:12px;color:var(--muted);margin:6px 0 12px;line-height:1.5;">Para prendas con <b>ancho</b> y <b>largo</b> en tallas distintas (acuerdo con el cliente). Déjalo en "igual" si la prenda es normal. En reportes sale como <b>L/S</b> = Ancho L / Largo S.</div>
+    <div id="aj-lista"></div>
+    <div class="field-group" style="margin-top:12px;"><div class="field-label">Tu código</div><input class="field-input" id="aj-unlock" type="password" inputmode="numeric" autocomplete="off" style="width:100%;"></div>
+    <div id="aj-error" style="color:var(--danger);font-size:12px;min-height:16px;margin-top:6px;"></div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn-modal-cancel" onclick="document.getElementById('modal-ajuste-talla').classList.add('hidden')" style="flex:1;">Cancelar</button>
+      <button id="aj-guardar" onclick="ajusteGuardar()" style="flex:2;padding:12px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">💾 Guardar ajustes</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay hidden" id="modal-editar-cola">
   <div class="modal" style="max-width:480px;max-height:90vh;overflow-y:auto;">
     <div class="modal-icon">✏️</div>
@@ -5629,6 +5644,7 @@ async function cargarAprobacionesCashea(){
           <div style="font-size:10px;color:var(--muted);margin-top:8px;">💱 Tasa BCV: Bs ${tasaBCV.toFixed(2)}</div>
         </div>
         ${facturaChk(packs[0][0])}${uniChip(packs[0][0],v(9),v(7),'Cashea')}
+        ${ajusteBtn('cashea_'+base,'S',packs.map((pk,ix)=>({codigo:String(pk[0]||'').trim(),piezas:String(pk[17]||''),label:'Part '+(ix+1)})),'cargarAprobacionesCashea')}
         <div style="margin-top:8px;margin-bottom:12px;">
           <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
           <div style="display:flex;gap:6px;">
@@ -6800,6 +6816,7 @@ async function cargarCola(){
           </div>`;
         }
         html+=facturaChk(packs[0][0])+uniChip(packs[0][0],v(9),v(7),'Cola');
+        html+=ajusteBtn('cola_'+base,'C',packs.map((pk,ix)=>({codigo:String(pk[1]||'').trim(),piezas:String(pk[17]||''),label:'Part '+(ix+1)})),'cargarCola');
         html+=`<div style="margin-top:8px;">
           <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
           <div style="display:flex;gap:6px;">
@@ -6891,6 +6908,74 @@ function guardarUrgenteGrupo(tipo, codigosStr, inputId){
 }
 
 let pendingEditCola=null;
+
+
+/* ── AJUSTE DE TALLA (ancho ≠ largo) ──────────────────────────────
+   Se guarda dentro del texto de la pieza: "Dama L/S - Nombre"  (Ancho L / Largo S).
+   tipo 'S' = APROBACIONES (por CodigoS) · tipo 'C' = COLA.P / R.COLA.P / PRODUCCION (por CodigoC). */
+const AJ_TALLAS=['XS','S','M','L','XL','XXL','XXXL','2','4','6','8','10','12','14','16'];
+window._ajData={}; let _aj=null;
+function ajusteBtn(key,tipo,items,recarga){
+  window._ajData[key]={tipo,items,recarga};
+  return `<button type="button" onclick="event.preventDefault();event.stopPropagation();ajusteAbrir('${key}')" style="width:100%;margin-top:8px;padding:10px;background:var(--surface2);border:1.5px solid var(--warn);border-radius:10px;color:var(--warn);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📏 AJUSTAR TALLAS (ancho ≠ largo)</button>`;
+}
+function ajusteToks(str){
+  return String(str||'').split(' | ').map(x=>x.trim()).filter(Boolean).map(t=>{
+    if(/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):/.test(t)) return {t,cont:true};
+    const m=t.match(/^(\S+)(\s+)(\S+)(.*)$/);
+    if(!m) return {t,cont:true};   // sin talla reconocible: no se toca
+    const sl=m[3].match(/^([^\/]+)\/([^\/]+)$/);
+    return {t,cont:false,pre:m[1]+m[2],resto:m[4],base:sl?sl[1].toUpperCase():m[3].toUpperCase(),largo:sl?sl[2].toUpperCase():'',orig:m[3]};
+  });
+}
+function ajusteAbrir(key){
+  const d=window._ajData[key]; if(!d) return;
+  _aj={key,d,packs:d.items.map(it=>({it,toks:ajusteToks(it.piezas)}))};
+  document.getElementById('aj-sub').textContent=d.items.map(i=>i.codigo).join(' · ');
+  const opt=(sel,base)=>`<option value="">igual (${base})</option>`+AJ_TALLAS.filter(x=>x!==base).map(x=>`<option value="${x}"${x===sel?' selected':''}>${x}</option>`).join('');
+  let html='';
+  _aj.packs.forEach((pk,pi)=>{
+    html+=`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px;">
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:6px;">${pk.it.label||('Pack '+(pi+1))} · ${pk.it.codigo}</div>`;
+    pk.toks.forEach((k,ti)=>{
+      if(k.cont) return;
+      const x=/\sx\d+\s*$|\sx\d+\s/i.test(k.resto);
+      html+=`<div style="padding:6px 0;border-top:1px solid var(--border);">
+        <div style="font-size:13px;margin-bottom:4px;">${k.t.replace(/</g,'&lt;')}</div>
+        <div style="display:flex;gap:8px;align-items:center;font-size:12px;">
+          <span style="color:var(--muted);">Ancho</span><select class="field-input" id="aj-a-${pi}-${ti}" style="flex:1;">${opt('',k.base)}</select>
+          <span style="color:var(--muted);">Largo</span><select class="field-input" id="aj-l-${pi}-${ti}" style="flex:1;">${opt(k.largo,k.base)}</select>
+        </div>${x?'<div style="font-size:11px;color:var(--warn);margin-top:3px;">Esta línea trae varias unidades: el ajuste se aplica a todas.</div>':''}</div>`;
+    });
+    html+='</div>';
+  });
+  document.getElementById('aj-lista').innerHTML=html;
+  document.getElementById('aj-unlock').value=''; document.getElementById('aj-error').textContent='';
+  document.getElementById('modal-ajuste-talla').classList.remove('hidden');
+}
+async function ajusteGuardar(){
+  const err=document.getElementById('aj-error'), unlock=document.getElementById('aj-unlock').value.trim().toUpperCase();
+  if(!USUARIOS[unlock]){ err.textContent='❌ Código incorrecto'; return; }
+  const btn=document.getElementById('aj-guardar'); btn.disabled=true; btn.textContent='Guardando...';
+  try{
+    for(let pi=0;pi<_aj.packs.length;pi++){
+      const pk=_aj.packs[pi]; let cambio=false;
+      const out=pk.toks.map((k,ti)=>{
+        if(k.cont) return k.t;
+        const a=(document.getElementById('aj-a-'+pi+'-'+ti)||{}).value||k.base, l=(document.getElementById('aj-l-'+pi+'-'+ti)||{}).value||k.base;
+        const talla=(a===l)?a:(a+'/'+l);
+        if(talla.toUpperCase()!==String(k.orig).toUpperCase()) cambio=true;
+        return k.pre+talla+k.resto;
+      });
+      if(!cambio) continue;
+      const r=await scriptGETjson({action:'ajustarPiezas',tipo:_aj.d.tipo,codigo:pk.it.codigo,piezas:out.join(' | ')},30000);
+      if(!r||!r.ok) throw new Error((r&&r.error)||'El servidor no respondió (¿falta actualizar Code_Completo.gs?)');
+    }
+    document.getElementById('modal-ajuste-talla').classList.add('hidden');
+    const f=window[_aj.d.recarga]; if(typeof f==='function') f();
+  }catch(e){ err.textContent='✗ '+e.message; }
+  btn.disabled=false; btn.textContent='💾 Guardar ajustes';
+}
 
 function abrirEditarCola(data){
   pendingEditCola=data;
@@ -7274,7 +7359,7 @@ function codParsePiezasSuave(txt){
   String(txt||'').split(' | ').map(x=>x.trim()).filter(Boolean).forEach(seg=>{
     const mm=seg.match(/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):\s*(.*)$/);
     if(mm){ if(last)last[mm[1]]=mm[2]; return; }
-    const m=seg.match(/^(.+?)\s+(XS|S|M|L|XL|[2-9]XL|\d{1,2})(\s+CAPUCHA CON TAPABOCA|\s+CON CAPUCHA)?(\s+CON CUELLO ALTO)?(?:\s+-\s+(.*))?$/i);
+    const m=seg.match(/^(.+?)\s+(XS|S|M|L|XL|[2-9]XL|\d{1,2}(?![\d/])|[A-Z0-9]{1,3}\/[A-Z0-9]{1,3})(\s+CAPUCHA CON TAPABOCA|\s+CON CAPUCHA)?(\s+CON CUELLO ALTO)?(?:\s+-\s+(.*))?$/i);
     last = m ? {genero:m[1],talla:m[2].toUpperCase(),capucha:!!m[3],tapaboca:/TAPABOCA/i.test(m[3]||''),cuelloAlto:!!m[4],nombre:(m[5]||'').trim()}
              : (()=>{const m2=seg.match(/^(.+?)\s+-\s+(.*)$/); return m2?{genero:m2[1],talla:'',capucha:false,tapaboca:false,cuelloAlto:false,nombre:m2[2].trim()}:{genero:'',talla:'',capucha:false,tapaboca:false,cuelloAlto:false,nombre:seg};})();
     out.push(last);
@@ -7322,7 +7407,7 @@ function codParsePiezas(txt,etq){
   String(txt||'').split(' | ').map(x=>x.trim()).filter(Boolean).forEach(seg=>{
     const mm=seg.match(/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):\s*(.*)$/);
     if(mm){ if(!last)throw new Error(etq+': dato "'+seg+'" sin pieza'); last[mm[1]]=mm[2]; return; }
-    const m=seg.match(/^(.+?)\s+(XS|S|M|L|XL|[2-9]XL|\d{1,2})(\s+CAPUCHA CON TAPABOCA|\s+CON CAPUCHA)?(\s+CON CUELLO ALTO)?(?:\s+-\s+(.*))?$/i);
+    const m=seg.match(/^(.+?)\s+(XS|S|M|L|XL|[2-9]XL|\d{1,2}(?![\d/])|[A-Z0-9]{1,3}\/[A-Z0-9]{1,3})(\s+CAPUCHA CON TAPABOCA|\s+CON CAPUCHA)?(\s+CON CUELLO ALTO)?(?:\s+-\s+(.*))?$/i);
     if(!m)throw new Error(etq+': no se entiende la pieza "'+seg+'" (formato: Género Talla [CON CAPUCHA|CAPUCHA CON TAPABOCA] [CON CUELLO ALTO] - Nombre)');
     last={genero:m[1],talla:m[2].toUpperCase(),tapaboca:/TAPABOCA/i.test(m[3]||''),capucha:!!m[3],cuelloAlto:!!m[4],nombre:(m[5]||'').trim()};
     out.push(last);
@@ -7822,6 +7907,7 @@ async function cargarSolicitudes(filtro){
         };
         if(String(r[37]||'').trim()){ html+=`<div style="margin-top:8px;background:#2a1010;border:1.5px solid var(--danger);border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700;color:var(--danger);">⚠️ ${String(r[37]).replace(/</g,'&lt;')} · revisa el pago antes de aprobar</div>`; }
         html+=facturaChk(packs[0][0])+uniChip(packs[0][0],v(9),v(7),'Pendiente');
+        html+=ajusteBtn('pend_'+base,'S',packs.map((pk,ix)=>({codigo:String(pk[0]||'').trim(),piezas:String(pk[17]||''),label:'Part '+(ix+1)})),'cargarSolicitudes');
         html+=`<div style="margin-top:8px;">
           <div style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">⚡ Urgencia</div>
           <div style="display:flex;gap:6px;">
@@ -9545,7 +9631,7 @@ function tallerDetalleHTML(g,cod){
   }).join('');
   var ent=[]; if(g.correo)ent.push('✉ '+e(g.correo)); if(g.celular)ent.push('📱 '+e(g.celular));
   var retira=(g.retira&&g.retira!==g.nombre)?'<div><span style="color:var(--muted)">Retira:</span> <b>'+e(g.retira)+'</b>'+(g.retiraCi?' · CI '+e(g.retiraCi):'')+(g.retiraCel?' · '+e(g.retiraCel):'')+'</div>':'';
-  return packs+'<div style="font-size:12px;line-height:1.5;margin-top:6px;background:var(--surface2);border-radius:8px;padding:7px 10px">'+
+  return packs+ajusteBtn('t_'+cod,'C',g.packs.map(function(p,i){return {codigo:p.codigoC,piezas:p.piezas,label:'Pack '+(i+1)}}).filter(function(x){return x.codigo}),'cargarTaller')+'<div style="font-size:12px;line-height:1.5;margin-top:6px;background:var(--surface2);border-radius:8px;padding:7px 10px">'+
     '<div><span style="color:var(--muted)">Cliente:</span> <b>'+e(g.nombre)+'</b> · CI '+e(g.cedula||'—')+(ent.length?' · '+ent.join(' · '):'')+'</div>'+
     '<div><span style="color:var(--muted)">Envío:</span> <b>'+e((ag[0]||'—').trim())+'</b>'+(ag.length>1?' — '+e(ag.slice(1).join('—').trim()):'')+'</div>'+retira+
     '<div><span style="color:var(--muted)">Pedido:</span> '+e(g.fecha||'—')+' · <span style="color:var(--muted)">Avance:</span> <b style="color:'+(ks.length&&hechas>=ks.length?'var(--accent)':'var(--warn)')+'">'+hechas+'/'+ks.length+' piezas</b></div></div>';
@@ -10298,6 +10384,8 @@ function tallerParsearPiezas(piezasStr){
     // No reconocido: se conserva en crudo para no perder el dato
     piezas.push({genero:'', talla:'', capucha:false, nombre:tok, raw:true});
   });
+  // Talla ajustada: "L/S" = Ancho L / Largo S (acuerdo con el vendedor). Queda como talla propia: no se suma con las L normales.
+  piezas.forEach(pz=>{ const m=String(pz.talla||'').match(/^([^\/\s]+)\/([^\/\s]+)$/); if(m) pz.ajuste={ancho:m[1].toUpperCase(), largo:m[2].toUpperCase()}; });
   return piezas;
 }
 
@@ -10404,7 +10492,7 @@ async function tallerConstruirCortadorHTML(codigos){
         if(pz.raw){ sinFormato++; return; }
         const telaPz=pz.tela||'', largoPz=pz.largo||'';
         const key=(pz.genero||'—')+'||'+(pz.talla||'—')+(pz.capucha?'||CAP':'')+(pz.cuelloAlto?'||CUA':'')+(telaPz?'||'+telaPz:'')+(largoPz?'||'+largoPz:'');
-        if(!grupos[key]) grupos[key]={genero:pz.genero||'—',talla:pz.talla||'—',capucha:pz.capucha,cuelloAlto:pz.cuelloAlto,tela:telaPz,largo:largoPz,unds:0};
+        if(!grupos[key]) grupos[key]={genero:pz.genero||'—',talla:pz.talla||'—',capucha:pz.capucha,cuelloAlto:pz.cuelloAlto,tela:telaPz,largo:largoPz,ajuste:pz.ajuste,unds:0};
         grupos[key].unds++;
       });
       const add=(colorTxt,row,unds)=>{
@@ -10415,7 +10503,8 @@ async function tallerConstruirCortadorHTML(codigos){
       };
       Object.values(grupos).forEach(gr=>{
         const colorTxt=(gr.tela||p.tela||'—').split('-')[0].trim();
-        const obs=gr.largo?gr.largo.toUpperCase():(gr.capucha?'CON CAPUCHA':(gr.cuelloAlto?'CON CUELLO ALTO':'SIN CAPUCHA'));
+        const obsBase=gr.largo?gr.largo.toUpperCase():(gr.capucha?'CON CAPUCHA':(gr.cuelloAlto?'CON CUELLO ALTO':'SIN CAPUCHA'));
+        const obs=gr.ajuste?('⚠ AJUSTADA: ANCHO '+gr.ajuste.ancho+' / LARGO '+gr.ajuste.largo+' · '+obsBase):obsBase;
         add(colorTxt,{cod,junto:uniDeGrupo(g).cods,urg:!!g.urgente,desc,talla:(gr.talla||'—').toUpperCase(),genero:(gr.genero||'—').toUpperCase(),unds:gr.unds,obs},gr.unds);
       });
       if(sinFormato>0){
@@ -10599,7 +10688,7 @@ function tallerConstruirEstampadorHTML(codigos, rec){
         const telaPz=pz.tela||''; // solo se llena cuando el pack tiene colores mezclados (Opción B)
         const logoKey=(pz.logoPecho||'')+'|'+(pz.logoEspalda||'')+'|'+(pz.logoManga||'');
         const key=(pz.genero||'—')+'||'+(pz.talla||'—')+'||'+(pz.nombre||'')+(pz.capucha?'||CAP':'')+(pz.cuelloAlto?'||CUA':'')+(telaPz?'||'+telaPz:'')+'||'+logoKey;
-        if(!grupos[key]) grupos[key]={genero:pz.genero||'—', talla:pz.talla||'—', nombre:pz.nombre||'', capucha:pz.capucha, cuelloAlto:pz.cuelloAlto, tela:telaPz,
+        if(!grupos[key]) grupos[key]={genero:pz.genero||'—', talla:pz.talla||'—', ajuste:pz.ajuste, nombre:pz.nombre||'', capucha:pz.capucha, cuelloAlto:pz.cuelloAlto, tela:telaPz,
           logoPecho:pz.logoPecho||'', logoEspalda:pz.logoEspalda||'', logoManga:pz.logoManga||'', unds:0};
         grupos[key].unds++;
       });
@@ -10613,7 +10702,7 @@ function tallerConstruirEstampadorHTML(codigos, rec){
         if(gr.logoEspalda&&!vis.cub.e) logosPieza.push('ESPALDA: '+gr.logoEspalda.toUpperCase()+' (EN GRANDE)');
         if(gr.logoManga&&!vis.cub.m)   logosPieza.push('MANGA: '+gr.logoManga.toUpperCase());
         const logosTxt=(logosPieza.length?`<br><span style="font-weight:700;color:#a00;">${logosPieza.join(' · ')}</span>`:'')+vis.html;
-        return `${gr.tela?'<span style="color:#555;">COLOR: '+gr.tela.toUpperCase()+'</span><br>':''}${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()} (${gr.capucha?'CON CAPUCHA':(gr.cuelloAlto?'CON CUELLO ALTO':'SIN CAPUCHA')})${gr.nombre?' - <span style="font-weight:700;font-size:15px;">'+gr.nombre.toUpperCase()+'</span>':''} (${gr.unds} UNDS)${logosTxt}`;
+        return `${gr.tela?'<span style="color:#555;">COLOR: '+gr.tela.toUpperCase()+'</span><br>':''}${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()}${gr.ajuste?' <b style="color:#a00;">⚠ AJUSTADA (ANCHO '+gr.ajuste.ancho+' / LARGO '+gr.ajuste.largo+')</b>':''} (${gr.capucha?'CON CAPUCHA':(gr.cuelloAlto?'CON CUELLO ALTO':'SIN CAPUCHA')})${gr.nombre?' - <span style="font-weight:700;font-size:15px;">'+gr.nombre.toUpperCase()+'</span>':''} (${gr.unds} UNDS)${logosTxt}`;
       });
       const lineasTalla=lineasArr.join('<br><br>');
       const _hd=`
