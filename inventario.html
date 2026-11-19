@@ -9665,6 +9665,86 @@ async function codigosBuscar(){
     }).join('');
   }catch(e){ host.innerHTML='<span style="color:#c00">✗ '+esc(e.message)+'</span>'; }
 }
+
+/* ===== ARCHIVO DE CORTE (DXF de vinil) desde Producción: pedidos que faltan por vinil, con check; al generar se pregunta si se marcan como vinil OK ===== */
+var PRC={sel:{},lista:[]};
+function prodCorteLista(){
+  var out=[], gs=window.prodGrupos||{}, av=window.prodAvance||{};
+  Object.keys(gs).forEach(function(cod){ var g=gs[cod], ks=prodKeys(g), a=av[String(cod).toUpperCase()]||{}, vn=a.vinil||[];
+    if(a.completo||!ks.length) return; var faltan=ks.filter(function(k){return vn.indexOf(k)<0}).length; if(!faltan) return;
+    var cols=[]; g.packs.forEach(function(p){ var c=String(p.vinil||'').trim(); if(c&&cols.indexOf(c)<0) cols.push(c); });
+    out.push({cod:cod,nombre:g.nombre||'',urgente:g.urgente||'',faltan:faltan,total:ks.length,vinil:cols.join(' · ')}); });
+  out.sort(function(a,b){ return (parseInt(a.cod)||0)-(parseInt(b.cod)||0); });
+  return out;
+}
+function prodCorteAbrir(){
+  var o=document.getElementById('prc-panel'); if(o) o.remove();
+  PRC.lista=prodCorteLista(); PRC.sel={}; PRC.lista.forEach(function(x){ PRC.sel[x.cod]=true; });
+  o=document.createElement('div'); o.id='prc-panel'; o.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:14px;font-family:Barlow,Arial,sans-serif';
+  document.body.appendChild(o); prodCortePintar();
+}
+function prodCortePintar(msgHtml){
+  var o=document.getElementById('prc-panel'); if(!o) return; var esc=prodEsc, n=PRC.lista.filter(function(x){return PRC.sel[x.cod]}).length;
+  var bs='border:0;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:800;cursor:pointer;';
+  var filas=PRC.lista.map(function(x){ return '<label style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid #e5e5e5;cursor:pointer"><input type="checkbox" '+(PRC.sel[x.cod]?'checked':'')+' onchange="PRC.sel[\''+esc(x.cod)+'\']=this.checked;prodCortePintar()" style="width:24px;height:24px;accent-color:#7c3aed;flex-shrink:0">'+
+    '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800">COD '+esc(x.cod)+' · '+esc(x.nombre)+(x.urgente?' <span style="color:#b45309;font-size:12px">⚡ '+esc(x.urgente)+'</span>':'')+'</div><div style="font-size:12px;color:#666">Vinil: '+esc(x.vinil||'—')+'</div></div>'+
+    '<div style="font-size:12px;font-weight:800;color:#7c3aed;white-space:nowrap">faltan '+x.faltan+'/'+x.total+'</div></label>'; }).join('');
+  o.innerHTML='<div style="background:#fff;color:#111;border-radius:16px;width:100%;max-width:640px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden">'+
+    '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:#111;color:#fff"><div style="flex:1;font-size:18px;font-weight:800">✂ Archivo de corte · vinil</div><button onclick="document.getElementById(\'prc-panel\').remove()" style="'+bs+'background:#fff;color:#111;padding:8px 12px">✕</button></div>'+
+    '<div style="padding:10px 16px;font-size:13px;color:#555;border-bottom:1px solid #e5e5e5">Pedidos que faltan por vinil. Desmarca los que no quieras incluir.<div style="margin-top:6px;display:flex;gap:8px"><button onclick="PRC.lista.forEach(function(x){PRC.sel[x.cod]=true});prodCortePintar()" style="'+bs+'background:#eee;color:#111;padding:6px 10px;font-size:12px">Marcar todos</button><button onclick="PRC.sel={};prodCortePintar()" style="'+bs+'background:#eee;color:#111;padding:6px 10px;font-size:12px">Desmarcar todos</button></div></div>'+
+    '<div style="overflow:auto;padding:4px 16px;flex:1">'+(filas||'<div style="padding:24px;text-align:center;color:#777">No hay pedidos con vinil pendiente.</div>')+'</div>'+
+    '<div id="prc-res" style="padding:0 16px">'+(msgHtml||'')+'</div>'+
+    '<div style="padding:12px 16px;border-top:1px solid #e5e5e5"><button id="prc-gen" onclick="prodCorteGenerar()" '+(n?'':'disabled')+' style="'+bs+'width:100%;background:#7c3aed;color:#fff;font-size:16px;padding:14px;'+(n?'':'opacity:.4')+'">✂ Generar archivo de corte ('+n+' pedido'+(n===1?'':'s')+')</button></div></div>';
+}
+async function prodCortePrepararGrupos(cods){
+  var res=await Promise.all([scriptGETjson({action:'leerProduccion'},30000),scriptGETjson({action:'leerTallerFuente'},30000).catch(function(){return {ok:false}})]);
+  var rows=(res[0]&&res[0].rows)||[], fuente=res[1], mapa={}, nuevos={};
+  if(fuente&&fuente.ok){ [].concat(fuente.cola||[],fuente.rcola||[]).forEach(function(r){ var cc=String(r[1]||'').trim(); if(!cc) return;
+    mapa[cc]={modelo:String(r[11]||'').trim(),manga:String(r[12]||'').trim(),capucha:String(r[13]||'').trim(),pack:String(r[14]||'').trim(),tela:String(r[15]||'').trim(),vinil:String(r[16]||'').trim(),piezas:String(r[17]||'').trim()}; }); }
+  rows.forEach(function(r){ var v=function(i){return String(r[i]||'').trim()}, cod=v(2)||v(1)||v(0); if(cods.indexOf(cod)<0) return;
+    if(!nuevos[cod]) nuevos[cod]={cod:cod,nombre:v(4),correo:v(5),cedula:v(6),celular:v(7),agencia:v(15),retira:v(16),retiraCi:v(17),retiraCel:v(18),fecha:v(25)||v(3),urgente:v(27),packs:[]};
+    var real=mapa[v(1)];
+    nuevos[cod].packs.push({codigoC:v(1),modelo:(real&&real.modelo)||v(8),manga:(real&&real.manga)||v(9),capucha:(real&&real.capucha)||v(10),pack:(real&&real.pack)||v(11),tela:(real&&real.tela)||v(12),vinil:(real&&real.vinil)||v(13),piezas:(real&&real.piezas)||v(14),fuenteConfiable:!!real,codigoS:v(0),piezasProd:v(14)}); });
+  Object.keys(nuevos).forEach(function(c){ tallerGrupos[c]=nuevos[c]; });
+}
+async function prodCorteGenerar(){
+  var cods=PRC.lista.filter(function(x){return PRC.sel[x.cod]}).map(function(x){return x.cod}); if(!cods.length) return;
+  var btn=document.getElementById('prc-gen'), res=document.getElementById('prc-res'), esc=prodEsc; btn.disabled=true; var t0=btn.textContent;
+  try{
+    btn.textContent='⏳ Preparando pedidos...'; await prodCortePrepararGrupos(cods);
+    var cs=cods.filter(function(c){return tallerGrupos[c]}); if(!cs.length) throw new Error('no se encontraron los pedidos');
+    btn.textContent='⏳ Generando archivo de corte...';
+    var grupos=tallerAgruparNombresVinil(cs), nombres=[], stickers=0;
+    grupos.forEach(function(g){ g.nombres.forEach(function(x){nombres.push(x.n)}); g.stickers.forEach(function(x){stickers+=x.n}); });
+    if(!nombres.length&&!stickers) throw new Error('estos pedidos no tienen nombres ni stickers de vinil para cortar');
+    var formas=await tallerPrepararFormas(grupos);
+    var info=await tallerEnviarDXFVinil(grupos,nombres,'Corte_Vinil_'+Date.now(),formas);
+    if(!info||!info.ok) throw new Error((info&&info.error)||'no se pudo generar el archivo');
+    var partes=[]; if(nombres.length) partes.push(nombres.length+(nombres.length===1?' nombre':' nombres')); if(stickers) partes.push(stickers+(stickers===1?' sticker':' stickers')); partes.push(grupos.length+(grupos.length===1?' color':' colores'));
+    res.innerHTML='<a href="'+esc(info.drive_url)+'" target="_blank" style="display:block;text-align:center;padding:13px;background:#059669;color:#fff;border-radius:10px;font-weight:800;text-decoration:none;margin:8px 0">⬇ Descargar archivo de corte ('+partes.join(' · ')+')</a>';
+    btn.textContent=t0;
+    prodCorteConfirmarVinil(cs);
+  }catch(e){ res.innerHTML='<div style="color:#c00;font-size:13px;margin:8px 0">✗ '+esc(e.message)+'</div>'; btn.textContent=t0; btn.disabled=false; }
+}
+function prodCorteConfirmarVinil(cods){
+  var m=document.createElement('div'); m.id='prc-confirma'; m.style.cssText='position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:16px;font-family:Barlow,Arial,sans-serif';
+  m.innerHTML='<div style="background:#fff;color:#111;border-radius:14px;padding:22px;max-width:400px;width:100%"><div style="font-size:19px;font-weight:800;margin-bottom:8px">✅ Archivo generado</div><div style="font-size:14px;color:#444;line-height:1.5;margin-bottom:16px">¿Deseas marcar los <b>'+cods.length+' pedido'+(cods.length===1?'':'s')+'</b> del archivo como <b>🎨 vinil OK</b> (todas sus piezas)?</div>'+
+    '<div style="display:flex;gap:10px"><button id="prc-no" style="flex:1;padding:13px;border:1px solid #bbb;background:#fff;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">No, dejarlos así</button><button id="prc-si" style="flex:1;padding:13px;border:0;background:#7c3aed;color:#fff;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer">Sí, marcar vinil OK</button></div></div>';
+  document.body.appendChild(m);
+  m.querySelector('#prc-no').onclick=function(){ m.remove(); };
+  m.querySelector('#prc-si').onclick=async function(){
+    var usr=await prodPedirClave('Marcar vinil OK','Se marcará el vinil de todas las piezas de '+cods.length+' pedido(s).'); if(!usr) return;
+    var b=m.querySelector('#prc-si'); b.disabled=true; b.textContent='Guardando...'; var fallos=[];
+    for(var i=0;i<cods.length;i++){ var cod=cods[i], g=(window.prodGrupos||{})[cod]; if(!g){ fallos.push(cod); continue; }
+      var ks=prodKeys(g), a=window.prodAvance[String(cod).toUpperCase()]||{done:[],completo:false};
+      try{ var r=await scriptGETjson({action:'guardarProdAvance',cod:cod,done:JSON.stringify(a.done||[]),completo:a.completo?'SI':'',usuario:usr,vinil:JSON.stringify(ks)},20000);
+        if(!r||!r.ok) throw new Error('x'); var cur=window.prodAvance[String(cod).toUpperCase()]=Object.assign({done:[],completo:false},a,{vinil:ks}); }
+      catch(e){ fallos.push(cod); } }
+    m.remove(); var p=document.getElementById('prc-panel'); if(p) p.remove();
+    if(fallos.length) alert('⚠ No se pudo marcar: '+fallos.join(', ')+'. Intenta de nuevo.');
+    cargarProduccion(true);
+  };
+}
 window.prodAvance=window.prodAvance||{};
 function prodEsc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 /* claves de las piezas de un pedido: <codigoS>#<n° de pieza en el pack> */
@@ -10561,7 +10641,7 @@ async function cargarProduccion(usarCache){
       if(st[c].vin)cnt.vin++; if(st[c].env)cnt.env++; if(st[c].ok)cnt.ok++; if(st[c].pag)cnt.pag++; });
     const codigos=fl?todos.filter(c=>st[c][fl]):todos.filter(c=>ver||!esComp(c));
     const fb=(k,t,col)=>`<button onclick="window.prodFiltro='${fl===k?'':k}';cargarProduccion(true)" style="padding:7px 12px;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;border:1.5px solid ${col};background:${fl===k?col:'transparent'};color:${fl===k?'#fff':col};">${t}</button>`;
-    const filtrosHTML=`<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;"><span style="font-size:11px;letter-spacing:.1em;font-weight:800;color:var(--muted);">FILTRAR:</span>${fb('','Todos','#71717a')}${fb('vin','🎨 Falta vinil ('+cnt.vin+')','#7c3aed')}${fb('env','🧵 Falta enviar a costura ('+cnt.env+')','#2563eb')}${fb('ok','✅ Costura OK ('+cnt.ok+')','#059669')}${fb('pag','💰 Costura pagada ('+cnt.pag+')','#6b7280')}</div>`;
+    const filtrosHTML=`<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;"><span style="font-size:11px;letter-spacing:.1em;font-weight:800;color:var(--muted);">FILTRAR:</span>${fb('','Todos','#71717a')}${fb('vin','🎨 Falta vinil ('+cnt.vin+')','#7c3aed')}${fb('env','🧵 Falta enviar a costura ('+cnt.env+')','#2563eb')}${fb('ok','✅ Costura OK ('+cnt.ok+')','#059669')}${fb('pag','💰 Costura pagada ('+cnt.pag+')','#6b7280')}${fl==='vin'?`<button onclick="prodCorteAbrir()" style="padding:7px 14px;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;border:none;background:#111;color:#fff;margin-left:auto;">✂ Archivo de corte</button>`:''}</div>`;
     lista.innerHTML=filtrosHTML+`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;"><div style="font-size:12px;color:var(--muted);">${codigos.length} pedido(s) ${fl?'con este filtro (incluye ejecutados)':(ver?'(con ejecutados)':'por ejecutar')}</div>
       <label style="font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;cursor:pointer;"><input type="checkbox" ${ver?'checked':''} onchange="window.prodVerEjecutados=this.checked;cargarProduccion(true)"> Mostrar ejecutados (${ejec})</label></div>`;
     if(!codigos.length){ lista.innerHTML+=fl?'<div style="text-align:center;padding:24px;color:var(--muted);font-size:14px;">Ningún pedido cumple este filtro</div>':'<div style="text-align:center;padding:24px;color:var(--accent);font-size:14px;">✅ Todo ejecutado: no hay pedidos pendientes en Producción</div>'; }
