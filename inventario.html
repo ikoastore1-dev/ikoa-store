@@ -10984,6 +10984,13 @@ function tallerHtmlStickersEstampador(gr,rec){
   return {html:html,cub:cub};
 }
 
+function tallerEstiloNombreVinil(vinil){
+  /* estilo del nombre que se estampa en la prenda: escrito en el color del vinil.
+     Colores claros (blanco, amarillo neón…) no se ven sobre papel blanco: van sobre una etiqueta negra. */
+  let rgb=[0,0,0]; try{ const v=String(vinil||'').split(/\s*\+\s*/)[0].trim(); if(v&&window.CODPDF&&CODPDF.vinilHex){ const m=String(CODPDF.vinilHex(v)).match(/\d+/g); if(m&&m.length>=3) rgb=m.slice(0,3).map(Number); } }catch(e){}
+  const lum=(0.2126*rgb[0]+0.7152*rgb[1]+0.0722*rgb[2])/255, css='rgb('+rgb.join(',')+')';
+  return 'color:'+css+';'+(lum>0.5?'background:#000;padding:0 7px;':'');
+}
 function tallerConstruirEstampadorHTML(codigos, rec){
   const fecha=tallerFechaHoy();
   const secs=[];
@@ -11030,7 +11037,7 @@ function tallerConstruirEstampadorHTML(codigos, rec){
         if(gr.logoEspalda&&!vis.cub.e) logosPieza.push('ESPALDA: '+gr.logoEspalda.toUpperCase()+' (EN GRANDE)');
         if(gr.logoManga&&!vis.cub.m)   logosPieza.push('MANGA: '+gr.logoManga.toUpperCase());
         const logosTxt=(logosPieza.length?`<br><span style="font-weight:700;color:#a00;">${logosPieza.join(' · ')}</span>`:'')+vis.html;
-        return `${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()}${gr.ajuste?' <b style="color:#a00;">⚠ AJUSTADA (ANCHO '+gr.ajuste.ancho+' / LARGO '+gr.ajuste.largo+')</b>':''} (${gr.capucha?'CON CAPUCHA':(gr.cuelloAlto?'CON CUELLO ALTO':'SIN CAPUCHA')})${gr.nombre?' - <span style="font-weight:700;font-size:15px;">'+gr.nombre.toUpperCase()+'</span>':''} (${gr.unds} UNDS)${logosTxt}`;
+        return `${(gr.genero||'—').toUpperCase()} ${(gr.talla||'—').toUpperCase()}${gr.ajuste?' <b style="color:#a00;">⚠ AJUSTADA (ANCHO '+gr.ajuste.ancho+' / LARGO '+gr.ajuste.largo+')</b>':''} (${gr.capucha?'CON CAPUCHA':(gr.cuelloAlto?'CON CUELLO ALTO':'SIN CAPUCHA')})${gr.nombre?' - <span style="font-weight:700;font-size:15px;'+tallerEstiloNombreVinil(p.vinil)+'">'+gr.nombre.toUpperCase()+'</span>':''} (${gr.unds} UNDS)${logosTxt}`;
       });
       const lineasTalla=lineasArr.join('<br><br>');
       const telaDe=Object.values(grupos).map(gr=>gr.raw?'':String(gr.tela||'').trim().toUpperCase());
@@ -11058,27 +11065,22 @@ function tallerConstruirEstampadorHTML(codigos, rec){
         ${hayVisual?`<div style="font-size:10.5px;margin:0 0 4px 0;">${lineasTalla}</div>`:`<p style="font-size:10.5px;margin:0 0 4px 0;">${lineasTalla}</p>`}
       `);
     });
-    const headHtml=`
+    const cbx=t=>`<div style="margin:0 0 2px 0;white-space:nowrap;"><span style="display:inline-block;width:13px;height:13px;border:2px solid #1a1a1a;margin-right:5px;vertical-align:middle;"></span><span style="font-size:10.5px;font-weight:700;vertical-align:middle;">${t}</span></div>`;
+    const boxOpen=`<table width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #000;margin:0 0 12px 0;"><tr><td style="padding:0 0 6px 0;">`;
+    const headHtml=boxOpen+`
       <div>
-        <table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0 4px 0;">
-          <tr><td width="110" valign="middle">${COT_LOGO_HTML.replace('width:160px','width:100px')}</td>
-          <td valign="middle" align="center" style="text-align:center;">
-            <p style="font-size:18px;font-weight:700;margin:0 0 1px 0;">COD - ${cod}</p>
-            ${g.urgente?`<p style="font-size:13px;font-weight:700;color:#d10000;margin:0;">⚡ URGENTE : ${g.urgente.toUpperCase()}</p>`:''}
-          </td>
-          <td width="150" valign="middle" align="center">
-            <div style="display:inline-block;border:2px solid #1a1a1a;border-radius:4px;padding:3px 8px;">
-              <span style="display:inline-block;width:16px;height:16px;border:2px solid #1a1a1a;margin-right:6px;vertical-align:middle;"></span>
-              <span style="font-size:11px;font-weight:700;vertical-align:middle;">VINIL FABRICADO</span>
-            </div>
-          </td></tr>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 4px 0;">
+          <tr><td width="115" valign="middle" style="padding-left:8px;">${COT_LOGO_HTML.replace('width:160px','width:100px')}</td>
+          <td valign="middle" style="font-size:34px;font-weight:900;">COD - ${cod}${g.urgente?'<div style="font-size:12px;font-weight:700;color:#d10000;">⚡ URGENTE : '+g.urgente.toUpperCase()+'</div>':''}</td>
+          <td width="190" valign="middle" align="left" style="padding-right:8px;">${cbx('VINIL FABRICADO')}${cbx('CORTE REVISADO')}${cbx('ENVIADO A COSTURA')}</td></tr>
         </table>
-        <p style="font-size:11px;font-weight:700;margin:0 0 2px 0;">CLIENTE : ${(g.nombre||'').toUpperCase()} / C.I: ${g.cedula||''} / AGENCIA: ${(g.agencia||'').split('—')[0].trim().toUpperCase()}</p>
+        <div style="margin:0 0 4px 0;background:#000;color:#fff;padding:3px 10px;font-size:18px;font-weight:700;"><span style="font-size:12px;">CLIENTE :</span> ${(g.nombre||'').toUpperCase()}</div>
+        <p style="font-size:11px;font-weight:700;margin:0 0 2px 8px;">C.I: ${g.cedula||''} / AGENCIA: ${(g.agencia||'').split('—')[0].trim().toUpperCase()}</p>
         ${uniDeGrupo(g).cods.length?'<div style="border:3px solid #000;background:#dff0ff;padding:6px 10px;margin:4px 0 8px 0;font-size:15px;font-weight:900;text-align:center;">🔗 SALE JUNTO CON COD '+uniDeGrupo(g).cods.join(' + ')+' — ENVIAR TODO EN UN SOLO PAQUETE</div>':''}${tallerLlevaFactura(g)?'<div style="border:3px solid #000;background:#fff6c8;padding:6px 10px;margin:4px 0 8px 0;font-size:15px;font-weight:900;text-align:center;">🧾 ENVIAR FACTURA — ANEXAR LA FACTURA DEL CLIENTE A ESTE PEDIDO <span style="display:inline-block;width:16px;height:16px;border:2px solid #000;margin-left:10px;vertical-align:middle;"></span> <span style="font-size:11px;">FACTURA ANEXADA</span></div>':''}
         <div style="border-top:1px dashed #999;margin-bottom:3px;"></div>
       </div>`;
-    const contHtml=`<div style="border:2px solid #000;padding:4px 10px;margin:0 0 6px 0;"><span style="font-size:17px;font-weight:900;">COD - ${cod}</span> <span style="font-size:12px;font-weight:900;background:#000;color:#fff;padding:1px 8px;">CONTINUACIÓN</span> <span style="font-size:11px;font-weight:700;">· CLIENTE: ${(g.nombre||'').toUpperCase()}${g.urgente?' · ⚡ URGENTE: '+g.urgente.toUpperCase():''}${uniDeGrupo(g).cods.length?' · 🔗 SALE JUNTO CON COD '+uniDeGrupo(g).cods.join(' + '):''}${tallerLlevaFactura(g)?' · 🧾 ENVIAR FACTURA':''}</span></div>`;
-    secs.push({head:headHtml,cont:contHtml,rows:packsArr,nuevaHoja:false,gap:16});
+    const contHtml=boxOpen+`<div style="background:#000;color:#fff;padding:4px 10px;margin:0 0 6px 0;"><span style="font-size:17px;font-weight:900;">COD - ${cod}</span> <span style="font-size:12px;font-weight:900;background:#000;color:#fff;padding:1px 8px;">CONTINUACIÓN</span> <span style="font-size:11px;font-weight:700;">· CLIENTE: ${(g.nombre||'').toUpperCase()}${g.urgente?' · ⚡ URGENTE: '+g.urgente.toUpperCase():''}${uniDeGrupo(g).cods.length?' · 🔗 SALE JUNTO CON COD '+uniDeGrupo(g).cods.join(' + '):''}${tallerLlevaFactura(g)?' · 🧾 ENVIAR FACTURA':''}</span></div>`;
+    secs.push({head:headHtml,cont:contHtml,rows:packsArr,nuevaHoja:false,gap:12,wrap:r=>'<div style="margin:0 0 0 8px;">'+r+'</div></td></tr></table>'});
   });
   return `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>Reporte Estampador - ${fecha}</title>
