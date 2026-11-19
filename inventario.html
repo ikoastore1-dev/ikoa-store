@@ -9734,12 +9734,15 @@ function prodCorteConfirmarVinil(cods){
   m.querySelector('#prc-no').onclick=function(){ m.remove(); };
   m.querySelector('#prc-si').onclick=async function(){
     var usr=await prodPedirClave('Marcar vinil OK','Se marcará el vinil de todas las piezas de '+cods.length+' pedido(s).'); if(!usr) return;
-    var b=m.querySelector('#prc-si'); b.disabled=true; b.textContent='Guardando...'; var fallos=[];
-    for(var i=0;i<cods.length;i++){ var cod=cods[i], g=(window.prodGrupos||{})[cod]; if(!g){ fallos.push(cod); continue; }
+    var b=m.querySelector('#prc-si'); b.disabled=true; m.querySelector('#prc-no').disabled=true; var fallos=[], hechos=0;
+    async function uno(cod){ var g=(window.prodGrupos||{})[cod]; if(!g){ fallos.push(cod); return; }
       var ks=prodKeys(g), a=window.prodAvance[String(cod).toUpperCase()]||{done:[],completo:false};
-      try{ var r=await scriptGETjson({action:'guardarProdAvance',cod:cod,done:JSON.stringify(a.done||[]),completo:a.completo?'SI':'',usuario:usr,vinil:JSON.stringify(ks)},20000);
-        if(!r||!r.ok) throw new Error('x'); var cur=window.prodAvance[String(cod).toUpperCase()]=Object.assign({done:[],completo:false},a,{vinil:ks}); }
-      catch(e){ fallos.push(cod); } }
+      try{ var r=await scriptGETjson({action:'guardarProdAvance',cod:cod,done:JSON.stringify(a.done||[]),completo:a.completo?'SI':'',usuario:usr,vinil:JSON.stringify(ks)},25000);
+        if(!r||!r.ok) throw new Error('x'); window.prodAvance[String(cod).toUpperCase()]=Object.assign({done:[],completo:false},a,{vinil:ks}); }
+      catch(e){ fallos.push(cod); }
+      hechos++; b.textContent='Guardando '+hechos+'/'+cods.length+'...'; }
+    b.textContent='Guardando 0/'+cods.length+'...';
+    for(var i=0;i<cods.length;i+=4){ await Promise.all(cods.slice(i,i+4).map(uno)); }
     m.remove(); var p=document.getElementById('prc-panel'); if(p) p.remove();
     if(fallos.length) alert('⚠ No se pudo marcar: '+fallos.join(', ')+'. Intenta de nuevo.');
     cargarProduccion(true);
@@ -9759,7 +9762,7 @@ function prodPrefijos(packs){ var vistos={}; (packs||[]).forEach(function(p,k){ 
 function prodKeys(g){var o=[];prodPrefijos(g.packs);g.packs.forEach(function(p,k){prodKeysPack(p,k).forEach(function(x){o.push(x.key)})});return o;}
 function prodPedirClave(titulo,detalle){
   return new Promise(function(ok){
-    var m=document.createElement('div'); m.style.cssText='position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px';
+    var m=document.createElement('div'); m.style.cssText='position:fixed;inset:0;z-index:10100;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px';
     m.innerHTML='<div style="background:#fff;color:#111;border-radius:14px;padding:20px;max-width:380px;width:100%;font-family:Barlow,Arial,sans-serif">'+
       '<div style="font-size:18px;font-weight:800;margin-bottom:6px">'+prodEsc(titulo)+'</div><div style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.4">'+prodEsc(detalle||'')+'</div>'+
       '<input id="pc-in" type="password" inputmode="numeric" autocomplete="off" placeholder="Tu código personal" style="width:100%;box-sizing:border-box;padding:12px;font-size:18px;border:2px solid #111;border-radius:10px;text-align:center">'+
