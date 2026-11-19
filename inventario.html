@@ -10518,15 +10518,16 @@ async function resResponder(i){
   try{ var d=await scriptGETjson({action:'moderarResena',id:r[0],estado:r[6],respuesta:t}); if(!d||!d.ok)throw new Error((d&&d.error)||'error'); resCargar(); }
   catch(e){ alert('No se pudo guardar: '+e.message); }
 }
-async function cargarProduccion(){
+async function cargarProduccion(usarCache){
   const msg=document.getElementById('produccion-msg');
   const lista=document.getElementById('produccion-lista');
   msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
   msg.innerHTML='<span class="spinner">↻</span> Cargando producción...';
   try{
-    const data=await scriptGETjson({action:'leerProduccion'});
+    const _cache=(usarCache===true&&window._prodRowsCache)?window._prodRowsCache:null;
+    const data=_cache||await scriptGETjson({action:'leerProduccion'}); window._prodRowsCache=data;
     const rows=data.rows||[];
-    try{ const av=await scriptGETjson({action:'leerProdAvance'}); window.prodAvance=(av&&av.avance)||{}; }catch(e){ window.prodAvance=window.prodAvance||{}; }
+    if(!_cache){ try{ const av=await scriptGETjson({action:'leerProdAvance'}); window.prodAvance=(av&&av.avance)||{}; }catch(e){ window.prodAvance=window.prodAvance||{}; } }
     if(rows.length===0){
       msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
       msg.innerHTML='✅ No hay pedidos en producción';
@@ -10551,10 +10552,16 @@ async function cargarProduccion(){
     window.prodGrupos=grupos;
     const todos=Object.keys(grupos), esComp=c=>prodFabricado(c,grupos[c]);
     const ejec=todos.filter(esComp).length, ver=!!window.prodVerEjecutados;
-    const codigos=todos.filter(c=>ver||!esComp(c));
-    lista.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;"><div style="font-size:12px;color:var(--muted);">${codigos.length} pedido(s) ${ver?'(con ejecutados)':'por ejecutar'}</div>
-      <label style="font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;cursor:pointer;"><input type="checkbox" ${ver?'checked':''} onchange="window.prodVerEjecutados=this.checked;cargarProduccion()"> Mostrar ejecutados (${ejec})</label></div>`;
-    if(!codigos.length){ lista.innerHTML+='<div style="text-align:center;padding:24px;color:var(--accent);font-size:14px;">✅ Todo ejecutado: no hay pedidos pendientes en Producción</div>'; }
+    const fl=window.prodFiltro||'', st={}, cnt={vin:0,env:0,ok:0,pag:0};
+    todos.forEach(c=>{ const gg=grupos[c], ks=prodKeys(gg), av=window.prodAvance[String(c).toUpperCase()]||{}, cs=av.costura||{}, vn=av.vinil||[];
+      st[c]={ vin:!av.completo&&ks.some(k=>vn.indexOf(k)<0), env:ks.some(k=>!cs[k]), ok:ks.length>0&&ks.every(k=>{const e=costuraEnt(cs[k]); return !!e&&(e.est==='ok'||!!e.pag);}), pag:ks.length>0&&ks.every(k=>{const e=costuraEnt(cs[k]); return !!e&&!!e.pag;}) };
+      if(st[c].vin)cnt.vin++; if(st[c].env)cnt.env++; if(st[c].ok)cnt.ok++; if(st[c].pag)cnt.pag++; });
+    const codigos=fl?todos.filter(c=>st[c][fl]):todos.filter(c=>ver||!esComp(c));
+    const fb=(k,t,col)=>`<button onclick="window.prodFiltro='${fl===k?'':k}';cargarProduccion(true)" style="padding:7px 12px;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;border:1.5px solid ${col};background:${fl===k?col:'transparent'};color:${fl===k?'#fff':col};">${t}</button>`;
+    const filtrosHTML=`<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;"><span style="font-size:11px;letter-spacing:.1em;font-weight:800;color:var(--muted);">FILTRAR:</span>${fb('','Todos','#71717a')}${fb('vin','🎨 Falta vinil ('+cnt.vin+')','#7c3aed')}${fb('env','🧵 Falta enviar a costura ('+cnt.env+')','#2563eb')}${fb('ok','✅ Costura OK ('+cnt.ok+')','#059669')}${fb('pag','💰 Costura pagada ('+cnt.pag+')','#6b7280')}</div>`;
+    lista.innerHTML=filtrosHTML+`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;"><div style="font-size:12px;color:var(--muted);">${codigos.length} pedido(s) ${fl?'con este filtro (incluye ejecutados)':(ver?'(con ejecutados)':'por ejecutar')}</div>
+      <label style="font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;cursor:pointer;"><input type="checkbox" ${ver?'checked':''} onchange="window.prodVerEjecutados=this.checked;cargarProduccion(true)"> Mostrar ejecutados (${ejec})</label></div>`;
+    if(!codigos.length){ lista.innerHTML+=fl?'<div style="text-align:center;padding:24px;color:var(--muted);font-size:14px;">Ningún pedido cumple este filtro</div>':'<div style="text-align:center;padding:24px;color:var(--accent);font-size:14px;">✅ Todo ejecutado: no hay pedidos pendientes en Producción</div>'; }
     codigos.forEach(cod=>{
       const g=grupos[cod];
       const _ks=prodKeys(g), _av=window.prodAvance[String(cod).toUpperCase()]||{done:[]}, _hechas=_ks.filter(k=>(_av.done||[]).indexOf(k)>=0).length;
