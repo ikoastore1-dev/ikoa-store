@@ -1091,21 +1091,6 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <button onclick="refreshAprobaciones()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 14px;font-size:13px;cursor:pointer;">↻</button>
     </div>
 
-    <!-- GENERAR LINK -->
-    <div id="g-token-section-apro" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;">
-      <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">🔗 Generar Link de Pedido</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Link único que expira en <b style="color:var(--warn);">4 horas</b> · solo se usa <b style="color:var(--warn);">una vez</b>.</div>
-      <button onclick="generarLinkPedido()" id="btn-generar-link" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;">⚡ Generar Link</button>
-      <div id="link-result" style="display:none;margin-top:14px;">
-        <div style="background:var(--surface2);border:1px solid #1a4a2a;border-radius:10px;padding:12px 14px;">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Link generado — válido por 4 horas</div>
-          <div id="link-text" style="font-size:13px;color:var(--text);word-break:break-all;margin-bottom:10px;"></div>
-          <button onclick="copiarLink()" style="width:100%;padding:10px;background:var(--surface3);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">📋 Copiar Link</button>
-          <button onclick="enviarLinkWhatsApp()" style="width:100%;padding:10px;background:linear-gradient(135deg,#25d366,#128c7e);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;">💬 Enviar por WhatsApp</button>
-        </div>
-      </div>
-      <div id="link-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:10px;"></div>
-    </div>
     <!-- SUB-PESTAÑAS -->
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
       <button class="apro-sub-btn" data-sub="Cashea" onclick="switchAprobaciones('Cashea')" style="flex:1;padding:8px;border:2px solid var(--accent);border-radius:8px;background:var(--surface2);color:var(--accent);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🛒 Cashea</button>
@@ -1284,6 +1269,25 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
   </div>
 
   <!-- TAB RESPALDO VENTA -->
+  <!-- TAB LINK -->
+  <div id="tab-link" style="display:none">
+    <!-- GENERAR LINK -->
+    <div id="g-token-section-apro" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;">
+      <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">🔗 Generar Link de Pedido</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Link único que expira en <b style="color:var(--warn);">4 horas</b> · solo se usa <b style="color:var(--warn);">una vez</b>.</div>
+      <button onclick="generarLinkPedido()" id="btn-generar-link" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);border:none;border-radius:10px;color:#000;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;">⚡ Generar Link</button>
+      <div id="link-result" style="display:none;margin-top:14px;">
+        <div style="background:var(--surface2);border:1px solid #1a4a2a;border-radius:10px;padding:12px 14px;">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Link generado — válido por 4 horas</div>
+          <div id="link-text" style="font-size:13px;color:var(--text);word-break:break-all;margin-bottom:10px;"></div>
+          <button onclick="copiarLink()" style="width:100%;padding:10px;background:var(--surface3);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">📋 Copiar Link</button>
+          <button onclick="enviarLinkWhatsApp()" style="width:100%;padding:10px;background:linear-gradient(135deg,#25d366,#128c7e);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;">💬 Enviar por WhatsApp</button>
+        </div>
+      </div>
+      <div id="link-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-top:10px;"></div>
+    </div>
+  </div>
+
   <div id="tab-respaldo" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
       <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">💬 Respaldo Venta</div>
@@ -4363,9 +4367,9 @@ function confirmarVentasLock(){
 }
 
 /* Menú agrupado: Respaldo dentro de Aprobaciones; Productos Nuevos va dentro de Stock; Factura, Taller y Programación dentro de Gestión */
-const GRUPO_TAB={respaldo:'aprobaciones',etiquetas:'stock',factura:'gestion',taller:'gestion',programacion:'gestion'};
+const GRUPO_TAB={respaldo:'aprobaciones',link:'aprobaciones',etiquetas:'stock',factura:'gestion',taller:'gestion',programacion:'gestion'};
 const SUBNAV_GRUPOS={
-  aprobaciones:[['aprobaciones','✅ Aprobaciones'],['respaldo','💬 Respaldo']],
+  aprobaciones:[['aprobaciones','✅ Aprobaciones'],['respaldo','💬 Respaldo'],['link','🔗 Link']],
   stock:[['stock','📦 Stock'],['etiquetas','🆕 Productos Nuevos']],
   gestion:[['gestion','📋 Gestión'],['factura','🧾 Factura'],['taller','🏭 Taller'],['programacion','📅 Programación']]
 };
@@ -4382,7 +4386,7 @@ function montarSubnav(){
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',montarSubnav); else montarSubnav();
 function switchTab(tab){
-  ['tasa','precios','stock','etiquetas','aprobaciones','factura','respaldo','gestion','taller','programacion','ventas','gastos'].forEach(t=>{
+  ['tasa','precios','stock','etiquetas','aprobaciones','factura','respaldo','link','gestion','taller','programacion','ventas','gastos'].forEach(t=>{
     const el=document.getElementById('tab-'+t);
     if(el) el.style.display=t===tab?'block':'none';
   });
