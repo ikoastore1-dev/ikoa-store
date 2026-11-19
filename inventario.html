@@ -5502,8 +5502,21 @@ function cambioChk(codigoS,nombre,cedula){
     '<label for="'+id+'" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🔄 Producto por cambio (sin costo de cobro)</label>'+
     (on?'<span style="font-size:11px;color:var(--warn);">'+String(f.motivo||'').replace(/</g,'&lt;')+(f.original?' · orig. '+String(f.original).replace(/</g,'&lt;'):'')+'</span>':'<span style="font-size:11px;color:var(--muted);">(entra a Ventas con monto 0 y cuenta aparte en el KPI)</span>')+'</div>';
 }
+function cambioPedirClave(titulo){
+  return new Promise(function(res){
+    var o=document.createElement('div'); o.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:16px';
+    o.innerHTML='<div style="background:var(--surface,#14161c);border:1px solid var(--border,#333);border-radius:14px;padding:20px;max-width:340px;width:100%;color:var(--text,#fff)"><div style="font-weight:800;font-size:16px;margin-bottom:4px">🔐 '+titulo+'</div><div style="font-size:12px;color:var(--muted,#999);margin-bottom:12px">Solo el administrador puede marcar o quitar un producto por cambio.</div><input id="cmb-clave" type="password" inputmode="numeric" autocomplete="off" placeholder="Código del administrador" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid var(--border,#333);background:var(--surface2,#1c1f27);color:inherit;font-size:16px"><div id="cmb-err" style="color:#ff5c5c;font-size:12px;min-height:16px;margin-top:6px"></div><div style="display:flex;gap:8px;margin-top:8px"><button id="cmb-no" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--border,#333);background:transparent;color:inherit;cursor:pointer">Cancelar</button><button id="cmb-ok" style="flex:1;padding:11px;border-radius:10px;border:none;background:var(--accent,#00d9a0);color:#000;font-weight:800;cursor:pointer">Continuar</button></div></div>';
+    document.body.appendChild(o);
+    var inp=o.querySelector('#cmb-clave'); setTimeout(function(){inp.focus()},50);
+    function fin(v){ o.remove(); res(v); }
+    function ok(){ var c=inp.value.trim().toUpperCase(); if(typeof USUARIOS!=='undefined'&&USUARIOS[c]) fin(USUARIOS[c]); else { o.querySelector('#cmb-err').textContent='❌ Código incorrecto — acceso denegado'; inp.value=''; inp.focus(); } }
+    o.querySelector('#cmb-ok').onclick=ok; o.querySelector('#cmb-no').onclick=function(){fin(null)}; inp.onkeydown=function(e){ if(e.key==='Enter') ok(); };
+  });
+}
 async function cambioGuardar(base,el,nombre,cedula){
   var val=el.checked, motivo='', original='', ref='';
+  var quien=await cambioPedirClave(val?'Marcar producto por cambio':'Quitar producto por cambio');
+  if(!quien){ el.checked=!val; return; }
   if(val){
     motivo=prompt('Motivo del cambio (ej: talla incorrecta, defecto, error de diseño):','');
     if(motivo===null||!String(motivo).trim()){ el.checked=false; return; }
@@ -5511,7 +5524,7 @@ async function cambioGuardar(base,el,nombre,cedula){
     ref=prompt('Valor referencial de la prenda en $ (lo que costaría) — opcional:','')||'';
   }
   el.disabled=true;
-  try{ var d=await scriptGETjson({action:'guardarCambio',base:base,valor:val?'SI':'',motivo:motivo,original:original,valor_ref:ref,nombre:nombre,cedula:cedula,usuario:(typeof USUARIOS!=='undefined'&&typeof unlock!=='undefined'&&USUARIOS[unlock])||''},15000);
+  try{ var d=await scriptGETjson({action:'guardarCambio',base:base,valor:val?'SI':'',motivo:motivo,original:original,valor_ref:ref,nombre:nombre,cedula:cedula,usuario:quien},15000);
     if(!d||!d.ok)throw new Error((d&&d.error)||'no se guardó');
     if(val) window._cambioFlags[base]={motivo:motivo,original:original,valor:ref}; else delete window._cambioFlags[base];
     el.parentNode.style.borderColor=val?'var(--warn)':'var(--border)';
