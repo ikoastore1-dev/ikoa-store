@@ -336,17 +336,9 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div style="font-size:17px;font-weight:700;color:var(--text);"   id="val-BCV">—</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px;">Tasa BCV</div>
       </button>
-      <button class="tasa-btn" id="tbtn-Shoes"  onclick="seleccionarTasa('Shoes')">
-        <div style="font-size:17px;font-weight:700;color:#f7931a;"         id="val-Shoes">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px;">Tasa Shoes</div>
-      </button>
       <button class="tasa-btn" id="tbtn-IKOA"   onclick="seleccionarTasa('IKOA')">
         <div style="font-size:17px;font-weight:700;color:var(--accent2);"  id="val-IKOA">—</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px;">Tasa IKOA</div>
-      </button>
-      <button class="tasa-btn" id="tbtn-BeKate"  onclick="seleccionarTasa('BeKate')">
-        <div style="font-size:17px;font-weight:700;color:#cc44ff;"         id="val-BeKate">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px;">BeKate</div>
       </button>
     </div>
     <div id="tasa-preview" style="background:var(--surface2);border:1px solid #1a4a2a;border-radius:10px;padding:12px;font-size:13px;color:var(--muted);text-align:center;margin-bottom:14px;">Selecciona una tasa para ver el cálculo</div>
@@ -612,16 +604,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <div id="tasa-disp-BCV" style="font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;color:var(--text);">—</div>
         </div>
         <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Shoes</div>
-          <div id="tasa-disp-Shoes" style="font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;color:var(--warn);">—</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">IKOA</div>
           <div id="tasa-disp-IKOA" style="font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;color:#cc88ff;">—</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">BeKate</div>
-          <div id="tasa-disp-BeKate" style="font-family:'Barlow',sans-serif;font-size:28px;font-weight:700;color:#ff8844;">—</div>
         </div>
       </div>
     </div>
@@ -635,16 +619,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <input class="field-input" type="number" id="tasa-inp-BCV" placeholder="0.00" step="0.01">
         </div>
         <div class="field-group" style="margin-bottom:0;">
-          <div class="field-label">Shoes</div>
-          <input class="field-input" type="number" id="tasa-inp-Shoes" placeholder="0.00" step="0.01">
-        </div>
-        <div class="field-group" style="margin-bottom:0;">
           <div class="field-label">IKOA</div>
           <input class="field-input" type="number" id="tasa-inp-IKOA" placeholder="0.00" step="0.01">
-        </div>
-        <div class="field-group" style="margin-bottom:0;">
-          <div class="field-label">BeKate</div>
-          <input class="field-input" type="number" id="tasa-inp-BeKate" placeholder="0.00" step="0.01">
         </div>
       </div>
       <div class="field-group" style="margin-bottom:12px;">
@@ -673,12 +649,6 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div id="c-ikoa-val" style="text-align:center;font-weight:700;color:var(--text);">—</div>
         <div id="c-ikoa-ant" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;">—</div>
         <div id="c-ikoa-act" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;">—</div>
-
-        <!-- Shoes -->
-        <div style="color:#44aaff;font-size:11px;font-weight:700;">Shoes</div>
-        <div id="c-shoes-val" style="text-align:center;font-weight:700;color:var(--text);">—</div>
-        <div id="c-shoes-ant" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;">—</div>
-        <div id="c-shoes-act" style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;">—</div>
 
         <!-- BCV referencia -->
         <div style="color:var(--accent);font-size:11px;font-weight:700;">BCV</div>
@@ -3014,9 +2984,7 @@ function mostrarModalTasa(codigo,nombre,precio){
   pendingEtiqueta={codigo,nombre,precio};
   selectedTasaName=null;
   document.getElementById('val-BCV').textContent    =TASAS.BCV    ?TASAS.BCV.toFixed(2)    :'—';
-  document.getElementById('val-Shoes').textContent=TASAS.Shoes?TASAS.Shoes.toFixed(2):'—';
   document.getElementById('val-IKOA').textContent  =TASAS.IKOA  ?TASAS.IKOA.toFixed(2)  :'—';
-  document.getElementById('val-BeKate').textContent =TASAS.BeKate ?TASAS.BeKate.toFixed(2) :'—';
   document.getElementById('tasa-resumen').innerHTML=`Producto: <b style="color:var(--text)">${nombre}</b><br>Código: <span>${codigo}</span><br>Base Imponible: <span>$ ${parseFloat(precio).toFixed(2)}</span>`;
   document.querySelectorAll('.tasa-btn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('tasa-confirm-btn').disabled=true;
@@ -4891,8 +4859,10 @@ async function guardarTasas(){
   if(!USUARIOS[unlock]){ errEl.style.display='block'; errEl.textContent='❌ Código incorrecto'; document.getElementById('tasa-tab-unlock').value=''; return; }
   errEl.style.display='none';
 
-  const nuevas={BCV:document.getElementById('tasa-inp-BCV').value.trim(), Shoes:document.getElementById('tasa-inp-Shoes').value.trim(), IKOA:document.getElementById('tasa-inp-IKOA').value.trim(), BeKate:document.getElementById('tasa-inp-BeKate').value.trim()};
-  if(Object.values(nuevas).some(v=>!v||isNaN(v))){ errEl.style.display='block'; errEl.textContent='Ingresa todas las tasas'; return; }
+  // Solo BCV e IKOA se editan. Shoes y BeKate ya no se muestran; se reenvían tal cual estaban para no alterar la hoja TASA.
+  const nuevas={BCV:document.getElementById('tasa-inp-BCV').value.trim(), IKOA:document.getElementById('tasa-inp-IKOA').value.trim()};
+  nuevas.Shoes=(TASAS.Shoes==null?'':String(TASAS.Shoes)); nuevas.BeKate=(TASAS.BeKate==null?'':String(TASAS.BeKate));
+  if([nuevas.BCV,nuevas.IKOA].some(v=>!v||isNaN(v))){ errEl.style.display='block'; errEl.textContent='Ingresa todas las tasas'; return; }
 
   msgEl.style.display='block';
   msgEl.style.background='var(--surface2)';
@@ -10463,6 +10433,7 @@ async function tallerConstruirCortadorHTML(codigos){
     resumen+=`<div style="font-size:11px;margin:2px 0;"><b>${fn}:</b> ${colores.map(c=>(F.colores[c].urgUnds?'⚡':'')+c+' ('+F.colores[c].unds+')').join(' · ')}</div>`;
     for(const c of colores){
       const C=F.colores[c], rgb=(window.CODPDF&&CODPDF.colorTela)?CODPDF.colorTela(C.telaTxt||c):[154,154,154];
+      const rgbCss='rgb('+rgb.join(',')+')';   // color de la tela: banda en cada fila de pedido
       const mk=await tallerMockupColor(C.pk,C.telaTxt||c);
       C.rows.sort((a,b)=>(b.urg-a.urg)||((parseInt(a.cod)||0)-(parseInt(b.cod)||0)));
       let prev=null, z=0;
@@ -10471,12 +10442,12 @@ async function tallerConstruirCortadorHTML(codigos){
         const bg=r.urg?(z%2?'#ffd9d9':'#ffc9c9'):(z%2?'#fff':'#e9e9e9');
         const td=`padding:3px 8px;border-bottom:1px solid #888;${nw?'border-top:4px solid #000;':''}font-size:15px;font-weight:800;background:${bg};`;
         const big=`${td}font-size:26px;font-weight:900;text-align:center;width:80px;border-left:1px solid #000;border-right:1px solid #000;`;
-        return `<tr><td style="${td}font-size:18px;font-weight:900;">${r.cod}${r.urg?' <b style="color:#c00;font-size:10px;">URGENTE</b>':''}${r.junto&&r.junto.length?'<div style="font-size:10px;font-weight:900;color:#0050a0;">🔗 SALE JUNTO CON COD '+r.junto.join(' + ')+'</div>':''}<div style="font-size:9px;font-weight:400;color:#444;">${r.desc}</div></td><td style="${big}">${r.talla}</td><td style="${td}">${r.genero}</td><td style="${big}">${r.unds}</td><td style="${td}">${r.obsHtml||r.obs}</td></tr>`;
+        return `<tr><td style="${td}font-size:18px;font-weight:900;border-left:16px solid ${rgbCss};">${r.cod}${r.urg?' <b style="color:#c00;font-size:10px;">URGENTE</b>':''}${r.junto&&r.junto.length?'<div style="font-size:10px;font-weight:900;color:#0050a0;">🔗 SALE JUNTO CON COD '+r.junto.join(' + ')+'</div>':''}<div style="font-size:9px;font-weight:400;color:#444;">${r.desc}</div></td><td style="${big}">${r.talla}</td><td style="${td}">${r.genero}</td><td style="${big}">${r.unds}</td><td style="${td}">${r.obsHtml||r.obs}</td></tr>`;
       });
       const headColor=bannerTela+`<div style="margin:6px 0 0;">
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:3px;"><tr>
           <td style="width:50px;vertical-align:middle;">${mk?`<img src="${mk}" style="height:46px;">`:''}</td>
-          <td style="vertical-align:middle;"><span style="display:inline-block;width:18px;height:18px;border:2px solid #000;border-radius:4px;vertical-align:middle;background:rgb(${rgb.join(',')});"></span>
+          <td style="vertical-align:middle;"><span style="display:inline-block;width:18px;height:18px;border:2px solid #000;border-radius:4px;vertical-align:middle;background:${rgbCss};"></span>
             <span style="font-size:22px;font-weight:900;vertical-align:middle;margin-left:6px;">${c}</span>
             <span style="font-size:12px;color:#444;vertical-align:middle;"> · ${C.unds} unds · ${C.cods.size} pedido(s)${C.urgUnds?' · <b style="color:#b00;">⚡ '+C.urgUnds+' URGENTES (primero)</b>':''}</span></td></tr></table></div>`;
       bannerTela='';
@@ -10599,9 +10570,19 @@ function tallerConstruirEstampadorHTML(codigos, rec){
     const g=tallerGrupos[cod];
     if(!g) return;
     const packsArr=[];
+    // Pedidos acoplados dentro de un mismo COD: los packs con el MISMO encabezado (descripción + tela + vinil) se unen para que
+    // las piezas iguales se sumen en una sola línea ("3 UNDS") en vez de repetirse una vez por pedido.
+    const packsMez=[], idxMez={};
     g.packs.forEach(p=>{
+      const k=tallerDescripcionPack(p)+'||'+String(p.tela||'').trim().toUpperCase()+'||'+String(p.vinil||'').trim().toUpperCase();
+      const arr=tallerParsearPiezas(p.piezas);
+      if(idxMez[k]==null){ idxMez[k]=packsMez.length; packsMez.push({p:p,piezas:arr.slice()}); }
+      else packsMez[idxMez[k]].piezas.push.apply(packsMez[idxMez[k]].piezas,arr);
+    });
+    packsMez.forEach(pm=>{
+      const p=pm.p;
       const desc=tallerDescripcionPack(p);
-      const piezas=tallerParsearPiezas(p.piezas);
+      const piezas=pm.piezas;
       // Agrupar por Genero+Talla+Nombre+Tela+Logos para mostrar "GENERO TALLA - NOMBRE (N UNDS)" con sus propios logos
       const grupos={};
       piezas.forEach(pz=>{
