@@ -1177,6 +1177,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <div id="cola-enviados-search" style="display:none;margin-bottom:12px;">
         <input class="search-input" type="text" id="cola-enviados-input" placeholder="Buscar por nombre, cédula o código..." style="width:100%;" oninput="filtrarEnviados(this.value)">
       </div>
+      <div style="margin-bottom:10px;text-align:right;"><button onclick="completarEnvioCOD()" style="padding:6px 12px;background:var(--surface2);border:1px solid var(--warn);border-radius:8px;color:var(--warn);font-size:12px;font-weight:700;cursor:pointer;">🛠 Completar envío con COD existente</button></div>
       <div id="cola-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
       <div id="cola-list"></div>
     </div>
@@ -5502,10 +5503,10 @@ function cambioChk(codigoS,nombre,cedula){
     '<label for="'+id+'" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🔄 Producto por cambio (sin costo de cobro)</label>'+
     (on?'<span style="font-size:11px;color:var(--warn);">'+String(f.motivo||'').replace(/</g,'&lt;')+(f.original?' · orig. '+String(f.original).replace(/</g,'&lt;'):'')+'</span>':'<span style="font-size:11px;color:var(--muted);">(entra a Ventas con monto 0 y cuenta aparte en el KPI)</span>')+'</div>';
 }
-function cambioPedirClave(titulo){
+function cambioPedirClave(titulo,sub){
   return new Promise(function(res){
     var o=document.createElement('div'); o.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:16px';
-    o.innerHTML='<div style="background:var(--surface,#14161c);border:1px solid var(--border,#333);border-radius:14px;padding:20px;max-width:340px;width:100%;color:var(--text,#fff)"><div style="font-weight:800;font-size:16px;margin-bottom:4px">🔐 '+titulo+'</div><div style="font-size:12px;color:var(--muted,#999);margin-bottom:12px">Solo el administrador puede marcar o quitar un producto por cambio.</div><input id="cmb-clave" type="password" inputmode="numeric" autocomplete="off" placeholder="Código del administrador" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid var(--border,#333);background:var(--surface2,#1c1f27);color:inherit;font-size:16px"><div id="cmb-err" style="color:#ff5c5c;font-size:12px;min-height:16px;margin-top:6px"></div><div style="display:flex;gap:8px;margin-top:8px"><button id="cmb-no" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--border,#333);background:transparent;color:inherit;cursor:pointer">Cancelar</button><button id="cmb-ok" style="flex:1;padding:11px;border-radius:10px;border:none;background:var(--accent,#00d9a0);color:#000;font-weight:800;cursor:pointer">Continuar</button></div></div>';
+    o.innerHTML='<div style="background:var(--surface,#14161c);border:1px solid var(--border,#333);border-radius:14px;padding:20px;max-width:340px;width:100%;color:var(--text,#fff)"><div style="font-weight:800;font-size:16px;margin-bottom:4px">🔐 '+titulo+'</div><div style="font-size:12px;color:var(--muted,#999);margin-bottom:12px">'+(sub||'Solo el administrador puede marcar o quitar un producto por cambio.')+'</div><input id="cmb-clave" type="password" inputmode="numeric" autocomplete="off" placeholder="Código del administrador" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid var(--border,#333);background:var(--surface2,#1c1f27);color:inherit;font-size:16px"><div id="cmb-err" style="color:#ff5c5c;font-size:12px;min-height:16px;margin-top:6px"></div><div style="display:flex;gap:8px;margin-top:8px"><button id="cmb-no" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--border,#333);background:transparent;color:inherit;cursor:pointer">Cancelar</button><button id="cmb-ok" style="flex:1;padding:11px;border-radius:10px;border:none;background:var(--accent,#00d9a0);color:#000;font-weight:800;cursor:pointer">Continuar</button></div></div>';
     document.body.appendChild(o);
     var inp=o.querySelector('#cmb-clave'); setTimeout(function(){inp.focus()},50);
     function fin(v){ o.remove(); res(v); }
@@ -5530,6 +5531,41 @@ async function cambioGuardar(base,el,nombre,cedula){
     el.parentNode.style.borderColor=val?'var(--warn)':'var(--border)';
   }catch(e){ el.checked=!val; alert('✗ No se pudo guardar el cambio: '+e.message); }
   el.disabled=false;
+}
+
+
+/* ===== RECUPERAR ENVÍO: el COD ya se generó pero se cortó la comunicación antes de terminar los demás pasos ===== */
+async function completarEnvioCOD(){
+  var cod=String(prompt('Número de COD que ya se generó (ej: 5782):','')||'').trim(); if(!cod) return;
+  var quien=await cambioPedirClave('Completar envío del COD '+cod,'Termina los pasos que faltaron, sin generar otro COD.'); if(!quien) return;
+  var msg=document.getElementById('cola-msg'); msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)'; msg.textContent='⏳ Revisando qué pasos se hicieron del COD '+cod+'…';
+  try{
+    var d=await scriptGETjson({action:'leerEnvioCOD',cod:cod},30000);
+    if(!d||!d.ok) throw new Error((d&&d.error)||'no se pudo revisar');
+    if(!d.rows.length) throw new Error('No encontré el COD '+cod+' en el historial de Cola (R.COLA.P). Si no pasó por ahí, avísame.');
+    var rows=d.rows, r0=rows[0], v=function(r,i){return String(r[i]||'').trim()};
+    var faltaPed=!d.enPedidos, faltaProd=rows.filter(function(r){return d.enProduccion.indexOf(v(r,1))<0;}), faltaVenta=rows.filter(function(r){return d.enVenta.indexOf(v(r,1))<0;});
+    var resumen='COD '+cod+' · '+v(r0,7)+' · '+rows.length+' pack(s)\n\nLo que YA está: '+(d.enPedidos?'Pedidos ✔ ':'')+(d.enProduccion.length?'Producción ✔ ':'')+(d.enVenta.length?'Ventas ✔':'')+'\nLo que FALTA: '+(faltaPed?'Pedidos ':'')+(faltaProd.length?'Producción ':'')+(faltaVenta.length?'Ventas':'');
+    if(!faltaPed&&!faltaProd.length&&!faltaVenta.length){ msg.textContent='✅ El COD '+cod+' ya está completo (Pedidos, Producción y Ventas). No hay nada que corregir.'; msg.style.color='var(--accent)'; return; }
+    if(!confirm(resumen+'\n\n¿Completar lo que falta?')){ msg.style.display='none'; return; }
+    var fecha=v(r0,6)||getFechaHora();
+    if(faltaPed){
+      var desc=rows.map(function(r,i){var det=v(r,17); var enc='Pack '+(i+1)+': '+v(r,14)+' '+v(r,11)+' '+v(r,12)+(v(r,13)&&v(r,13)!=='Sin Capucha'?' '+v(r,13).toUpperCase():''); return det?enc+' :: '+det:enc;}).join('  ||  ');
+      await scriptGETjson({action:'addPedido',nombre:v(r0,7),cedula:v(r0,9),correo:v(r0,8),cod:cod,numero_guia:'',agencia:v(r0,18),status:'En Producción',celular:v(r0,10),fecha:fecha,descripcion:desc,nombre_envio:v(r0,19),cel_envio:v(r0,21),ci_envio:v(r0,20),direccion:'',usuario:quien,urgente:v(r0,31)});
+    }
+    var hechos=0;
+    for(var i=0;i<rows.length;i++){
+      var r=rows[i], codC=v(r,1), nec=v(r,29)==='si';
+      var enProd=d.enProduccion.indexOf(codC)>=0, enVen=d.enVenta.indexOf(codC)>=0;
+      if(enProd&&enVen) continue;
+      if(enProd&&!enVen){ msg.textContent='⚠️ '+codC+' está en Producción pero no en Ventas: lo registro en Ventas igual.'; }
+      await registrarEnProduccion({codigoP:v(r,2),codigoC:codC,cod:cod,fecha:fecha,nombre:v(r,7),correo:v(r,8),cedula:v(r,9),celular:v(r,10),modelo:v(r,11),manga:v(r,12),capucha:v(r,13),pack:v(r,14),tela:v(r,15),vinil:v(r,16),piezas:v(r,17),agencia:v(r,18),retira_nombre:v(r,19),retira_ci:v(r,20),retira_cel:v(r,21),banco:v(r,22),cod_pago:v(r,23),
+        moneda:i===0?v(r,22):'',monto:i===0?v(r,29):'',tasa:i===0?(v(r,36)||TASAS.BCV||''):'',referencia:v(r,23),usuario:quien,fecha_apro:fecha,fecha_produccion:fecha,usuario_produccion:v(r,25)||quien,urgente:v(r,31),cashea_flag:v(r,32)||'NO',cashea_pct_aplicado:v(r,33),monto_cashea_usd:v(r,23),fuente:'Cola',necesita_arte:nec?'si':'no',cod_arte:nec?cod:''});
+      hechos++;
+    }
+    msg.style.background='var(--surface2)'; msg.style.border='1px solid #1a4a2a'; msg.style.color='var(--accent)';
+    msg.innerHTML='✅ COD '+cod+' completado: '+(faltaPed?'Pedidos · ':'')+hechos+' pack(s) en Producción/Ventas. Quedó pendiente solo imprimir ticket y avisar acople si aplica.';
+  }catch(e){ msg.style.background='#2a1010'; msg.style.color='var(--danger)'; msg.textContent='✗ '+e.message; }
 }
 
 /* ===== ENVÍO CONJUNTO: pedidos del mismo cliente que salen juntos (se une en Pendiente / Cashea / Cola; viaja por Taller, reportes, ticket y guía) ===== */
