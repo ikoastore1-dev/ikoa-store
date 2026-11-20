@@ -17514,18 +17514,20 @@ function cambioPedirClave(titulo,sub){
   function refill(){ if(!sesionActiva()) return; claves().forEach(function(i){ if(i.dataset.auto) i.value=SESION.codigo; }); }
   // guarda: ¿el onclick llama (hasta 2 niveles) a una función que lee alguno de los campos de clave?
   function leeClave(nombre,ids,prof,vistos){
-    if(vistos[nombre]||prof>2) return false; vistos[nombre]=1; var f=window[nombre]; if(typeof f!=='function') return false;
+    if(vistos[nombre]||prof>1||NAV.test(nombre)) return false; vistos[nombre]=1; var f=window[nombre]; if(typeof f!=='function') return false;
     var src; try{ src=Function.prototype.toString.call(f); }catch(e){ return false; }
     for(var k=0;k<ids.length;k++){ if(src.indexOf("'"+ids[k]+"'")>=0||src.indexOf('"'+ids[k]+'"')>=0||src.indexOf('`'+ids[k]+'`')>=0) return true; }
     var re=/([A-Za-z_$][\w$]*)\s*\(/g, m; while((m=re.exec(src))){ if(typeof window[m[1]]==='function'&&leeClave(m[1],ids,prof+1,vistos)) return true; }
     return false;
   }
+  var NAV=/^(switch|show|ir[A-Z]|nav|abrir|cargar|toggle|filtrar|set[A-Z]|ver[A-Z]|cerrar|render|pintar|actualizar|refrescar|recargar|mostrar|ocultar|seleccionar|buscar)/i;
   function guardado(oc,ids){ var re=/([A-Za-z_$][\w$]*)\s*\(/g, m, v={}; while((m=re.exec(oc))){ if(leeClave(m[1],ids,0,v)) return true; } return false; }
   var bypass=false;
   document.addEventListener('click',function(e){
     if(bypass||!sesionActiva()) return;
     var b=e.target&&e.target.closest?e.target.closest('button,[onclick]'):null; if(!b||b.closest('#conf-auto')) return;
     var oc=b.getAttribute('onclick')||''; if(!oc) return;
+    if(b.classList.contains('tab')||b.closest('.tabs,.tab-bar,nav')||NAV.test(oc.trim())) return;   // pestañas y navegación: nunca piden confirmación
     var inl=claves().filter(function(i){ return i.dataset.auto&&!enModal(i); }); refill();
     if(!inl.length) return;                                   // los diálogos (modal) ya traen su propia pregunta y botón Confirmar
     if(!guardado(oc,inl.map(function(i){return i.id}))) return;
