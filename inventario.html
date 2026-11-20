@@ -2389,6 +2389,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
           <input type="checkbox" id="taller-check-todos" onchange="tallerSeleccionarTodos(this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
           Seleccionar todos
         </label>
+        <button id="taller-btn-urg" onclick="tallerToggleUrgentes()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--warn);border-radius:8px;color:var(--warn);font-size:13px;font-weight:800;cursor:pointer;">⚡ Urgentes <span id="taller-urg-n"></span></button>
         <button onclick="tallerAbrirEscaner()" style="padding:8px 14px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:800;cursor:pointer;">📷 Escanear pedido (QR)</button>
         <button onclick="cargarTaller()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;cursor:pointer;">🔄 Recargar</button>
       </div>
@@ -2459,6 +2460,7 @@ function sesAplicar(s){
   USUARIOS_RESPALDO[s.codigo]=s.nombre; if(s.rol!=='respaldo') USUARIOS[s.codigo]=s.nombre;
   const o=document.getElementById('ses-overlay'); if(o) o.style.display='none';
   aplicarAccesoVentas();
+  try{ if(window.claveAutoAplicar) claveAutoAplicar(); }catch(e){}
 }
 function puedeVentas(){ return !SESION||SESION.ventas!==false; }
 function aplicarAccesoVentas(){ var b=document.querySelector('.main-tab[data-tab="ventas"]'); if(b) b.style.display=puedeVentas()?'':'none'; }
@@ -3657,10 +3659,10 @@ async function cargarColaFacturacion(){
 
 async function confirmarProcesarFactura(codigos){
   if(!Array.isArray(codigos)) codigos=[codigos];
-  if(!confirm(`¿Confirmas que ya facturaste el pedido ${codigos[0].split('.')[0]} (${codigos.length} pack${codigos.length>1?'s':''})? Se moverá al historial.`)) return;
-  const numFactura=prompt('Número de Factura en Valery:');
+  if(!await uiConfirm(`¿Confirmas que ya facturaste el pedido ${codigos[0].split('.')[0]} (${codigos.length} pack${codigos.length>1?'s':''})? Se moverá al historial.`)) return;
+  const numFactura=await uiPrompt('Número de Factura en Valery:');
   if(!numFactura||!numFactura.trim()){ alert('Debes ingresar el número de factura para continuar.'); return; }
-  const auth=prompt('Código de usuario para confirmar:');
+  const auth=await uiPrompt('Código de usuario para confirmar:');
   if(!auth) return;
   const authUp=auth.trim().toUpperCase();
   const usuarioNombre=USUARIOS[authUp]||USUARIOS_RESPALDO[auth.trim()];
@@ -3962,7 +3964,7 @@ function actualizarUICuentaActiva(cuenta){
 
 async function cambiarCuentaActiva(cuenta){
   const nombres={empresa:'Empresa Banesco', personal:'Personal', blanca:'Blanca Celis'};
-  if(!confirm(`¿Seguro que deseas cambiar la cuenta activa a "${nombres[cuenta]}"? Esto afecta lo que ven TODOS los clientes ahora mismo en TODAS las apps.`)) return;
+  if(!await uiConfirm(`¿Seguro que deseas cambiar la cuenta activa a "${nombres[cuenta]}"? Esto afecta lo que ven TODOS los clientes ahora mismo en TODAS las apps.`)) return;
   try{
     const data=await scriptGETjson({action:'setCuentaActiva', cuenta});
     if(data.ok){ actualizarUICuentaActiva(cuenta); alert('✅ Cuenta activa cambiada correctamente.'); }
@@ -4271,7 +4273,7 @@ function renderCarritos(){
 // Carga el pedido de un carrito que llegó al pago como solicitud PENDIENTE (igual que si el cliente lo hubiera enviado)
 async function carCargarPendiente(id){
   var r=_carritos.find(function(x){return x['ID']===id}); if(!r)return;
-  if(!confirm('¿Cargar a pendiente el pedido de '+(r['Nombre']||'este cliente')+'?\n\nSe creará la solicitud con los datos que dejó en la app. Si el cliente luego envía el pedido por su cuenta, quedaría duplicado.'))return;
+  if(!await uiConfirm('¿Cargar a pendiente el pedido de '+(r['Nombre']||'este cliente')+'?\n\nSe creará la solicitud con los datos que dejó en la app. Si el cliente luego envía el pedido por su cuenta, quedaría duplicado.'))return;
   var btn=event&&event.target; if(btn){btn.disabled=true;btn.textContent='⏳ Cargando...';}
   try{
     var d=await scriptGETjson({action:'leerCarritoDetalle',id:id});
@@ -5507,7 +5509,7 @@ function cambioChk(codigoS,nombre,cedula){
     '<label for="'+id+'" style="font-size:13px;color:var(--text);cursor:pointer;font-weight:600;">🔄 Producto por cambio (sin costo de cobro)</label>'+
     (on?'<span style="font-size:11px;color:var(--warn);">'+String(f.motivo||'').replace(/</g,'&lt;')+(f.original?' · orig. '+String(f.original).replace(/</g,'&lt;'):'')+'</span>':'<span style="font-size:11px;color:var(--muted);">(entra a Ventas con monto 0 y cuenta aparte en el KPI)</span>')+'</div>';
 }
-function cambioPedirClave(titulo,sub){
+function cambioPedirClaveOriginal(titulo,sub){
   return new Promise(function(res){
     var o=document.createElement('div'); o.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:16px';
     o.innerHTML='<div style="background:var(--surface,#14161c);border:1px solid var(--border,#333);border-radius:14px;padding:20px;max-width:340px;width:100%;color:var(--text,#fff)"><div style="font-weight:800;font-size:16px;margin-bottom:4px">🔐 '+titulo+'</div><div style="font-size:12px;color:var(--muted,#999);margin-bottom:12px">'+(sub||'Solo el administrador puede marcar o quitar un producto por cambio.')+'</div><input id="cmb-clave" type="password" inputmode="numeric" autocomplete="off" placeholder="Código del administrador" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid var(--border,#333);background:var(--surface2,#1c1f27);color:inherit;font-size:16px"><div id="cmb-err" style="color:#ff5c5c;font-size:12px;min-height:16px;margin-top:6px"></div><div style="display:flex;gap:8px;margin-top:8px"><button id="cmb-no" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--border,#333);background:transparent;color:inherit;cursor:pointer">Cancelar</button><button id="cmb-ok" style="flex:1;padding:11px;border-radius:10px;border:none;background:var(--accent,#00d9a0);color:#000;font-weight:800;cursor:pointer">Continuar</button></div></div>';
@@ -5523,10 +5525,10 @@ async function cambioGuardar(base,el,nombre,cedula){
   var quien=await cambioPedirClave(val?'Marcar producto por cambio':'Quitar producto por cambio');
   if(!quien){ el.checked=!val; return; }
   if(val){
-    motivo=prompt('Motivo del cambio (ej: talla incorrecta, defecto, error de diseño):','');
+    motivo=await uiPrompt('Motivo del cambio (ej: talla incorrecta, defecto, error de diseño):','');
     if(motivo===null||!String(motivo).trim()){ el.checked=false; return; }
-    original=prompt('Pedido original que se cambia (ej: S-480) — opcional:','')||'';
-    ref=prompt('Valor referencial de la prenda en $ (lo que costaría) — opcional:','')||'';
+    original=await uiPrompt('Pedido original que se cambia (ej: S-480) — opcional:','')||'';
+    ref=await uiPrompt('Valor referencial de la prenda en $ (lo que costaría) — opcional:','')||'';
   }
   el.disabled=true;
   try{ var d=await scriptGETjson({action:'guardarCambio',base:base,valor:val?'SI':'',motivo:motivo,original:original,valor_ref:ref,nombre:nombre,cedula:cedula,usuario:quien},15000);
@@ -5540,7 +5542,7 @@ async function cambioGuardar(base,el,nombre,cedula){
 
 /* ===== RECUPERAR ENVÍO: el COD ya se generó pero se cortó la comunicación antes de terminar los demás pasos ===== */
 async function completarEnvioCOD(){
-  var cod=String(prompt('Número de COD que ya se generó (ej: 5782):','')||'').trim(); if(!cod) return;
+  var cod=String(await uiPrompt('Número de COD que ya se generó (ej: 5782):','')||'').trim(); if(!cod) return;
   var quien=await cambioPedirClave('Completar envío del COD '+cod,'Termina los pasos que faltaron, sin generar otro COD.'); if(!quien) return;
   var msg=document.getElementById('cola-msg'); msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)'; msg.textContent='⏳ Revisando qué pasos se hicieron del COD '+cod+'…';
   try{
@@ -5553,9 +5555,9 @@ async function completarEnvioCOD(){
     // monto real del pago (de las aprobaciones) y revisión del monto ya guardado en Ventas
     var pago0=(d.pagos||{})[v(r0,0)]||null, ventaMala=(d.ventaRows||[]).filter(function(x){return x.codigoC===v(r0,1)&&(isNaN(parseFloat(x.monto))||x.monto==='');})[0];
     if(!faltaPed&&!faltaProd.length&&!faltaVenta.length&&!ventaMala){ msg.textContent='✅ El COD '+cod+' ya está completo (Pedidos, Producción y Ventas). No hay nada que corregir.'; msg.style.color='var(--accent)'; return; }
-    if(!pago0&&(faltaVenta.length||ventaMala)){ var mm=prompt('No encontré el pago de '+v(r0,0)+'. Escribe el monto pagado (solo número):',''); if(mm===null||isNaN(parseFloat(mm))) throw new Error('Cancelado: sin monto no se registra en Ventas.'); var mo=prompt('Moneda: escribe Bs o Divisa','Divisa'); pago0={moneda:(String(mo||'').toLowerCase().indexOf('bs')===0?'Bs':'Divisa'),monto:mm,ref:'',tasa:''}; }
+    if(!pago0&&(faltaVenta.length||ventaMala)){ var mm=await uiPrompt('No encontré el pago de '+v(r0,0)+'. Escribe el monto pagado (solo número):',''); if(mm===null||isNaN(parseFloat(mm))) throw new Error('Cancelado: sin monto no se registra en Ventas.'); var mo=await uiPrompt('Moneda: escribe Bs o Divisa','Divisa'); pago0={moneda:(String(mo||'').toLowerCase().indexOf('bs')===0?'Bs':'Divisa'),monto:mm,ref:'',tasa:''}; }
     if(pago0) resumen+='\n\nPago encontrado: '+(pago0.moneda==='Bs'?'Bs ':'$')+pago0.monto+(ventaMala?'\n⚠️ En Ventas está mal el monto ("'+ventaMala.monto+'"): lo corrijo.':'');
-    if(!confirm(resumen+'\n\n¿Completar lo que falta?')){ msg.style.display='none'; return; }
+    if(!await uiConfirm(resumen+'\n\n¿Completar lo que falta?')){ msg.style.display='none'; return; }
     if(ventaMala&&pago0&&!faltaVenta.length){ var cr=await scriptGETjson({action:'corregirVentaMonto',cod:cod,codigoC:ventaMala.codigoC,moneda:pago0.moneda,monto:pago0.monto,tasa:pago0.tasa||ventaMala.tasa||TASAS.BCV||''}); if(!cr||!cr.ok) throw new Error((cr&&cr.error)||'no se corrigió Ventas'); }
     var fecha=v(r0,6)||getFechaHora();
     if(faltaPed){
@@ -5671,7 +5673,7 @@ async function uniGuardar(base){
   }catch(e){ msg.innerHTML='<span style="color:var(--danger)">✗ '+prodEsc(e.message)+'</span>'; }
 }
 async function uniQuitar(base){
-  if(!confirm('¿Quitar '+base+' del envío conjunto?'))return;
+  if(!await uiConfirm('¿Quitar '+base+' del envío conjunto?'))return;
   try{ var d=await scriptGETjson({action:'guardarUnion',bases:base,grupo:'',usuario:''},15000); if(!d||!d.ok)throw new Error((d&&d.error)||'no se guardó'); delete window._uniones[base]; window._uniUbicT=0;
     var resto=Object.keys(window._uniones).filter(function(b){return window._uniones[b]}); // si queda solo 1 pedido en el grupo, el grupo se disuelve
     var cnt={}; resto.forEach(function(b){cnt[window._uniones[b]]=(cnt[window._uniones[b]]||0)+1}); var solos=resto.filter(function(b){return cnt[window._uniones[b]]<2});
@@ -5807,8 +5809,8 @@ async function cargarAprobacionesCashea(){
 let _casheaModalKey=null;
 async function abrirModalReprobarCashea(key){
   const data=window[`_casheaData_${key}`]||{};
-  if(!confirm(`¿Reprobar la solicitud Cashea de ${data.nombre||''}?\n\nEl pedido pasará a Reprobadas.`)) return;
-  const auth=prompt('Ingresa tu código de usuario:');
+  if(!await uiConfirm(`¿Reprobar la solicitud Cashea de ${data.nombre||''}?\n\nEl pedido pasará a Reprobadas.`)) return;
+  const auth=await uiPrompt('Ingresa tu código de usuario:');
   if(!auth) return;
   const authUp=auth.trim().toUpperCase();
   if(!USUARIOS[authUp]){ alert('❌ Código incorrecto'); return; }
@@ -7337,7 +7339,7 @@ function colaLoteTodos(v){ [].forEach.call(document.querySelectorAll('.lote-chk'
 function colaLoteContar(){ var n=document.querySelectorAll('.lote-chk:checked').length, t=document.querySelectorAll('.lote-chk').length, g=document.getElementById('lote-go'), sb=document.getElementById('lote-sub');
   if(g){ g.textContent='🚀 PROCESAR '+(n===t?'TODOS ':'')+'('+n+')'; g.disabled=n===0; g.style.opacity=n===0?.5:1; }
   if(sb&&!(window._lote&&window._lote.corriendo))sb.textContent=n+' de '+t+' pedido(s) se enviarán a producción, uno tras otro, y al final se imprimen sus tickets juntos.'; }
-function colaCerrarLote(){ var o=document.getElementById('modal-lote'); if(window._lote&&window._lote.corriendo&&!confirm('Hay un proceso en marcha. ¿Cerrar la ventana? (el proceso continúa)'))return; if(o)o.remove(); cargarCola(); }
+async function colaCerrarLote(){ var o=document.getElementById('modal-lote'); if(window._lote&&window._lote.corriendo&&!await uiConfirm('Hay un proceso en marcha. ¿Cerrar la ventana? (el proceso continúa)'))return; if(o)o.remove(); cargarCola(); }
 async function colaProcesarLote(){
   var Lt=window._lote; if(!Lt||Lt.corriendo)return; var unlock=(document.getElementById('lote-unlock').value||'').trim().toUpperCase(), er=document.getElementById('lote-error');
   if(!USUARIOS[unlock]){ er.textContent='❌ Código incorrecto — acceso denegado'; document.getElementById('lote-unlock').value=''; return; }
@@ -8207,8 +8209,8 @@ function abrirEditarApro(data){
 }
 
 async function eliminarParteApro(codigoParte){
-  if(!confirm('¿Eliminar esta parte del pedido? ('+codigoParte+')\n\nEsta acción no se puede deshacer.')) return;
-  const unlock=(prompt('Ingresa tu código personal para confirmar la eliminación:')||'').trim().toUpperCase();
+  if(!await uiConfirm('¿Eliminar esta parte del pedido? ('+codigoParte+')\n\nEsta acción no se puede deshacer.')) return;
+  const unlock=(await uiPrompt('Ingresa tu código personal para confirmar la eliminación:')||'').trim().toUpperCase();
   if(!unlock) return;
   if(!USUARIOS[unlock]){ alert('❌ Código incorrecto'); return; }
   try{
@@ -8924,8 +8926,8 @@ function toggleHistorialDetalle(i){
   const el=document.getElementById('hist-det-'+i);
   if(el) el.style.display=el.style.display==='none'?'block':'none';
 }
-function clearHistorial(){
-  if(confirm('¿Limpiar el historial local?')){historial=[];localStorage.setItem('ikoa_hist_v3','[]');renderHistorial();}
+async function clearHistorial(){
+  if(await uiConfirm('¿Limpiar el historial local?')){historial=[];localStorage.setItem('ikoa_hist_v3','[]');renderHistorial();}
 }
 
 // ── ENVÍO POR SELECCIÓN ───────────────────────────────────────
@@ -9570,7 +9572,7 @@ function prodPintarCostura(host){
   });
 }
 async function costurasAgregar(){
-  var a=prompt('Nombre de la nueva costurera:'); if(a===null) return; a=a.trim(); if(!a) return;
+  var a=await uiPrompt('Nombre de la nueva costurera:'); if(a===null) return; a=a.trim(); if(!a) return;
   var lista=(window.COSTURERAS||[]).slice();
   if(lista.some(function(x){return x.toLowerCase()===a.toLowerCase()})){ alert('Ya existe una costurera con ese nombre.'); return; }
   if(lista.length>=8){ alert('Máximo 8 costureras.'); return; }
@@ -9578,7 +9580,7 @@ async function costurasAgregar(){
   try{ var r=await scriptGETjson({action:'guardarCosturas',nombres:JSON.stringify(lista)},15000); if(!r||!r.ok) throw new Error((r&&r.error)||'no se guardó'); window.COSTURERAS=r.nombres; if(document.getElementById('cstr-panel')) costurasPintarPanel(); var hp=document.getElementById('prod-packs'); if(hp&&document.getElementById('prod-overlay')){ prodPintarCostura(hp); prodActualizarBarra(); } }catch(e){ alert('✗ '+e.message); }
 }
 async function prodEditarCosturas(){
-  var a=prompt('Nombres de las costureras, separados por coma (máx. 8):',(window.COSTURERAS||[]).join(', ')); if(a===null) return;
+  var a=await uiPrompt('Nombres de las costureras, separados por coma (máx. 8):',(window.COSTURERAS||[]).join(', ')); if(a===null) return;
   var n=a.split(',').map(function(x){return x.trim()}).filter(Boolean); if(!n.length){alert('Escribe al menos un nombre');return;}
   try{ var r=await scriptGETjson({action:'guardarCosturas',nombres:JSON.stringify(n)},15000); if(!r||!r.ok) throw new Error((r&&r.error)||'no se guardó'); window.COSTURERAS=r.nombres; prodPintarCostura(document.getElementById('prod-packs')); if(document.getElementById('prod-packs')) prodActualizarBarra(); if(document.getElementById('cstr-panel')) costurasPintarPanel(); }catch(e){ alert('✗ '+e.message); }
 }
@@ -9704,15 +9706,15 @@ function prodCorteAbrir(){
 function prodCortePintar(msgHtml){
   var o=document.getElementById('prc-panel'); if(!o) return; var esc=prodEsc, n=PRC.lista.filter(function(x){return PRC.sel[x.cod]}).length;
   var bs='border:0;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:800;cursor:pointer;';
-  var filas=PRC.lista.map(function(x){ return '<label style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid #e5e5e5;cursor:pointer"><input type="checkbox" '+(PRC.sel[x.cod]?'checked':'')+' onchange="PRC.sel[\''+esc(x.cod)+'\']=this.checked;prodCortePintar()" style="width:24px;height:24px;accent-color:#7c3aed;flex-shrink:0">'+
-    '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800">COD '+esc(x.cod)+' · '+esc(x.nombre)+(x.urgente?' <span style="color:#b45309;font-size:12px">⚡ '+esc(x.urgente)+'</span>':'')+'</div><div style="font-size:12px;color:#666">Vinil: '+esc(x.vinil||'—')+'</div></div>'+
-    '<div style="font-size:12px;font-weight:800;color:#7c3aed;white-space:nowrap">faltan '+x.faltan+'/'+x.total+'</div></label>'; }).join('');
-  o.innerHTML='<div style="background:#fff;color:#111;border-radius:16px;width:100%;max-width:640px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden">'+
-    '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:#111;color:#fff"><div style="flex:1;font-size:18px;font-weight:800">✂ Archivo de corte · vinil</div><button onclick="document.getElementById(\'prc-panel\').remove()" style="'+bs+'background:#fff;color:#111;padding:8px 12px">✕</button></div>'+
-    '<div style="padding:10px 16px;font-size:13px;color:#555;border-bottom:1px solid #e5e5e5">Pedidos que faltan por vinil. Desmarca los que no quieras incluir.<div style="margin-top:6px;display:flex;gap:8px"><button onclick="PRC.lista.forEach(function(x){PRC.sel[x.cod]=true});prodCortePintar()" style="'+bs+'background:#eee;color:#111;padding:6px 10px;font-size:12px">Marcar todos</button><button onclick="PRC.sel={};prodCortePintar()" style="'+bs+'background:#eee;color:#111;padding:6px 10px;font-size:12px">Desmarcar todos</button></div></div>'+
-    '<div style="overflow:auto;padding:4px 16px;flex:1">'+(filas||'<div style="padding:24px;text-align:center;color:#777">No hay pedidos con vinil pendiente.</div>')+'</div>'+
+  var filas=PRC.lista.map(function(x){ return '<label style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--border);cursor:pointer"><input type="checkbox" '+(PRC.sel[x.cod]?'checked':'')+' onchange="PRC.sel[\''+esc(x.cod)+'\']=this.checked;prodCortePintar()" style="width:24px;height:24px;accent-color:var(--accent);flex-shrink:0">'+
+    '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800">COD '+esc(x.cod)+' · '+esc(x.nombre)+(x.urgente?' <span style="color:#f59e0b;font-size:12px">⚡ '+esc(x.urgente)+'</span>':'')+'</div><div style="font-size:12px;color:var(--muted)">Vinil: '+esc(x.vinil||'—')+'</div></div>'+
+    '<div style="font-size:12px;font-weight:800;color:var(--accent);white-space:nowrap">faltan '+x.faltan+'/'+x.total+'</div></label>'; }).join('');
+  o.innerHTML='<div style="background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:20px;width:100%;max-width:640px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden">'+
+    '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--surface2);color:var(--text);border-bottom:1px solid var(--border)"><div style="flex:1;font-size:18px;font-weight:800">✂ Archivo de corte · vinil</div><button onclick="document.getElementById(\'prc-panel\').remove()" style="'+bs+'background:var(--surface3,#2a2a2a);color:var(--text);padding:8px 12px">✕</button></div>'+
+    '<div style="padding:10px 16px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--border)">Pedidos que faltan por vinil. Desmarca los que no quieras incluir.<div style="margin-top:6px;display:flex;gap:8px"><button onclick="PRC.lista.forEach(function(x){PRC.sel[x.cod]=true});prodCortePintar()" style="'+bs+'background:var(--surface2);border:1px solid var(--border)!important;color:var(--text);padding:6px 10px;font-size:12px">Marcar todos</button><button onclick="PRC.sel={};prodCortePintar()" style="'+bs+'background:var(--surface2);border:1px solid var(--border)!important;color:var(--text);padding:6px 10px;font-size:12px">Desmarcar todos</button></div></div>'+
+    '<div style="overflow:auto;padding:4px 16px;flex:1">'+(filas||'<div style="padding:24px;text-align:center;color:var(--muted)">No hay pedidos con vinil pendiente.</div>')+'</div>'+
     '<div id="prc-res" style="padding:0 16px">'+(msgHtml||'')+'</div>'+
-    '<div style="padding:12px 16px;border-top:1px solid #e5e5e5"><button id="prc-gen" onclick="prodCorteGenerar()" '+(n?'':'disabled')+' style="'+bs+'width:100%;background:#7c3aed;color:#fff;font-size:16px;padding:14px;'+(n?'':'opacity:.4')+'">✂ Generar archivo de corte ('+n+' pedido'+(n===1?'':'s')+')</button></div></div>';
+    '<div style="padding:12px 16px;border-top:1px solid var(--border)"><button id="prc-gen" onclick="prodCorteGenerar()" '+(n?'':'disabled')+' style="'+bs+'width:100%;background:linear-gradient(135deg,var(--accent) 0%,#00b890 100%);color:#000;font-size:16px;padding:14px;'+(n?'':'opacity:.4')+'">✂ Generar archivo de corte ('+n+' pedido'+(n===1?'':'s')+')</button></div></div>';
 }
 async function prodCortePrepararGrupos(cods){
   var res=await Promise.all([scriptGETjson({action:'leerProduccion'},30000),scriptGETjson({action:'leerTallerFuente'},30000).catch(function(){return {ok:false}})]);
@@ -9745,9 +9747,9 @@ async function prodCorteGenerar(){
   }catch(e){ res.innerHTML='<div style="color:#c00;font-size:13px;margin:8px 0">✗ '+esc(e.message)+'</div>'; btn.textContent=t0; btn.disabled=false; }
 }
 function prodCorteConfirmarVinil(cods){
-  var m=document.createElement('div'); m.id='prc-confirma'; m.style.cssText='position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:16px;font-family:Barlow,Arial,sans-serif';
-  m.innerHTML='<div style="background:#fff;color:#111;border-radius:14px;padding:22px;max-width:400px;width:100%"><div style="font-size:19px;font-weight:800;margin-bottom:8px">✅ Archivo generado</div><div style="font-size:14px;color:#444;line-height:1.5;margin-bottom:16px">¿Deseas marcar los <b>'+cods.length+' pedido'+(cods.length===1?'':'s')+'</b> del archivo como <b>🎨 vinil OK</b> (todas sus piezas)?</div>'+
-    '<div style="display:flex;gap:10px"><button id="prc-no" style="flex:1;padding:13px;border:1px solid #bbb;background:#fff;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">No, dejarlos así</button><button id="prc-si" style="flex:1;padding:13px;border:0;background:#7c3aed;color:#fff;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer">Sí, marcar vinil OK</button></div></div>';
+  var m=document.createElement('div'); m.id='prc-confirma'; m.className='modal-overlay'; m.style.zIndex=10002;
+  m.innerHTML='<div class="modal"><div class="modal-icon">✅</div><div class="modal-title">Archivo generado</div><div class="modal-subtitle">¿Deseas marcar los <b>'+cods.length+' pedido'+(cods.length===1?'':'s')+'</b> del archivo como <b>🎨 vinil OK</b> (todas sus piezas)?</div>'+
+    '<div class="modal-btns"><button class="modal-cancel" id="prc-no">No, dejarlos así</button><button class="modal-confirm" id="prc-si">Sí, marcar vinil OK</button></div></div>';
   document.body.appendChild(m);
   m.querySelector('#prc-no').onclick=function(){ m.remove(); };
   m.querySelector('#prc-si').onclick=async function(){
@@ -9778,7 +9780,7 @@ function prodFabricado(cod,g){var av=(window.prodAvance||{})[String(cod).toUpper
 /* Si dos packs del mismo pedido comparten el código S, el 2º usa 'S~1' para que sus piezas no se confundan con las del 1º (el 1º conserva su clave de siempre) */
 function prodPrefijos(packs){ var vistos={}; (packs||[]).forEach(function(p,k){ var b=p.codigoS||('P'+k), n=vistos[b]||0; vistos[b]=n+1; p._kp=n?b+'~'+n:b; }); }
 function prodKeys(g){var o=[];prodPrefijos(g.packs);g.packs.forEach(function(p,k){prodKeysPack(p,k).forEach(function(x){o.push(x.key)})});return o;}
-function prodPedirClave(titulo,detalle){
+function prodPedirClaveOriginal(titulo,detalle){
   return new Promise(function(ok){
     var m=document.createElement('div'); m.style.cssText='position:fixed;inset:0;z-index:10100;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px';
     m.innerHTML='<div style="background:#fff;color:#111;border-radius:14px;padding:20px;max-width:380px;width:100%;font-family:Barlow,Arial,sans-serif">'+
@@ -9792,8 +9794,8 @@ function prodPedirClave(titulo,detalle){
     m.querySelector('#pc-si').onclick=go; m.querySelector('#pc-no').onclick=function(){fin(null)}; inp.onkeydown=function(e){if(e.key==='Enter')go()};
   });
 }
-function prodCerrarTablet(forzar){
-  if(prodDirty&&!forzar&&!confirm('Hay piezas marcadas sin guardar. ¿Cerrar sin guardar?'))return;
+async function prodCerrarTablet(forzar){
+  if(prodDirty&&!forzar&&!await uiConfirm('Hay piezas marcadas sin guardar. ¿Cerrar sin guardar?'))return;
   var o=document.getElementById('prod-overlay');if(o)o.remove();document.body.style.overflow='';prodDirty=false;prodCodAbierto=null;
   if(typeof cargarProduccion==='function'&&document.getElementById('produccion-lista'))cargarProduccion();
 }
@@ -10061,8 +10063,8 @@ async function enviosAceptar(id,cod){
   cod=String(cod||'').trim().toUpperCase(); var it=window._envios.items[id], card=document.getElementById(id), res=card&&card.querySelector('.env-res');
   if(!it||!res)return; if(!cod){res.innerHTML='<span style="color:var(--danger)">Escribe o elige un COD</span>';return;}
   var ok=window._envios.cands&&window._envios.cands.some(function(g){return g.cod.toUpperCase()===cod});
-  if(!ok&&!confirm('El COD '+cod+' no está entre los pedidos en producción. ¿Guardar la guía igual?'))return;
-  var clave=prompt('Código de autorización para cargar la guía de '+cod+':'); if(clave===null)return;
+  if(!ok&&!await uiConfirm('El COD '+cod+' no está entre los pedidos en producción. ¿Guardar la guía igual?'))return;
+  var clave=await uiPrompt('Código de autorización para cargar la guía de '+cod+':'); if(clave===null)return;
   clave=String(clave).trim().toUpperCase(); if(!USUARIOS[clave]){res.innerHTML='<span style="color:var(--danger)">❌ Código incorrecto</span>';return;}
   res.innerHTML='<span class="spinner">↻</span> Subiendo '+prodEsc(cod)+'.JPG...';
   try{
@@ -10570,13 +10572,13 @@ async function limGuardar(){
     document.getElementById('lim-tope').value=''; limMsg('✅ Límite guardado: '+color+' · '+tope+' unidades',true); limCargar();
   }catch(e){limMsg('⚠️ '+e.message,false);}
 }
-function limEditar(i){
-  var l=LIM_DATA[i], v=prompt('Nuevo tope para '+l.color+' (vendidas hasta ahora: '+l.vendidas+')',l.tope);
+async function limEditar(i){
+  var l=LIM_DATA[i], v=await uiPrompt('Nuevo tope para '+l.color+' (vendidas hasta ahora: '+l.vendidas+')',l.tope);
   if(v===null)return; v=parseInt(v,10); if(!(v>0)){alert('Escribe un número mayor a 0');return;}
   scriptGETjson({action:'guardarLimite',hoja:l.hoja,tipo:l.tipo,color:l.color,tope:v}).then(function(){limCargar();});
 }
-function limQuitar(i){
-  var l=LIM_DATA[i]; if(!confirm('¿Quitar el límite de '+l.color+'? El color volverá a estar disponible.'))return;
+async function limQuitar(i){
+  var l=LIM_DATA[i]; if(!await uiConfirm('¿Quitar el límite de '+l.color+'? El color volverá a estar disponible.'))return;
   scriptGETjson({action:'eliminarLimite',hoja:l.hoja,tipo:l.tipo,color:l.color}).then(function(){limCargar();});
 }
 
@@ -10618,7 +10620,7 @@ async function resMod(i,estado){
 }
 async function resResponder(i){
   var r=RES_DATA[i]; if(!r)return;
-  var t=prompt('Respuesta pública de IKOA para '+r[3]+' (déjala vacía para quitarla):',r[9]||''); if(t===null)return;
+  var t=await uiPrompt('Respuesta pública de IKOA para '+r[3]+' (déjala vacía para quitarla):',r[9]||''); if(t===null)return;
   try{ var d=await scriptGETjson({action:'moderarResena',id:r[0],estado:r[6],respuesta:t}); if(!d||!d.ok)throw new Error((d&&d.error)||'error'); resCargar(); }
   catch(e){ alert('No se pudo guardar: '+e.message); }
 }
@@ -13888,8 +13890,8 @@ function rvRenderItemsYMonto(){
 
 let cotTasaBCVReal=null;
 
-function cotConvertirATasaBCV(totalBs){
-  const tasaTexto=prompt('Ingresa la tasa BCV oficial de hoy (Bs por $1):');
+async function cotConvertirATasaBCV(totalBs){
+  const tasaTexto=await uiPrompt('Ingresa la tasa BCV oficial de hoy (Bs por $1):');
   if(!tasaTexto) return;
   const tasaBCVReal=parseFloat(tasaTexto.replace(',','.'));
   if(!tasaBCVReal||tasaBCVReal<=0){ alert('Ingresa un número válido para la tasa'); return; }
@@ -14739,8 +14741,8 @@ async function cotBuscarCotizaciones(){
 
 let cotbTasaBCVReal=null;
 
-function cotbConvertirATasaBCV(totalBs, codigo){
-  const tasaTexto=prompt('Ingresa la tasa BCV oficial de hoy (Bs por $1):');
+async function cotbConvertirATasaBCV(totalBs, codigo){
+  const tasaTexto=await uiPrompt('Ingresa la tasa BCV oficial de hoy (Bs por $1):');
   if(!tasaTexto) return;
   const tasaBCVReal=parseFloat(tasaTexto.replace(',','.'));
   if(!tasaBCVReal||tasaBCVReal<=0){ alert('Ingresa un número válido para la tasa'); return; }
@@ -17473,6 +17475,143 @@ var qrcode = function() {
     window[n]=async function(){ var r=await orig.apply(this,arguments); try{ uniAcoplar(document.getElementById(mapa[n][0]),mapa[n][1]); if(n==='cargarCola')colaBarraLote(); }catch(e){} return r; }; });
 })();
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',aplicarAccesoVentas); else aplicarAccesoVentas();
+</script>
+
+<script>
+/* ===== UNA SOLA CLAVE: la del inicio de sesión. Dentro de la app ya no se vuelve a pedir; solo se confirma con "¿Está seguro?" ===== */
+function sesionActiva(){ return !!(SESION&&SESION.codigo&&typeof USUARIOS!=='undefined'&&USUARIOS[SESION.codigo]); }
+function confirmarOperacion(titulo,detalle){
+  return uiModal({icon:'⚠️',title:'¿Está seguro de realizar esta operación?',sub:[titulo,detalle].filter(Boolean).join(' — '),note:'Sesión: '+(SESION&&SESION.nombre||''),ok:'Sí',cancel:'No'});
+}
+function prodPedirClave(titulo,detalle){
+  if(!sesionActiva()) return prodPedirClaveOriginal(titulo,detalle);
+  return confirmarOperacion(titulo,detalle).then(function(v){ return v?(SESION.codigo+' - '+USUARIOS[SESION.codigo]):null; });
+}
+function cambioPedirClave(titulo,sub){
+  if(!sesionActiva()) return cambioPedirClaveOriginal(titulo,sub);
+  return confirmarOperacion(titulo,sub).then(function(v){ return v?USUARIOS[SESION.codigo]:null; });
+}
+(function(){
+  var ID_RE=/unlock|auth|^modal-cod$/i, NO_RE=/^ses-cod$|-error$|-title$|-subtitle$|-icon$|-confirm$|-wrap$|-section$|^modal-auth-gen$/i;
+  function esClave(i){ return i&&i.tagName==='INPUT'&&i.id&&ID_RE.test(i.id)&&!NO_RE.test(i.id)&&i.type!=='checkbox'&&i.type!=='radio'&&i.type!=='hidden'; }
+  function claves(){ return Array.prototype.filter.call(document.querySelectorAll('input[id]'),esClave); }
+  function enModal(i){ return !!i.closest('.modal-overlay,.modal'); }
+  function preparar(i){
+    if(!sesionActiva()) return; i.value=SESION.codigo;
+    if(i.dataset.auto) return; i.dataset.auto='1'; i.style.display='none';
+    var lab=i.previousElementSibling;
+    if(lab&&/^(DIV|LABEL|SPAN|P)$/.test(lab.tagName)&&!lab.querySelector('input,button,select,textarea')&&/c[oó]digo/i.test(lab.textContent||'')){
+      if(enModal(i)){ lab.textContent='¿Está seguro de realizar esta operación?'; lab.style.cssText+=';font-size:14px;font-weight:700;color:var(--text,#fff);text-transform:none;letter-spacing:0;margin:4px 0 10px'; }
+      else lab.style.display='none';
+    }
+    if(i.placeholder) i.placeholder='';
+    var mo=i.closest('.modal'); if(mo){ mo.querySelectorAll('.modal-subtitle,.modal-sub,.modal-desc').forEach(function(s){
+      var t=s.textContent||''; if(!/c[oó]digo/i.test(t)) return;
+      var t2=t.replace(/(ingresa|introduce|escribe)\s+tu\s+c[oó]digo(\s+(personal|de usuario|de autorizaci[oó]n))?\s*(para|y)?\s*/i,'Confirma para ');
+      s.textContent=/c[oó]digo/i.test(t2)?'¿Está seguro de realizar esta operación?':t2; }); }
+  }
+  window.claveAutoAplicar=function(){ claves().forEach(preparar); };
+  function refill(){ if(!sesionActiva()) return; claves().forEach(function(i){ if(i.dataset.auto) i.value=SESION.codigo; }); }
+  // guarda: ¿el onclick llama (hasta 2 niveles) a una función que lee alguno de los campos de clave?
+  function leeClave(nombre,ids,prof,vistos){
+    if(vistos[nombre]||prof>2) return false; vistos[nombre]=1; var f=window[nombre]; if(typeof f!=='function') return false;
+    var src; try{ src=Function.prototype.toString.call(f); }catch(e){ return false; }
+    for(var k=0;k<ids.length;k++){ if(src.indexOf("'"+ids[k]+"'")>=0||src.indexOf('"'+ids[k]+'"')>=0||src.indexOf('`'+ids[k]+'`')>=0) return true; }
+    var re=/([A-Za-z_$][\w$]*)\s*\(/g, m; while((m=re.exec(src))){ if(typeof window[m[1]]==='function'&&leeClave(m[1],ids,prof+1,vistos)) return true; }
+    return false;
+  }
+  function guardado(oc,ids){ var re=/([A-Za-z_$][\w$]*)\s*\(/g, m, v={}; while((m=re.exec(oc))){ if(leeClave(m[1],ids,0,v)) return true; } return false; }
+  var bypass=false;
+  document.addEventListener('click',function(e){
+    if(bypass||!sesionActiva()) return;
+    var b=e.target&&e.target.closest?e.target.closest('button,[onclick]'):null; if(!b||b.closest('#conf-auto')) return;
+    var oc=b.getAttribute('onclick')||''; if(!oc) return;
+    var inl=claves().filter(function(i){ return i.dataset.auto&&!enModal(i); }); refill();
+    if(!inl.length) return;                                   // los diálogos (modal) ya traen su propia pregunta y botón Confirmar
+    if(!guardado(oc,inl.map(function(i){return i.id}))) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    var txt=(b.textContent||'').replace(/\s+/g,' ').trim().slice(0,70);
+    confirmarOperacion(txt,'').then(function(ok){ if(!ok) return; refill(); bypass=true; try{ b.click(); } finally{ bypass=false; } });
+  },true);
+  // Enter dentro de otros campos también dispara lo mismo; aquí solo mantenemos el campo relleno
+  document.addEventListener('keydown',refill,true);
+  // prompts que pedían el código: se responden solos con el de la sesión
+  var p0=window.prompt.bind(window);
+  window.prompt=function(msg,def){ if(sesionActiva()&&/c[oó]digo (de usuario|personal)/i.test(String(msg))&&!/factura|motivo|pedido|valor|monto|nombre|n[uú]mero/i.test(String(msg))) return SESION.codigo; return p0(msg,def); };
+  var _t=null; new MutationObserver(function(){ if(_t) return; _t=setTimeout(function(){ _t=null; if(sesionActiva()) window.claveAutoAplicar(); },60); }).observe(document.documentElement,{childList:true,subtree:true});
+  document.addEventListener('DOMContentLoaded',function(){ window.claveAutoAplicar(); });
+  setTimeout(function(){ window.claveAutoAplicar(); },300);
+})();
+</script>
+
+<script>
+/* ===== VENTANAS OSCURAS (estilo "Procesar todos los pedidos") para confirmar / preguntar / avisar ===== */
+function uiModal(o){
+  return new Promise(function(res){
+    var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+    var m=document.createElement('div'); m.className='modal-overlay ui-dark'; m.style.zIndex=200000;
+    m.innerHTML='<div class="modal" role="dialog" aria-modal="true" style="max-height:90vh;overflow:auto">'+
+      '<div class="modal-icon">'+(o.icon||'❓')+'</div>'+
+      '<div class="modal-title">'+esc(o.title||'')+'</div>'+
+      (o.sub?'<div class="modal-subtitle" style="white-space:pre-line">'+esc(o.sub)+'</div>':(o.input?'':'<div style="height:14px"></div>'))+
+      (o.input?'<input id="ui-inp" class="ui-inp" type="'+(o.type||'text')+'" value="'+esc(o.def||'')+'" autocomplete="off" style="width:100%;box-sizing:border-box;padding:12px;margin-bottom:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:16px;font-family:inherit;outline:none">':'')+
+      (o.note?'<div style="font-size:12px;color:var(--muted);text-align:center;margin:-6px 0 14px">'+esc(o.note)+'</div>':'')+
+      '<div class="modal-btns">'+(o.cancel===false?'':'<button class="modal-cancel" id="ui-no">'+esc(o.cancel||'Cancelar')+'</button>')+'<button class="modal-confirm" id="ui-si">'+esc(o.ok||'Aceptar')+'</button></div></div>';
+    document.body.appendChild(m);
+    var inp=m.querySelector('#ui-inp'), si=m.querySelector('#ui-si');
+    (inp||si).focus(); if(inp) inp.select();
+    function fin(v){ document.removeEventListener('keydown',kd,true); m.remove(); res(v); }
+    function kd(e){ if(e.key==='Escape'){e.stopPropagation(); fin(o.input?null:false);} else if(e.key==='Enter'&&(inp||document.activeElement===si)){e.preventDefault();e.stopPropagation(); si.click();} }
+    document.addEventListener('keydown',kd,true);
+    si.onclick=function(){ fin(o.input?inp.value:true); };
+    var no=m.querySelector('#ui-no'); if(no) no.onclick=function(){ fin(o.input?null:false); };
+    m.addEventListener('mousedown',function(e){ if(e.target===m&&o.cancel!==false) fin(o.input?null:false); });
+  });
+}
+function uiConfirm(msg){
+  msg=String(msg==null?'':msg); var mm=msg.match(/^\s*([^\w\s¿¡(]{1,4}️?)\s*/u); var icon='❓';
+  if(mm){ icon=mm[1]; msg=msg.slice(mm[0].length); }
+  var partes=msg.split('\n'); var t=partes.shift(); 
+  return uiModal({icon:icon,title:t,sub:partes.join('\n').trim(),ok:'Sí',cancel:'No'});
+}
+function uiPrompt(msg,def){
+  msg=String(msg==null?'':msg);
+  if(typeof sesionActiva==='function'&&sesionActiva()&&/c[oó]digo (de usuario|personal)|autorizaci[oó]n/i.test(msg)&&!/factura|motivo|pedido|valor|monto|nombre|n[uú]mero/i.test(msg)) return Promise.resolve(SESION.codigo);
+  var partes=msg.split('\n'); var t=partes.shift();
+  return uiModal({icon:'✏️',title:t,sub:partes.join('\n').trim(),input:true,def:def==null?'':def,ok:'Aceptar',cancel:'Cancelar'});
+}
+(function(){ /* alert() -> ventana oscura, en cola */
+  var cola=[],abierta=false;
+  function sig(){ if(abierta||!cola.length) return; abierta=true; var t=cola.shift(); var icon='ℹ️';
+    var mm=t.match(/^\s*([^\w\s¿¡(]{1,4}️?)\s*/u); if(mm){ icon=mm[1]; t=t.slice(mm[0].length); }
+    var p=t.split('\n'); var ti=p.shift();
+    if(ti.length>90){ p.unshift(ti); ti=''; }
+    uiModal({icon:icon,title:ti||'Aviso',sub:p.join('\n').trim(),ok:'Entendido',cancel:false}).then(function(){ abierta=false; sig(); }); }
+  window.alert=function(m){ cola.push(String(m==null?'':m)); sig(); };
+})();
+</script>
+
+<script>
+/* ===== Filtro URGENTES en Taller ===== */
+var tallerSoloUrg=false;
+function tallerAplicarUrg(){
+  var n=0, tot=0;
+  document.querySelectorAll('.taller-check-item').forEach(function(chk){
+    var cod=chk.getAttribute('data-cod'), g=(typeof tallerGrupos!=='undefined'&&tallerGrupos[cod])||{}, u=!!g.urgente, c=chk.closest('label'); tot++; if(u) n++;
+    var ocultar=tallerSoloUrg&&!u; if(c) c.style.display=ocultar?'none':'';
+    if(ocultar&&chk.checked){ chk.checked=false; tallerSeleccionados.delete(cod); }
+  });
+  var b=document.getElementById('taller-btn-urg'), s=document.getElementById('taller-urg-n');
+  if(s) s.textContent='('+n+')';
+  if(b){ b.style.background=tallerSoloUrg?'var(--warn)':'var(--surface2)'; b.style.color=tallerSoloUrg?'#000':'var(--warn)'; }
+  var t=document.getElementById('taller-check-todos'); if(t) t.checked=false;
+  var e=document.getElementById('taller-urg-vacio'), L=document.getElementById('taller-lista');
+  if(L){ if(tallerSoloUrg&&tot&&!n){ if(!e){ e=document.createElement('div'); e.id='taller-urg-vacio'; e.style.cssText='padding:24px;text-align:center;color:var(--muted)'; e.textContent='No hay pedidos urgentes en el taller.'; L.appendChild(e);} } else if(e) e.remove(); }
+  if(typeof tallerActualizarContador==='function') tallerActualizarContador();
+}
+function tallerToggleUrgentes(){ tallerSoloUrg=!tallerSoloUrg; tallerAplicarUrg(); }
+(function(){ var o=window.cargarTaller; if(typeof o!=='function') return;
+  window.cargarTaller=async function(){ var r=await o.apply(this,arguments); try{ tallerAplicarUrg(); }catch(e){} return r; }; })();
 </script>
 </body>
 </html>
