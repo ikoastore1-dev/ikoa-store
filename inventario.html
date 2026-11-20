@@ -11674,7 +11674,7 @@ async function tallerHTMLaPDF(html,nombre){
     }
     const blob=pdf.output('blob'), localUrl=URL.createObjectURL(blob);
     let url=localUrl, id='';
-    try{   // se guarda también en Drive (si el Apps Script ya tiene la acción); si no, se usa el enlace local de esta sesión
+    if(!/^Taller_/.test(nombre)) try{   // los reportes del Taller ya NO se guardan en Drive (solo enlace local de esta sesión); los demás PDF sí
       const b64=await new Promise((ok,no)=>{ const fr=new FileReader(); fr.onload=()=>ok(String(fr.result).split(',')[1]); fr.onerror=no; fr.readAsDataURL(blob); });
       const r=await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'guardarPDFBase64',titulo:nombre,pdf_base64:b64})}).then(x=>x.json());
       if(r&&r.ok){ url=r.pdf_url; id=r.pdf_id; }
