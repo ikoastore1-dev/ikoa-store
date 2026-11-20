@@ -17604,7 +17604,7 @@ function tallerAplicarUrg(){
   var n=0, tot=0;
   document.querySelectorAll('.taller-check-item').forEach(function(chk){
     var cod=chk.getAttribute('data-cod'), g=(typeof tallerGrupos!=='undefined'&&tallerGrupos[cod])||{}, u=!!g.urgente, c=chk.closest('label'); tot++; if(u) n++;
-    var ocultar=tallerSoloUrg&&!u; if(c) c.style.display=ocultar?'none':'';
+    var ocultar=tallerSoloUrg&&!u; if(c){ if(ocultar){ if(c.style.display!=='none'){ c.dataset.urgOc='1'; c.style.display='none'; } } else if(c.dataset.urgOc==='1'){ delete c.dataset.urgOc; c.style.display='flex'; } }
     if(ocultar&&chk.checked){ chk.checked=false; tallerSeleccionados.delete(cod); }
   });
   var b=document.getElementById('taller-btn-urg'), s=document.getElementById('taller-urg-n');
