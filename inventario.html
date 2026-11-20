@@ -7039,29 +7039,31 @@ let pendingEditCola=null;
 /* ── EDITAR PEDIDO COMPLETO (todas las columnas) ──────────────────
    hoja 'APROBACIONES' (clave = col A, CodigoS) o 'COLA.P' (clave = col B, CodigoC). Cashea y Pendientes viven en APROBACIONES. */
 const ET_NOMBRES={0:'Código S',1:'Código C',2:'Código P',3:'Código COD',4:'Fecha',7:'Nombre',8:'Correo',9:'Cédula',10:'Celular',11:'Modelo',12:'Manga',13:'Capucha',14:'Pack',15:'Tela',16:'Vinil',17:'Piezas',18:'Agencia',19:'Retira nombre',20:'Retira CI',21:'Retira celular',26:'Estado',28:'Pago moneda',29:'Pago monto',30:'Pago referencia',31:'Urgente',32:'Cashea (SI/NO)',33:'% Cashea',34:'% Inicial Cashea',36:'Tasa BCV',37:'Alerta'};
-const ET_CLIENTE=[7,8,9,10,18,19,20,21,28,29,30,31];   // datos del cliente: se muestran una vez y se aplican a todos los packs
+const ET_CLIENTE=[7,8,9,10,18,19,20,21,28,29,30,31]; const ET_CLIENTE_PROD=[4,5,6,7,15,16,17,18,19,20,23];
+function _etCL(){ return (_et&&_et.d.hoja==='PRODUCCION')?ET_CLIENTE_PROD:ET_CLIENTE; }
+function _etPz(){ return (_et&&_et.d.hoja==='PRODUCCION')?14:17; }   // datos del cliente: se muestran una vez y se aplican a todos los packs
 let _et=null;
 function editarTodoAbrir(key){
   const d=(window._etData||{})[key]; if(!d) return;
-  const hdr=(d.hoja==='COLA.P'?window._hdrCola:window._hdrApro)||[];
+  const hdr=(d.hoja==='COLA.P'?window._hdrCola:(d.hoja==='PRODUCCION'?window._hdrProd:window._hdrApro))||[];
   const colClave=d.hoja==='APROBACIONES'?0:1;
   _et={key,d,hdr,colClave};
-  const nombre=i=>String(hdr[i]||'').trim()||ET_NOMBRES[i]||('Columna '+(i+1));
-  const campo=(id,i,val,ro)=>{ const v=String(val==null?'':val); const largo=(i===17||v.length>70||v.indexOf('\n')>=0);
-    const shown=(i===17)?v.split(' | ').join('\n'):v;
+  const nombre=i=>String(hdr[i]||'').trim()||(d.hoja==='PRODUCCION'?'':ET_NOMBRES[i])||('Columna '+(i+1));
+  const campo=(id,i,val,ro)=>{ const v=String(val==null?'':val); const largo=(i===_etPz()||v.length>70||v.indexOf('\n')>=0);
+    const shown=(i===_etPz())?v.split(' | ').join('\n'):v;
     const esc=shown.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
     return `<div class="field-group" style="${largo?'grid-column:1/-1;':''}"><div class="field-label">${nombre(i)}</div>`+
-      (largo?`<textarea class="field-input" id="${id}" rows="${i===17?5:3}" style="width:100%;resize:vertical;font-size:12px;"${ro?' readonly':''}>${esc}</textarea>`
+      (largo?`<textarea class="field-input" id="${id}" rows="${i===_etPz()?5:3}" style="width:100%;resize:vertical;font-size:12px;"${ro?' readonly':''}>${esc}</textarea>`
             :`<input class="field-input" id="${id}" type="text" value="${esc}" style="width:100%;"${ro?' readonly':''}>`)+'</div>'; };
   const r0=d.rows[0]; const n=Math.max(...d.rows.map(r=>r.length));
   let html=`<div style="background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:10px;margin-bottom:10px;">
     <div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:6px;">Datos del cliente y pago (se aplican a todos los packs)</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${ET_CLIENTE.filter(i=>i<n).map(i=>campo('et-c-'+i,i,r0[i])).join('')}</div></div>`;
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${_etCL().filter(i=>i<n).map(i=>campo('et-c-'+i,i,r0[i])).join('')}</div></div>`;
   d.rows.forEach((r,pi)=>{
     html+=`<details ${pi===0?'open':''} style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px;">
       <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--text);">Pack ${pi+1} · ${r[colClave]}</summary>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">`;
-    for(let i=0;i<n;i++){ if(ET_CLIENTE.indexOf(i)>=0) continue; html+=campo('et-'+pi+'-'+i,i,r[i],i===colClave); }
+    for(let i=0;i<n;i++){ if(_etCL().indexOf(i)>=0) continue; html+=campo('et-'+pi+'-'+i,i,r[i],i===colClave); }
     html+='</div></details>';
   });
   document.getElementById('et-sub').textContent=d.rows.map(r=>r[colClave]).join(' · ');
@@ -7075,12 +7077,12 @@ async function editarTodoGuardar(){
   const btn=document.getElementById('et-guardar'); btn.disabled=true; btn.textContent='Guardando...';
   const {d,colClave}=_et;
   try{
-    const leer=(id,i)=>{ const el=document.getElementById(id); if(!el) return null; let v=el.value; if(i===17) v=v.split('\n').map(s=>s.trim()).filter(Boolean).join(' | '); return v; };
+    const leer=(id,i)=>{ const el=document.getElementById(id); if(!el) return null; let v=el.value; if(i===_etPz()) v=v.split('\n').map(s=>s.trim()).filter(Boolean).join(' | '); return v; };
     for(let pi=0;pi<d.rows.length;pi++){
       const r=d.rows[pi], cambios={};
       for(let i=0;i<r.length;i++){
         if(i===colClave) continue;
-        const id=(ET_CLIENTE.indexOf(i)>=0)?('et-c-'+i):('et-'+pi+'-'+i);
+        const id=(_etCL().indexOf(i)>=0)?('et-c-'+i):('et-'+pi+'-'+i);
         const nv=leer(id,i); if(nv===null) continue;
         if(String(nv)!==String(r[i]==null?'':r[i])) cambios[i]=nv;
       }
@@ -10817,7 +10819,7 @@ async function cargarTaller(){
     await facturaCargarFlags();
     try{ const es=await scriptGETjson({action:'leerEstadoEnvio'},15000); window._estadoEnvio=(es&&es.estados)||{}; }catch(e){ window._estadoEnvio=window._estadoEnvio||{}; }
     const rows=data.rows||[];
-    tallerGrupos={};
+    tallerGrupos={}; window._prodRaw={}; window._hdrProd=data.headers||window._hdrProd||null;
     if(rows.length===0){
       msg.style.background='#0a2a0a'; msg.style.color='var(--accent)';
       msg.innerHTML='✅ No hay pedidos en producción';
@@ -10842,6 +10844,7 @@ async function cargarTaller(){
       const v=i=>String(r[i]||'').trim();
       const cod=v(2)||v(1)||v(0);
       const codigoC=v(1);
+      (window._prodRaw[cod]=window._prodRaw[cod]||[]).push(r);
       if(!tallerGrupos[cod]) tallerGrupos[cod]={
         cod, nombre:v(4), correo:v(5), cedula:v(6), celular:v(7), agencia:v(15), retira:v(16), retiraCi:v(17), retiraCel:v(18),
         fecha:v(25)||v(3), urgente:v(27), packs:[]
@@ -10887,6 +10890,7 @@ async function cargarTaller(){
           ${tallerDetalleHTML(g,cod)}
           <div class="taller-acts" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:stretch;">
             <button type="button" onclick="event.preventDefault();event.stopPropagation();tallerVerPedidoCompleto('${cod}')" style="padding:7px 14px;background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:12px;font-weight:800;cursor:pointer;">🖼 Ver pedido completo (mockups)</button>
+            <button type="button" onclick="event.preventDefault();event.stopPropagation();tallerEditarPedido('${cod}')" style="padding:7px 14px;background:transparent;border:1.5px solid var(--warn);border-radius:8px;color:var(--warn);font-size:13px;font-weight:700;cursor:pointer;">✏️ Editar pedido</button>
             ${tallerWaBtn(g)}
             <button type="button" onclick="event.preventDefault();event.stopPropagation();tallerImprimirTicket('${cod}')" style="padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🖨 Ticket de envío</button>
             ${_fab?`<button type="button" onclick="event.preventDefault();event.stopPropagation();tallerNotificarMensajero('${cod}')" style="padding:7px 14px;background:${(window._estadoEnvio||{})[cod]?'var(--surface2)':'#ffb020'};border:${(window._estadoEnvio||{})[cod]?'1px solid var(--accent)':'none'};border-radius:8px;color:${(window._estadoEnvio||{})[cod]?'var(--accent)':'#000'};font-size:12px;font-weight:800;cursor:pointer;">${(window._estadoEnvio||{})[cod]?'🛵 Mensajero notificado ✓ (reenviar)':'🛵 Notificar mensajero'}</button>`:''}
@@ -17614,6 +17618,15 @@ function tallerAplicarUrg(){
 function tallerToggleUrgentes(){ tallerSoloUrg=!tallerSoloUrg; tallerAplicarUrg(); }
 (function(){ var o=window.cargarTaller; if(typeof o!=='function') return;
   window.cargarTaller=async function(){ var r=await o.apply(this,arguments); try{ tallerAplicarUrg(); }catch(e){} return r; }; })();
+</script>
+
+<script>
+/* ===== Taller: editar el pedido completo (todas las columnas de PRODUCCION) ===== */
+function tallerEditarPedido(cod){
+  var rows=(window._prodRaw||{})[cod]; if(!rows||!rows.length){ alert('No se encontró el pedido '+cod+'. Recarga el Taller.'); return; }
+  window._etData=window._etData||{}; window._etData['prod_'+cod]={hoja:'PRODUCCION',rows:rows,recarga:'cargarTaller'};
+  editarTodoAbrir('prod_'+cod);
+}
 </script>
 </body>
 </html>
