@@ -1131,6 +1131,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
       <button class="apro-sub-btn" data-sub="Pendiente" onclick="switchAprobaciones('Pendiente')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Pendientes</button>
       <button class="apro-sub-btn" data-sub="GiftCard" onclick="switchAprobaciones('GiftCard')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🎁 GiftCard</button>
       <button class="apro-sub-btn" data-sub="Cola" onclick="switchAprobaciones('Cola')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⏳ Cola</button>
+      <button class="apro-sub-btn" data-sub="Repetir" onclick="switchAprobaciones('Repetir')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--muted);font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🔁 Repetir</button>
     </div>
     <!-- Búsqueda para Aprobadas/Reprobadas -->
     <div id="historial-apro-search" style="display:none;margin-bottom:12px;">
@@ -1185,6 +1186,11 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     </div>
 
     <!-- SECCIÓN CASHEA -->
+    <div id="aprosec-repetir" style="display:none;">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Busca un pedido anterior del cliente (nombre, cédula, celular o código), cámbiale colores / piezas / productos y guárdalo como un <b>pedido nuevo en Pendiente</b>. El pedido viejo no se toca.</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;"><input class="search-input" type="text" id="rep-q" placeholder="Nombre, cédula, celular o código (mín. 3 letras)..." style="flex:1;" onkeydown="if(event.key==='Enter')repBuscar()"><button onclick="repBuscar()" style="padding:8px 16px;border:none;border-radius:8px;background:var(--accent);color:#000;font-weight:800;cursor:pointer;">Buscar</button></div>
+      <div id="rep-res"></div>
+    </div>
     <div id="aprosec-cashea" style="display:none;">
       <!-- Sub-pestañas Cashea -->
       <div style="display:flex;gap:6px;margin-bottom:12px;">
@@ -5223,13 +5229,14 @@ function switchStock(sub){
 function switchAprobaciones(sub){
   document.querySelectorAll('.apro-sub-btn').forEach(b=>{
     const active=b.dataset.sub===sub;
-    const colors={Pendiente:'var(--warn)',Cola:'var(--warn)',GiftCard:'#cc66ff',Cashea:'var(--accent)'};
+    const colors={Pendiente:'var(--warn)',Cola:'var(--warn)',GiftCard:'#cc66ff',Cashea:'var(--accent)',Repetir:'var(--accent2,#7c6cff)'};
     const bgs={Pendiente:'#2a1f0a',Cola:'#2a1f0a',GiftCard:'#1a0f2b',Cashea:'#0a2a1a'};
     b.style.borderColor=active?(colors[sub]||'var(--accent)'):'var(--border)';
     b.style.background=active?(bgs[sub]||'var(--surface2)'):'var(--surface2)';
     b.style.color=active?(colors[sub]||'var(--accent)'):'var(--muted)';
   });
-  document.getElementById('aprosec-solicitudes').style.display=(sub==='Cola'||sub==='GiftCard'||sub==='Cashea')?'none':'block';
+  document.getElementById('aprosec-solicitudes').style.display=(sub==='Cola'||sub==='GiftCard'||sub==='Cashea'||sub==='Repetir')?'none':'block';
+  var _rs=document.getElementById('aprosec-repetir'); if(_rs) _rs.style.display=sub==='Repetir'?'block':'none';
   document.getElementById('aprosec-cola').style.display=sub==='Cola'?'block':'none';
   document.getElementById('aprosec-giftcard').style.display=sub==='GiftCard'?'block':'none';
   document.getElementById('aprosec-cashea').style.display=sub==='Cashea'?'block':'none';
@@ -17659,6 +17666,101 @@ function piezasAgrupadas(s){
   var tot=bloques.length;
   var html=orden.map(function(k){ var g=map[k]; return (g.n>1?'<b style="color:var(--accent);margin-right:4px">'+g.n+'×</b>':'')+g.l.join('<br>'); }).join('<div style="height:8px"></div>');
   return html+(orden.length<tot?'<div style="margin-top:8px;padding-top:6px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)">Total: '+tot+' piezas · '+orden.length+' combinaciones</div>':'');
+}
+</script>
+
+<script>
+/* ===== 🔁 REPETIR PEDIDO (Aprobaciones): copia un pedido anterior, se edita y se guarda como NUEVO pendiente ===== */
+var _repGrupos=[], _repEd=null, _repColores={telas:[],viniles:[]};
+function repEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
+function repPiezasATexto(s){   // "A | det | A | det | B | det" -> "2x A ¦ det\n1x B ¦ det"
+  var L=String(s||'').split(' | ').map(function(x){return x.trim();}).filter(Boolean), bl=[], act=null;
+  L.forEach(function(l){ if(/^[^:\-]{1,30}:\s/.test(l)&&act) act.l.push(l); else { act={l:[l]}; bl.push(act); } });
+  var m={}, o=[]; bl.forEach(function(b){ var k=b.l.join('\u0001'); if(!m[k]){ m[k]={l:b.l,n:0}; o.push(k); } m[k].n++; });
+  return o.map(function(k){ return m[k].n+'x '+m[k].l.join(' ¦ '); }).join('\n');
+}
+function repTextoAPiezas(t){
+  var out=[]; String(t||'').split('\n').forEach(function(ln){ ln=ln.trim(); if(!ln) return; var mm=ln.match(/^(\d+)\s*[x×]\s*(.*)$/i), n=mm?Math.max(1,parseInt(mm[1],10)):1, tx=mm?mm[2]:ln;
+    var partes=tx.split('¦').map(function(x){return x.trim();}).filter(Boolean); for(var i=0;i<n;i++) partes.forEach(function(p){ out.push(p); }); });
+  return out.join(' | ');
+}
+function repContarPiezas(t){ var n=0; String(t||'').split('\n').forEach(function(ln){ ln=ln.trim(); if(!ln) return; var mm=ln.match(/^(\d+)\s*[x×]/i); n+=mm?parseInt(mm[1],10):1; }); return n; }
+async function repBuscar(){
+  var q=document.getElementById('rep-q').value.trim(), box=document.getElementById('rep-res');
+  if(q.length<3){ box.innerHTML='<div style="color:var(--warn)">Escribe al menos 3 caracteres.</div>'; return; }
+  box.innerHTML='<div style="color:var(--muted)">⏳ Buscando...</div>';
+  try{
+    var r=await scriptGETjson({action:'buscarPedidosCliente',q:q},30000); if(!r||!r.ok) throw new Error((r&&r.error)||'sin respuesta');
+    _repGrupos=r.grupos||[];
+    if(!_repGrupos.length){ box.innerHTML='<div style="color:var(--muted);padding:14px">No se encontraron pedidos.</div>'; return; }
+    box.innerHTML=_repGrupos.map(function(g,i){
+      var pz=g.packs.reduce(function(n,p){return n+repContarPiezas(repPiezasATexto(p.piezas));},0);
+      return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">'+
+        '<div style="flex:1;min-width:200px"><div style="font-weight:800;font-size:15px">'+repEsc(g.nombre)+' <span style="font-size:12px;color:var(--muted);font-weight:600">· '+repEsc(g.base)+' · '+repEsc(g.fuente)+'</span></div>'+
+        '<div style="font-size:12px;color:var(--muted)">'+repEsc(g.fecha)+' · '+g.packs.length+' pack(s) · '+pz+' pieza(s) · '+repEsc(g.packs.map(function(p){return p.tela+' / '+p.vinil;}).filter(function(v,ix,a){return a.indexOf(v)===ix;}).join(' · '))+'</div></div>'+
+        '<button onclick="repAbrir('+i+')" style="padding:9px 16px;border:1.5px solid var(--accent);border-radius:8px;background:transparent;color:var(--accent);font-weight:800;cursor:pointer">🔁 Repetir</button></div>';
+    }).join('');
+  }catch(e){ box.innerHTML='<div style="color:var(--danger)">✗ '+repEsc(e.message)+'</div>'; }
+}
+async function repCargarColores(){
+  if(_repColores.telas.length) return;
+  for(var h of ['COLORES.COMFY','COLORES.LICRA']){ try{ var r=await scriptGETjson({action:'leerColores',hoja:h,todos:'1'},15000); if(r&&r.ok){ r.telas.forEach(function(t){ if(_repColores.telas.indexOf(t)<0)_repColores.telas.push(t); }); r.viniles.forEach(function(v){ if(_repColores.viniles.indexOf(v)<0)_repColores.viniles.push(v); }); } }catch(e){} }
+}
+function repPackHTML(p,i){
+  function f(k,l,w){ return '<div style="flex:'+(w||1)+';min-width:130px"><div style="font-size:10px;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-bottom:2px">'+l+'</div><input data-rp="'+k+'" value="'+repEsc(p[k])+'" '+(k==='tela'?'list="rep-dl-t"':k==='vinil'?'list="rep-dl-v"':'')+' style="width:100%;box-sizing:border-box;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit"></div>'; }
+  return '<div class="rep-pack" style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>Pack '+(i+1)+'</b><button onclick="this.closest(\'.rep-pack\').remove()" style="background:none;border:1px solid var(--danger);color:var(--danger);border-radius:7px;padding:3px 10px;cursor:pointer;font-size:12px">🗑 Quitar</button></div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+f('pack','PACK',1)+f('modelo','MODELO',2)+f('manga','MANGA',1)+f('capucha','CAPUCHA',1)+f('tela','TELA',1)+f('vinil','VINIL',1)+'</div>'+
+    '<div style="font-size:10px;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-bottom:2px">PIEZAS · una línea por tipo: <i>cantidad x talla - nombre ¦ detalle</i> (ej: 5x Caballero L - SIN NOMBRE EN MANGA ¦ LogoPecho: ASCIELCA)</div>'+
+    '<textarea data-rp="piezas" rows="6" style="width:100%;box-sizing:border-box;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;line-height:1.5">'+repEsc(repPiezasATexto(p.piezas))+'</textarea></div>';
+}
+async function repAbrir(i){
+  var g=_repGrupos[i]; if(!g) return; await repCargarColores();
+  _repEd=g; var old=document.getElementById('rep-modal'); if(old) old.remove();
+  function c(k,l){ return '<div style="flex:1;min-width:150px"><div style="font-size:10px;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-bottom:2px">'+l+'</div><input data-rc="'+k+'" value="'+repEsc(g[k])+'" style="width:100%;box-sizing:border-box;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit"></div>'; }
+  var m=document.createElement('div'); m.id='rep-modal'; m.className='modal-overlay'; m.style.cssText='z-index:100000;align-items:flex-start;overflow:auto;padding:16px';
+  m.innerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;max-width:900px;width:100%;margin:0 auto;padding:18px;color:var(--text)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:20px;font-weight:800">🔁 Repetir pedido de '+repEsc(g.nombre)+'</div><button onclick="document.getElementById(\'rep-modal\').remove()" style="background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer">✕</button></div>'+
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">Copia de '+repEsc(g.base)+'. Se guardará como un pedido NUEVO en Pendiente (código S nuevo).</div>'+
+    '<datalist id="rep-dl-t">'+_repColores.telas.map(function(t){return '<option value="'+repEsc(t)+'">';}).join('')+'</datalist><datalist id="rep-dl-v">'+_repColores.viniles.map(function(t){return '<option value="'+repEsc(t)+'">';}).join('')+'</datalist>'+
+    '<div style="font-weight:800;margin:6px 0">Cliente</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+c('nombre','NOMBRE')+c('cedula','CÉDULA / RIF')+c('celular','CELULAR')+c('correo','CORREO')+'</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+c('agencia','AGENCIA / ENTREGA')+c('retira_nombre','RETIRA (NOMBRE)')+c('retira_ci','RETIRA (C.I.)')+c('retira_cel','RETIRA (CEL)')+'</div>'+
+    '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:12px"><b>🎨 Cambiar color a todos los packs:</b><input id="rep-all-t" list="rep-dl-t" placeholder="Tela" style="padding:7px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text)"><input id="rep-all-v" list="rep-dl-v" placeholder="Vinil" style="padding:7px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text)"><button onclick="repAplicarColor()" style="padding:7px 14px;border:none;border-radius:8px;background:var(--accent);color:#000;font-weight:800;cursor:pointer">Aplicar</button></div>'+
+    '<div style="font-weight:800;margin:6px 0">Packs / productos</div><div id="rep-packs">'+g.packs.map(repPackHTML).join('')+'</div>'+
+    '<button onclick="repAgregarPack()" style="padding:9px 14px;border:1.5px dashed var(--accent);border-radius:10px;background:transparent;color:var(--accent);font-weight:800;cursor:pointer;margin-bottom:14px">➕ Agregar pack / producto</button>'+
+    '<div style="font-weight:800;margin:6px 0">Pago (como cualquier pedido nuevo; puedes dejarlo vacío y completarlo después)</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><select id="rep-mon" style="padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text)"><option value="">Moneda</option><option>Bs</option><option>Divisa</option></select><input id="rep-monto" placeholder="Monto" style="flex:1;min-width:120px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text)"><input id="rep-ref" placeholder="Referencia" style="flex:1;min-width:120px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text)"><label style="display:flex;gap:6px;align-items:center;color:var(--warn);font-weight:700"><input type="checkbox" id="rep-urg"> Urgente</label></div>'+
+    '<div id="rep-msg" style="margin-bottom:8px;font-size:13px"></div><div class="modal-btns"><button class="modal-cancel" onclick="document.getElementById(\'rep-modal\').remove()">Cancelar</button><button class="modal-confirm" id="rep-save" onclick="repGuardar()">Crear pedido nuevo</button></div></div>';
+  document.body.appendChild(m);
+}
+function repAplicarColor(){ var t=document.getElementById('rep-all-t').value.trim(), v=document.getElementById('rep-all-v').value.trim();
+  document.querySelectorAll('#rep-packs .rep-pack').forEach(function(p){ if(t) p.querySelector('[data-rp=tela]').value=t; if(v) p.querySelector('[data-rp=vinil]').value=v; }); }
+function repAgregarPack(){ var host=document.getElementById('rep-packs'), ult=host.querySelector('.rep-pack:last-child'), b={pack:'',modelo:'',manga:'',capucha:'',tela:'',vinil:'',piezas:''};
+  if(ult) ['modelo','manga','capucha','tela','vinil'].forEach(function(k){ b[k]=ult.querySelector('[data-rp='+k+']').value; });
+  host.insertAdjacentHTML('beforeend',repPackHTML(b,host.children.length)); host.lastElementChild.scrollIntoView({block:'center'}); }
+async function repGuardar(){
+  var msg=document.getElementById('rep-msg'), g=_repEd, btn=document.getElementById('rep-save');
+  var cli={}; document.querySelectorAll('#rep-modal [data-rc]').forEach(function(i){ cli[i.dataset.rc]=i.value.trim(); });
+  var packs=[]; document.querySelectorAll('#rep-packs .rep-pack').forEach(function(el){ var o={}; el.querySelectorAll('[data-rp]').forEach(function(i){ o[i.dataset.rp]=i.value.trim(); }); o.piezas=repTextoAPiezas(o.piezas); packs.push(o); });
+  var er=function(t){ msg.innerHTML='<span style="color:var(--danger)">'+t+'</span>'; };
+  if(!cli.nombre||!cli.celular){ er('Nombre y celular son obligatorios'); return; }
+  if(!packs.length){ er('Agrega al menos un pack'); return; }
+  for(var i=0;i<packs.length;i++){ if(!packs[i].piezas){ er('El pack '+(i+1)+' no tiene piezas'); return; } if(!packs[i].tela||!packs[i].vinil){ er('El pack '+(i+1)+': falta tela o vinil'); return; } }
+  var total=packs.reduce(function(n,p){return n+p.piezas.split(' | ').length;},0);
+  if(!await uiConfirm('🔁 ¿Crear el pedido nuevo de '+cli.nombre+'?\n'+packs.length+' pack(s). Entra a Pendiente con un código S nuevo; el pedido anterior no se modifica.')) return;
+  btn.disabled=true; var cods=[], principal='';
+  try{
+    for(var i=0;i<packs.length;i++){
+      msg.innerHTML='<span class="spinner">↻</span> Guardando pack '+(i+1)+'/'+packs.length+'...';
+      var p=Object.assign({action:'addSolicitud',subindex:String(i),codigo_principal:principal,fecha:new Date().toLocaleString('es-VE'),
+        pago_moneda:document.getElementById('rep-mon').value,pago_monto:document.getElementById('rep-monto').value.trim(),pago_ref:document.getElementById('rep-ref').value.trim(),
+        urgente:document.getElementById('rep-urg').checked?'SI':'',cashea_flag:'NO',cashea_pct_aplicado:''},cli,packs[i]);
+      var r=await scriptGETjson(p,30000); if(!r||!r.ok) throw new Error('Pack '+(i+1)+': '+((r&&r.error)||'error')+(cods.length?' (ya se crearon: '+cods.join(', ')+')':''));
+      if(i===0) principal=r.codigo; cods.push(r.codigo);
+    }
+    document.getElementById('rep-modal').remove();
+    alert('✅ Pedido nuevo creado en Pendiente: '+cods.join(', '));
+    document.getElementById('rep-res').innerHTML=''; document.getElementById('rep-q').value='';
+    try{ switchAprobaciones('Pendiente'); }catch(e){}
+  }catch(e){ er('✗ '+repEsc(e.message)); btn.disabled=false; }
 }
 </script>
 </body>
