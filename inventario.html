@@ -3639,7 +3639,7 @@ async function cargarColaFacturacion(){
             <div><span style="color:var(--muted);">Tela:</span> ${vp(14)||'—'}</div>
             <div><span style="color:var(--muted);">Vinil:</span> ${vp(15)||'—'}</div>
           </div>
-          ${vp(16)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${vp(16).split(' | ').join('<br>')}</div>`:''}
+          ${vp(16)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${piezasAgrupadas(vp(16))}</div>`:''}
         </div>`;
       });
       const codigosGrupo=packs.map(pk=>String(pk[0]||'').trim()).filter(Boolean);
@@ -5787,7 +5787,7 @@ async function cargarAprobacionesCashea(){
             <div><span style="color:var(--muted);">Tela:</span> ${vp(15)}</div>
             <div><span style="color:var(--muted);">Vinil:</span> ${vp(16)}</div>
           </div>
-          ${vp(17)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${vp(17).split(' | ').join('<br>')}</div>`:''}
+          ${vp(17)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${piezasAgrupadas(vp(17))}</div>`:''}
         </div>`;
       });
       // Botón aprobar
@@ -6893,7 +6893,7 @@ async function cargarCola(){
             <div><span style="color:var(--muted);">Tela:</span> ${vp(15)}</div>
             <div><span style="color:var(--muted);">Vinil:</span> ${vp(16)}</div>
           </div>
-          ${vp(17)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${vp(11)?modeloManga(vp(11),vp(12)):''}<br>${vp(17).split(' | ').join('<br>')}</div>`:''}
+          ${vp(17)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${vp(11)?modeloManga(vp(11),vp(12)):''}<br>${piezasAgrupadas(vp(17))}</div>`:''}
         </div>`;
       });
       if(filtroCola==='Pagado'){
@@ -8110,7 +8110,7 @@ async function cargarSolicitudes(filtro){
             <div><span style="color:var(--muted);">Tela:</span> ${vp(15)}</div>
             <div><span style="color:var(--muted);">Vinil:</span> ${vp(16)}</div>
           </div>
-          ${vp(17)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${vp(17).split(' | ').join('<br>')}</div>`:''}
+          ${vp(17)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${piezasAgrupadas(vp(17))}</div>`:''}
         </div>`;
       });
       if(filtroSolicitudes==='Reprobado'){
@@ -10209,6 +10209,7 @@ async function tallerEscanerConfirmar(){
       try{ var f2=new FormData(); f2.append('action','escanearPedido'); f2.append('cod',sociosEsc[si]); f2.append('nombre',gs2.nombre||''); f2.append('correo',''); f2.append('agencia',gs2.agencia||''); f2.append('usuario','Escáner Taller'); f2.append('done',JSON.stringify(prodKeys(gk2))); f2.append('reenviar','SI'); f2.append('imagen_base64',S.jpg.split(',')[1]);
         var r2=await fetch(SCRIPT_URL,{method:'POST',body:f2}), j2=await r2.json(); if(j2&&j2.ok){ window.prodAvance[sociosEsc[si]]={done:prodKeys(gk2),completo:true}; (window._estadoEnvio=window._estadoEnvio||{})[sociosEsc[si]]={estado:'EN PROCESO DE ENVÍO',fecha:j2.fecha||'',correo:''}; } }catch(e){ console.warn('socio',e); } }
     window.prodAvance=window.prodAvance||{}; window.prodAvance[S.cod]={done:prodKeys(gk),completo:true};
+    tallerCosturaOk(S.cod); sociosEsc.forEach(function(c){ tallerCosturaOk(c); });
     (window._estadoEnvio=window._estadoEnvio||{})[S.cod]={estado:'EN PROCESO DE ENVÍO',fecha:j.fecha||'',correo:j.correo_enviado?'ENVIADO':''};
     res.innerHTML='<div style="color:var(--accent);font-weight:800;font-size:15px">✅ '+prodEsc(g.nombre)+' · fabricado y en proceso de envío</div>'+(j.correo_enviado?'<div style="font-size:13px;color:var(--text)">📧 Correo enviado al cliente con la foto.</div>':'<div style="font-size:13px;color:var(--warn)">⚠ El pedido quedó marcado, pero el correo no salió ('+prodEsc(j.aviso||'')+').</div>')+
       '<button onclick="tallerAbrirEscaner()" style="margin-top:8px;padding:10px 16px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-weight:800;cursor:pointer">📷 Escanear otro pedido</button>';
@@ -10342,6 +10343,7 @@ async function tallerGuiaConfirmar(){
       nombre_envio:p.esMismo?'':p.retiraNombre,cel_envio:p.esMismo?'':p.retiraCel,ci_envio:p.esMismo?'':p.retiraCi,direccion:direccion,usuario:usuario});
     if(!resP.ok)throw new Error('No se pudo guardar en PEDIDOS: '+(resP.error||''));
     if(necesita){ try{ guiaAprender(t.texto,cupon,agU,t.sug); (window._guiaHist=window._guiaHist||[]).push({a:agU,g:cupon}); }catch(e){} }
+    try{ await tallerCosturaOk(t.cod); }catch(e){}
     try{ await eliminarDeProduccion(t.cod); }catch(e){ console.warn('eliminarProduccion error:',e); }
     var mb=new FormData();
     mb.append('tipo_operacion','Enviado'); mb.append('status','Enviado'); mb.append('nombre',p.nombre); mb.append('correo',p.correo||''); mb.append('cedula',p.cedula); mb.append('celular',p.celular);
@@ -10357,6 +10359,7 @@ async function tallerGuiaConfirmar(){
       var dsc='Envio conjunto con COD '+t.cod+' desde Taller '+usuario;
       var r1=await scriptGETjson({action:'addPedido',nombre:ps.nombre,cedula:ps.cedula,correo:ps.correo||'',cod:cs,numero_guia:guia,agencia:ps.agencia,status:'Enviado',celular:ps.celular,fecha:fecha,descripcion:dsc,nombre_envio:ps.esMismo?'':ps.retiraNombre,cel_envio:ps.esMismo?'':ps.retiraCel,ci_envio:ps.esMismo?'':ps.retiraCi,direccion:direccion,usuario:usuario});
       if(!r1.ok)throw new Error('COD '+cs+': no se pudo guardar en PEDIDOS: '+(r1.error||''));
+      try{ await tallerCosturaOk(cs); }catch(e){}
       try{ await eliminarDeProduccion(cs); }catch(e){ console.warn('eliminarProduccion error:',e); }
       var mb2=new FormData(); [['tipo_operacion','Enviado'],['status','Enviado'],['nombre',ps.nombre],['correo',ps.correo||''],['cedula',ps.cedula],['celular',ps.celular],['agencia',ps.agencia],['direccion_agencia',direccion],['diferente_envio',ps.esMismo?'no':'si'],['nombre_envio',ps.esMismo?'':ps.retiraNombre],['ci_envio',ps.esMismo?'':ps.retiraCi],['cel_envio',ps.esMismo?'':ps.retiraCel],['codigo',cs],['numero_guia',guia],['descripcion',dsc],['urgente','NO'],['selector_agregar_arte','no'],['nombre_arte',''],['usuario',usuario],['fecha',fecha],['sin_correo','si']].forEach(function(kv){mb2.append(kv[0],kv[1])});
       var pr2=await enviarAProceso(mb2,'Enviado'); if(!pr2.ok)throw new Error('COD '+cs+': '+(pr2.error||'no se pudo registrar el envío'));
@@ -17496,7 +17499,7 @@ function cambioPedirClave(titulo,sub){
   return confirmarOperacion(titulo,sub).then(function(v){ return v?USUARIOS[SESION.codigo]:null; });
 }
 (function(){
-  var ID_RE=/unlock|auth|^modal-cod$/i, NO_RE=/^ses-cod$|-error$|-title$|-subtitle$|-icon$|-confirm$|-wrap$|-section$|^modal-auth-gen$/i;
+  var ID_RE=/unlock|auth|^modal-cod$|^tg-clave$/i, NO_RE=/^ses-cod$|-error$|-title$|-subtitle$|-icon$|-confirm$|-wrap$|-section$|^modal-auth-gen$/i;
   function esClave(i){ return i&&i.tagName==='INPUT'&&i.id&&ID_RE.test(i.id)&&!NO_RE.test(i.id)&&i.type!=='checkbox'&&i.type!=='radio'&&i.type!=='hidden'; }
   function claves(){ return Array.prototype.filter.call(document.querySelectorAll('input[id]'),esClave); }
   function enModal(i){ return !!i.closest('.modal-overlay,.modal'); }
@@ -17626,6 +17629,36 @@ function tallerEditarPedido(cod){
   var rows=(window._prodRaw||{})[cod]; if(!rows||!rows.length){ alert('No se encontró el pedido '+cod+'. Recarga el Taller.'); return; }
   window._etData=window._etData||{}; window._etData['prod_'+cod]={hoja:'PRODUCCION',rows:rows,recarga:'cargarTaller'};
   editarTodoAbrir('prod_'+cod);
+}
+</script>
+
+<script>
+/* Al enviar (escaneo al mensajero o carga de guía): las piezas que estaban EN COSTURA pasan a "recibidas OK" para que sumen como listas en la costurera */
+async function tallerCosturaOk(cod){
+  try{
+    cod=String(cod||'').toUpperCase(); if(!cod) return;
+    var av=await scriptGETjson({action:'leerProdAvance'},20000), a=((av&&av.avance)||{})[cod];
+    if(!a||!a.costura) return;
+    var c=a.costura, n=0, ahora=costuraAhora();
+    Object.keys(c).forEach(function(k){ var e=costuraEnt(c[k]); if(e&&e.c&&e.env&&!e.est&&!e.pag){ e.est='ok'; e.rec=ahora; c[k]=e; n++; } });
+    if(!n) return;
+    var usr=(typeof SESION!=='undefined'&&SESION&&SESION.nombre)||'Taller';
+    var r=await scriptGETjson({action:'guardarProdAvance',cod:cod,done:JSON.stringify(a.done||[]),completo:a.completo?'SI':'',usuario:usr,vinil:JSON.stringify(a.vinil||[]),costura:JSON.stringify(c)},25000);
+    if(r&&r.ok){ window.prodAvance=window.prodAvance||{}; window.prodAvance[cod]=Object.assign({},a,{costura:c}); }
+  }catch(e){ console.warn('tallerCosturaOk',e); }
+}
+</script>
+
+<script>
+/* Agrupa piezas idénticas (misma talla/nombre/atributos) en una sola línea con cantidad: "5× Caballero L - SIN NOMBRE EN MANGA". Solo visual. */
+function piezasAgrupadas(s){
+  var L=String(s||'').split(' | ').map(function(x){return x.trim();}).filter(Boolean), bloques=[], act=null;
+  L.forEach(function(l){ var det=/^[^:\-]{1,30}:\s/.test(l)&&act; if(det) act.l.push(l); else { act={l:[l]}; bloques.push(act); } });
+  var map={}, orden=[];
+  bloques.forEach(function(b){ var k=b.l.join('\u0001'); if(!map[k]){ map[k]={l:b.l,n:0}; orden.push(k); } map[k].n++; });
+  var tot=bloques.length;
+  var html=orden.map(function(k){ var g=map[k]; return (g.n>1?'<b style="color:var(--accent);margin-right:4px">'+g.n+'×</b>':'')+g.l.join('<br>'); }).join('<div style="height:8px"></div>');
+  return html+(orden.length<tot?'<div style="margin-top:8px;padding-top:6px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)">Total: '+tot+' piezas · '+orden.length+' combinaciones</div>':'');
 }
 </script>
 </body>
