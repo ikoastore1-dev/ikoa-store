@@ -5487,7 +5487,13 @@ async function confirmarPagarCuota(){
 
 /* ===== FACTURA DEL CLIENTE: casilla en Cashea / Pendiente / Cola; se exige al enviar desde Taller ===== */
 window._facturaFlags={};
-async function facturaCargarFlags(){ await uniCargar(); try{ var d=await scriptGETjson({action:'leerFacturaCliente'},15000); if(d&&d.ok) window._facturaFlags=d.bases||{}; }catch(e){} try{ var c=await scriptGETjson({action:'leerCambios'},15000); if(c&&c.ok) window._cambioFlags=c.bases||{}; }catch(e){} }
+async function facturaCargarFlags(){   // las 3 consultas EN PARALELO (antes iban una tras otra y tardaba varias veces más)
+  await Promise.all([
+    uniCargar(),
+    scriptGETjson({action:'leerFacturaCliente'},15000).then(function(d){ if(d&&d.ok) window._facturaFlags=d.bases||{}; }).catch(function(){}),
+    scriptGETjson({action:'leerCambios'},15000).then(function(c){ if(c&&c.ok) window._cambioFlags=c.bases||{}; }).catch(function(){})
+  ]);
+}
 function facturaBase(cod){ return String(cod||'').trim().toUpperCase().split('.')[0]; }
 function facturaChk(codigoS){   // codigoS: código S de cualquier pack del pedido
   var b=facturaBase(codigoS); if(!b) return '';
@@ -5697,8 +5703,8 @@ async function cargarAprobacionesCashea(){
   const msgEl=document.getElementById('cashea-apro-msg');
   listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>';
   try{
-    await facturaCargarFlags();
-    const [data, dataTasa] = await Promise.all([
+    const [, data, dataTasa] = await Promise.all([
+      facturaCargarFlags(),
       scriptGETjson({action:'leerCashea'}),
       scriptGETjson({action:'leerTodosLosPrecios'})
     ]);
@@ -6831,8 +6837,7 @@ async function cargarCola(){
   const listEl=document.getElementById('cola-list');
   listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando cola...</div>`;
   try{
-    await facturaCargarFlags();
-    const data=await scriptGETjson({action:'leerCola',filtro:filtroCola});
+    const [,data]=await Promise.all([facturaCargarFlags(), scriptGETjson({action:'leerCola',filtro:filtroCola})]);
     window._hdrCola=data.headers||window._hdrCola||null;
     const enCola=data.rows||[];
     if(!enCola.length){
@@ -7481,7 +7486,14 @@ var CSS='.cp *{box-sizing:border-box}.cp{font-family:Montserrat,Barlow,Arial,san
 '.cp .t{display:inline-block;background:#111;color:#fff;font-weight:700;min-width:48px;text-align:center;padding:8px 0;font-size:13px}.cp .g{letter-spacing:.2em;font-size:8px;font-weight:700}.cp .nm b{font-size:13px}.cp .nm div{color:#777;font-size:9.5px;margin-top:2px}';
 var ETQ={normal:'CUELLO NORMAL',alto:'CUELLO ALTO',capucha:'CON CAPUCHA',capuchatapaboca:'CAPUCHA CON TAPABOCA'};
 var CHK=false;
-function filas(piezas,i0,pn){var h='',i=i0;piezas.forEach(function(p){i++;h+='<tr>'+(CHK&&p.id?'<td style="width:46px"><input type="checkbox" class="pchk" data-k="'+esc(p.id)+'" style="width:30px;height:30px;accent-color:#111;cursor:pointer"></td>':(CHK?'<td></td>':''))+'<td style="color:#888;width:34px">'+(i<10?'0':'')+i+'</td><td style="width:70px"><span class="t">'+esc(p.talla||'—')+'</span></td><td class="g" style="width:100px">'+esc(String(p.genero||'').toUpperCase())+'</td><td class="nm"><b>'+esc(p.nombre||'')+'</b>'+(p.extra?'<div>'+esc(p.extra)+'</div>':'')+'</td></tr>'});return {h:h,i:i}}
+function filas(piezas,i0,pn){var h='',i=i0;
+  if(!CHK){   // vista / PDF: piezas idénticas (talla, género, nombre y detalle) se agrupan con su cantidad; con checks de Producción cada pieza sigue siendo una fila
+    var gm={},go=[]; piezas.forEach(function(p){ var k=[p.talla,p.genero,p.nombre,p.extra].join('\u0001'); if(!gm[k]){ gm[k]={p:p,n:0}; go.push(k); } gm[k].n++; });
+    go.forEach(function(k){ var g=gm[k],p=g.p,a1=i+1,a2=i+g.n; i=a2; var z=function(x){return (x<10?'0':'')+x;};
+      h+='<tr><td style="color:#888;width:34px;white-space:nowrap">'+(g.n>1?z(a1)+'–'+z(a2):z(a1))+'</td><td style="width:110px;white-space:nowrap"><span class="t">'+esc(p.talla||'—')+'</span>'+(g.n>1?' <b style="font-size:15px;margin-left:6px">×'+g.n+'</b>':'')+'</td><td class="g" style="width:100px">'+esc(String(p.genero||'').toUpperCase())+'</td><td class="nm"><b>'+esc(p.nombre||'')+'</b>'+(p.extra?'<div>'+esc(p.extra)+'</div>':'')+'</td></tr>'; });
+    return {h:h,i:i};
+  }
+  piezas.forEach(function(p){i++;h+='<tr>'+(CHK&&p.id?'<td style="width:46px"><input type="checkbox" class="pchk" data-k="'+esc(p.id)+'" style="width:30px;height:30px;accent-color:#111;cursor:pointer"></td>':(CHK?'<td></td>':''))+'<td style="color:#888;width:34px">'+(i<10?'0':'')+i+'</td><td style="width:70px"><span class="t">'+esc(p.talla||'—')+'</span></td><td class="g" style="width:100px">'+esc(String(p.genero||'').toUpperCase())+'</td><td class="nm"><b>'+esc(p.nombre||'')+'</b>'+(p.extra?'<div>'+esc(p.extra)+'</div>':'')+'</td></tr>'});return {h:h,i:i}}
 /* datos = {cod,fecha,nombre,cedula,celular,correo,agencia,direccion,retira,retiraCi,retiraCel,urgente,packs:[{titulo,linea,vinil,bloques:[{tela,estilo,piezas:[{talla,genero,nombre,extra}],you:{img,lineas:[[a,b]]}|null}]}]} */
 async function armarPaginas(d){
   CHK=!!d.chk;var logo=d.soloSecciones?{src:''}:await loadImg(BASE+'ikoa_logo.png'),secs=[],n=0,PO=d.off||0;
@@ -10825,7 +10837,6 @@ async function cargarTaller(){
       scriptGETjson({action:'leerTallerFuente'}).catch(()=>({ok:false}))
     ]);
     try{ const av=await scriptGETjson({action:'leerProdAvance'}); window.prodAvance=(av&&av.avance)||{}; }catch(e){ window.prodAvance=window.prodAvance||{}; }
-    await facturaCargarFlags();
     await facturaCargarFlags();
     try{ const es=await scriptGETjson({action:'leerEstadoEnvio'},15000); window._estadoEnvio=(es&&es.estados)||{}; }catch(e){ window._estadoEnvio=window._estadoEnvio||{}; }
     const rows=data.rows||[];
