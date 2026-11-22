@@ -8477,7 +8477,7 @@ async function confirmarAprobacion(){
       const waBody=new FormData();
       waBody.append('celular', pendingSolicitud.celular||'');
       waBody.append('nombre', pendingSolicitud.nombre||'');
-      waBody.append('mensaje', `Hola ${pendingSolicitud.nombre||''} Somos IKOA BeKate. Tu pedido fue procesado correctamente. Recibiras una copia mas detallada por correo. Gracias por tu preferencia`);
+      waBody.append('mensaje', `Hola ${pendingSolicitud.nombre||''} Somos IKOA BRAND. Tu pedido fue procesado correctamente. Recibiras una copia mas detallada por correo. Gracias por tu preferencia`);
       await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{
         method:'POST',
         body:waBody,
@@ -8901,8 +8901,8 @@ document.getElementById('gestion-form').addEventListener('submit',async function
           waBody.append('celular', celularEnvio);
           waBody.append('nombre', nombreEnvio);
           const waMensaje=tipo==='COD'
-            ? `Hola ${nombreEnvio} Somos IKOA BeKate. Tu pedido ha sido registrado y ya se encuentra en el área de producción. En cuanto esté listo te notificaremos. Gracias`
-            : `Hola ${nombreEnvio} Somos IKOA BeKate. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias`;
+            ? `Hola ${nombreEnvio} Somos IKOA BRAND. Tu pedido ha sido registrado y ya se encuentra en el área de producción. En cuanto esté listo te notificaremos. Gracias`
+            : `Hola ${nombreEnvio} Somos IKOA BRAND. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias`;
           waBody.append('mensaje', waMensaje);
           await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:waBody,mode:'no-cors'});
         }
@@ -9251,7 +9251,7 @@ async function confirmarEnvioSeleccion(){
         const waBody=new FormData();
         waBody.append('celular', pedidoEncontrado.celular||'');
         waBody.append('nombre', pedidoEncontrado.nombre||'');
-        waBody.append('mensaje', `Hola ${pedidoEncontrado.nombre||''} Somos IKOA BeKate. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias`);
+        waBody.append('mensaje', `Hola ${pedidoEncontrado.nombre||''} Somos IKOA BRAND. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias`);
         await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:waBody,mode:'no-cors'});
       }
     }catch(waErr){ console.warn('WhatsApp webhook error:',waErr); }
@@ -10407,7 +10407,7 @@ async function tallerGuiaConfirmar(){
       var mb2=new FormData(); [['tipo_operacion','Enviado'],['status','Enviado'],['nombre',ps.nombre],['correo',ps.correo||''],['cedula',ps.cedula],['celular',ps.celular],['agencia',ps.agencia],['direccion_agencia',direccion],['diferente_envio',ps.esMismo?'no':'si'],['nombre_envio',ps.esMismo?'':ps.retiraNombre],['ci_envio',ps.esMismo?'':ps.retiraCi],['cel_envio',ps.esMismo?'':ps.retiraCel],['codigo',cs],['numero_guia',guia],['descripcion',dsc],['urgente','NO'],['selector_agregar_arte','no'],['nombre_arte',''],['usuario',usuario],['fecha',fecha],['sin_correo','si']].forEach(function(kv){mb2.append(kv[0],kv[1])});
       var pr2=await enviarAProceso(mb2,'Enviado'); if(!pr2.ok)throw new Error('COD '+cs+': '+(pr2.error||'no se pudo registrar el envío'));
     }
-    try{ if(p.celular){ var wa=new FormData(); wa.append('celular',p.celular||''); wa.append('nombre',p.nombre||''); wa.append('mensaje','Hola '+(p.nombre||'')+' Somos IKOA BeKate. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias'); await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:wa,mode:'no-cors'}); } }catch(e){ console.warn('WhatsApp webhook error:',e); }
+    try{ if(p.celular){ var wa=new FormData(); wa.append('celular',p.celular||''); wa.append('nombre',p.nombre||''); wa.append('mensaje','Hola '+(p.nombre||'')+' Somos IKOA BRAND. Tu pedido ya fue enviado a la agencia o servicio solicitado. Para mas detalle revisa tu correo. Gracias'); await fetch('https://hook.us2.make.com/mfcykwoz8ghmo59b9cmbljxb8i7vol7m',{method:'POST',body:wa,mode:'no-cors'}); } }catch(e){ console.warn('WhatsApp webhook error:',e); }
     msg.innerHTML='<span style="color:var(--accent);font-weight:800">✅ Enviado · COD '+prodEsc(t.cod)+' · '+prodEsc(usuario)+'</span>';
     setTimeout(function(){ tallerCerrarGuia(); cargarTaller(); },2500);
   }catch(e){ msg.innerHTML='<span style="color:var(--danger)">✗ '+prodEsc(e.message)+'</span>'; btn.disabled=false; btn.style.opacity=1; }
