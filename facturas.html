@@ -33,7 +33,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
 .vi{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line);font-size:13px}.vi:first-child{border-top:0}.vi b{font-size:14px;display:block}.vi small{color:var(--muted)}
 .chip{white-space:nowrap;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:#eee;color:var(--ink)}.chip.r{background:#fbe9e7;color:var(--err)}.chip.a{background:#fff3df;color:var(--warn)}.chip.v{background:#e3f4ea;color:var(--ok)}
 .card h2 .n{float:right}.sub{font-size:12px;color:var(--muted);margin:-4px 0 6px}.tl{font-size:12px;color:var(--muted);border-left:2px solid var(--line);padding:2px 0 8px 10px;margin-left:4px}.tl b{color:var(--ink)}
-</style></head><body>
+.vchk{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;margin:4px 0 8px;padding:8px 10px;border:1px dashed var(--line);border-radius:10px;background:#faf8f5}.vchk input{width:20px;height:20px;accent-color:var(--acc);flex:none}.vchk em{font-style:normal;margin-left:auto}</style></head><body>
 <header><span>IKOA · Cargar facturas <small>v1</small></span><button id="logout" class="hide">Salir</button></header>
 <main>
 
@@ -154,8 +154,11 @@ if(S.usuario&&TOKEN)cargarPorFacturar();
 function hace(ms){if(!ms)return 'nunca';const m=Math.round((Date.now()-ms)/60000);return m<1?'justo ahora':m<60?'hace '+m+' min':'hace '+(Math.floor(m/60))+' h '+(m%60)+' min'}
 function dur(m){if(m==null)return 'nuevo';return m<60?m+' min':Math.floor(m/60)+' h '+(m%60?(m%60)+' min':'')}
 function hh(ms){return new Date(ms).toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit',timeZone:'America/Caracas'})}
-function vcard(tit,n,sub,items){return `<div class="card"><h2>${tit} <span class="tag ${n?'p':'f'} n">${n}</span></h2>${sub?'<div class="sub">'+sub+'</div>':''}${items.length?items.join(''):'<div class="hint">✓ Nada pendiente</div>'}</div>`}
+function vchk(cat,txt){const d=S.vdiario||{flags:{},ultHoy:[]},on=!!d.flags[cat],ya=on&&d.ultHoy.includes(cat);
+ return `<label class="vchk"><input type="checkbox" class="vdiario" data-cat="${cat}" ${on?'checked':''}> <span>${txt||'Avisar solo 1 vez al día'}</span>${on?`<em class="chip ${ya?'v':'a'}">${ya?'✓ ya avisado hoy':'avisa 1 vez al día'}</em>`:''}</label>`}
+function vcard(tit,n,sub,items,chk){return `<div class="card"><h2>${tit} <span class="tag ${n?'p':'f'} n">${n}</span></h2>${sub?'<div class="sub">'+sub+'</div>':''}${chk||''}${items.length?items.join(''):'<div class="hint">✓ Nada pendiente</div>'}</div>`}
 function pintarVigilancia(v){
+ S.vdiario=v.diario||{flags:{},ultHoy:[]};
  const act=v.vigilanciaActiva,ult=v.ultimaVuelta,atras=ult?(Date.now()-ult)/60000:9e9;
  const caida=!act||atras>v.cadaMin*2+5;
  const est=$('vEstado');est.className='estado '+(caida?'mal':(v.dentroHorario?'ok':'noche'));
@@ -168,10 +171,10 @@ function pintarVigilancia(v){
  const ap=(x,tipo)=>`<div class="vi"><div><b>${esc(x.base)}${x.nombre?' · '+esc(x.nombre):''}</b><small>${tipo}${x.notificado?' · cliente notificado (no alerta)':''}</small></div><span class="chip ${x.escalado?'r':(x.mins!=null&&x.mins>=30?'a':'')}">${x.notificado?'✓ avisado':(x.escalado?'⚠️ ':'')+dur(x.mins)}</span></div>`;
  const cuerpo=[];
  cuerpo.push(vcard('🔔 Por aprobar',porAp,'Los marcados ⚠️ llevan '+v.correoMin+' min o más sin atender: ya se refuerzan por correo.',
-  v.pendientes.map(x=>ap(x,'Pendiente')).concat(v.cashea.map(x=>ap(x,'Cashea')),v.preaprobados.map(x=>ap(x,'Cashea preaprobado por tienda')))));
- cuerpo.push(vcard('🧾 Cashea por facturar',v.porFacturar.length,'Factura obligatoria. Se cargan en la pestaña “Cargar factura”.',v.porFacturar.map(x=>`<div class="vi"><div><b>${esc(x.base)}${x.nombre?' · '+esc(x.nombre):''}</b><small>${esc(x.fecha)}</small></div><span class="chip a">por facturar</span></div>`)));
- cuerpo.push(vcard('🛒 Carritos sin concretar',v.carritos.length,'Llegaron al pago con nombre y celular (últimas 12 h).',v.carritos.map(c=>`<div class="vi"><div><b>${esc(c.nombre)}${c.usd!=null?' · $'+c.usd.toFixed(2):''}</b><small>${esc(c.cel)} · ${esc(c.estado)}</small></div><span class="chip ${c.avisado?'v':'a'}">${c.avisado?'✓ avisado':dur(c.mins)}</span></div>`)));
- cuerpo.push(vcard('🔥 Urgentes para hoy o mañana',urg+(v.urgSinFecha||[]).length,'Tomado de la nota de urgente de cada pedido en producción.',
+  v.pendientes.map(x=>ap(x,'Pendiente')).concat(v.cashea.map(x=>ap(x,'Cashea')),v.preaprobados.map(x=>ap(x,'Cashea preaprobado por tienda'))),vchk('pend','Pendientes: 1 vez al día')+vchk('cash','Cashea: 1 vez al día')+vchk('pre','Preaprobados: 1 vez al día')));
+ cuerpo.push(vcard('🧾 Cashea por facturar',v.porFacturar.length,'Factura obligatoria. Se cargan en la pestaña “Cargar factura”.',v.porFacturar.map(x=>`<div class="vi"><div><b>${esc(x.base)}${x.nombre?' · '+esc(x.nombre):''}</b><small>${esc(x.fecha)}</small></div><span class="chip a">por facturar</span></div>`),vchk('fact')));
+ cuerpo.push(vcard('🛒 Carritos sin concretar',v.carritos.length,'Llegaron al pago con nombre y celular (últimas 12 h).',v.carritos.map(c=>`<div class="vi"><div><b>${esc(c.nombre)}${c.usd!=null?' · $'+c.usd.toFixed(2):''}</b><small>${esc(c.cel)} · ${esc(c.estado)}</small></div><span class="chip ${c.avisado?'v':'a'}">${c.avisado?'✓ avisado':dur(c.mins)}</span></div>`),vchk('carr','Un solo resumen al día (en vez de un aviso por carrito)')));
+ cuerpo.push(vcard('🔥 Urgentes para hoy o mañana',urg+(v.urgSinFecha||[]).length,'Tomado de la nota de urgente de cada pedido en producción. Ya se avisa 1 sola vez al día (listado de las 7:00 am).',
   (v.urgentes||[]).map(x=>`<div class="vi"><div><b>${esc(x.etq)} · ${esc(x.nombre)}</b><small>${esc(x.nota)}</small></div><span class="chip r">${esc(x.cuando)}</span></div>`).concat((v.urgSinFecha||[]).map(x=>`<div class="vi"><div><b>${esc(x.etq)} · ${esc(x.nombre)}</b><small>${esc(x.nota)}</small></div><span class="chip a">sin fecha clara</span></div>`))));
  cuerpo.push(vcard('⏳ Más de '+v.diasHabiles+' días hábiles',vie,'En producción y sin enviar (lunes a viernes, sin feriados).',(v.viejos||[]).map(x=>`<div class="vi"><div><b>${esc(x.etq)} · ${esc(x.nombre)}</b><small>desde ${esc(x.desde)}${x.nota?' · '+esc(x.nota):''}</small></div><span class="chip r">${x.dias} días</span></div>`)));
  cuerpo.push(`<div class="card"><h2>🕒 Últimas vueltas</h2><div class="sub">Correo de refuerzo a ti: ${v.ultimoCorreo?hace(v.ultimoCorreo):'aún no se ha enviado'} · Listado de las 7:00 am: ${v.listadoActivo?'activo':'NO instalado'}</div>`+
@@ -185,6 +188,9 @@ async function cargarVigilancia(){if(vigBusy)return;vigBusy=true;$('vRef').disab
  }catch(e){$('vCuerpo').innerHTML='<div class="card"><div class="msg err">'+esc(e.message)+'</div></div>'}
  finally{vigBusy=false;$('vRef').disabled=false}}
 $('vRef').onclick=cargarVigilancia;
+document.addEventListener('change',async e=>{const c=e.target.closest('.vdiario');if(!c)return;c.disabled=true;
+ try{const r=await gas({action:'guardarVigilanciaDiario',cat:c.dataset.cat,valor:c.checked?'SI':'NO'});if(!r||!r.ok)throw new Error((r&&r.error)||'No se pudo guardar');await cargarVigilancia()}
+ catch(err){c.checked=!c.checked;c.disabled=false;$('vHora').textContent='⚠️ No se pudo guardar: '+err.message}});
 setInterval(()=>{if(S.usuario&&TOKEN&&!document.hidden&&!$('t-vig').classList.contains('hide'))cargarVigilancia()},60000);
 
 /* ---------- pestañas ---------- */
