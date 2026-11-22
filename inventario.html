@@ -5707,11 +5707,13 @@ async function cargarAprobacionesCashea(modo){
   if(!listEl) return;
   listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>';
   try{
-    const [, data, dataTasa] = await Promise.all([
+    const [, data, dataTasa, dataNotif] = await Promise.all([
       facturaCargarFlags(),
       scriptGETjson({action:'leerCashea'}),
-      scriptGETjson({action:'leerTodosLosPrecios'})
+      scriptGETjson({action:'leerTodosLosPrecios'}),
+      scriptGETjson({action:'leerCasheaNotificados'}).catch(()=>null)
     ]);
+    if(dataNotif&&dataNotif.ok) window._casheaNotif=dataNotif.bases||{};
     if(!data.ok) throw new Error(data.error||'Error');
     window._hdrApro=data.headers||window._hdrApro||null;
     const rows=(data.rows||[]).filter(r=>(String(r[26]||'').trim()==='Cashea Preaprobado')===PRE);
@@ -5808,6 +5810,7 @@ async function cargarAprobacionesCashea(modo){
           ${vp(17)?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${piezasAgrupadas(vp(17))}</div>`:''}
         </div>`;
       });
+      html+=casheaNotifHTML(base,v(23));
       // Botón aprobar
       const aproKey='cashea_'+base.replace(/[^a-zA-Z0-9]/g,'_');
       window[`_casheaData_${aproKey}`]={cod:base, codigos:packs.map(pk=>String(pk[0]||'').trim()).filter(Boolean), fecha:v(4), nombre:v(7), celular:v(10), pack:v(14), tela:v(15), piezas:v(17), agencia:v(18), monto:v(29), casheaPct:casheaPct, row:r, pre:PRE, estado:v(26), preCod:v(23), prePct:v(34), preUsuario:v(24)};
@@ -17801,6 +17804,35 @@ async function repGuardar(){
 function casheaRol(){ var r=String((typeof SESION!=='undefined'&&SESION&&SESION.rol)||'admin').toLowerCase(), n=String((typeof SESION!=='undefined'&&SESION&&SESION.nombre)||'');
   if(r==='tienda'||/gaby/i.test(n)) return 'tienda'; if(r==='respaldo') return 'otro'; return 'admin'; }
 function modal0Titulo(){ var m=document.getElementById('modal-aprobar-cashea'); return m&&m.firstElementChild&&m.firstElementChild.firstElementChild; }
+</script>
+
+<script>
+/* Cashea: "Notificado al cliente" (exige el COD Cashea). Mientras esté notificado, el aviso de cada 30 min no lo cuenta. */
+window._casheaNotif=window._casheaNotif||{};
+function casheaNotifHTML(base,codSug){
+  var n=(window._casheaNotif||{})[base], on=!!n, id='cn-'+String(base).replace(/[^A-Za-z0-9]/g,'_');
+  return '<div style="display:flex;align-items:center;gap:10px;margin:10px 0;background:var(--surface2);border:1.5px solid '+(on?'var(--accent)':'var(--border)')+';border-radius:10px;padding:10px 12px;flex-wrap:wrap">'+
+    '<input type="checkbox" id="'+id+'" '+(on?'checked':'')+' onchange="casheaNotifCambiar(\''+base+'\',this,\''+String(codSug||'').replace(/[^A-Za-z0-9-]/g,'')+'\')" style="width:20px;height:20px;cursor:pointer;accent-color:var(--accent)">'+
+    '<label for="'+id+'" style="font-size:13px;font-weight:700;cursor:pointer">📲 Notificado al cliente</label>'+
+    (on?'<span style="font-size:12px;color:var(--accent)">✅ COD Cashea <b>'+String(n.cod).replace(/[<>&]/g,'')+'</b> · '+String(n.fecha||'').replace(/[<>&]/g,'')+' · '+String(n.usuario||'').replace(/[<>&]/g,'')+'</span>':'<span style="font-size:11px;color:var(--muted)">(se pide el COD Cashea para asociar la orden; mientras no esté marcado, el sistema te sigue avisando)</span>')+'</div>';
+}
+async function casheaNotifCambiar(base,cb,sug){
+  var marcar=cb.checked; var usr=(typeof SESION!=='undefined'&&SESION&&SESION.nombre)||'';
+  try{
+    var cod='';
+    if(marcar){
+      cod=await uiPrompt('Número de orden Cashea (COD Cashea)\nEscríbelo para asociar este pedido con su orden y marcarlo como notificado al cliente.',sug||'');
+      cod=(cod==null?'':String(cod).trim());
+      if(!cod){ cb.checked=false; if(cod==='') alert('⚠️ Sin el COD Cashea no se puede marcar como notificado.'); return; }
+    }else if(!await uiConfirm('¿Quitar la marca de "notificado al cliente"?\nEl sistema volverá a avisarte de este pedido.')){ cb.checked=true; return; }
+    cb.disabled=true;
+    var r=await scriptGETjson({action:'marcarCasheaNotificado',base:base,on:marcar?'1':'',cod_cashea:cod,usuario:usr,fecha:(typeof getFechaHora==='function'?getFechaHora():new Date().toLocaleString('es-VE'))},20000);
+    if(!r||!r.ok) throw new Error((r&&r.error)||'sin respuesta');
+    window._casheaNotif=window._casheaNotif||{};
+    if(marcar) window._casheaNotif[base]={cod:cod,usuario:usr,fecha:(typeof getFechaHora==='function'?getFechaHora():'')}; else delete window._casheaNotif[base];
+    var cont=cb.parentElement; cont.outerHTML=casheaNotifHTML(base,sug);
+  }catch(e){ cb.checked=!marcar; cb.disabled=false; alert('✗ No se pudo guardar: '+e.message); }
+}
 </script>
 </body>
 </html>
