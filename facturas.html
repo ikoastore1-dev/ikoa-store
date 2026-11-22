@@ -122,7 +122,8 @@ $('logout').onclick=()=>{try{sessionStorage.removeItem('ikoaFacUser');sessionSto
 if(S.usuario&&TOKEN)mostrarApp();
 
 /* ===== Cashea por facturar: vigila las aprobaciones Cashea (COLA.FACTURACION) ===== */
-async function cargarPorFacturar(){
+async function cargarRecientes(){try{const r=await gas({action:'leerFacturasCargadas'});S.rec=((r&&r.rows)||[]).map(f=>parseInt(String(f.num).replace(/\D/g,''),10)).filter(n=>n>0&&n<1e7).slice(0,60)}catch(e){}}
+async function cargarPorFacturar(){cargarRecientes();
  try{const r=await gas({action:'buscarPedidoFactura',q:'',solo_cola:'SI'});const l=(r&&r.pedidos)||[];S.porFact=l;
   $('nPorFact').textContent=l.length;$('nPorFact').style.background=l.length?'':'#1a3a1a';
   $('listaPorFact').innerHTML=l.length?l.map((c,i)=>`<button type="button" class="cand${S.pre&&S.pre.base===c.base?' on':''}" data-pf="${i}"><b>${esc(c.base)} · ${esc(c.nombre)}</b>${(c.cods||[]).map(x=>'<span class="tag f">COD '+esc(x.cod)+(x.factura?' ✓':'')+'</span>').join('')}<span>Cédula ${esc(c.cedula||'—')} · ${c.monto?(c.moneda==='Bs'||!c.moneda?'Bs ':'$ ')+esc(c.monto):''} · ${esc(c.fecha||'')}</span></button>`).join(''):'<div class="hint">✓ No hay pedidos Cashea por facturar.</div>'
@@ -151,9 +152,11 @@ async function pdfACanvas(file){
  const pdf=await window.pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise,pg=await pdf.getPage(1),vp0=pg.getViewport({scale:1}),sc=Math.min(2.5,1800/Math.max(vp0.width,vp0.height)),vp=pg.getViewport({scale:sc});
  const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;return c}
 async function leerTexto(canvas){
- if(window.__ocrStub)return window.__ocrStub(canvas);
+ if(window.__ocrStub){const r=await window.__ocrStub(canvas);return Array.isArray(r)?r:[r]}
  await cargarLib('https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js',()=>!!window.Tesseract);
- const w=await window.Tesseract.createWorker('spa',1);try{const r=await w.recognize(canvas);return(r&&r.data&&r.data.text)||''}finally{try{await w.terminate()}catch(e){}}}
+ const w=await window.Tesseract.createWorker('spa',1);const out=[];
+ try{for(const psm of ['4','6']){try{await w.setParameters({tessedit_pageseg_mode:psm,preserve_interword_spaces:'1'})}catch(e){}const r=await w.recognize(canvas);const tx=(r&&r.data&&r.data.text)||'';if(tx)out.push(tx)}return out}   // 2 lecturas (PSM 4 y 6): se cruzan para corregir errores del OCR
+ finally{try{await w.terminate()}catch(e){}}}
 const fileB64=f=>new Promise((r,j)=>{const fr=new FileReader();fr.onload=()=>r(String(fr.result).split(',')[1]);fr.onerror=j;fr.readAsDataURL(f)});
 
 async function procesarArchivo(file){
@@ -167,34 +170,86 @@ async function procesarArchivo(file){
   else{canvas=await imgACanvas(file,1800);b64=canvas.toDataURL('image/jpeg',0.85).split(',')[1];mime='image/jpeg'}
   S.archivo={b64,mime,nombre:file.name||'factura'};
   const pv=document.createElement('canvas');pv.width=Math.min(600,canvas.width);pv.height=Math.round(canvas.height*pv.width/canvas.width);pv.getContext('2d').drawImage(canvas,0,0,pv.width,pv.height);$('prev').innerHTML='';$('prev').appendChild(pv);
-  let texto='';try{const cr=document.createElement('canvas');cr.width=canvas.width;cr.height=canvas.height;cr.getContext('2d').drawImage(canvas,0,0);texto=await leerTexto(realzar(cr))}catch(e){$('leyendo').className='msg warn';$('leyendo').textContent='No se pudo leer automáticamente ('+e.message+'). Escribe los datos a mano.'}
-  const d=parsearFactura(texto);$('ocrTxt').textContent=texto||'(sin texto)';
+  let texto=[];try{const cr=document.createElement('canvas');cr.width=canvas.width;cr.height=canvas.height;cr.getContext('2d').drawImage(canvas,0,0);texto=await leerTexto(realzar(cr))}catch(e){$('leyendo').className='msg warn';$('leyendo').textContent='No se pudo leer automáticamente ('+e.message+'). Escribe los datos a mano.'}
+  const d=parsearFactura(texto,{rec:S.rec});S.leida=d;$('ocrTxt').textContent=(texto&&texto.length?texto.join('\n===== otra lectura =====\n'):'')||'(sin texto)';
   $('num').value=d.num||'';$('fecha').value=d.fecha||'';$('monto').value=d.monto||'';$('ced').value=d.ced||'';$('nom').value=d.nom||'';
   $('c2').classList.remove('hide');$('c3').classList.remove('hide');
-  if(texto){$('leyendo').className='msg ok';$('leyendo').textContent=d.num?'✓ Leída. Revisa los datos antes de guardar.':'Leída, pero no encontré el número de factura. Escríbelo.'}
+  if(texto.length){const av=[];if(!d.num)av.push('no pude leer el N° de factura: escríbelo');if(!d.montoOk)av.push('el monto no pudo verificarse con el IVA: revísalo');
+   $('leyendo').className='msg '+(av.length?'warn':'ok');$('leyendo').textContent=av.length?'⚠️ Leída, pero '+av.join(' y ')+'.':'✓ Leída. Total verificado con el IVA (16%). Confirma el N° y la fecha mirando la foto.'}
+  $('num').placeholder=S.rec&&S.rec.length?'Ej: '+(Math.max.apply(null,S.rec)+1)+' (siguiente)':'Ej: 00001234';
   await sugerir();
  }catch(e){$('leyendo').className='msg err';$('leyendo').textContent=e.message}
 }
 
-/* Interpreta el texto de una factura (formato venezolano: 1.234,56) */
-function parsearFactura(t){
- const o={num:'',fecha:'',monto:'',ced:'',nom:''};t=String(t||'').replace(/\r/g,'');
- // Ticket fiscal (SENIAT): "FACTURA:   00002354". Se exige los dos puntos para no confundir con el título "FACTURA" ni con "Ref. Interna"
- let m=t.match(/FACTURA\s*[:;.]\s*N?[°º]?\s*0*(\d{3,12})/i)||t.match(/(?:n[°º]|nro\.?|no\.)\s*(?:de\s*)?factura[\s:.#-]*0*(\d{3,12})/i);
- if(m)o.num=m[1];
+/* ===== Lectura de facturas fiscales SENIAT (ticket térmico). El OCR confunde 0/6/8/9: se corrige con IVA, secuencia y fecha ===== */
+const CONF='0689';
+const esConf=c=>CONF.indexOf(c)>=0;
+function eqStr(a,b){if(a.length!==b.length)return false;for(let i=0;i<a.length;i++){if(a[i]!==b[i]&&!(esConf(a[i])&&esConf(b[i])))return false}return true}
+function variantes(s,max){const pos=[];for(let i=0;i<s.length;i++)if(esConf(s[i]))pos.push(i);
+ if(pos.length>max)return [{s:s,n:0}];const res=[];
+ const rec=(k,cur,n)=>{if(k===pos.length){res.push({s:cur.join(''),n:n});return}
+  for(const d of CONF){const c=cur.slice();c[pos[k]]=d;rec(k+1,c,n+(d===s[pos[k]]?0:1))}};
+ rec(0,s.split(''),0);return res}
+function lev(a,b){a=String(a||'');b=String(b||'');const m=[];for(let i=0;i<=a.length;i++){m[i]=[i]}for(let j=1;j<=b.length;j++)m[0][j]=j;
+ for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return m[a.length][b.length]}
+const fmtCent=c=>{const e=Math.floor(c/100),d=String(c%100).padStart(2,'0');return String(e).replace(/\B(?=(\d{3})+(?!\d))/g,'.')+','+d};
+/* Montos: busca Base + IVA(16%) + Total que cuadren aunque el OCR cambie 0↔8↔6↔9 */
+function poolMontos(t){t=String(t||'').replace(/(\d)\s*([.,])\s*(\d)/g,'$1$2$3');const out=[];const re=/\d[\d.,]{3,13}\d/g;let m;
+ while((m=re.exec(t))){const raw=m[0];if(!/[.,]\d{2}$/.test(raw))continue;const d=raw.replace(/\D/g,'');if(d.length>=4&&d.length<=11)out.push(d)}return out}
+function repararTotal(pool){let best=null;
+ pool.forEach(sB=>{variantes(sB,7).forEach(v=>{const b=parseInt(v.s,10);if(!b||b<1000)return;const i0=Math.round(b*0.16);
+  for(let di=-1;di<=1;di++){const i=i0+di,tt=b+i,si=String(i),st=String(tt);
+   if(pool.some(y=>y!==sB&&eqStr(si,y))&&pool.some(y=>eqStr(st,y))){const sc=v.n*2+Math.abs(di);if(!best||sc<best.sc||(sc===best.sc&&tt>best.t))best={sc:sc,t:tt,b:b,i:i}}}})});
+ return best}
+/* Fecha dd-mm-aaaa: elige la variante válida, no futura y más reciente */
+function repararFecha(d,m,y,hoy){hoy=hoy||new Date();const cand=[];
+ variantes(String(d).padStart(2,'0'),2).forEach(a=>variantes(String(m).padStart(2,'0'),2).forEach(b=>variantes(String(y),4).forEach(c=>{
+  const D=+a.s,M=+b.s,Y=+c.s;if(M<1||M>12||D<1||D>31)return;const dt=new Date(Y,M-1,D);if(dt.getMonth()!==M-1)return;
+  const dif=(hoy-dt)/864e5;if(dif<-0.5||dif>800)return;cand.push({dt:dt,n:a.n+b.n+c.n,s:a.s+'/'+b.s+'/'+c.s})})));
+ if(!cand.length)return null;cand.sort((p,q)=>(q.dt-p.dt)||(p.n-q.n));return cand[0].s}
+const L2D={o:'0',O:'0',D:'0',Q:'0',z:'2',Z:'2',s:'5',S:'5',l:'1',I:'1',B:'8',g:'9',b:'6',G:'6'};
+function candNumero(t){const L=String(t||'').replace(/\r/g,'').split('\n');
+ let i0=L.findIndex(l=>/^\W*FACTUR/i.test(l)),i1=L.findIndex((l,k)=>k>=Math.max(i0,0)&&/FECHA/i.test(l));if(i0<0)i0=0;if(i1<0)i1=Math.min(L.length-1,i0+4);
+ const out=[];for(let k=i0;k<=Math.min(L.length-1,i1+4);k++){const l=L[k];if(!l.trim()||/interna|ref\b/i.test(l))continue;
+  let m;const re=/[0-9OoDQ]{6,10}/g;while((m=re.exec(l)))out.push(m[0].replace(/[oOdDQ]/g,'0'));
+  if(!out.length){const re2=/[A-Za-z0-9]{8}/g;while((m=re2.exec(l))){const s=m[0].split('').map(c=>/\d/.test(c)?c:(L2D[c]||'?')).join('');if(!/\?/.test(s)&&/^0{2,}/.test(s))out.push(s)}}}
+ return out}
+function limpiaNumero(tok){if(!tok)return '';let s=tok.length>8?tok.slice(-8):tok;
+ if(s.length===8&&/^[0689]{4}/.test(s))s='0000'+s.slice(4);else if(s.length===8&&/^[0689]{3}[1-57]/.test(s))s='000'+s.slice(3);
+ return s.replace(/^0+/,'')||''}
+/* secuencia: si hay facturas cargadas, elige la variante 0/6/8/9 más cercana a las últimas */
+function ajustarNumero(n,rec){if(!n||!rec||!rec.length)return n;const dist=v=>Math.min.apply(null,rec.map(r=>Math.abs(r-v)));
+ const v0=parseInt(n,10);if(dist(v0)<=400)return n;let best=null;
+ variantes(n,8).forEach(v=>{const x=parseInt(v.s,10);const d=dist(x);if(d<=400&&(!best||d<best.d||(d===best.d&&v.n<best.n)))best={s:String(x),d:d,n:v.n}});
+ return best?best.s:n}
+function parsearUno(t,ctx){const o={num:'',fecha:'',monto:'',ced:'',nom:'',montoOk:false};t=String(t||'').replace(/\r/g,'');ctx=ctx||{};
+ // número
+ const cn=candNumero(t).map(limpiaNumero).filter(Boolean);let m=t.match(/(?:n[°º]|nro\.?|no\.)\s*(?:de\s*)?factura[\s:.#-]*0*(\d{3,12})/i);
+ o.num=cn.length?cn[0]:(m?m[1]:'');
+ // fecha
  m=t.match(/FECHA\s*[:;.]?\s*(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4}|\d{2})/i)||t.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4}|\d{2})\b/);
- if(m){let a=m[3];if(a.length===2)a='20'+a;o.fecha=m[1].padStart(2,'0')+'/'+m[2].padStart(2,'0')+'/'+a}
- // Cliente: línea "RIF/CI:V11053975". El RIF de IKOA (J-505031716) sale arriba en el ticket y se ignora
- const EMPRESA='505031716';
- m=t.match(/RIF\s*[\/|]\s*CI\s*[:;.]?\s*([VEJGP])?[\s-]*([\d.]{6,11})/i);
- if(m&&m[2].replace(/\D/g,'')!==EMPRESA)o.ced=m[2].replace(/\D/g,'');
- if(!o.ced){const re=/\b([VEJGP])[\s.:-]*([\d.]{6,11})(?:[\s-]*\d)?\b/gi;let x;while((x=re.exec(t))){const d=x[2].replace(/\D/g,'');if(d&&d!==EMPRESA){o.ced=d;break}}}
- m=t.match(/(?:R\.?\s*S\.?|raz[oó]n social|nombre|cliente|se[ñn]or(?:es)?)\s*[:;]\s*([^\n]{3,60})/i);
- if(m)o.nom=m[1].replace(/\s{2,}/g,' ').replace(/(rif|c\.?i\.?|c[ée]dula).*$/i,'').trim();
- const nums=[];const re2=/\btotal\b[^\d\n]{0,28}([\d][\d.,]*)/gi;let y;while((y=re2.exec(t))){const v=aNumero(y[1]);if(v>0)nums.push(v)}
- if(!nums.length){const re3=/(?:tran\.?\s*bancaria|efectivo|divisa)[^\d\n]{0,20}([\d][\d.,]*)/gi;while((y=re3.exec(t))){const v=aNumero(y[1]);if(v>0)nums.push(v)}}
- if(nums.length){const v=Math.max(...nums);o.monto=v.toFixed(2).replace('.',',')}
+ if(m){let a=m[3];if(a.length===2)a='20'+a;o.fecha=repararFecha(m[1],m[2],a,ctx.hoy)||(m[1].padStart(2,'0')+'/'+m[2].padStart(2,'0')+'/'+a)}
+ // cédula del cliente (el RIF de IKOA sale arriba y se ignora)
+ const EMP='505031716';
+ m=t.match(/R[I1lE]F?\s*[\/|]\s*C[I1l]\s*[:;.\-]?\s*([VEJGP])?[\s-]*([\d.]{6,11})/i);if(m&&m[2].replace(/\D/g,'')!==EMP)o.ced=m[2].replace(/\D/g,'');
+ // nombre
+ m=t.match(/(?:R\s*[.\-]\s*S\s*[.\-]?|raz[oó]n social|nombre|cliente|se[ñn]or(?:es)?)\s*[:;]\s*([^\n]{3,60})/i)||t.match(/\bS\.\s*[:;]\s*([A-ZÁÉÍÓÚÑ ]{4,50})/);
+ if(m)o.nom=m[1].replace(/(rif|c\.?i\.?|c[ée]dula).*$/i,'').replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ ]/g,' ').replace(/\s+/g,' ').trim().replace(/(\s[A-Za-z]{1,2})+$/,'').trim();
+ // monto: primero que cuadre con IVA; si no, el TOTAL del ticket
+ const r=repararTotal(poolMontos(t));
+ if(r){o.monto=fmtCent(r.t);o.montoOk=true}
+ else{const nums=[];const re2=/\btotal\b[^\d\n]{0,28}([\d][\d.,]*)/gi;let y;while((y=re2.exec(t))){const v=aNumero(y[1]);if(v>0)nums.push(v)}
+  if(!nums.length){const re3=/(?:tran\.?\s*bancaria|efectivo|divisa)[^\d\n]{0,20}([\d][\d.,]*)/gi;while((y=re3.exec(t))){const v=aNumero(y[1]);if(v>0)nums.push(v)}}
+  if(nums.length)o.monto=Math.max.apply(null,nums).toFixed(2).replace('.',',')}
  return o}
+/* Une varias lecturas (PSM 4 y 6): por campo gana la verificada / la más repetida */
+function parsearFactura(textos,ctx){if(!Array.isArray(textos))textos=[textos];ctx=ctx||{};const rs=textos.map(t=>parsearUno(t,ctx));
+ const voto=(k,pref)=>{const c={};rs.forEach(r=>{if(r[k]&&(!pref||r[pref]))c[r[k]]=(c[r[k]]||0)+1});let b='',n=0;Object.keys(c).forEach(v=>{if(c[v]>n){n=c[v];b=v}});return b};
+ const o={num:'',fecha:'',monto:'',ced:'',nom:'',montoOk:false};
+ o.monto=voto('monto','montoOk')||voto('monto');o.montoOk=rs.some(r=>r.montoOk&&r.monto===o.monto);
+ o.fecha=voto('fecha');o.ced=voto('ced');o.nom=rs.map(r=>r.nom).filter(Boolean).sort((a,b)=>b.length-a.length)[0]||'';
+ o.num=ajustarNumero(voto('num'),ctx.rec);return o}
+
 // Realza el contraste (tickets térmicos salen grises y pálidos en foto): gris + estirado de niveles
 function realzar(c){const x=c.getContext('2d'),im=x.getImageData(0,0,c.width,c.height),d=im.data,h=new Uint32Array(256);
  for(let i=0;i<d.length;i+=4){const g=(d[i]*.299+d[i+1]*.587+d[i+2]*.114)|0;d[i]=d[i+1]=d[i+2]=g;h[g]++}
@@ -208,7 +263,7 @@ function aNumero(s){s=String(s||'').trim();if(!s)return 0;const ult=Math.max(s.l
 const fmtBs=n=>Number(n||0).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2});
 function pintarCands(lista,vacio){
  S.sel='';$('sinPedido').classList.remove('on');$('guardar').disabled=true;S.cands=lista;
- $('cands').innerHTML=lista.length?lista.map((c,i)=>`<button type="button" class="cand" data-i="${i}"><b>${esc(c.base)} · ${esc(c.nombre)}</b>${c.enCola?'<span class="tag p">POR FACTURAR</span>':''}${c.coincide?'<span class="tag f">✓ MONTO COINCIDE</span>':''}${c.facturado?'<span class="tag f">YA TIENE FACTURA</span>':''}<span>Cédula ${esc(c.cedula||'—')} · ${c.monto?(c.moneda==='Bs'||!c.moneda?'Bs ':'$ ')+esc(c.monto):''} · ${esc(c.fecha||'')}</span></button>`).join(''):`<div class="hint">${vacio||'Sin coincidencias.'}</div>`}
+ $('cands').innerHTML=lista.length?lista.map((c,i)=>`<button type="button" class="cand" data-i="${i}"><b>${esc(c.base)} · ${esc(c.nombre)}</b>${c.enCola?'<span class="tag p">POR FACTURAR</span>':''}${c.coincide?'<span class="tag f">✓ COINCIDE</span>':''}${c.facturado?'<span class="tag f">YA TIENE FACTURA</span>':''}<span>Cédula ${esc(c.cedula||'—')} · ${c.monto?(c.moneda==='Bs'||!c.moneda?'Bs ':'$ ')+esc(c.monto):''} · ${esc(c.fecha||'')}</span></button>`).join(''):`<div class="hint">${vacio||'Sin coincidencias.'}</div>`}
 $('sinPedido').onclick=()=>{S.sel='SIN PEDIDO';S.cod='';$('codBox').style.display='none';[...$('cands').children].forEach(x=>x.classList.remove('on'));$('sinPedido').classList.add('on');$('guardar').disabled=false;$('msg').textContent=''};
 $('cands').onclick=e=>{$('sinPedido').classList.remove('on');const b=e.target.closest('.cand');if(!b)return;const c=S.cands[+b.dataset.i];S.sel=c.base;S.cod='';mostrarCods(c);
  [...$('cands').children].forEach(x=>x.classList.toggle('on',x===b));$('guardar').disabled=false;
@@ -218,16 +273,27 @@ function mostrarCods(c){const bx=$('codBox'),op=$('codOpts');const l=(c&&c.cods)
  if(l.length===1){S.cod=l[0].cod;op.firstChild.classList.add('on')}}
 document.addEventListener('click',e=>{const b=e.target.closest('#codOpts .cand');if(!b)return;S.cod=b.dataset.cod;[...$('codOpts').children].forEach(x=>x.classList.toggle('on',x===b))});
 async function buscarPedidos(q){const r=await gas({action:'buscarPedidoFactura',q});if(!r||!r.ok)throw new Error((r&&r.error)||'No se pudo buscar');return r.pedidos||[]}
+function puntuar(c,d,mf){let p=0;const m=aNumero(c.monto);
+ if(mf&&m){if(Math.abs(m-mf)/mf<0.01||Math.abs(m*1.16-mf)/mf<0.01)p+=4;else{const a=String(Math.round(mf*100)),b2=String(Math.round(m*100)),b3=String(Math.round(m*116));if(eqStr(a,b2)||eqStr(a,b3))p+=3}}
+ const ce=String(c.cedula||'').replace(/\D/g,''),cl=String(d.ced||'').replace(/\D/g,'');
+ if(ce&&cl&&ce.length>=6&&cl.length>=6){const x=lev(ce,cl);if(x===0)p+=4;else if(x===1)p+=3;else if(x===2)p+=1.5}
+ const n1=String(c.nombre||'').toUpperCase().replace(/[^A-ZÁÉÍÓÚÑ ]/g,'').trim(),n2=String(d.nom||'').toUpperCase().replace(/[^A-ZÁÉÍÓÚÑ ]/g,'').trim();
+ if(n1&&n2){const r=1-lev(n1,n2)/Math.max(n1.length,n2.length);if(r>=0.85)p+=3;else if(r>=0.7)p+=1.5}
+ return p}
 async function sugerir(){
- const ced=$('ced').value.replace(/\D/g,''),nom=$('nom').value.trim();
- try{let l=[];if(ced.length>=5)l=await buscarPedidos(ced);if(!l.length&&nom.length>=4)l=await buscarPedidos(nom);
-  if(!l.length){const r=await gas({action:'buscarPedidoFactura',q:'',solo_cola:'SI'});l=(r&&r.pedidos)||[]}
-  const mf=aNumero($('monto').value);
-  l.forEach(c=>{const m=aNumero(c.monto);c.coincide=!!(mf&&m&&(Math.abs(m-mf)/mf<0.01||Math.abs(m*1.16-mf)/mf<0.01))});
-  if(S.pre){l=l.filter(c=>c.base!==S.pre.base);l.unshift(Object.assign({},S.pre,{coincide:true}))}
-  l.sort((a,b)=>(S.pre?(b.base===S.pre.base)-(a.base===S.pre.base):0)||(b.coincide-a.coincide)||(b.enCola-a.enCola));
+ const d=S.leida||{ced:$('ced').value,nom:$('nom').value},ced=$('ced').value.replace(/\D/g,''),nom=$('nom').value.trim();
+ try{const pool={};const add=a=>(a||[]).forEach(c=>{if(c&&c.base&&!pool[c.base])pool[c.base]=c});
+  const qs=[];if(ced.length>=5){qs.push(ced);if(ced.length>=8){qs.push(ced.slice(0,5));qs.push(ced.slice(-5))}}
+  if(nom.length>=4){qs.push(nom);nom.split(/\s+/).filter(w=>w.length>=4).slice(0,2).forEach(w=>qs.push(w))}
+  const rs=await Promise.all([...new Set(qs)].map(q=>buscarPedidos(q).catch(()=>[])));rs.forEach(add);add(S.porFact);
+  if(!Object.keys(pool).length){const r=await gas({action:'buscarPedidoFactura',q:'',solo_cola:'SI'});add((r&&r.pedidos)||[])}
+  let l=Object.keys(pool).map(k=>pool[k]);const mf=aNumero($('monto').value);
+  l.forEach(c=>{c.pts=puntuar(c,d,mf);c.coincide=c.pts>=4});
+  if(S.pre){l=l.filter(c=>c.base!==S.pre.base);l.unshift(Object.assign({},S.pre,{coincide:true,pts:99}))}
+  l.sort((a,b)=>(b.pts-a.pts)||(b.enCola-a.enCola));l=l.slice(0,12);
   pintarCands(l,'No encontré pedidos. Busca por cédula, nombre o código S-.');
-  if(l.length&&l[0].coincide){S.sel=l[0].base;S.cod='';mostrarCods(l[0]);$('cands').firstChild.classList.add('on');$('guardar').disabled=false}
+  if(l.length&&l[0].coincide){const n1=String(l[0].nombre||'').toUpperCase(),n2=$('nom').value.toUpperCase();if(n1&&n2&&n1!==n2&&1-lev(n1,n2)/Math.max(n1.length,n2.length)>=0.8)$('nom').value=l[0].nombre;   // corrige letras mal leídas (ARTAS→ARIAS) con el nombre del pedido
+   S.sel=l[0].base;S.cod='';mostrarCods(l[0]);$('cands').firstChild.classList.add('on');$('guardar').disabled=false}
  }catch(e){pintarCands([],e.message)}}
 $('ced').onchange=sugerir;
 $('bBuscar').onclick=async()=>{const q=$('q').value.trim();if(q.length<3){return}try{pintarCands(await buscarPedidos(q),'Sin resultados para “'+esc(q)+'”.')}catch(e){pintarCands([],e.message)}};
