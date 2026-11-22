@@ -1151,6 +1151,8 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <input class="search-input" type="text" id="historial-apro-input" placeholder="Buscar por nombre, cédula o código..." style="width:100%;" oninput="buscarHistorialApro(this.value)">
       </div>
       <div id="apro-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
+      <div id="pre-cashea-msg" style="display:none;padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;text-align:center;"></div>
+      <div id="pre-cashea-list"></div>
       <div id="solicitudes-list"></div>
     </div>
 
@@ -5698,9 +5700,11 @@ function uniRefrescar(){ try{ var t=document.querySelector('[id^="tab-"]:not([st
   ['cargarAprobacionesCashea','cargarSolicitudes','cargarCola'].forEach(function(f){ try{ var el={cargarAprobacionesCashea:'cashea-apro-list',cargarSolicitudes:'solicitudes-list',cargarCola:'cola-list'}[f]; var e=document.getElementById(el); if(e&&e.offsetParent!==null&&typeof window[f]==='function')window[f](); }catch(x){} });
   try{ var tl=document.getElementById('taller-lista'); if(tl&&tl.offsetParent!==null)cargarTaller(); }catch(x){}
 }
-async function cargarAprobacionesCashea(){
-  const listEl=document.getElementById('cashea-apro-list');
-  const msgEl=document.getElementById('cashea-apro-msg');
+async function cargarAprobacionesCashea(modo){
+  const PRE=(modo==='pre');   // PRE = preaprobados por Gaby: se ven dentro de Pendientes; los demás Cashea en su pestaña
+  const listEl=document.getElementById(PRE?'pre-cashea-list':'cashea-apro-list');
+  const msgEl=document.getElementById(PRE?'pre-cashea-msg':'cashea-apro-msg');
+  if(!listEl) return;
   listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>';
   try{
     const [, data, dataTasa] = await Promise.all([
@@ -5710,8 +5714,9 @@ async function cargarAprobacionesCashea(){
     ]);
     if(!data.ok) throw new Error(data.error||'Error');
     window._hdrApro=data.headers||window._hdrApro||null;
-    const rows=data.rows||[];
+    const rows=(data.rows||[]).filter(r=>(String(r[26]||'').trim()==='Cashea Preaprobado')===PRE);
     const tasaBCV = parseFloat(dataTasa?.tasa_bcv)||0;
+    if(PRE&&!rows.length){ listEl.innerHTML=''; return; }
     if(!rows.length){
       listEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:12px;"><div style="font-size:32px;margin-bottom:10px;">🛒</div><div style="font-size:15px;">No hay pedidos Cashea pendientes</div></div>';
       return;
@@ -5724,7 +5729,7 @@ async function cargarAprobacionesCashea(){
       if(!grupos[base]) grupos[base]=[];
       grupos[base].push(r);
     });
-    listEl.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${Object.keys(grupos).length} pedido(s) · ${rows.length} pack(s)</div>`;
+    listEl.innerHTML=PRE?`<div style="font-size:14px;font-weight:800;color:var(--warn);margin:0 0 12px;">🛒 Preaprobados desde Cashea (por tienda) · esperan al administrador (${Object.keys(grupos).length})</div>`:`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${Object.keys(grupos).length} pedido(s) · ${rows.length} pack(s)</div>`;
     Object.entries(grupos).forEach(([base, packs])=>{
       const r=packs[0];
       const v=i=>String(r[i]||'').trim();
@@ -5805,11 +5810,19 @@ async function cargarAprobacionesCashea(){
       });
       // Botón aprobar
       const aproKey='cashea_'+base.replace(/[^a-zA-Z0-9]/g,'_');
-      window[`_casheaData_${aproKey}`]={cod:base, codigos:packs.map(pk=>String(pk[0]||'').trim()).filter(Boolean), fecha:v(4), nombre:v(7), celular:v(10), pack:v(14), tela:v(15), piezas:v(17), agencia:v(18), monto:v(29), casheaPct:casheaPct, row:r};
+      window[`_casheaData_${aproKey}`]={cod:base, codigos:packs.map(pk=>String(pk[0]||'').trim()).filter(Boolean), fecha:v(4), nombre:v(7), celular:v(10), pack:v(14), tela:v(15), piezas:v(17), agencia:v(18), monto:v(29), casheaPct:casheaPct, row:r, pre:PRE, estado:v(26), preCod:v(23), prePct:v(34), preUsuario:v(24)};
       html+=`
-      <div style="display:flex;gap:8px;margin-top:4px;">
+      <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
         <button onclick="abrirModalReprobarCashea('${aproKey}')" style="flex:1;padding:12px;background:var(--surface2);border:1.5px solid var(--danger);border-radius:8px;color:var(--danger);font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✗ Reprobar</button>
-        <button onclick="abrirModalAprobarCashea('${aproKey}')" style="flex:2;padding:12px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✅ Aprobar Solicitud Cashea</button>
+        ${(function(){
+          const rc=casheaRol(), pre=(v(26)==='Cashea Preaprobado');
+          const banda=pre?'<div style="flex-basis:100%;background:#2a1f0a;border:1.5px solid var(--warn);border-radius:8px;padding:8px 12px;color:var(--warn);font-size:13px;font-weight:700;margin-bottom:6px;">🟡 PREAPROBADO por '+(v(24)||'tienda')+' desde CASHEA — falta la aprobación del administrador</div>':'';
+          let btn;
+          if(rc==='otro') btn='<div style="flex:2;padding:12px;text-align:center;color:var(--muted);font-size:13px;border:1px dashed var(--border);border-radius:8px;">Solo Gaby (preaprueba) o el administrador pueden aprobar Cashea</div>';
+          else if(rc==='tienda'&&pre) btn='<div style="flex:2;padding:12px;text-align:center;color:var(--warn);font-size:13px;font-weight:700;border:1px dashed var(--warn);border-radius:8px;">⏳ Esperando al administrador</div>';
+          else btn='<button onclick="abrirModalAprobarCashea(\''+aproKey+'\')" style="flex:2;padding:12px;background:'+(rc==='tienda'?'var(--warn)':'var(--accent)')+';border:none;border-radius:8px;color:#000;font-family:\'Barlow\',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">'+(rc==='tienda'?'🟡 Preaprobar (pasa al administrador)':(pre?'✅ Aprobar (preaprobado)':'✅ Aprobar Solicitud Cashea'))+'</button>';
+          return banda+btn;
+        })()}
       </div>`;
       card.innerHTML=html;
       listEl.appendChild(card);
@@ -5819,7 +5832,7 @@ async function cargarAprobacionesCashea(){
   }
 }
 
-let _casheaModalKey=null;
+let _casheaModalKey=null, _casheaPreMode=false;
 async function abrirModalReprobarCashea(key){
   const data=window[`_casheaData_${key}`]||{};
   if(!await uiConfirm(`¿Reprobar la solicitud Cashea de ${data.nombre||''}?\n\nEl pedido pasará a Reprobadas.`)) return;
@@ -5850,19 +5863,20 @@ async function abrirModalReprobarCashea(key){
     }
     setMsg('#2a0a0a','var(--danger)',`✗ Proceso realizado correctamente — solicitud reprobada (${codigos.length} parte${codigos.length>1?'s':''})`);
     setTimeout(()=>{ if(msgEl) msgEl.style.display='none'; },4000);
-    cargarAprobacionesCashea();
+    cargarAprobacionesCashea(data.pre?'pre':'');
   }catch(e){
     const esTimeout=/timeout/i.test(e.message||'');
     setMsg('#2a1a0a','var(--warn)', esTimeout
       ? `⚠️ Se agotó el tiempo de espera, pero el proceso puede haber terminado en el servidor. Verificando...`
       : `✗ Error: ${e.message}`);
-    setTimeout(()=>cargarAprobacionesCashea(), esTimeout?1500:0);
+    setTimeout(()=>cargarAprobacionesCashea(data.pre?'pre':''), esTimeout?1500:0);
   }
 }
 
 function abrirModalAprobarCashea(key){
   _casheaModalKey=key;
   const data=window[`_casheaData_${key}`]||{};
+  _casheaPreMode=!!data.pre;
   // Reusar el modal de aprobación existente adaptado para Cashea
   const modal=document.getElementById('modal-aprobar-cashea');
   if(!modal){
@@ -5894,9 +5908,10 @@ function abrirModalAprobarCashea(key){
       </div>`;
     document.body.appendChild(div);
   }
-  document.getElementById('cashea-modal-info').textContent=`${data.nombre||''} · Bs ${data.monto||''} · Cashea ${data.casheaPct||''}%`;
-  document.getElementById('cashea-cod-input').value='';
-  document.getElementById('cashea-pct-inicial-input').value='';
+  document.getElementById('cashea-modal-info').textContent=`${data.nombre||''} · Bs ${data.monto||''} · Cashea ${data.casheaPct||''}%`+(data.estado==='Cashea Preaprobado'?` · preaprobado por ${data.preUsuario||'tienda'}`:'');
+  document.getElementById('cashea-cod-input').value=data.estado==='Cashea Preaprobado'?(data.preCod||''):'';
+  document.getElementById('cashea-pct-inicial-input').value=data.estado==='Cashea Preaprobado'?(data.prePct||''):'';
+  try{ const t=modal0Titulo(); if(t) t.textContent=casheaRol()==='tienda'?'🟡 Preaprobar Solicitud Cashea':'🛒 Aprobar Solicitud Cashea'; }catch(e){}
   document.getElementById('cashea-auth-input').value='';
   document.getElementById('cashea-modal-error').style.display='none';
   document.getElementById('modal-aprobar-cashea').style.display='flex';
@@ -5925,7 +5940,7 @@ async function confirmarAprobarCashea(){
 
   // Cerrar el modal de inmediato y mostrar un loading visible en la pantalla principal
   cerrarModalCashea();
-  const msgEl=document.getElementById('cashea-apro-msg');
+  const msgEl=document.getElementById(_casheaPreMode?'pre-cashea-msg':'cashea-apro-msg');
   const setMsg=(bg,color,html)=>{ if(msgEl){ msgEl.style.display='block'; msgEl.style.background=bg; msgEl.style.color=color; msgEl.innerHTML=html; } };
   setMsg('var(--surface2)','var(--muted)',`<span class="spinner">↻</span> Procesando aprobación (0/${codigos.length})...`);
 
@@ -5947,18 +5962,23 @@ async function confirmarAprobarCashea(){
       if(res.ok) lastCodigoC=res.codigoC;
       else throw new Error(res.error||'Error en '+codigoParte);
     }
+    if(casheaRol()==='tienda'){
+      setMsg('#2a1f0a','var(--warn)','🟡 Preaprobado. Quedó pendiente de la aprobación del administrador (no se envía correo al cliente todavía).');
+      setTimeout(()=>{ if(msgEl) msgEl.style.display='none'; },6000);
+      cargarAprobacionesCashea(_casheaPreMode?'pre':''); return;
+    }
     setMsg('var(--surface2)','var(--muted)','<span class="spinner">↻</span> Enviando correo al cliente...');
     let rcC=null; try{ rcC=await enviarCorreoPagoCliente(codigos[0]); }catch(_e){}
     setMsg('#0a2a0a','var(--accent)',`✅ Proceso realizado correctamente (${codigos.length} parte${codigos.length>1?'s':''}) → ${lastCodigoC} | FACTURAS.CASHEA registrado${rcC&&rcC.ok?' | 📧 correo enviado':' | ⚠️ correo al cliente no enviado'}`);
     setTimeout(()=>{ if(msgEl) msgEl.style.display='none'; },4000);
-    cargarAprobacionesCashea();
+    cargarAprobacionesCashea(_casheaPreMode?'pre':'');
   }catch(e){
     const esTimeout=/timeout/i.test(e.message||'');
     setMsg('#2a1a0a','var(--warn)', esTimeout
       ? `⚠️ Se agotó el tiempo de espera, pero el proceso puede haber terminado en el servidor. Verificando...`
       : `✗ Error: ${e.message}`);
     // Recargar la lista de todos modos para confirmar el estado real (el backend puede haber terminado aunque el navegador dejó de esperar)
-    setTimeout(()=>cargarAprobacionesCashea(), esTimeout?1500:0);
+    setTimeout(()=>cargarAprobacionesCashea(_casheaPreMode?'pre':''), esTimeout?1500:0);
   }
 }
 
@@ -8044,6 +8064,7 @@ let _historialApro=[];
 
 async function cargarSolicitudes(filtro){
   if(filtro!==undefined) filtroSolicitudes=filtro;
+  try{ var _pl=document.getElementById('pre-cashea-list'); if(_pl){ if(filtroSolicitudes==='Pendiente') cargarAprobacionesCashea('pre'); else _pl.innerHTML=''; } }catch(e){}
   const listEl=document.getElementById('solicitudes-list');
   listEl.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spinner">↻</span> Cargando...</div>`;
   try{
@@ -17773,6 +17794,13 @@ async function repGuardar(){
     try{ switchAprobaciones('Pendiente'); }catch(e){}
   }catch(e){ er('✗ '+repEsc(e.message)); btn.disabled=false; }
 }
+</script>
+
+<script>
+/* Roles para aprobar Cashea: tienda (Gaby) preaprueba; admin aprueba; "respaldo" no aprueba */
+function casheaRol(){ var r=String((typeof SESION!=='undefined'&&SESION&&SESION.rol)||'admin').toLowerCase(), n=String((typeof SESION!=='undefined'&&SESION&&SESION.nombre)||'');
+  if(r==='tienda'||/gaby/i.test(n)) return 'tienda'; if(r==='respaldo') return 'otro'; return 'admin'; }
+function modal0Titulo(){ var m=document.getElementById('modal-aprobar-cashea'); return m&&m.firstElementChild&&m.firstElementChild.firstElementChild; }
 </script>
 </body>
 </html>
