@@ -9085,7 +9085,7 @@ async function buscarPedidoCOD(){
             <span style="color:var(--muted);">Retira:</span> ${p0.retiraNombre||data.nombre}${p0.retiraCi?` · C.I: ${p0.retiraCi}`:''}${p0.retiraCel?` · Cel: ${p0.retiraCel}${waIcono(p0.retiraCel)}`:''}
           </div>
           ${packs.map((pk,idx)=>{
-            const piezasFmt=(pk.piezas||'').split('|').map(s=>s.trim()).filter(Boolean).join('<br>');
+            const piezasFmt=piezasAgrupadas((pk.piezas||'').split('|').map(s=>s.trim()).filter(Boolean).join(' | '));
             return `<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);">
               <div style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Part ${idx+1} · ${pk.pack||''} · <span style="color:var(--muted);font-size:13px;">${pk.codigoC||''}</span></div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:6px;">
@@ -10607,8 +10607,25 @@ function limRender(){
       '<div style="height:8px;background:var(--border);border-radius:6px;margin:8px 0;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+col+'"></div></div>'+
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div style="font-size:13px;color:var(--muted)">Vendidas <b style="color:var(--text)">'+l.vendidas+'</b> de <b style="color:var(--text)">'+l.tope+'</b></div><div style="display:flex;gap:6px">'+
       '<button onclick="limEditar('+i+')" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:12px;font-weight:700;cursor:pointer">✏️ Cambiar tope</button>'+
-      '<button onclick="limQuitar('+i+')" style="padding:7px 12px;border:1px solid #ef4444;border-radius:8px;background:transparent;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer">Quitar límite</button></div></div></div>';
+      '<button onclick="limDiag('+i+')" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:12px;font-weight:700;cursor:pointer">🔍 ¿Qué cuenta?</button>'+
+      '<button onclick="limQuitar('+i+')" style="padding:7px 12px;border:1px solid #ef4444;border-radius:8px;background:transparent;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer">Quitar límite</button></div></div><div id="lim-diag-'+i+'" style="display:none;margin-top:10px"></div></div>';
   }).join('');
+}
+
+// Explica pedido por pedido qué cuenta (y por qué no) para un límite
+async function limDiag(i){
+  var l=LIM_DATA[i], box=document.getElementById('lim-diag-'+i); if(!l||!box)return;
+  if(box.style.display==='block'){box.style.display='none';return;}
+  box.style.display='block'; box.innerHTML='<div style="color:var(--muted);font-size:12px">Revisando pedidos…</div>';
+  try{
+    var d=await scriptGETjson({action:'diagnosticarLimite',hoja:l.hoja,tipo:l.tipo,color:l.color});
+    if(!d||!d.ok)throw new Error((d&&d.error)||'sin respuesta');
+    var L=d.limite, h='<div style="font-size:12px;color:var(--muted);margin-bottom:6px">Total contado hoy: <b style="color:var(--text)">'+L.total+'</b> · base al crear el límite: <b style="color:var(--text)">'+L.base+'</b> · vendidas = total − base = <b style="color:var(--text)">'+L.vendidas+'</b> · creado '+prodEsc(L.creado)+'</div>';
+    h+= d.filas.length ? d.filas.map(function(f){
+      return '<div style="border-top:1px solid var(--border);padding:7px 0;font-size:12px;display:flex;justify-content:space-between;gap:8px"><div><b>'+prodEsc(f.cod)+'</b> · '+prodEsc(f.estado||'—')+' · '+prodEsc(f.modelo)+'<br><span style="color:var(--muted)">'+prodEsc(f.motivo)+'</span></div><div style="white-space:nowrap;font-weight:800;color:'+(f.cuenta?'#22c55e':'#f5b700')+'">'+(f.cuenta?'✓ cuenta '+f.u:'no cuenta')+'</div></div>';
+    }).join('') : '<div style="font-size:12px;color:#f5b700">Ningún pedido pendiente/aprobado menciona ese color. Si acabas de procesar pedidos con él, revisa que el color del pedido se llame igual.</div>';
+    box.innerHTML=h;
+  }catch(e){box.innerHTML='<div style="color:#ef4444;font-size:12px">No se pudo revisar: '+prodEsc(e.message)+' (¿publicaste la nueva versión del Apps Script?)</div>';}
 }
 async function limGuardar(){
   var hoja=document.getElementById('lim-linea').value, tipo=document.getElementById('lim-tipo').value, color=document.getElementById('lim-tela').value, tope=parseInt(document.getElementById('lim-tope').value,10);
@@ -10729,7 +10746,7 @@ async function cargarProduccion(usarCache){
             <div><span style="color:var(--muted);">Tela:</span> ${p.tela||'—'}</div>
             <div><span style="color:var(--muted);">Vinil:</span> ${p.vinil||'—'}</div>
           </div>
-          ${p.piezas?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${p.modelo||''} ${p.manga||''} ${p.capucha||''}<br>${p.piezas.split(' | ').join('<br>')}</div>`:''}
+          ${p.piezas?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${p.modelo||''} ${p.manga||''} ${p.capucha||''}<br>${piezasAgrupadas(p.piezas)}</div>`:''}
         </div>`).join('');
       const card=document.createElement('div');
       card.style.cssText=`background:var(--surface);border:1px solid ${g.urgente?'var(--warn)':'var(--border)'};border-radius:12px;padding:16px;margin-bottom:14px;animation:slideUp .3s ease;`;
