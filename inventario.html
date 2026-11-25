@@ -9676,6 +9676,7 @@ function costurasTotales(i){ var ag=costurasAgg(costurasSelOk(i)), usd=0; ag.for
 function costurasPrecio(j,v){ var k=CSTR.mods[j]; CSTR.precios[k]=v; try{ localStorage.setItem('cstr_precios',JSON.stringify(CSTR.precios)); }catch(e){} costurasRecalc(CSTR.corte); }
 function costurasRecalc(i){ if(i==null) return; var t=costurasTotales(i); t.ag.forEach(function(x,j){ var el=document.getElementById('cstr-sub-'+j); if(el) el.textContent='$'+x.sub.toFixed(2); }); var u=document.getElementById('cstr-tot-usd'), b=document.getElementById('cstr-tot-bs'); if(u) u.textContent='$'+t.usd.toFixed(2); if(b) b.textContent='Bs '+t.bs.toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2}); CSTR.tasa=(document.getElementById('cstr-tasa')||{}).value||CSTR.tasa; }
 async function costurasAbrirPanel(){
+  CSTR.vista=''; CSTR.meta=null;
   var o=document.getElementById('cstr-panel'); if(o) o.remove();
   o=document.createElement('div'); o.id='cstr-panel'; o.style.cssText='position:fixed;inset:0;z-index:10000;background:#f4f4f4;overflow:auto;color:#111;font-family:Barlow,Arial,sans-serif';
   o.innerHTML='<div style="padding:30px;font-size:15px">⏳ Cargando costureras...</div>'; document.body.appendChild(o);
@@ -9688,10 +9689,80 @@ function costurasPorNombre(){
   Object.keys(av).forEach(function(cod){ var c=(av[cod]&&av[cod].costura)||{}; Object.keys(c).forEach(function(k){ var e=costuraEnt(c[k]); if(!e||!e.c) return; (por[e.c]=por[e.c]||[]).push(Object.assign({},e,{cod:cod,key:k})); }); });
   return por;
 }
+/* ===== 📊 KPIs de producción y costura (dentro del panel de Costureras) =====
+   Fuente: piezas enviadas a costura (PROD_AVANCE) + pedidos de PRODUCCION (tela/vinil/fecha). Las fechas de envío/recibido se guardan sin año: se infiere el año más reciente que no sea futuro. */
+var KPI_MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function kpiCorta(s,now){ var m=/^(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})/.exec(String(s||'')); if(!m) return null; var y=now.getFullYear(), d=new Date(y,+m[2]-1,+m[1],+m[3],+m[4]); if(d.getTime()>now.getTime()+864e5) d=new Date(y-1,+m[2]-1,+m[1],+m[3],+m[4]); return d; }
+function kpiLarga(s){ s=String(s||''); var m=/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/.exec(s); if(m) return new Date(+m[3],+m[2]-1,+m[1],+m[4],+m[5]);
+  m=/(\d{1,2})\s+([A-Za-zñÑ]{3})[a-z]*\.?\s+(\d{4})\s+(\d{1,2}):(\d{2})\s*([AaPp][Mm])?/.exec(s); if(!m) return null; var mo=KPI_MES.indexOf(m[2].toLowerCase()); if(mo<0) return null; var h=+m[4]; if(m[6]){ var pm=/p/i.test(m[6]); if(pm&&h<12) h+=12; if(!pm&&h===12) h=0; } return new Date(+m[3],mo,+m[1],h,+m[5]); }
+function kpiDur(ms){ if(ms==null||isNaN(ms)) return '—'; var h=ms/36e5; if(h<1) return Math.max(1,Math.round(ms/6e4))+' min'; if(h<48) return (Math.round(h*10)/10)+' h'; return (Math.round(h/2.4)/10)+' d'; }
+function kpiProm(a){ return a.length?a.reduce(function(x,y){return x+y},0)/a.length:null; }
+function kpiMediana(a){ if(!a.length) return null; var b=a.slice().sort(function(x,y){return x-y}), m=Math.floor(b.length/2); return b.length%2?b[m]:(b[m-1]+b[m])/2; }
+function kpiLunes(d){ var x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; }
+async function costurasKPIAbrir(){
+  CSTR.vista=(CSTR.vista==='kpi')?'':'kpi'; costurasPintarPanel(); if(CSTR.vista!=='kpi'||CSTR.meta) return;
+  try{
+    var r=await scriptGETjson({action:'leerProduccion'},25000), rows=(r&&r.rows)||[], meta={pieza:{},pedido:{}}, grupos={};
+    rows.forEach(function(x){ var v=function(i){return String(x[i]||'').trim()}, cod=v(2)||v(1)||v(0); if(!grupos[cod]) grupos[cod]={fecha:v(25)||v(3),packs:[]}; grupos[cod].packs.push({codigoS:v(0),tela:v(12),vinil:v(13),piezas:v(14)}); });
+    Object.keys(grupos).forEach(function(cod){ var g=grupos[cod]; meta.pedido[cod.toUpperCase()]=g.fecha; prodPrefijos(g.packs); g.packs.forEach(function(p,k){ prodKeysPack(p,k).forEach(function(z){ meta.pieza[cod.toUpperCase()+'|'+z.key]={tela:p.tela,vinil:p.vinil}; }); }); });
+    CSTR.meta=meta;
+  }catch(e){ CSTR.meta={pieza:{},pedido:{},error:true}; }
+  if(CSTR.vista==='kpi') costurasPintarPanel();
+}
+function costurasKPIHTML(){
+  var esc=prodEsc, now=new Date(), per=CSTR.kpiPer||'30', cf=CSTR.kpiCst||'', meta=CSTR.meta;
+  if(!meta) return '<div style="padding:30px;font-size:15px">⏳ Calculando KPIs…</div>';
+  var por=costurasPorNombre(), todas=[]; Object.keys(por).forEach(function(n){ por[n].forEach(function(e){ var x=Object.assign({},e); x._env=kpiCorta(e.env,now); x._rec=kpiCorta(e.rec,now); x._est=costuraEstado(e); todas.push(x); }); });
+  var desde=per==='todo'?null:new Date(now.getTime()-(+per)*864e5);
+  var L=todas.filter(function(e){ return (!cf||e.c===cf)&&(!desde||(e._env&&e._env>=desde)); });
+  var ok=L.filter(function(e){return e._est==='ok'||e._est==='pag'}), tcos=ok.filter(function(e){return e._env&&e._rec&&e._rec>=e._env}).map(function(e){return e._rec-e._env});
+  var devP=L.filter(function(e){return (e.dev||0)>0||e._est==='rep'}), devT=L.reduce(function(a,e){return a+(e.dev||(e._est==='rep'?1:0))},0), enC=L.filter(function(e){return e._est==='taller'}).length;
+  var card=function(n,l,c,sub){ return '<div style="flex:1;min-width:130px;background:#fff;border:2px solid '+c+';border-radius:12px;padding:10px;text-align:center"><div style="font-size:26px;font-weight:900;color:'+c+'">'+n+'</div><div style="font-size:11px;font-weight:700;color:#555">'+l+'</div>'+(sub?'<div style="font-size:11px;color:#888;margin-top:2px">'+sub+'</div>':'')+'</div>'; };
+  var sec=function(t,body){ return '<div style="background:#fff;border:1px solid #ddd;border-radius:14px;padding:14px;margin:0 0 14px"><div style="font-size:16px;font-weight:900;margin-bottom:8px">'+t+'</div>'+body+'</div>'; };
+  var tabla=function(cab,filas){ return '<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><tr>'+cab.map(function(c,i){return '<th style="text-align:'+(i?'right':'left')+';padding:5px 8px;border-bottom:2px solid #ddd;color:#555;font-size:11px;letter-spacing:.05em">'+c+'</th>'}).join('')+'</tr>'+filas.map(function(f){return '<tr>'+f.map(function(c,i){return '<td style="text-align:'+(i?'right':'left')+';padding:5px 8px;border-bottom:1px solid #eee">'+c+'</td>'}).join('')+'</tr>'}).join('')+'</table></div>'; };
+  var h='<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><b>📊 KPIs</b>'+
+    '<select onchange="CSTR.kpiPer=this.value;costurasPintarPanel()" style="padding:9px;border:1px solid #bbb;border-radius:8px;font-size:14px">'+[['7','Últimos 7 días'],['30','Últimos 30 días'],['90','Últimos 90 días'],['365','Último año'],['todo','Todo el historial']].map(function(o){return '<option value="'+o[0]+'"'+(o[0]===per?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select>'+
+    '<select onchange="CSTR.kpiCst=this.value;costurasPintarPanel()" style="padding:9px;border:1px solid #bbb;border-radius:8px;font-size:14px"><option value="">Todas las costureras</option>'+Object.keys(por).map(function(n){return '<option value="'+esc(n)+'"'+(n===cf?' selected':'')+'>'+esc(n)+'</option>'}).join('')+'</select>'+
+    '<span style="font-size:11px;color:#888">(el período se cuenta desde la fecha de envío a costura)</span></div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+card(L.length,'PIEZAS ENVIADAS A COSTURA','#2563eb')+card(ok.length,'FABRICADAS (OK)','#059669',L.length?Math.round(ok.length*100/L.length)+'% de lo enviado':'')+card(devP.length,'PIEZAS DEVUELTAS','#dc2626',(L.length?Math.round(devP.length*1000/L.length)/10:0)+'% · '+devT+' devolución(es)')+card(enC,'EN COSTURA AHORA','#7c3aed')+card(kpiDur(kpiProm(tcos)),'TIEMPO PROM. DE COSTURA','#0891b2','mediana '+kpiDur(kpiMediana(tcos)))+'</div>';
+  // por costurera
+  var fc=Object.keys(por).map(function(n){ var l=L.filter(function(e){return e.c===n}); if(!l.length) return null; var o=l.filter(function(e){return e._est==='ok'||e._est==='pag'}), t=o.filter(function(e){return e._env&&e._rec&&e._rec>=e._env}).map(function(e){return e._rec-e._env}), d=l.filter(function(e){return (e.dev||0)>0||e._est==='rep'}).length;
+    return ['<b style="color:'+costuraColor(n)+'">'+esc(n)+'</b>',l.length,o.length,d+' ('+Math.round(d*100/l.length)+'%)',kpiDur(kpiProm(t))]; }).filter(Boolean);
+  h+=sec('🧵 Por costurera',fc.length?tabla(['COSTURERA','ENVIADAS','OK','DEVUELTAS','TIEMPO PROM.'],fc):'<span style="color:#888">Sin datos en este período.</span>');
+  // por modelo
+  var mm={}; L.forEach(function(e){ var k=costuraModelo(e), o=mm[k]=mm[k]||{n:0,ok:0,t:[],d:0}; o.n++; if(e._est==='ok'||e._est==='pag'){ o.ok++; if(e._env&&e._rec&&e._rec>=e._env) o.t.push(e._rec-e._env); } if((e.dev||0)>0||e._est==='rep') o.d++; });
+  var fm=Object.keys(mm).sort(function(a,b){return mm[b].n-mm[a].n}).slice(0,15).map(function(k){ var o=mm[k]; return [esc(k),o.n,o.ok,o.d,kpiDur(kpiProm(o.t))]; });
+  h+=sec('👕 Productos fabricados por modelo',fm.length?tabla(['MODELO','ENVIADAS','OK','DEVUELTAS','TIEMPO PROM.'],fm):'<span style="color:#888">Sin datos.</span>');
+  // telas y colores de vinil
+  var ct={}, cv={}, sin=0; L.forEach(function(e){ var m=meta.pieza[String(e.cod).toUpperCase()+'|'+e.key]; if(!m){ sin++; return; } var t=(m.tela||'—').toUpperCase(), v=(m.vinil||'—').toUpperCase(); ct[t]=(ct[t]||0)+1; cv[v]=(cv[v]||0)+1; });
+  var chips=function(o,col){ var k=Object.keys(o).sort(function(a,b){return o[b]-o[a]}); return k.length?k.map(function(x){return '<span style="display:inline-block;background:#f4f4f5;border:1px solid '+col+';border-radius:20px;padding:4px 11px;margin:3px 5px 3px 0;font-size:12.5px"><b>'+o[x]+'</b> '+esc(x)+'</span>'}).join(''):'<span style="color:#888">Sin datos.</span>'; };
+  h+=sec('🎨 Telas y colores de vinil','<div style="font-size:12px;font-weight:800;color:#555">TELAS</div>'+chips(ct,'#0891b2')+'<div style="font-size:12px;font-weight:800;color:#555;margin-top:6px">VINIL</div>'+chips(cv,'#7c3aed')+(sin?'<div style="font-size:11px;color:#888;margin-top:6px">'+sin+' pieza(s) sin dato de tela (el pedido ya no está en Producción).</div>':''));
+  // pedidos: más lentos / más rápidos en coserse
+  var pc={}; L.forEach(function(e){ var o=pc[e.cod]=pc[e.cod]||{n:0,ok:0,a:null,b:null}; o.n++; if(e._est==='ok'||e._est==='pag') o.ok++; if(e._env&&(!o.a||e._env<o.a)) o.a=e._env; if(e._rec&&(!o.b||e._rec>o.b)) o.b=e._rec; });
+  var pl=Object.keys(pc).filter(function(c){ var o=pc[c]; return o.ok===o.n&&o.a&&o.b&&o.b>=o.a; }).map(function(c){ return {c:c,n:pc[c].n,d:pc[c].b-pc[c].a}; }).sort(function(a,b){return b.d-a.d});
+  var lis=function(a){ return a.length?tabla(['COD','PIEZAS','TIEMPO DE COSTURA'],a.map(function(x){return ['COD '+esc(x.c),x.n,'<b>'+kpiDur(x.d)+'</b>']})):'<span style="color:#888">Sin pedidos completos en el período.</span>'; };
+  h+=sec('🐢 Pedidos que más tardaron en coserse','<div style="font-size:11px;color:#888;margin-bottom:4px">Desde que salió la 1ª pieza hasta que volvió la última OK (solo pedidos con todas sus piezas recibidas).</div>'+lis(pl.slice(0,5)))+sec('⚡ Pedidos más rápidos en coserse',lis(pl.slice(-5).reverse()));
+  // tiempo de fabricación del pedido (producción → ejecutado)
+  var fab=[]; Object.keys(window.prodAvance||{}).forEach(function(c){ var a=window.prodAvance[c]; if(!a||!a.completo||!a.fecha) return; var f1=kpiLarga(meta.pedido[c]), f2=kpiLarga(a.fecha); if(!f1||!f2||f2<f1) return; if(desde&&f2<desde) return; fab.push({c:c,d:f2-f1}); });
+  fab.sort(function(a,b){return b.d-a.d});
+  h+=sec('⏱ Tiempo de fabricación del pedido (entrada a producción → ejecutado)',fab.length?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+card(fab.length,'PEDIDOS EJECUTADOS','#059669')+card(kpiDur(kpiProm(fab.map(function(x){return x.d}))),'PROMEDIO','#2563eb')+card(kpiDur(kpiMediana(fab.map(function(x){return x.d}))),'MEDIANA','#0891b2')+card(kpiDur(fab[0].d),'EL MÁS LENTO','#dc2626','COD '+esc(fab[0].c))+card(kpiDur(fab[fab.length-1].d),'EL MÁS RÁPIDO','#059669','COD '+esc(fab[fab.length-1].c))+'</div><div style="font-size:11px;color:#888">Usa la fecha del último guardado del pedido como momento de ejecución (aproximado).'+(meta.error?' ⚠ No se pudieron leer las fechas de los pedidos.':'')+'</div>':'<span style="color:#888">Sin pedidos ejecutados con fecha en el período.</span>'+(meta.error?' ⚠ No se pudieron leer las fechas de los pedidos.':''));
+  // historial por semana y mes (todo el historial, sin filtro de período)
+  var base=todas.filter(function(e){return !cf||e.c===cf});
+  var serie=function(n,ini,sig,lab){ var out=[]; var d=ini(now); for(var i=0;i<n;i++){ out.unshift({d:new Date(d),l:lab(d),e:0,o:0}); d=sig(d); } return out; };
+  var sem=serie(12,kpiLunes,function(d){ var x=new Date(d); x.setDate(x.getDate()-7); return x; },function(d){ return d.getDate()+' '+KPI_MES[d.getMonth()]; });
+  var mes=serie(12,function(d){return new Date(d.getFullYear(),d.getMonth(),1)},function(d){return new Date(d.getFullYear(),d.getMonth()-1,1)},function(d){return KPI_MES[d.getMonth()]+' '+String(d.getFullYear()).slice(2)});
+  var meter=function(S,ini2,fin2,t){ base.forEach(function(e){ if(e._env){ var i=S.length-1; while(i>=0&&S[i].d>e._env) i--; if(i>=0&&e._env<fin2(S[i].d)) S[i].e++; } if((e._est==='ok'||e._est==='pag')&&e._rec){ var j=S.length-1; while(j>=0&&S[j].d>e._rec) j--; if(j>=0&&e._rec<fin2(S[j].d)) S[j].o++; } }); };
+  meter(sem,0,function(d){var x=new Date(d); x.setDate(x.getDate()+7); return x;}); meter(mes,0,function(d){return new Date(d.getFullYear(),d.getMonth()+1,1);});
+  var barras=function(S){ var mx=Math.max.apply(null,S.map(function(x){return Math.max(x.e,x.o)}).concat([1])); return '<div style="display:flex;gap:6px;align-items:flex-end;height:150px;overflow-x:auto;padding-top:6px">'+S.map(function(x){ return '<div style="flex:1;min-width:34px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><div style="display:flex;gap:2px;align-items:flex-end;height:118px"><div title="Enviadas: '+x.e+'" style="width:12px;background:#2563eb;height:'+Math.round(x.e*118/mx)+'px;border-radius:3px 3px 0 0"></div><div title="OK: '+x.o+'" style="width:12px;background:#059669;height:'+Math.round(x.o*118/mx)+'px;border-radius:3px 3px 0 0"></div></div><div style="font-size:10px;color:#555;margin-top:3px">'+x.e+' / '+x.o+'</div><div style="font-size:10px;color:#888;white-space:nowrap">'+x.l+'</div></div>'; }).join('')+'</div>'; };
+  var leyenda='<div style="font-size:11px;color:#555;margin-bottom:2px"><span style="color:#2563eb">■</span> enviadas a costura &nbsp; <span style="color:#059669">■</span> recibidas OK (cifras: enviadas / OK)</div>';
+  h+=sec('📅 Piezas por semana (últimas 12)',leyenda+barras(sem))+sec('🗓 Piezas por mes (últimos 12)',leyenda+barras(mes));
+  return h;
+}
 function costurasPintarPanel(){
   var o=document.getElementById('cstr-panel'); if(!o) return; var esc=prodEsc, por=costurasPorNombre(); CSTR.nombres=Object.keys(por);
   var bs='border:0;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:800;cursor:pointer;';
-  var h='<div style="position:sticky;top:0;z-index:2;background:#111;color:#fff;display:flex;align-items:center;gap:8px;padding:10px 14px;flex-wrap:wrap"><button onclick="document.getElementById(\'cstr-panel\').remove()" style="'+bs+'background:#fff;color:#111">✕ Cerrar</button><div style="flex:1;font-size:18px;font-weight:800">🧵 Costureras</div><button onclick="costurasAgregar()" style="'+bs+'background:#1fbf6a;color:#000">➕ Agregar costurera</button><button onclick="prodEditarCosturas()" style="'+bs+'background:#333;color:#fff">✏ Editar nombres</button><button onclick="costurasAbrirPanel()" style="'+bs+'background:#333;color:#fff">↻</button></div><div style="padding:14px;max-width:900px;margin:0 auto">';
+  var h='<div style="position:sticky;top:0;z-index:2;background:#111;color:#fff;display:flex;align-items:center;gap:8px;padding:10px 14px;flex-wrap:wrap"><button onclick="document.getElementById(\'cstr-panel\').remove()" style="'+bs+'background:#fff;color:#111">✕ Cerrar</button><div style="flex:1;font-size:18px;font-weight:800">🧵 Costureras</div><button onclick="costurasAgregar()" style="'+bs+'background:#1fbf6a;color:#000">➕ Agregar costurera</button><button onclick="costurasKPIAbrir()" style="'+bs+'background:'+(CSTR.vista==='kpi'?'#f5b700;color:#000':'#333;color:#fff')+'">'+(CSTR.vista==='kpi'?'🧵 Ver costureras':'📊 KPIs')+'</button><button onclick="prodEditarCosturas()" style="'+bs+'background:#333;color:#fff">✏ Editar nombres</button><button onclick="costurasAbrirPanel()" style="'+bs+'background:#333;color:#fff">↻</button></div><div style="padding:14px;max-width:900px;margin:0 auto">';
+  if(CSTR.vista==='kpi'){ var _sc=o.scrollTop; o.innerHTML=h+costurasKPIHTML()+'</div>'; o.scrollTop=_sc; return; }
   function pill(n,l,col){ return '<div style="flex:1;min-width:92px;background:#fff;border:2px solid '+col+';border-radius:12px;padding:8px;text-align:center"><div style="font-size:26px;font-weight:900;color:'+col+'">'+n+'</div><div style="font-size:11px;font-weight:700;color:#555">'+l+'</div></div>'; }
   function lineaPz(e){ var est=costuraEstado(e); var tag={taller:'🧵 en costura',rep:'🔧 devuelta',ok:'✅ OK',pag:'💰 '+(e.pag||'')}[est];
     return 'COD '+esc(e.cod)+' · '+esc(e.t||e.key)+(e.m?' <span style="color:#888">('+esc(e.m)+')</span>':'')+' — <b>'+tag+'</b> <span style="color:#888;font-size:11px">envío '+esc(e.env||'—')+(e.rec?' · '+(est==='rep'?'devuelta ':'recibida ')+esc(e.rec):'')+'</span>'; }
