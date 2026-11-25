@@ -1183,6 +1183,8 @@ function codigoSinPrecio(cod){ var P=window._packPreciosComfy; if(!P||!Object.ke
 function continuarTrasTiburon(cfg){
   // Todas las toallas (de la serie y de las colecciones) se cobran con el código de la toalla Tiburón Ballena
   var codPrecio=(cfg.tipo==='toalla')?'TOALLATBALLENA':cfg.codigo;
+  // Kids Boy 3 y Girl 6 se cobran con los mismos códigos de la serie Tiburón Ballena (KidsBoy3Dress → TiburonBallenaDress, etc.)
+  codPrecio=String(codPrecio||'').replace(/^(KidsBoy3|Girl6)/,'TiburonBallena');
   if(codigoSinPrecio(codPrecio)){ alert('Este modelo todavía no tiene precio disponible. Escríbenos por WhatsApp y con gusto te ayudamos con tu pedido.'); return false; }
   continuarTrasLicra('larga');
   pedido.serie=cfg.serie||'TiburonBallena';
