@@ -11153,19 +11153,20 @@ async function cargarTaller(){
     });
     const codigos=Object.keys(tallerGrupos);
     const sinFuente=Object.values(tallerGrupos).reduce((s,g)=>s+g.packs.filter(p=>!p.fuenteConfiable).length,0);
-    lista.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${codigos.length} pedido(s) disponibles${sinFuente?` · <span style="color:var(--warn);">⚠ ${sinFuente} pack(s) sin match en COLA.P/R.COLA.P (usando copia de PRODUCCION)</span>`:''}</div>`;
+    lista.style.cssText='display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;';
+    lista.innerHTML=`<div style="flex:1 1 100%;font-size:12px;color:var(--muted);margin-bottom:2px;">${codigos.length} pedido(s) disponibles${sinFuente?` · <span style="color:var(--warn);">⚠ ${sinFuente} pack(s) sin match en COLA.P/R.COLA.P (usando copia de PRODUCCION)</span>`:''}</div>`;
     codigos.forEach(cod=>{
       const g=tallerGrupos[cod];
       const resumenPacks=g.packs.map(p=>`${p.pack||'—'}× ${modeloManga(p.modelo,p.manga)}`.trim()).join(' · ');
       const _gk={packs:g.packs.map(p=>({codigoS:p.codigoS,piezas:p.piezasProd}))}, _fab=prodFabricado(cod,_gk), _fac=tallerLlevaFactura(g);
-      const card=document.createElement('label');
-      card.style.cssText=`display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid ${_fab?'var(--accent)':(g.urgente?'var(--warn)':'var(--border)')};border-left:4px solid ${_fab?'var(--accent)':(g.urgente?'var(--warn)':'var(--accent)')};border-radius:14px;padding:16px 18px;margin-bottom:14px;cursor:pointer;`;
+      const card=document.createElement('label'); card.className='taller-card '+((window.tallerAbierto===cod)?'tl-abierta':'tl-cerr');
+      card.style.cssText=`display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid ${_fab?'var(--accent)':(g.urgente?'var(--warn)':'var(--border)')};border-left:4px solid ${_fab?'var(--accent)':(g.urgente?'var(--warn)':'var(--accent)')};cursor:pointer;`;
       card.innerHTML=`
         <input type="checkbox" class="taller-check-item" data-cod="${cod}" onchange="toggleTallerSel('${cod}',this.checked)" style="width:20px;height:20px;margin-top:2px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;">
         <div style="flex:1;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+          <div class="tl-hdr" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+            <button type="button" class="tl-cod" onclick="event.preventDefault();event.stopPropagation();tallerToggleCard('${cod}')" title="${prodEsc(g.nombre)}" style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 12px;font-size:13px;font-weight:800;color:var(--text);cursor:pointer;font-family:'Barlow',sans-serif;">${_fab?'✅ ':''}${(window._estadoEnvio&&window._estadoEnvio[String(cod).toUpperCase()])?'🚚 ':''}${g.urgente?'⚡ ':''}${cod}</button>
             <span style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;">${g.nombre}</span>
-            <span style="background:#0f2b1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;">${cod}</span>
             ${(window._estadoEnvio&&window._estadoEnvio[String(cod).toUpperCase()])?`<span style="background:#1a2a1a;border:1px solid var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);">🚚 EN PROCESO DE ENVÍO · mensajero · ${prodEsc(window._estadoEnvio[String(cod).toUpperCase()].fecha||'')}</span>`:''}
             ${(function(){var u=uniEstadoGrupo(g); if(!u.cods.length&&!u.pend.length)return ''; return '<span style="background:#12202a;border:1px solid var(--accent2);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent2);">🔗 SALE JUNTO CON '+u.cods.map(function(c){return 'COD '+c}).concat(u.pend).join(' · ')+'</span>'+((u.faltan.length||u.pend.length)?'<span style="background:#2a1f0a;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">⏳ esperando '+u.faltan.map(function(c){return 'COD '+c}).concat(u.pend.map(function(b){return b+' (aún sin COD)'})).join(', ')+'</span>':'');})()}
             ${_fac?`<span style="background:#1a1a2a;border:1px solid var(--accent2);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent2);">🧾 LLEVA FACTURA</span>`:''}
@@ -11173,7 +11174,7 @@ async function cargarTaller(){
             ${g.urgente?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--warn);">⚡ ${g.urgente}</span>`:''}
             ${g.packs.some(p=>!p.fuenteConfiable)?`<span style="background:#1a1a10;border:1px solid var(--warn);border-radius:20px;padding:2px 10px;font-size:10px;color:var(--warn);">⚠ sin match COLA.P</span>`:''}
           </div>
-          ${tallerDetalleHTML(g,cod)}
+          <div class="tl-body">${tallerDetalleHTML(g,cod)}
           <div class="taller-acts" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:stretch;">
             <button type="button" onclick="event.preventDefault();event.stopPropagation();tallerVerPedidoCompleto('${cod}')" style="padding:7px 14px;background:var(--surface2);border:1.5px solid var(--accent);border-radius:8px;color:var(--accent);font-size:12px;font-weight:800;cursor:pointer;">🖼 Ver pedido completo (mockups)</button>
             <button type="button" onclick="event.preventDefault();event.stopPropagation();tallerEditarPedido('${cod}')" style="padding:7px 14px;background:transparent;border:1.5px solid var(--warn);border-radius:8px;color:var(--warn);font-size:13px;font-weight:700;cursor:pointer;">✏️ Editar pedido</button>
@@ -11181,7 +11182,7 @@ async function cargarTaller(){
             <button type="button" onclick="event.preventDefault();event.stopPropagation();tallerImprimirTicket('${cod}')" style="padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🖨 Ticket de envío</button>
             ${_fab?`<button type="button" onclick="event.preventDefault();event.stopPropagation();tallerNotificarMensajero('${cod}')" style="padding:7px 14px;background:${(window._estadoEnvio||{})[cod]?'var(--surface2)':'#ffb020'};border:${(window._estadoEnvio||{})[cod]?'1px solid var(--accent)':'none'};border-radius:8px;color:${(window._estadoEnvio||{})[cod]?'var(--accent)':'#000'};font-size:12px;font-weight:800;cursor:pointer;">${(window._estadoEnvio||{})[cod]?'🛵 Mensajero notificado ✓ (reenviar)':'🛵 Notificar mensajero'}</button>`:''}
             ${_fab?`<button type="button" onclick="event.preventDefault();event.stopPropagation();tallerAbrirGuia('${cod}')" style="padding:7px 14px;background:linear-gradient(135deg,var(--accent),#00b386);border:none;border-radius:8px;color:#000;font-size:12px;font-weight:800;cursor:pointer;">📦 Cargar guía de envío</button>`:''}
-          </div>
+          </div></div>
         </div>`;
       lista.appendChild(card);
     });
@@ -11192,6 +11193,16 @@ async function cargarTaller(){
   }
 }
 
+(function(){ var st=document.createElement('style'); st.textContent='.taller-card{border-radius:14px}.taller-card.tl-cerr{padding:8px 12px;border-radius:12px;gap:8px;align-items:center}.taller-card.tl-cerr>div{flex:none}.taller-card.tl-cerr .tl-hdr{margin-bottom:0}.taller-card.tl-cerr .tl-hdr>*:not(.tl-cod){display:none}.taller-card.tl-cerr .tl-body{display:none}.taller-card.tl-abierta{flex:1 1 100%;padding:16px 18px}'; document.head.appendChild(st); })();
+// Taller: solo botones con el COD; al tocar uno se abre el pedido (tocar de nuevo lo cierra). El check de cada botón sigue sirviendo para seleccionar pedidos.
+function tallerToggleCard(cod){
+  var abrir=(window.tallerAbierto!==cod); window.tallerAbierto=abrir?cod:null;
+  [].forEach.call(document.querySelectorAll('#taller-lista .taller-card'),function(c){
+    var k=c.querySelector('.taller-check-item'), on=!!k&&abrir&&k.getAttribute('data-cod')===cod;
+    c.classList.toggle('tl-abierta',on); c.classList.toggle('tl-cerr',!on);
+    if(on) setTimeout(function(){ c.scrollIntoView({behavior:'smooth',block:'start'}); },30);
+  });
+}
 function tallerWaBtn(g){
   var t=String(g.celular||'').replace(/\D/g,''); if(!t)return '<span style="font-size:11px;color:var(--muted);">Sin celular</span>';
   if(t.length===11&&t[0]==='0')t='58'+t.slice(1); else if(t.length===10)t='58'+t; else if(t.length<10)return '<span style="font-size:11px;color:var(--muted);">Celular inválido: '+g.celular+'</span>';
