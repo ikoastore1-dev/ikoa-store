@@ -3733,8 +3733,10 @@ async function cargarPrecios(){
 
 // Series de colección: cada serie genera sus 8 prendas con el código CódigoSerie + sufijo (ej. AlphaGris, AlphaGrisDress, TOALLAALPHAGRIS)
 const PRECIOS_SERIES=[
-  {id:'AlphaGris',nombre:'Alpha Gris'},{id:'AlphaMarino',nombre:'Alpha Marino'},
-  {id:'CampingBlack',nombre:'Camping Black'},{id:'CampingCamo',nombre:'Camping Camo'},{id:'CampingSelva',nombre:'Camping Selva'}
+  {id:'AlphaGris',nombre:'Alpha Gris'},{id:'AlphaMarino',nombre:'Alpha Marino'},{id:'AlphaSelva',nombre:'Alpha Selva'},{id:'AlphaPink',nombre:'Alpha Pink'},
+  {id:'CampingBlack',nombre:'Camping Black'},{id:'CampingCamo',nombre:'Camping Camo'},{id:'CampingSelva',nombre:'Camping Selva'},
+  {id:'NauticaMarino',nombre:'Náutica Marino'},{id:'NauticaPink',nombre:'Náutica Pink'},{id:'NauticaBlackJack',nombre:'Náutica Black Jack'},{id:'NauticaMintJack',nombre:'Náutica Mint Jack'},
+  {id:'KidsBoy3',nombre:'Kids Boy 3'},{id:'Girl6',nombre:'Girl 6'}
 ];
 const PRECIOS_PRENDAS_SERIE=[['','Playera'],['Dress','Dress'],['Cortaviento','Cortaviento'],['Short','Short'],['Bikini','Bikini'],['BikiniMLarga','Bikini M. Larga'],['Enterizo','Enterizo'],['TOALLA','Toalla']];
 PRECIOS_SERIES.forEach(se=>PRECIOS_PRENDAS_SERIE.forEach(pr=>{
@@ -7430,7 +7432,7 @@ async function loteReportes(){
 }
 /* ===== COD PDF v8 (se arma en el navegador de inventario y se envía a Apps Script) ===== */
 (function(){
-var BASE='cod-mockups/', K_TELA={"vino-tinto": "#6f191a", "naranja": "#ef632e", "fucsia": "#f451c8", "morado": "#8952fb", "amarillo-bb": "#fdfac4", "amarillo-neon": "#e8fe05", "blanco": "#f7f6fc", "negro": "#040d1b", "azul-rey": "#0101ef", "azul-marino": "#060a32", "menta": "#69d5d3", "azul-bb": "#c3e9f4", "beige": "#c2bfaf", "gris": "#8f969e", "rojo": "#a32a25", "rosa-bb": "#eac3ca", "rosa-vieja": "#d29fa8", "verde-militar": "#535433", "naranja-neon": "#e2500e", "lila": "#e09df5", "marron": "#35231c"}, K_VIN={"blanco": "#f4f5fa", "negro": "#060d1a", "azul-rey": "#0f04b0", "azul-marino": "#060b2f", "turquesa": "#65bbb2", "beige": "#c7c4b6", "verde-neon": "#72f460", "amarillo-neon": "#e2f353", "amarillo-cat": "#eaaf41", "rojo": "#ad3d40", "coral-neon": "#d73958", "vino-tinto": "#5a201b", "fucsia": "#ce58b0", "lila": "#d7a4ec", "morado": "#6233de", "azul-indigo": "#508cea", "gris": "#9aa0a6", "naranja": "#f37021", "dorado": "#c9a13b", "plateado": "#c0c3c8", "amarillo": "#f7d117", "rosado": "#f29bc0", "verde": "#1e8c3a"};
+var BASE='cod-mockups/', K_TELA={"vino-tinto": "#6f191a", "naranja": "#ef632e", "fucsia": "#f451c8", "morado": "#8952fb", "amarillo-bb": "#fdfac4", "amarillo-neon": "#e8fe05", "blanco": "#f7f6fc", "negro": "#040d1b", "azul-rey": "#0101ef", "azul-marino": "#060a32", "menta": "#69d5d3", "azul-bb": "#c3e9f4", "beige": "#caa88c", "gris": "#8f969e", "rojo": "#a32a25", "rosa-bb": "#eac3ca", "rosa-vieja": "#d29fa8", "verde-militar": "#535433", "naranja-neon": "#e2500e", "lila": "#e09df5", "marron": "#35231c"}, K_VIN={"blanco": "#f4f5fa", "negro": "#060d1a", "azul-rey": "#0f04b0", "azul-marino": "#060b2f", "turquesa": "#65bbb2", "beige": "#c7c4b6", "verde-neon": "#72f460", "amarillo-neon": "#e2f353", "amarillo-cat": "#eaaf41", "rojo": "#ad3d40", "coral-neon": "#d73958", "vino-tinto": "#5a201b", "fucsia": "#ce58b0", "lila": "#d7a4ec", "morado": "#6233de", "azul-indigo": "#508cea", "gris": "#9aa0a6", "naranja": "#f37021", "dorado": "#c9a13b", "plateado": "#c0c3c8", "amarillo": "#f7d117", "rosado": "#f29bc0", "verde": "#1e8c3a"};
 var MOCK_H=0.19;   /* escala común de las prendas */
 function slug(n){var s=String(n||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
   return s.replace(/-bebe(?=-|$)/g,'-bb').replace(/^(rosado|rosada)(?=-|$)/,'rosa').replace(/^rosa-viejo$/,'rosa-vieja').replace(/^vinotinto$/,'vino-tinto').replace(/^amarillo-cat[a-z]*$/,'amarillo-cat')}
