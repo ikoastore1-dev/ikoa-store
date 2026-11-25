@@ -1690,7 +1690,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <div id="produccion-pane-lista" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
             <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">🏭 Pedidos en Producción</div>
-            <div style="display:flex;gap:8px;"><button onclick="codigosAbrir()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🔗 Códigos</button><button onclick="costurasAgregar()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">➕ Costurera</button><button onclick="costurasAbrirPanel()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🧵 Costureras</button><button onclick="cargarProduccion()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">↻ Actualizar</button></div>
+            <div style="display:flex;gap:8px;"><button onclick="codigosAbrir()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🔗 Códigos</button><button onclick="costurasAgregar()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">➕ Costurera</button><button onclick="costurasAbrirPanel()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🧵 Costureras</button><button onclick="subAbrirPanel()" style="padding:8px 14px;background:var(--surface2);border:1px solid #ea580c;border-radius:8px;color:#fb923c;font-size:12px;font-weight:700;cursor:pointer;">🖨 Sublimación</button><button onclick="cargarProduccion()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">↻ Actualizar</button></div>
           </div>
           <div style="position:relative;margin-bottom:12px;"><input id="prod-busq" type="search" placeholder="🔍 Buscar por nombre, cédula o COD…" oninput="prodBuscar()" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;"><div id="prod-busq-n" style="font-size:11px;color:var(--muted);margin:4px 2px 0;min-height:14px;"></div></div>
           <div id="produccion-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-bottom:8px;"></div>
@@ -7691,7 +7691,7 @@ function codPackGenerico(pk,k,offset,etq){
   const grupos={};
   piezas.forEach(p=>{const kk=p.telaP||'';(grupos[kk]=grupos[kk]||[]).push(p)});
   const bloques=Object.keys(grupos).map(kk=>({tela:String(kk).trim()||'—',estilo:'normal',etq:titulo.toUpperCase(),
-    piezas:grupos[kk].map(p=>({id:(pk._kp||pk.codigoS||('P'+(k+offset)))+'#'+p.idx,talla:p.talla,genero:p.genero,nombre:p.nombre,
+    piezas:ordPiezasPz(grupos[kk]).map(p=>({id:(pk._kp||pk.codigoS||('P'+(k+offset)))+'#'+p.idx,talla:p.talla,genero:p.genero,nombre:p.nombre,
       extra:[flag(p),p.LogoPecho?'Logo pecho: '+p.LogoPecho:'',p.LogoManga?'Logo manga: '+p.LogoManga:'',p.LogoEspalda?'Logo espalda: '+p.LogoEspalda:'',p.Largo?'Largo: '+p.Largo:''].filter(Boolean).join(' · ')})),
     you:null,gen:codMockGenerico(pk,kk)}));
   return {titulo:titulo||'Pack',linea:/LICRA/i.test(pk.modelo||'')?'licra':'comfy',vinil:codUnico(pk.vinil)||'—',bloques:bloques};
@@ -7772,7 +7772,7 @@ async function codConstruirPacks(allPacks,extras,offset){
     const bloques=[];
     const claves=Object.keys(grupos).sort((a,b)=>orden.indexOf(a.split('|')[0])-orden.indexOf(b.split('|')[0]));
     for(const kk of claves){ const e=kk.split('|')[0];
-      const bl={tela:grupos[kk][0].telaP,estilo:e,piezas:grupos[kk].map(p=>({id:(pk._kp||pk.codigoS||('P'+(k+offset)))+'#'+p.idx,talla:p.talla,genero:p.genero,nombre:p.nombre,extra:esYou?'Diseño Ikoa You':[p.LogoPecho?'Logo pecho: '+p.LogoPecho:'',p.LogoManga?'Logo manga: '+p.LogoManga:'',p.LogoEspalda?'Logo espalda: '+p.LogoEspalda:''].filter(Boolean).join(' · ')})),you:null};
+      const bl={tela:grupos[kk][0].telaP,estilo:e,piezas:ordPiezasPz(grupos[kk]).map(p=>({id:(pk._kp||pk.codigoS||('P'+(k+offset)))+'#'+p.idx,talla:p.talla,genero:p.genero,nombre:p.nombre,extra:esYou?'Diseño Ikoa You':[p.LogoPecho?'Logo pecho: '+p.LogoPecho:'',p.LogoManga?'Logo manga: '+p.LogoManga:'',p.LogoEspalda?'Logo espalda: '+p.LogoEspalda:''].filter(Boolean).join(' · ')})),you:null};
       if(esYou) bl.you={img:await codRenderYou(linea,dis,orden.indexOf(e),etq),lineas:lineas};
       bloques.push(bl);
     }
@@ -9575,6 +9575,87 @@ function cerrarVisorPDF(){
 // ── PRODUCCION ────────────────────────────────────────────────
 
 /* ===== Vista de producción para tablet: pedido con mockups, tallas y nombres + avance por pieza ===== */
+/*SUB*/
+/* ===== ORDEN ESTÁNDAR DE PIEZAS (todos los reportes): Caballero → Dama → Kids, y dentro de cada género de la talla MAYOR a la MENOR ===== */
+function ordGenRank(g){ g=String(g||'').toLowerCase(); if(/caballero|hombre/.test(g)) return 0; if(/dama|mujer/.test(g)) return 1; if(/kid|ni[nñ]/.test(g)) return 2; if(/toalla/.test(g)) return 3; return 4; }
+function ordTallaRank(t){ t=String(t||'').toUpperCase().trim().split('/')[0].replace(/\./g,'').replace(/\s+/g,''); if(!t) return -1; if(/^\d+$/.test(t)) return parseInt(t,10);
+  var m=/^(\d)?(X+)?(S|M|L)$/.exec(t.replace(/^X{2}L$/,'2XL').replace(/^X{3}L$/,'3XL')); var T=t.replace(/^XXL$/,'2XL').replace(/^XXXL$/,'3XL');
+  var tab={'XXS':0,'XS':1,'S':2,'M':3,'L':4,'XL':5,'2XL':6,'3XL':7,'4XL':8,'5XL':9,'6XL':10,'UNICA':3,'ÚNICA':3,'U':3,'UNICO':3};
+  if(tab[T]!=null) return tab[T]; var mm=/^(\d)XL$/.exec(T); if(mm) return 4+parseInt(mm[1],10); return -1; }
+function ordCmpGT(g1,t1,g2,t2){ return (ordGenRank(g1)-ordGenRank(g2))||(ordTallaRank(t2)-ordTallaRank(t1)); }
+function ordPiezasPz(arr){ return (arr||[]).map(function(x,i){return [x,i]}).sort(function(a,b){ return ordCmpGT(a[0].genero,a[0].talla,b[0].genero,b[0].talla)||(a[1]-b[1]); }).map(function(x){return x[0]}); }
+function ordNombres(arr){ return (arr||[]).map(function(x,i){return [x,i]}).sort(function(a,b){ return ordCmpGT(a[0].g,a[0].z,b[0].g,b[0].z)||(a[1]-b[1]); }).map(function(x){return x[0]}); }
+/* Piezas en texto ("Caballero L - NOMBRE | LogoPecho: … | Dama M - …") → bloques [{l:[líneas],i:índice original}] ordenados. ancho=true agrupa también líneas "Campo: valor" como detalle de la pieza anterior */
+function ordBloques(s,ancho){ var L=String(s||'').split(' | ').map(function(x){return x.trim();}).filter(Boolean), bl=[], act=null, n=0;
+  L.forEach(function(l){ var det=/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):/.test(l)||(ancho&&act&&/^[^:\-]{1,30}:\s/.test(l)); if(det&&act) act.l.push(l); else { act={l:[l],i:n++}; bl.push(act); } });
+  return bl.map(function(b){ var m=/^(\S+)\s+(\S+)/.exec(b.l[0])||[]; b.g=m[1]||''; b.z=m[2]||''; return b; }).sort(function(a,b){ return ordCmpGT(a.g,a.z,b.g,b.z)||(a.i-b.i); }); }
+/* ===== 🖨 SUBLIMACIÓN: piezas con tela estampada. Se tachan al imprimir en papel y al estamparse en calandra =====
+   Automático: series de colección (Tiburón Ballena, Camping, Náutica, Alpha), Licra Colección, Toalla, y productos "Sublimada/Sublimado".
+   Manual: cada pack se puede forzar a SÍ/NO (unicolores o Licra Protect que a veces se sublimen). Guardado en PROD_AVANCE (SUBLIM_JSON). */
+var prodSubSt={ov:{},imp:new Set(),cal:new Set()};
+function subDe(o){ o=o||{}; return {ov:Object.assign({},o.ov||{}),imp:new Set(o.imp||[]),cal:new Set(o.cal||[])}; }
+function subJSON(st,ks){ var f=function(S){ return Array.from(S).filter(function(k){ return !ks||ks.indexOf(k)>=0; }); }; return JSON.stringify({ov:st.ov,imp:f(st.imp),cal:f(st.cal)}); }
+function subNorm(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
+function subAuto(p){ return /tiburon|camping|nautica|alpha|sublimad|toalla|coleccion/.test(subNorm([p.modelo,p.tela,p.pack].join(' '))); }
+function subPackKey(p,k){ return p._kp||p.codigoS||('P'+k); }
+function subPackOn(st,p,k){ var v=st.ov[subPackKey(p,k)]; return (typeof v==='boolean')?v:subAuto(p); }
+function subClavesOn(st,g){ prodPrefijos(g.packs); var out=[]; g.packs.forEach(function(p,k){ if(subPackOn(st,p,k)) prodKeysPack(p,k).forEach(function(x){ out.push(x.key); }); }); return out; }
+/* ---- Panel «Sublimación» (todas las piezas por estampar de todos los pedidos) ---- */
+var SUBP={items:[],sub:{},av:{},ver:false,q:'',sucio:{},grupos:{}};
+async function subAbrirPanel(){
+  var o=document.getElementById('sub-panel'); if(o) o.remove();
+  o=document.createElement('div'); o.id='sub-panel'; o.style.cssText='position:fixed;inset:0;z-index:10000;background:#f4f4f4;overflow:auto;color:#111;font-family:Barlow,Arial,sans-serif';
+  o.innerHTML='<div style="padding:30px;font-size:15px">⏳ Cargando piezas de sublimación…</div>'; document.body.appendChild(o);
+  try{
+    var rs=await Promise.all([scriptGETjson({action:'leerProduccion'},25000),scriptGETjson({action:'leerProdAvance'},20000)]);
+    var rows=(rs[0]&&rs[0].rows)||[]; window.prodAvance=(rs[1]&&rs[1].avance)||window.prodAvance||{}; SUBP.av=window.prodAvance;
+    var grupos={}; rows.forEach(function(x){ var v=function(i){return String(x[i]||'').trim()}, cod=v(2)||v(1)||v(0);
+      if(!grupos[cod]) grupos[cod]={cod:cod,nombre:v(4),packs:[]}; grupos[cod].packs.push({modelo:v(8),manga:v(9),capucha:v(10),pack:v(11),tela:v(12),vinil:v(13),piezas:v(14),codigoS:v(0),codigoC:v(1)}); });
+    SUBP.grupos=grupos; SUBP.sub={}; SUBP.sucio={}; SUBP.items=[];
+    Object.keys(grupos).forEach(function(cod){ var g=grupos[cod], a=SUBP.av[cod.toUpperCase()]||{}, st=SUBP.sub[cod]=subDe(a.sub); prodPrefijos(g.packs);
+      g.packs.forEach(function(p,k){ if(!subPackOn(st,p,k)) return; prodKeysPack(p,k).forEach(function(z){ SUBP.items.push({cod:cod,nombre:g.nombre,key:z.key,txt:z.txt,tela:p.tela||'—',modelo:modeloManga(p.modelo,p.manga),pack:p.pack}); }); }); });
+  }catch(e){ o.innerHTML='<div style="padding:30px;color:#c00">✗ '+prodEsc(e.message)+'</div>'; return; }
+  subPintarPanel();
+}
+function subToggle(cod,key,campo,v){ var st=SUBP.sub[cod]; if(!st) return; if(v) st[campo].add(key); else st[campo].delete(key); SUBP.sucio[cod]=true; subPintarPanel(); }
+function subGrupoTodos(idx,campo,v){ (SUBP.grupoSel[idx]||[]).forEach(function(it){ var st=SUBP.sub[it.cod]; if(v) st[campo].add(it.key); else st[campo].delete(it.key); SUBP.sucio[it.cod]=true; }); subPintarPanel(); }
+function subPintarPanel(){
+  var o=document.getElementById('sub-panel'); if(!o) return; var esc=prodEsc, q=SUBP.q||'', sc=o.scrollTop;
+  var vis=SUBP.items.filter(function(it){ var st=SUBP.sub[it.cod]; return (SUBP.ver||!st.cal.has(it.key))&&(!q.trim()||busqCoincide([it.cod,it.nombre,it.tela,it.modelo,it.txt].join(' '),q)); });
+  var tot=SUBP.items.length, imp=SUBP.items.filter(function(it){return SUBP.sub[it.cod].imp.has(it.key)}).length, cal=SUBP.items.filter(function(it){return SUBP.sub[it.cod].cal.has(it.key)}).length;
+  var bs='border:0;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:800;cursor:pointer;', nSucios=Object.keys(SUBP.sucio).length;
+  var h='<div style="position:sticky;top:0;z-index:2;background:#111;color:#fff;display:flex;align-items:center;gap:8px;padding:10px 14px;flex-wrap:wrap"><button onclick="subCerrar()" style="'+bs+'background:#fff;color:#111">✕ Cerrar</button><div style="flex:1;font-size:18px;font-weight:800">🖨 Sublimación</div>'+
+    (nSucios?'<button onclick="subGuardar()" style="'+bs+'background:#f5b700;color:#000">💾 Guardar ('+nSucios+' pedido'+(nSucios>1?'s':'')+')</button>':'')+'<button onclick="subAbrirPanel()" style="'+bs+'background:#333;color:#fff">↻</button></div><div style="padding:14px;max-width:900px;margin:0 auto">';
+  function pill(n,l,c){ return '<div style="flex:1;min-width:110px;background:#fff;border:2px solid '+c+';border-radius:12px;padding:8px;text-align:center"><div style="font-size:26px;font-weight:900;color:'+c+'">'+n+'</div><div style="font-size:11px;font-weight:700;color:#555">'+l+'</div></div>'; }
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+pill(tot-cal,'POR ESTAMPAR','#dc2626')+pill(tot-imp,'POR IMPRIMIR EN PAPEL','#d97706')+pill(imp,'IMPRESAS','#2563eb')+pill(cal,'ESTAMPADAS (CALANDRA)','#059669')+'</div>'+
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><input type="search" value="'+esc(q)+'" placeholder="🔍 Buscar por cliente, COD, tela, modelo…" oninput="SUBP.q=this.value;subPintarPanel();var e=document.querySelector(\'#sub-panel input[type=search]\');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length);}" style="flex:1;min-width:220px;padding:10px 14px;border:1px solid #bbb;border-radius:10px;font-size:14px"><label style="font-size:13px;display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" '+(SUBP.ver?'checked':'')+' onchange="SUBP.ver=this.checked;subPintarPanel()" style="width:18px;height:18px"> Ver ya estampadas</label></div>';
+  SUBP.grupoSel=[]; var gr={}, orden=[];
+  vis.forEach(function(it){ var k=it.tela.toUpperCase()+'¦'+it.modelo.toUpperCase(); if(!gr[k]){ gr[k]=[]; orden.push(k); } gr[k].push(it); });
+  orden.sort(function(a,b){ return gr[b].length-gr[a].length; });
+  if(!orden.length) h+='<div style="background:#fff;border:1px solid #ddd;border-radius:14px;padding:24px;text-align:center;color:#666">'+(tot?'✅ Todo lo de sublimación ya está estampado.':'No hay piezas de sublimación en producción.')+'</div>';
+  orden.forEach(function(k){ var L=gr[k], idx=SUBP.grupoSel.push(L)-1, t=k.split('¦');
+    h+='<div style="background:#fff;border:1px solid #ddd;border-radius:14px;padding:12px;margin-bottom:12px"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><div style="flex:1;min-width:200px"><div style="font-size:17px;font-weight:900">🎨 '+esc(t[0])+'</div><div style="font-size:12px;color:#666">'+esc(t[1])+' · '+L.length+' pieza(s)</div></div>'+
+      '<button onclick="subGrupoTodos('+idx+',\'imp\',true)" style="'+bs+'background:#fff;color:#2563eb;border:1.5px solid #2563eb;padding:7px 10px;font-size:12px">🖨 Todas impresas</button><button onclick="subGrupoTodos('+idx+',\'cal\',true)" style="'+bs+'background:#fff;color:#059669;border:1.5px solid #059669;padding:7px 10px;font-size:12px">🔥 Todas estampadas</button></div>';
+    L.forEach(function(it){ var st=SUBP.sub[it.cod], i=st.imp.has(it.key), c=st.cal.has(it.key), kk=esc(it.key);
+      h+='<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid #eee;'+(c?'opacity:.5;':'')+'"><div style="flex:1;font-size:14px;'+(i||c?'text-decoration:line-through;color:#777;':'')+'">COD '+esc(it.cod)+' · '+esc(it.txt)+' <span style="color:#999;font-size:11px">'+esc(it.nombre)+'</span></div>'+
+        '<label style="font-size:12px;font-weight:700;color:#2563eb;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" '+(i?'checked':'')+' onchange="subToggle(\''+esc(it.cod)+'\',\''+kk+'\',\'imp\',this.checked)" style="width:24px;height:24px;accent-color:#2563eb">🖨</label>'+
+        '<label style="font-size:12px;font-weight:700;color:#059669;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" '+(c?'checked':'')+' onchange="subToggle(\''+esc(it.cod)+'\',\''+kk+'\',\'cal\',this.checked)" style="width:24px;height:24px;accent-color:#059669">🔥</label></div>'; });
+    h+='</div>'; });
+  h+='<div style="font-size:11px;color:#888;margin:8px 0 30px">🖨 = impreso en papel · 🔥 = estampado en calandra. Para mandar un pedido que no es de colección (unicolor, Licra Protect…) a sublimación: ábrelo en Producción y usa «🖨 Sublimación: SÍ/NO» en su pack.</div></div>';
+  o.innerHTML=h; o.scrollTop=sc;
+}
+function subCerrar(){ var n=Object.keys(SUBP.sucio).length; if(n&&!confirm('Tienes cambios sin guardar en '+n+' pedido(s). ¿Cerrar sin guardar?')) return; var o=document.getElementById('sub-panel'); if(o) o.remove(); if(typeof cargarProduccion==='function') try{ cargarProduccion(); }catch(e){} }
+async function subGuardar(){
+  var cods=Object.keys(SUBP.sucio); if(!cods.length) return;
+  var usr=await prodPedirClave('Guardar sublimación','Se guardará lo impreso/estampado en '+cods.length+' pedido(s).'); if(!usr) return;
+  var fallos=[];
+  for(var i=0;i<cods.length;i+=4){ await Promise.all(cods.slice(i,i+4).map(async function(cod){
+    var a=SUBP.av[cod.toUpperCase()]||{done:[],completo:false}, g=SUBP.grupos[cod], ks=g?prodKeys(g):[];
+    try{ var r=await scriptGETjson({action:'guardarProdAvance',cod:cod,done:JSON.stringify(a.done||[]),completo:a.completo?'SI':'',usuario:usr,sub:subJSON(SUBP.sub[cod],ks)},25000);
+      if(!r||!r.ok) throw new Error((r&&r.error)||'x'); window.prodAvance[cod.toUpperCase()]=Object.assign({done:[],completo:false},a,{sub:JSON.parse(subJSON(SUBP.sub[cod],ks))}); delete SUBP.sucio[cod]; }
+    catch(e){ fallos.push(cod); } })); }
+  subPintarPanel(); if(fallos.length) alert('✗ No se guardaron: '+fallos.join(', ')+'. Revisa que el servidor esté actualizado (Nueva versión) e inténtalo de nuevo.');
+}
 var prodVistaCache={}, prodSel=new Set(), prodDirty=false, prodCodAbierto=null, prodCostura={}, prodVinil=new Set(), prodEmp=new Set();
 /* ===== COSTURERAS: cada pieza se asigna a una costurera (los nombres se guardan en el servidor) ===== */
 window.COSTURERAS=null;
@@ -9599,6 +9680,8 @@ function prodPintarCostura(host){
     function b(txt,col,fn){ var x=document.createElement('button'); x.type='button'; x.textContent=txt; x.style.cssText='padding:4px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid '+col+';background:#fff;color:'+col; x.onclick=function(ev){ ev.preventDefault(); fn(); }; bar.appendChild(x); }
     function ref(){ prodDirty=true; prodPintarCostura(host); prodActualizarBarra(); }
     lab('TODO EL PEDIDO');
+    prodPrefijos(g.packs); g.packs.forEach(function(p,k0){ var pk=subPackKey(p,k0), on=subPackOn(prodSubSt,p,k0), man=(typeof prodSubSt.ov[pk]==='boolean');
+      b('🖨 Sublimación'+(g.packs.length>1?' (Pack '+(k0+1)+')':'')+': '+(on?'SÍ':'NO')+(man?' · manual':(on?' · auto':'')),on?'#c2410c':'#71717a',function(){ prodSubSt.ov[pk]=!on; ref(); }); });
     var todosEmp=ks.every(function(k){return prodEmp.has(k)});
     b(todosEmp?'📦 Quitar empaque a todas':'📦 Empacar todas','#a16207',function(){ ks.forEach(function(k){ if(todosEmp) prodEmp.delete(k); else prodEmp.add(k); }); ref(); });
     var todosVin=ks.every(function(k){return prodVinil.has(k)});
@@ -9609,6 +9692,7 @@ function prodPintarCostura(host){
     if(enc.length) b('📥 Recibir OK las '+enc.length+' enviadas','#059669',function(){ var ahora=costuraAhora(); enc.forEach(function(k){ var e=costuraEnt(prodCostura[k]); e.est='ok'; e.rec=ahora; prodCostura[k]=e; }); ref(); });
     host.parentNode.insertBefore(bar,host);
   })();
+  var subOn={}; if(g){ prodPrefijos(g.packs); g.packs.forEach(function(p,k0){ subOn[subPackKey(p,k0)]=subPackOn(prodSubSt,p,k0); }); }
   host.querySelectorAll('.pchk').forEach(function(c){
     var k=c.dataset.k, row=c.closest('tr')||c.closest('label'); if(!row) return;
     var e=costuraEnt(prodCostura[k]), vin=prodVinil.has(k), est=e?costuraEstado(e):'';
@@ -9627,6 +9711,12 @@ function prodPintarCostura(host){
     btn(emp?'📦 Empacada ✔':'📦 Empacar','#a16207',emp,function(){ if(prodEmp.has(k)) prodEmp.delete(k); else prodEmp.add(k); refrescar(); });
     if(emp){ var bt=box.lastChild; bt.style.background='#eab308'; bt.style.borderColor='#a16207'; bt.style.color='#000'; }
     var d0=document.createElement('span'); d0.style.cssText='width:1px;height:16px;background:#d4d4d8;margin:0 4px;'; box.appendChild(d0);
+    if(subOn[k.split('#')[0]]){ var si=prodSubSt.imp.has(k), sc2=prodSubSt.cal.has(k);
+      lab('SUBLIM.'); btn(si?'🖨 Impreso ✔':'🖨 Impreso','#2563eb',si,function(){ if(prodSubSt.imp.has(k)) prodSubSt.imp.delete(k); else prodSubSt.imp.add(k); refrescar(); });
+      btn(sc2?'🔥 Calandra ✔':'🔥 Calandra','#059669',sc2,function(){ if(prodSubSt.cal.has(k)) prodSubSt.cal.delete(k); else prodSubSt.cal.add(k); refrescar(); });
+      var d1=document.createElement('span'); d1.style.cssText='width:1px;height:16px;background:#d4d4d8;margin:0 4px;'; box.appendChild(d1);
+      if(si||sc2) row.style.textDecoration='line-through'; else row.style.textDecoration=''; }
+    else row.style.textDecoration='';
     lab('VINIL'); btn(vin?'🎨 Listo ✔':'🎨 Marcar listo','#7c3aed',vin,function(){ if(prodVinil.has(k)) prodVinil.delete(k); else prodVinil.add(k); refrescar(); });
     var d=document.createElement('span'); d.style.cssText='width:1px;height:16px;background:#d4d4d8;margin:0 4px;'; box.appendChild(d);
     lab('COSTURA');
@@ -9959,7 +10049,7 @@ function prodActualizarBarra(){
   var vin=ks.filter(function(k){return prodVinil.has(k)}).length; var resumen=[ks.length?'🎨 vinil '+vin+'/'+ks.length:'',c.env?'en costura '+c.env:'',c.ok?'✅ OK '+c.ok:'',c.rep?'🔧 devueltas '+c.rep:'',c.pag?'💰 pagadas '+c.pag:''].filter(Boolean).join(' · ');
   var t=document.getElementById('prod-prog'); if(t){
     function chip(txt,bg){ return '<span style="display:inline-block;background:'+bg+';color:#fff;border-radius:20px;padding:3px 10px;margin:3px 6px 0 0;font-size:12px;font-weight:800">'+txt+'</span>'; }
-    t.innerHTML=chip('✔ '+hechas+'/'+ks.length+' hechas'+(av.completo?' · EJECUTADO':''),hechas>=ks.length&&ks.length?'#059669':'#52525b')+chip('🎨 vinil '+vin+'/'+ks.length,vin>=ks.length&&ks.length?'#7c3aed':'#52525b')+(ks.length?(function(){ var em=ks.filter(function(k){return prodEmp.has(k)}).length; return em>=ks.length?chip('📦 EMPACADO 100% · LISTO PARA MENSAJERO','#ca8a04'):chip('📦 empacadas '+em+'/'+ks.length,'#52525b'); })():'')+(c.env?chip('🧵 en costura '+c.env,'#2563eb'):'')+(c.ok?chip('📥 OK '+c.ok,'#059669'):'')+(c.rep?chip('🔧 devueltas '+c.rep,'#dc2626'):'')+(c.pag?chip('💰 pagadas '+c.pag,'#6b7280'):'');
+    t.innerHTML=chip('✔ '+hechas+'/'+ks.length+' hechas'+(av.completo?' · EJECUTADO':''),hechas>=ks.length&&ks.length?'#059669':'#52525b')+chip('🎨 vinil '+vin+'/'+ks.length,vin>=ks.length&&ks.length?'#7c3aed':'#52525b')+(function(){ var so=subClavesOn(prodSubSt,g); if(!so.length) return ''; var im=so.filter(function(k){return prodSubSt.imp.has(k)}).length, ca=so.filter(function(k){return prodSubSt.cal.has(k)}).length; return chip('🖨 papel '+im+'/'+so.length+' · 🔥 calandra '+ca+'/'+so.length,ca>=so.length?'#c2410c':'#52525b'); })()+(ks.length?(function(){ var em=ks.filter(function(k){return prodEmp.has(k)}).length; return em>=ks.length?chip('📦 EMPACADO 100% · LISTO PARA MENSAJERO','#ca8a04'):chip('📦 empacadas '+em+'/'+ks.length,'#52525b'); })():'')+(c.env?chip('🧵 en costura '+c.env,'#2563eb'):'')+(c.ok?chip('📥 OK '+c.ok,'#059669'):'')+(c.rep?chip('🔧 devueltas '+c.rep,'#dc2626'):'')+(c.pag?chip('💰 pagadas '+c.pag,'#6b7280'):'');
   }
   var sv=document.getElementById('prod-save'); if(sv)sv.style.display=prodDirty?'inline-block':'none';
   var nb=document.getElementById('prod-notif'); if(nb){ var todo=ks.length&&ks.every(function(k){return prodEmp.has(k)}); nb.style.boxShadow=todo?'0 0 0 4px #fde047':''; nb.textContent=todo?'🛵 Notificar mensajero · LISTO ✔':'🛵 Notificar mensajero'; }
@@ -9986,9 +10076,9 @@ async function prodGuardar(completo,reabrir){
   var usr=await prodPedirClave(completo?'Ejecutado total':(reabrir?'Reabrir pedido':'Guardar avance'),det); if(!usr)return;
   var btns=document.querySelectorAll('#prod-overlay button'); btns.forEach(function(b){b.disabled=true});
   try{
-    var r=await scriptGETjson({action:'guardarProdAvance',cod:cod,done:JSON.stringify(Array.from(prodSel).filter(function(k){return ks.indexOf(k)>=0})),completo:completo?'SI':'',usuario:usr,vinil:JSON.stringify(Array.from(prodVinil).filter(function(k){return ks.indexOf(k)>=0})),emp:JSON.stringify(Array.from(prodEmp).filter(function(k){return ks.indexOf(k)>=0})),costura:JSON.stringify(Object.keys(prodCostura).filter(function(k){return ks.indexOf(k)>=0}).reduce(function(o,k){o[k]=prodCostura[k];return o},{}))});
+    var r=await scriptGETjson({action:'guardarProdAvance',cod:cod,done:JSON.stringify(Array.from(prodSel).filter(function(k){return ks.indexOf(k)>=0})),completo:completo?'SI':'',usuario:usr,vinil:JSON.stringify(Array.from(prodVinil).filter(function(k){return ks.indexOf(k)>=0})),emp:JSON.stringify(Array.from(prodEmp).filter(function(k){return ks.indexOf(k)>=0})),sub:subJSON(prodSubSt,ks),costura:JSON.stringify(Object.keys(prodCostura).filter(function(k){return ks.indexOf(k)>=0}).reduce(function(o,k){o[k]=prodCostura[k];return o},{}))});
     if(!r||!r.ok)throw new Error((r&&r.error)||'no se pudo guardar');
-    window.prodAvance[cod.toUpperCase()]={done:Array.from(prodSel),completo:!!completo,usuario:usr,fecha:'',vinil:Array.from(prodVinil),emp:Array.from(prodEmp),costura:Object.assign({},prodCostura)};
+    window.prodAvance[cod.toUpperCase()]={done:Array.from(prodSel),completo:!!completo,usuario:usr,fecha:'',vinil:Array.from(prodVinil),emp:Array.from(prodEmp),sub:JSON.parse(subJSON(prodSubSt,ks)),costura:Object.assign({},prodCostura)};
     prodDirty=false; prodCerrarTablet(true);
   }catch(e){ btns.forEach(function(b){b.disabled=false}); alert('✗ No se guardó: '+e.message); }
 }
@@ -9997,7 +10087,7 @@ async function abrirProduccionTablet(cod){
   prodPrefijos(g.packs);
   var o0=document.getElementById('prod-overlay'); if(o0)o0.remove();
   prodCodAbierto=cod; prodDirty=false;
-  var av=window.prodAvance[String(cod).toUpperCase()]||{done:[],completo:false}; prodSel=new Set(av.done||[]); prodVinil=new Set(av.vinil||[]); prodEmp=new Set(av.emp||[]); prodCostura={}; Object.keys(av.costura||{}).forEach(function(k){ prodCostura[k]=costuraEnt(av.costura[k]); }); await costurasCargar();
+  var av=window.prodAvance[String(cod).toUpperCase()]||{done:[],completo:false}; prodSel=new Set(av.done||[]); prodVinil=new Set(av.vinil||[]); prodEmp=new Set(av.emp||[]); prodSubSt=subDe(av.sub); prodCostura={}; Object.keys(av.costura||{}).forEach(function(k){ prodCostura[k]=costuraEnt(av.costura[k]); }); await costurasCargar();
   var o=document.createElement('div'); o.id='prod-overlay';
   o.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;overflow:auto;-webkit-overflow-scrolling:touch;color:#111';
   var CW=Math.max(320,window.innerWidth-28), z=Math.max(0.6,Math.min(1.6,CW/700)), esc=prodEsc;
@@ -10556,7 +10646,7 @@ function pedidoCapturaCanvas(base){
     add('PARTE '+(idx+1)+' · '+q(14)+'  ('+q(0)+')','bold 30px '+F,'#0a7d4a',6);
     add('Modelo: '+(q(11)||'—'),'26px '+F); add('Manga: '+q(12)+(q(13)?'   ·   Capucha: '+q(13):''),'26px '+F);
     add('Tela: '+q(15)+'   ·   Vinil: '+q(16),'26px '+F,'#111',6);
-    q(17).split(' | ').forEach(function(t){ if(t.trim()) add('• '+t.trim(),'bold 26px '+F,'#222'); });
+    ordBloques(q(17),true).forEach(function(bl){ bl.l.forEach(function(t){ if(t.trim()) add('• '+t.trim(),'bold 26px '+F,'#222'); }); });
   });
   add('','10px '+F,'#111',10);
   add('Responde por este chat con tu confirmación, o dinos qué hay que corregir.','24px '+F,'#555');
@@ -10666,19 +10756,17 @@ async function aproVerPedido(base){
   }
 }
 function aproPackTexto(p,i,n){
-  var esc=prodEsc, lines=String(p.piezas||'').split(' | ').map(function(x){return x.trim()}).filter(Boolean).map(function(seg){
-    return '<div style="padding:7px 0;border-bottom:1px solid #e6e6e6;font-size:15px">'+esc(seg)+'</div>';}).join('');
+  var esc=prodEsc, lines=ordBloques(p.piezas,false).map(function(b){ return b.l.map(function(seg){ return '<div style="padding:7px 0;border-bottom:1px solid #e6e6e6;font-size:15px">'+esc(seg)+'</div>'; }).join(''); }).join('');
   return '<div style="border-top:1px solid #111;margin-top:14px;padding:12px 0;font-size:13px;max-width:700px"><div style="font-size:19px;font-weight:800">Pack '+(i+1)+(n>1?' de '+n:'')+': '+esc(p.pack||'—')+' · '+esc(modeloManga(p.modelo,p.manga))+'</div>'+
    '<div style="margin:6px 0 10px"><span style="color:#888">Tela</span> <b>'+esc(p.tela)+'</b> &nbsp; <span style="color:#888">Vinil</span> <b>'+esc(p.vinil)+'</b></div>'+aproFotoPack(p)+lines+'</div>';
 }
 function prodPackTexto(p,i,n){
   var esc=prodEsc, ks=prodKeysPack(p,i), lines='';
-  var segs=String(p.piezas||'').split(' | ').map(function(x){return x.trim()}).filter(Boolean), n2=0;
-  segs.forEach(function(seg){
-    if(/^(LogoPecho|LogoEspalda|LogoManga|Tela|Largo):/.test(seg)){lines+='<div style="margin:-4px 0 6px 42px;font-size:12px;color:#777">'+esc(seg)+'</div>';return;}
-    var key=ks[n2++].key;
+  ordBloques(p.piezas,false).forEach(function(bl){ bl.l.forEach(function(seg,si){
+    if(si>0){lines+='<div style="margin:-4px 0 6px 42px;font-size:12px;color:#777">'+esc(seg)+'</div>';return;}
+    var key=ks[bl.i].key;
     lines+='<label style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #e6e6e6;font-size:15px;cursor:pointer"><input type="checkbox" class="pchk" data-k="'+esc(key)+'" style="width:30px;height:30px;accent-color:#111;flex:none"><span>'+esc(seg)+'</span></label>';
-  });
+  }); });
   return '<div style="border-top:1px solid #111;margin-top:14px;padding:12px 0;font-size:13px;max-width:700px"><div style="font-size:19px;font-weight:800">Pack '+(i+1)+(n>1?' de '+n:'')+': '+esc(p.pack||'—')+' · '+esc(modeloManga(p.modelo,p.manga))+'</div>'+
    '<div style="margin:6px 0 10px"><span style="color:#888">Tela</span> <b>'+esc(p.tela)+'</b> &nbsp; <span style="color:#888">Vinil</span> <b>'+esc(p.vinil)+'</b></div>'+aproFotoPack(p)+lines+'</div>';
 }
@@ -11180,7 +11268,8 @@ function tallerParsearPiezas(piezasStr){
   });
   // Talla ajustada: "L/S" = Ancho L / Largo S (acuerdo con el vendedor). Queda como talla propia: no se suma con las L normales.
   piezas.forEach(pz=>{ const m=String(pz.talla||'').match(/^([^\/\s]+)\/([^\/\s]+)$/); if(m) pz.ajuste={ancho:m[1].toUpperCase().replace(/\./g,' '), largo:m[2].toUpperCase().replace(/\./g,' ')}; });
-  return piezas;
+  piezas.forEach((pz,i)=>{ pz._i=i; });   // posición original (las claves de costura/avance dependen de ella)
+  return ordPiezasPz(piezas.filter(pz=>!pz.raw)).concat(piezas.filter(pz=>pz.raw));   // Caballero → Dama → Kids, talla mayor → menor
 }
 
 // Reformatea texto "sucio" (pegado sin espacios/separadores, típico de pedidos
@@ -11286,7 +11375,7 @@ async function tallerConstruirCortadorHTML(codigos){
       const desc=tallerDescripcionPack(p), fam=tallerFamiliaTela(p), piezas=tallerParsearPiezas(p.piezas), grupos={}; let sinFormato=0;
       piezas.forEach((pz,pi)=>{
         if(pz.raw){ sinFormato++; return; }
-        const costPz=tallerCosturaDe(cod,p,pk0,pi);
+        const costPz=tallerCosturaDe(cod,p,pk0,pz._i!=null?pz._i:pi);
         const telaPz=pz.tela||'', largoPz=pz.largo||'';
         const key=(pz.genero||'—')+'||'+(pz.talla||'—')+(pz.capucha?'||CAP':'')+(pz.cuelloAlto?'||CUA':'')+(telaPz?'||'+telaPz:'')+(largoPz?'||'+largoPz:'')+(costPz?'||C:'+costPz:'');
         if(!grupos[key]) grupos[key]={genero:pz.genero||'—',talla:pz.talla||'—',capucha:pz.capucha,cuelloAlto:pz.cuelloAlto,tela:telaPz,largo:largoPz,ajuste:pz.ajuste,cost:costPz,unds:0};
@@ -11325,7 +11414,7 @@ async function tallerConstruirCortadorHTML(codigos){
       const C=F.colores[c], rgb=(window.CODPDF&&CODPDF.colorTela)?CODPDF.colorTela(C.telaTxt||c):[154,154,154];
       const rgbCss='rgb('+rgb.join(',')+')';   // color de la tela: banda en cada fila de pedido
       const mk=await tallerMockupColor(C.pk,C.telaTxt||c);
-      C.rows.sort((a,b)=>(b.urg-a.urg)||((parseInt(a.cod)||0)-(parseInt(b.cod)||0)));
+      C.rows.sort((a,b)=>(b.urg-a.urg)||((parseInt(a.cod)||0)-(parseInt(b.cod)||0))||ordCmpGT(a.genero,a.talla,b.genero,b.talla));
       let prev=null, z=0;
       const filasArr=C.rows.map(r=>{
         const nw=prev!==null&&prev!==r.cod; prev=r.cod; z++;
@@ -11473,10 +11562,11 @@ function tallerConstruirEstampadorHTML(codigos, rec){
     const packsMez=[], idxMez={};
     g.packs.forEach((p,pk0)=>{
       const k=tallerDescripcionPack(p)+'||'+String(p.tela||'').trim().toUpperCase()+'||'+String(p.vinil||'').trim().toUpperCase();
-      const arr=tallerParsearPiezas(p.piezas); arr.forEach((pz,pi)=>{ pz._cost=tallerCosturaDe(cod,p,pk0,pi); });
+      const arr=tallerParsearPiezas(p.piezas); arr.forEach((pz,pi)=>{ pz._cost=tallerCosturaDe(cod,p,pk0,pz._i!=null?pz._i:pi); });
       if(idxMez[k]==null){ idxMez[k]=packsMez.length; packsMez.push({p:p,piezas:arr.slice()}); }
       else packsMez[idxMez[k]].piezas.push.apply(packsMez[idxMez[k]].piezas,arr);
     });
+    packsMez.forEach(pm=>{ pm.piezas=ordPiezasPz(pm.piezas); });
     packsMez.forEach(pm=>{
       const p=pm.p;
       const desc=tallerDescripcionPack(p);
@@ -11605,7 +11695,7 @@ function tallerAgruparNombresVinil(codigos){
           if(mc){ color=mc[1].replace(/\s+/g,' ').trim().toUpperCase(); nombre=nombre.slice(0,mc.index).trim(); }
           if(nombre){
             const tag=(!pz.raw&&/^kids$/i.test(String(pz.genero||'').trim()))?('KIDS '+String(pz.talla||'').trim().toUpperCase()).trim():'';
-            grupoDe(color).nombres.push({n:nombre.toUpperCase(), t:tag});
+            grupoDe(color).nombres.push({n:nombre.toUpperCase(), t:tag, g:pz.genero||'', z:pz.talla||''});
           }
         }
         // 2) los stickers de vinil de la pieza: cada uno va al grupo de SU color (aunque la pieza no lleve nombre)
@@ -11620,7 +11710,7 @@ function tallerAgruparNombresVinil(codigos){
     if(total(b)!==total(a)) return total(b)-total(a);               // más elementos a cortar primero
     return a.primero-b.primero;                                     // empate: el que apareció primero en los pedidos
   });
-  return lista.map(g=>({color:g.color, nombres:g.nombres,
+  return lista.map(g=>({color:g.color, nombres:ordNombres(g.nombres),
     stickers:Object.keys(g.stk).sort((x,y)=>g.stk[y]-g.stk[x]||x.localeCompare(y,'es',{numeric:true})).map(c=>({c,n:g.stk[c]})),
     // lo mismo, separado por zona (m=manga, e=espalda, p=pecho): cada zona se corta a su medida
     formas:Object.keys(g.stkz).sort((x,y)=>g.stkz[y]-g.stkz[x]||x.localeCompare(y,'es',{numeric:true})).map(k=>{const [c,z]=k.split('|'); return {c,z,n:g.stkz[k]};})}));
@@ -17838,6 +17928,7 @@ async function tallerCosturaOk(cod){
 function piezasAgrupadas(s){
   var L=String(s||'').split(' | ').map(function(x){return x.trim();}).filter(Boolean), bloques=[], act=null;
   L.forEach(function(l){ var det=/^[^:\-]{1,30}:\s/.test(l)&&act; if(det) act.l.push(l); else { act={l:[l]}; bloques.push(act); } });
+  bloques=bloques.map(function(b,i){ var m=/^(\S+)\s+(\S+)/.exec(b.l[0])||[]; b.g=m[1]||''; b.z=m[2]||''; b.i=i; return b; }).sort(function(a,b){ return ordCmpGT(a.g,a.z,b.g,b.z)||(a.i-b.i); });   // Caballero → Dama → Kids, talla mayor → menor
   var map={}, orden=[];
   bloques.forEach(function(b){ var k=b.l.join('\u0001'); if(!map[k]){ map[k]={l:b.l,n:0}; orden.push(k); } map[k].n++; });
   var tot=bloques.length;
