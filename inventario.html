@@ -10939,6 +10939,9 @@ async function cargarProduccion(usarCache){
     lista.innerHTML=filtrosHTML+`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;"><div style="font-size:12px;color:var(--muted);">${codigos.length} pedido(s) ${fl?'con este filtro (incluye ejecutados)':(ver?'(con ejecutados)':'por ejecutar')}</div>
       <label style="font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;cursor:pointer;"><input type="checkbox" ${ver?'checked':''} onchange="window.prodVerEjecutados=this.checked;cargarProduccion(true)"> Mostrar ejecutados (${ejec})</label></div>`;
     if(!codigos.length){ lista.innerHTML+=fl?'<div style="text-align:center;padding:24px;color:var(--muted);font-size:14px;">Ningún pedido cumple este filtro</div>':'<div style="text-align:center;padding:24px;color:var(--accent);font-size:14px;">✅ Todo ejecutado: no hay pedidos pendientes en Producción</div>'; }
+    const _chips=document.createElement('div'); _chips.id='prod-chips'; _chips.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;'; lista.appendChild(_chips);
+    const _det=document.createElement('div'); _det.id='prod-detalle'; lista.appendChild(_det);
+    window._prodCards={}; if(window.prodAbierto&&codigos.indexOf(window.prodAbierto)<0) window.prodAbierto=null;
     codigos.forEach(cod=>{
       const g=grupos[cod];
       const _ks=prodKeys(g), _av=window.prodAvance[String(cod).toUpperCase()]||{done:[]}, _hechas=_ks.filter(k=>(_av.done||[]).indexOf(k)>=0).length;
@@ -10985,12 +10988,26 @@ async function cargarProduccion(usarCache){
           <span style="color:var(--muted);">Retira:</span> ${g.retira||'—'}${g.retiraCI?` · C.I: ${g.retiraCI}`:''}${g.retiraCel?` · Cel: ${g.retiraCel}`:''}
         </div>
         ${packsHTML}`;
-      lista.appendChild(card);
+      window._prodCards[cod]=card;
+      const _fin=!!(_av.completo||(_hechas>=_ks.length&&_ks.length>0));
+      const chip=document.createElement('div'); chip.className='prod-card'; chip.dataset.q=card.dataset.q; chip.style.display='inline-block';
+      chip.innerHTML=`<button type="button" class="prod-chip" data-cod="${cod}" title="${prodEsc(g.nombre)}" onclick="prodAbrirPedido('${cod}')" style="padding:10px 16px;border-radius:10px;font-family:'Barlow',sans-serif;font-size:15px;font-weight:800;cursor:pointer;border:1.5px solid ${g.urgente?'var(--warn)':(_fin?'var(--accent)':'var(--border)')};background:${_fin?'#0a2a0a':'var(--surface)'};color:${g.urgente?'var(--warn)':'var(--text)'};">${g.urgente?'⚡ ':''}${_fin?'✅ ':''}${cod}</button>`;
+      _chips.appendChild(chip);
     });
+    if(window.prodAbierto) prodAbrirPedido(window.prodAbierto,true);
   }catch(e){
     msg.style.background='#2a1010'; msg.style.color='var(--danger)';
     msg.innerHTML='✗ '+e.message;
   }
+}
+// Producción: solo botones con el COD; al tocar uno se abre el pedido completo debajo (tocar de nuevo lo cierra)
+function prodAbrirPedido(cod,mantener){
+  var det=document.getElementById('prod-detalle'), card=(window._prodCards||{})[cod]; if(!det||!card) return;
+  var cerrar=(!mantener&&window.prodAbierto===cod);
+  det.innerHTML=''; window.prodAbierto=cerrar?null:cod;
+  if(!cerrar) det.appendChild(card);
+  [].forEach.call(document.querySelectorAll('#prod-chips .prod-chip'),function(b){ var on=(b.getAttribute('data-cod')===window.prodAbierto); b.style.outline=on?'2px solid var(--accent)':''; b.style.outlineOffset=on?'2px':''; });
+  if(!cerrar&&!mantener) det.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 // ── TALLER (Cortador & Estampador) ─────────────────────────────
