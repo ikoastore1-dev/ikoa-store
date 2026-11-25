@@ -1692,6 +1692,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
             <div style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em;">🏭 Pedidos en Producción</div>
             <div style="display:flex;gap:8px;"><button onclick="codigosAbrir()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🔗 Códigos</button><button onclick="costurasAgregar()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">➕ Costurera</button><button onclick="costurasAbrirPanel()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;">🧵 Costureras</button><button onclick="cargarProduccion()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">↻ Actualizar</button></div>
           </div>
+          <div style="position:relative;margin-bottom:12px;"><input id="prod-busq" type="search" placeholder="🔍 Buscar por nombre, cédula o COD…" oninput="prodBuscar()" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;"><div id="prod-busq-n" style="font-size:11px;color:var(--muted);margin:4px 2px 0;min-height:14px;"></div></div>
           <div id="produccion-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-bottom:8px;"></div>
           <div id="produccion-lista"></div>
         </div>
@@ -2402,6 +2403,7 @@ main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
         <button onclick="cargarTaller()" style="padding:8px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;cursor:pointer;">🔄 Recargar</button>
       </div>
 
+      <div style="position:relative;margin-bottom:12px;"><input id="taller-busq" type="search" placeholder="🔍 Buscar por nombre, cédula o COD…" oninput="tallerBuscar()" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;"><div id="taller-busq-n" style="font-size:11px;color:var(--muted);margin:4px 2px 0;min-height:14px;"></div></div>
       <div id="taller-msg" style="display:none;padding:10px;border-radius:8px;font-size:13px;margin-bottom:12px;text-align:center;"></div>
       <div id="taller-lista"></div>
 
@@ -5912,7 +5914,9 @@ function abrirModalAprobarCashea(key){
     document.body.appendChild(div);
   }
   document.getElementById('cashea-modal-info').textContent=`${data.nombre||''} · Bs ${data.monto||''} · Cashea ${data.casheaPct||''}%`+(data.estado==='Cashea Preaprobado'?` · preaprobado por ${data.preUsuario||'tienda'}`:'');
-  document.getElementById('cashea-cod-input').value=data.estado==='Cashea Preaprobado'?(data.preCod||''):'';
+  var _nt=((window._casheaNotif||{})[data.cod])||null, _ci=document.getElementById('cashea-cod-input');
+  _ci.value=(_nt&&_nt.cod)?_nt.cod:((data.estado==='Cashea Preaprobado'&&data.preCod)?data.preCod:'');   /* precarga el COD Cashea ya escrito al notificar al cliente; se puede modificar */
+  _ci.placeholder=(_nt&&_nt.cod)?'COD de la notificación (puedes cambiarlo)':'Número de orden Cashea';
   document.getElementById('cashea-pct-inicial-input').value=data.estado==='Cashea Preaprobado'?(data.prePct||''):'';
   try{ const t=modal0Titulo(); if(t) t.textContent=casheaRol()==='tienda'?'🟡 Preaprobar Solicitud Cashea':'🛒 Aprobar Solicitud Cashea'; }catch(e){}
   document.getElementById('cashea-auth-input').value='';
@@ -7384,7 +7388,7 @@ async function colaProcesarLote(){
   [].forEach.call(document.querySelectorAll('.lote-chk'),function(c){ c.disabled=true; if(!c.checked){ var it=document.getElementById('lote-it-'+c.getAttribute('data-i')); if(it)it.style.opacity=.35; } });
   document.getElementById('lote-todos-w').style.display='none';
   Lt.lista=sel.map(function(i){return Lt.lista[i]}); var idx=sel.slice();
-  Lt.corriendo=true; var tickets=[], ok=0, falla=null;
+  Lt.corriendo=true; var tickets=[], cods=[], ok=0, falla=null;
   document.getElementById('lote-clave').style.display='none'; document.getElementById('lote-btns').innerHTML='';
   document.getElementById('lote-sub').innerHTML='<span class="spinner">↻</span> Procesando… no cierres esta ventana.';
   for(var i=0;i<Lt.lista.length;i++){
@@ -7394,16 +7398,35 @@ async function colaProcesarLote(){
       var data=colaUnirConjuntos(x.data); pendingCola=data;     // recalcula por si un compañero ya salió
       await confirmarPlanificacion({lote:true,unlock:unlock});
       var r=window._envioCola||{};
-      if(r.ok){ ok++; if(r.ticket)tickets.push(r.ticket); ic.textContent='✅'; st.innerHTML='<b style="color:var(--accent)">COD '+prodEsc(r.codMake||'—')+'</b>'; }
+      if(r.ok){ ok++; if(r.ticket)tickets.push(r.ticket); if(r.codMake&&cods.indexOf(String(r.codMake))<0)cods.push(String(r.codMake)); ic.textContent='✅'; st.innerHTML='<b style="color:var(--accent)">COD '+prodEsc(r.codMake||'—')+'</b>'; }
       else { throw new Error((document.getElementById('cola-msg').textContent||'No se pudo enviar').replace(/^✗\s*/,'')); }
     }catch(e){ ic.textContent='❌'; st.innerHTML='<span style="color:var(--danger)">'+prodEsc(e.message)+'</span>'; falla=x; break; }
     await new Promise(function(r){setTimeout(r,1500)});      // deja que el COD siguiente se actualice
   }
-  Lt.corriendo=false; Lt.tickets=tickets;
+  Lt.corriendo=false; Lt.tickets=tickets; Lt.cods=cods;
   var sub=document.getElementById('lote-sub');
   sub.innerHTML=falla?'⚠️ Se detuvo en <b>'+prodEsc(falla.data.nombre)+'</b>. Enviados: '+ok+' de '+Lt.lista.length+'. Los demás quedaron en Cola, sin tocar.':'✅ Listo: '+ok+' pedido(s) enviados a producción.';
-  document.getElementById('lote-btns').innerHTML=(tickets.length?'<button class="modal-confirm" onclick="ikoaImprimirTickets(window._lote.tickets)">🖨 Imprimir '+tickets.length+' ticket'+(tickets.length>1?'s':'')+'</button>':'')+'<button class="modal-cancel" onclick="colaCerrarLote()">Cerrar</button>';
+  document.getElementById('lote-btns').innerHTML=(cods.length?'<button class="modal-confirm" id="lote-rep-btn" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff" onclick="loteReportes()">📋 Reportes de producción · Cortador · Estampador · DXF vinil ('+cods.length+')</button>':'')+(tickets.length?'<button class="modal-confirm" onclick="ikoaImprimirTickets(window._lote.tickets)">🖨 Imprimir '+tickets.length+' ticket'+(tickets.length>1?'s':'')+'</button>':'')+'<button class="modal-cancel" onclick="colaCerrarLote()">Cerrar</button>';
   if(tickets.length){ try{ ikoaImprimirTickets(tickets); }catch(e){ console.warn(e); } }
+}
+/* Reportes de producción de los pedidos recién procesados en lote: Cortador, Estampador, archivo de corte de vinil (DXF) y hoja DTF */
+async function loteReportes(){
+  var Lt=window._lote||{}, cods=(Lt.cods||[]).slice(), b=document.getElementById('lote-rep-btn'), box=document.getElementById('lote-rep-res');
+  if(!cods.length)return;
+  if(!box){ box=document.createElement('div'); box.id='lote-rep-res'; box.style.cssText='margin-top:10px;text-align:left;font-size:13px'; var bt=document.getElementById('lote-btns'); bt.parentNode.insertBefore(box,bt); }
+  if(b){ b.disabled=true; b.style.opacity=.6; }
+  var prog=function(t){ box.innerHTML='<span class="spinner">↻</span> '+prodEsc(t); };
+  try{
+    prog('Cargando los pedidos de Taller…');
+    await cargarTaller();
+    cods.sort(function(a,c){return (parseInt(a)||0)-(parseInt(c)||0)});
+    var ok=cods.filter(function(c){return tallerGrupos[c]}), falta=cods.filter(function(c){return !tallerGrupos[c]});
+    if(!ok.length){ box.innerHTML='<div style="color:var(--danger)">✗ Los pedidos aún no aparecen en Taller. Espera unos segundos y vuelve a intentar.</div>'; return; }
+    var html=await tallerReportesCore(ok, prog);
+    box.innerHTML='<div style="font-weight:700;margin-bottom:6px">📋 Reportes de COD '+ok.map(prodEsc).join(', ')+'</div><div style="display:flex;flex-wrap:wrap;gap:8px">'+html+'</div>'+
+      (falta.length?'<div style="color:var(--warn);margin-top:6px">⚠️ No se incluyeron (aún no cargan en Taller): COD '+falta.map(prodEsc).join(', ')+'</div>':'');
+  }catch(e){ box.innerHTML='<div style="color:var(--danger)">✗ '+prodEsc(e.message)+'</div>'; }
+  finally{ if(b){ b.disabled=false; b.style.opacity=1; b.textContent='🔄 Volver a generar reportes'; } }
 }
 /* ===== COD PDF v8 (se arma en el navegador de inventario y se envía a Apps Script) ===== */
 (function(){
@@ -9552,7 +9575,7 @@ function cerrarVisorPDF(){
 // ── PRODUCCION ────────────────────────────────────────────────
 
 /* ===== Vista de producción para tablet: pedido con mockups, tallas y nombres + avance por pieza ===== */
-var prodVistaCache={}, prodSel=new Set(), prodDirty=false, prodCodAbierto=null, prodCostura={}, prodVinil=new Set();
+var prodVistaCache={}, prodSel=new Set(), prodDirty=false, prodCodAbierto=null, prodCostura={}, prodVinil=new Set(), prodEmp=new Set();
 /* ===== COSTURERAS: cada pieza se asigna a una costurera (los nombres se guardan en el servidor) ===== */
 window.COSTURERAS=null;
 var COSTURA_COLORES=['#2563eb','#db2777','#059669','#d97706','#7c3aed','#0891b2','#be123c','#4d7c0f'];
@@ -9576,6 +9599,8 @@ function prodPintarCostura(host){
     function b(txt,col,fn){ var x=document.createElement('button'); x.type='button'; x.textContent=txt; x.style.cssText='padding:4px 10px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid '+col+';background:#fff;color:'+col; x.onclick=function(ev){ ev.preventDefault(); fn(); }; bar.appendChild(x); }
     function ref(){ prodDirty=true; prodPintarCostura(host); prodActualizarBarra(); }
     lab('TODO EL PEDIDO');
+    var todosEmp=ks.every(function(k){return prodEmp.has(k)});
+    b(todosEmp?'📦 Quitar empaque a todas':'📦 Empacar todas','#a16207',function(){ ks.forEach(function(k){ if(todosEmp) prodEmp.delete(k); else prodEmp.add(k); }); ref(); });
     var todosVin=ks.every(function(k){return prodVinil.has(k)});
     b(todosVin?'🎨 Quitar vinil a todas':'🎨 Vinil listo en todas','#7c3aed',function(){ ks.forEach(function(k){ if(todosVin) prodVinil.delete(k); else prodVinil.add(k); }); ref(); });
     var libres=ks.filter(function(k){return !costuraEnt(prodCostura[k])});
@@ -9595,6 +9620,13 @@ function prodPintarCostura(host){
       b.style.cssText='padding:3px 9px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;line-height:1.2;border:1.5px solid '+col+';background:'+(on?col:'#fff')+';color:'+(on?'#fff':col)+';'+(dis?'opacity:.55;':'');
       b.onclick=function(ev){ ev.preventDefault(); ev.stopPropagation(); fn(); }; box.appendChild(b); return b; }
     function sep(){ var s=document.createElement('span'); s.textContent='›'; s.style.cssText='color:#bbb;font-size:13px;font-weight:700;'; box.appendChild(s); }
+    var emp=prodEmp.has(k);
+    if(emp){ box.style.background='#fef08a'; box.style.borderLeftColor='#eab308'; }
+    row.style.background=emp?'#fde047':''; if(row.tagName==='TR'){ [].forEach.call(row.cells,function(td){ td.style.background=emp?'#fde047':''; }); }
+    if(emp) row.style.opacity='1';
+    btn(emp?'📦 Empacada ✔':'📦 Empacar','#a16207',emp,function(){ if(prodEmp.has(k)) prodEmp.delete(k); else prodEmp.add(k); refrescar(); });
+    if(emp){ var bt=box.lastChild; bt.style.background='#eab308'; bt.style.borderColor='#a16207'; bt.style.color='#000'; }
+    var d0=document.createElement('span'); d0.style.cssText='width:1px;height:16px;background:#d4d4d8;margin:0 4px;'; box.appendChild(d0);
     lab('VINIL'); btn(vin?'🎨 Listo ✔':'🎨 Marcar listo','#7c3aed',vin,function(){ if(prodVinil.has(k)) prodVinil.delete(k); else prodVinil.add(k); refrescar(); });
     var d=document.createElement('span'); d.style.cssText='width:1px;height:16px;background:#d4d4d8;margin:0 4px;'; box.appendChild(d);
     lab('COSTURA');
@@ -9851,15 +9883,21 @@ function prodActualizarBarra(){
   var vin=ks.filter(function(k){return prodVinil.has(k)}).length; var resumen=[ks.length?'🎨 vinil '+vin+'/'+ks.length:'',c.env?'en costura '+c.env:'',c.ok?'✅ OK '+c.ok:'',c.rep?'🔧 devueltas '+c.rep:'',c.pag?'💰 pagadas '+c.pag:''].filter(Boolean).join(' · ');
   var t=document.getElementById('prod-prog'); if(t){
     function chip(txt,bg){ return '<span style="display:inline-block;background:'+bg+';color:#fff;border-radius:20px;padding:3px 10px;margin:3px 6px 0 0;font-size:12px;font-weight:800">'+txt+'</span>'; }
-    t.innerHTML=chip('✔ '+hechas+'/'+ks.length+' hechas'+(av.completo?' · EJECUTADO':''),hechas>=ks.length&&ks.length?'#059669':'#52525b')+chip('🎨 vinil '+vin+'/'+ks.length,vin>=ks.length&&ks.length?'#7c3aed':'#52525b')+(c.env?chip('🧵 en costura '+c.env,'#2563eb'):'')+(c.ok?chip('📥 OK '+c.ok,'#059669'):'')+(c.rep?chip('🔧 devueltas '+c.rep,'#dc2626'):'')+(c.pag?chip('💰 pagadas '+c.pag,'#6b7280'):'');
+    t.innerHTML=chip('✔ '+hechas+'/'+ks.length+' hechas'+(av.completo?' · EJECUTADO':''),hechas>=ks.length&&ks.length?'#059669':'#52525b')+chip('🎨 vinil '+vin+'/'+ks.length,vin>=ks.length&&ks.length?'#7c3aed':'#52525b')+(ks.length?(function(){ var em=ks.filter(function(k){return prodEmp.has(k)}).length; return em>=ks.length?chip('📦 EMPACADO 100% · LISTO PARA MENSAJERO','#ca8a04'):chip('📦 empacadas '+em+'/'+ks.length,'#52525b'); })():'')+(c.env?chip('🧵 en costura '+c.env,'#2563eb'):'')+(c.ok?chip('📥 OK '+c.ok,'#059669'):'')+(c.rep?chip('🔧 devueltas '+c.rep,'#dc2626'):'')+(c.pag?chip('💰 pagadas '+c.pag,'#6b7280'):'');
   }
   var sv=document.getElementById('prod-save'); if(sv)sv.style.display=prodDirty?'inline-block':'none';
+  var nb=document.getElementById('prod-notif'); if(nb){ var todo=ks.length&&ks.every(function(k){return prodEmp.has(k)}); nb.style.boxShadow=todo?'0 0 0 4px #fde047':''; nb.textContent=todo?'🛵 Notificar mensajero · LISTO ✔':'🛵 Notificar mensajero'; }
 }
 function prodAplicarChecks(){
   var host=document.getElementById('prod-packs'); if(!host)return;
-  host.querySelectorAll('.pchk').forEach(function(c){c.checked=prodSel.has(c.dataset.k); c.onchange=function(){ if(c.checked)prodSel.add(c.dataset.k); else prodSel.delete(c.dataset.k); prodDirty=true; prodActualizarBarra(); var row=c.closest('tr,label'); if(row)row.style.opacity=c.checked?'.45':'1'; }; var row=c.closest('tr,label'); if(row)row.style.opacity=c.checked?'.45':'1'; });
+  host.querySelectorAll('.pchk').forEach(function(c){c.checked=prodSel.has(c.dataset.k); c.onchange=function(){ if(c.checked)prodSel.add(c.dataset.k); else prodSel.delete(c.dataset.k); prodDirty=true; prodActualizarBarra(); var row=c.closest('tr,label'); if(row)row.style.opacity=(c.checked&&!prodEmp.has(c.dataset.k))?'.45':'1'; }; var row=c.closest('tr,label'); if(row)row.style.opacity=(c.checked&&!prodEmp.has(c.dataset.k))?'.45':'1'; });
   prodPintarCostura(host);
   prodActualizarBarra();
+}
+async function prodNotificarMensajero(cod){
+  var g=(window.prodGrupos||{})[cod], ks=g?prodKeys(g):[], falta=ks.filter(function(k){return !prodEmp.has(k)}).length;
+  if(falta&&!(await uiConfirm('Faltan '+falta+' pieza(s) por marcar como 📦 empacadas. ¿Notificar al mensajero de todos modos? (al notificar, el pedido completo queda como ejecutado y empacado)')))return;
+  tallerNotificarMensajero(cod);
 }
 async function prodGuardar(completo,reabrir){
   var cod=prodCodAbierto, g=(window.prodGrupos||{})[cod]; if(!g)return;
@@ -9872,9 +9910,9 @@ async function prodGuardar(completo,reabrir){
   var usr=await prodPedirClave(completo?'Ejecutado total':(reabrir?'Reabrir pedido':'Guardar avance'),det); if(!usr)return;
   var btns=document.querySelectorAll('#prod-overlay button'); btns.forEach(function(b){b.disabled=true});
   try{
-    var r=await scriptGETjson({action:'guardarProdAvance',cod:cod,done:JSON.stringify(Array.from(prodSel).filter(function(k){return ks.indexOf(k)>=0})),completo:completo?'SI':'',usuario:usr,vinil:JSON.stringify(Array.from(prodVinil).filter(function(k){return ks.indexOf(k)>=0})),costura:JSON.stringify(Object.keys(prodCostura).filter(function(k){return ks.indexOf(k)>=0}).reduce(function(o,k){o[k]=prodCostura[k];return o},{}))});
+    var r=await scriptGETjson({action:'guardarProdAvance',cod:cod,done:JSON.stringify(Array.from(prodSel).filter(function(k){return ks.indexOf(k)>=0})),completo:completo?'SI':'',usuario:usr,vinil:JSON.stringify(Array.from(prodVinil).filter(function(k){return ks.indexOf(k)>=0})),emp:JSON.stringify(Array.from(prodEmp).filter(function(k){return ks.indexOf(k)>=0})),costura:JSON.stringify(Object.keys(prodCostura).filter(function(k){return ks.indexOf(k)>=0}).reduce(function(o,k){o[k]=prodCostura[k];return o},{}))});
     if(!r||!r.ok)throw new Error((r&&r.error)||'no se pudo guardar');
-    window.prodAvance[cod.toUpperCase()]={done:Array.from(prodSel),completo:!!completo,usuario:usr,fecha:'',vinil:Array.from(prodVinil),costura:Object.assign({},prodCostura)};
+    window.prodAvance[cod.toUpperCase()]={done:Array.from(prodSel),completo:!!completo,usuario:usr,fecha:'',vinil:Array.from(prodVinil),emp:Array.from(prodEmp),costura:Object.assign({},prodCostura)};
     prodDirty=false; prodCerrarTablet(true);
   }catch(e){ btns.forEach(function(b){b.disabled=false}); alert('✗ No se guardó: '+e.message); }
 }
@@ -9883,7 +9921,7 @@ async function abrirProduccionTablet(cod){
   prodPrefijos(g.packs);
   var o0=document.getElementById('prod-overlay'); if(o0)o0.remove();
   prodCodAbierto=cod; prodDirty=false;
-  var av=window.prodAvance[String(cod).toUpperCase()]||{done:[],completo:false}; prodSel=new Set(av.done||[]); prodVinil=new Set(av.vinil||[]); prodCostura={}; Object.keys(av.costura||{}).forEach(function(k){ prodCostura[k]=costuraEnt(av.costura[k]); }); await costurasCargar();
+  var av=window.prodAvance[String(cod).toUpperCase()]||{done:[],completo:false}; prodSel=new Set(av.done||[]); prodVinil=new Set(av.vinil||[]); prodEmp=new Set(av.emp||[]); prodCostura={}; Object.keys(av.costura||{}).forEach(function(k){ prodCostura[k]=costuraEnt(av.costura[k]); }); await costurasCargar();
   var o=document.createElement('div'); o.id='prod-overlay';
   o.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;overflow:auto;-webkit-overflow-scrolling:touch;color:#111';
   var CW=Math.max(320,window.innerWidth-28), z=Math.max(0.6,Math.min(1.6,CW/700)), esc=prodEsc;
@@ -9895,7 +9933,7 @@ async function abrirProduccionTablet(cod){
       '<button onclick="prodGuardar(true)" style="background:#1fbf6a;color:#000;border:0;border-radius:10px;padding:12px 14px;font-size:15px;font-weight:800;cursor:pointer;">✅ Ejecutado total</button>')+
     '<button onclick="prodEditarCosturas()" title="Nombres de las costureras" style="background:#333;color:#fff;border:1px solid #666;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:700;cursor:pointer;">🧵 Costureras</button>'+
     waBoton(g.celular,g.nombre,'('+cod+')')+
-    '<button onclick="tallerNotificarMensajero(\''+esc(cod)+'\')" style="background:#ffb020;color:#000;border:0;border-radius:10px;padding:12px 14px;font-size:14px;font-weight:800;cursor:pointer;">🛵 Notificar mensajero</button>'+
+    '<button id="prod-notif" onclick="prodNotificarMensajero(\''+esc(cod)+'\')" style="background:#ffb020;color:#000;border:0;border-radius:10px;padding:12px 14px;font-size:14px;font-weight:800;cursor:pointer;">🛵 Notificar mensajero</button>'+
     '<button onclick="prodTicket(\''+esc(cod)+'\')" style="background:#333;color:#fff;border:1px solid #666;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:700;cursor:pointer;">🖨 Ticket</button></div>';
   var ag=String(g.agencia||'').split('—');
   var head='<div style="zoom:'+z+';padding:14px 14px 0;font-family:Montserrat,Barlow,Arial,sans-serif;width:'+Math.round((window.innerWidth)/z)+'px;box-sizing:border-box">'+
@@ -10186,6 +10224,7 @@ function tallerDetalleHTML(g,cod){
   var aj=ajusteBtn('t_'+cod,'C',g.packs.map(function(p,i){return {codigo:p.codigoC,piezas:p.piezas,label:'Pack '+(i+1)}}).filter(function(x){return x.codigo}),'cargarTaller',true);
   return '<div style="height:6px;background:var(--surface3);border-radius:6px;overflow:hidden;margin:8px 0 4px"><div style="height:100%;width:'+Math.max(pct,3)+'%;background:'+(okAv?'var(--accent)':'var(--warn)')+'"></div></div>'+
     '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>Avance <b style="color:'+(okAv?'var(--accent)':'var(--warn)')+'">'+hechas+'/'+ks.length+' piezas</b></span><span>🕐 '+e(g.fecha||'—')+'</span></div>'+
+    (function(){ var em=ks.filter(function(k){return (av.emp||[]).indexOf(k)>=0}).length; return ks.length?'<div style="font-size:12px;margin-top:4px;color:var(--muted)">📦 Empacado <b style="color:'+(em>=ks.length?'#eab308':'var(--warn)')+'">'+em+'/'+ks.length+' piezas</b>'+(em>=ks.length?' ✅ listo para el mensajero':'')+'</div>':''; })()+
     '<div style="font-size:12px;margin-top:4px;color:var(--muted)">🎨 Vinil fabricado <b style="color:'+(vinOk?'var(--accent)':'var(--warn)')+'">'+vinN+'/'+ks.length+' piezas</b>'+(vinOk?' ✅':'')+'</div>'+
     '<div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;align-items:center">'+chips+aj+'</div>'+
     '<div style="font-size:12.5px;line-height:1.7;color:var(--muted);background:var(--surface2);border-radius:10px;padding:10px 12px">'+
@@ -10251,8 +10290,8 @@ async function tallerEscanerConfirmar(){
     var sociosEsc=uniDeGrupo(g).cods;
     for(var si=0;si<sociosEsc.length;si++){ var gs2=tallerGrupoDe(sociosEsc[si]); if(!gs2)continue; var gk2={packs:gs2.packs.map(function(p){return {codigoS:p.codigoS,piezas:p.piezasProd}})};
       try{ var f2=new FormData(); f2.append('action','escanearPedido'); f2.append('cod',sociosEsc[si]); f2.append('nombre',gs2.nombre||''); f2.append('correo',''); f2.append('agencia',gs2.agencia||''); f2.append('usuario','Escáner Taller'); f2.append('done',JSON.stringify(prodKeys(gk2))); f2.append('reenviar','SI'); f2.append('imagen_base64',S.jpg.split(',')[1]);
-        var r2=await fetch(SCRIPT_URL,{method:'POST',body:f2}), j2=await r2.json(); if(j2&&j2.ok){ window.prodAvance[sociosEsc[si]]={done:prodKeys(gk2),completo:true}; (window._estadoEnvio=window._estadoEnvio||{})[sociosEsc[si]]={estado:'EN PROCESO DE ENVÍO',fecha:j2.fecha||'',correo:''}; } }catch(e){ console.warn('socio',e); } }
-    window.prodAvance=window.prodAvance||{}; window.prodAvance[S.cod]={done:prodKeys(gk),completo:true};
+        var r2=await fetch(SCRIPT_URL,{method:'POST',body:f2}), j2=await r2.json(); if(j2&&j2.ok){ window.prodAvance[sociosEsc[si]]={done:prodKeys(gk2),emp:prodKeys(gk2),completo:true}; (window._estadoEnvio=window._estadoEnvio||{})[sociosEsc[si]]={estado:'EN PROCESO DE ENVÍO',fecha:j2.fecha||'',correo:''}; } }catch(e){ console.warn('socio',e); } }
+    window.prodAvance=window.prodAvance||{}; window.prodAvance[S.cod]={done:prodKeys(gk),emp:prodKeys(gk),completo:true};
     tallerCosturaOk(S.cod); sociosEsc.forEach(function(c){ tallerCosturaOk(c); });
     (window._estadoEnvio=window._estadoEnvio||{})[S.cod]={estado:'EN PROCESO DE ENVÍO',fecha:j.fecha||'',correo:j.correo_enviado?'ENVIADO':''};
     res.innerHTML='<div style="color:var(--accent);font-weight:800;font-size:15px">✅ '+prodEsc(g.nombre)+' · fabricado y en proceso de envío</div>'+(j.correo_enviado?'<div style="font-size:13px;color:var(--text)">📧 Correo enviado al cliente con la foto.</div>':'<div style="font-size:13px;color:var(--warn)">⚠ El pedido quedó marcado, pero el correo no salió ('+prodEsc(j.aviso||'')+').</div>')+
@@ -10749,7 +10788,7 @@ async function cargarProduccion(usarCache){
           </div>
           ${p.piezas?`<div style="background:var(--surface2);border-radius:6px;padding:8px;font-size:12px;line-height:1.7;">${[modeloManga(p.modelo,p.manga),(p.capucha&&!/^sin/i.test(p.capucha)&&String(p.modelo||'').toLowerCase().indexOf(String(p.capucha).toLowerCase())<0?p.capucha:'')].filter(Boolean).join(' ')}<br>${piezasAgrupadas(p.piezas)}</div>`:''}
         </div>`).join('');
-      const card=document.createElement('div');
+      const card=document.createElement('div'); card.className='prod-card'; card.dataset.q=busqNorm([cod,g.nombre,g.cedula,g.packs.map(p=>p.codigoS).join(' ')].join(' '));
       card.style.cssText=`background:var(--surface);border:1px solid ${g.urgente?'var(--warn)':'var(--border)'};border-radius:12px;padding:16px;margin-bottom:14px;animation:slideUp .3s ease;`;
       card.innerHTML=`
         ${g.urgente?`<div style="background:#1a1a10;border:1px solid var(--warn);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:13px;font-weight:700;color:var(--warn);">⚡ PRIORIDAD · ${g.urgente}</div>`:''}
@@ -10874,13 +10913,14 @@ async function cargarTaller(){
   msg.style.display='block'; msg.style.background='var(--surface2)'; msg.style.color='var(--muted)';
   msg.innerHTML='<span class="spinner">↻</span> Cargando pedidos en producción...';
   try{
+    // Las 5 consultas EN PARALELO (antes las 3 últimas iban una tras otra y sumaban sus tiempos)
     const [data, fuente]=await Promise.all([
       scriptGETjson({action:'leerProduccion'}),
-      scriptGETjson({action:'leerTallerFuente'}).catch(()=>({ok:false}))
+      scriptGETjson({action:'leerTallerFuente'}).catch(()=>({ok:false})),
+      scriptGETjson({action:'leerProdAvance'}).then(av=>{ window.prodAvance=(av&&av.avance)||{}; }).catch(()=>{ window.prodAvance=window.prodAvance||{}; }),
+      facturaCargarFlags().catch(()=>{}),
+      scriptGETjson({action:'leerEstadoEnvio'},15000).then(es=>{ window._estadoEnvio=(es&&es.estados)||{}; }).catch(()=>{ window._estadoEnvio=window._estadoEnvio||{}; })
     ]);
-    try{ const av=await scriptGETjson({action:'leerProdAvance'}); window.prodAvance=(av&&av.avance)||{}; }catch(e){ window.prodAvance=window.prodAvance||{}; }
-    await facturaCargarFlags();
-    try{ const es=await scriptGETjson({action:'leerEstadoEnvio'},15000); window._estadoEnvio=(es&&es.estados)||{}; }catch(e){ window._estadoEnvio=window._estadoEnvio||{}; }
     const rows=data.rows||[];
     tallerGrupos={}; window._prodRaw={}; window._hdrProd=data.headers||window._hdrProd||null;
     if(rows.length===0){
@@ -10982,7 +11022,7 @@ function toggleTallerSel(cod, checked){
 
 function tallerSeleccionarTodos(checked){
   document.querySelectorAll('.taller-check-item').forEach(chk=>{
-    const _c=chk.closest('label'); if(_c&&_c.style.display==='none')return;
+    const _c=chk.closest('label'); if(_c&&getComputedStyle(_c).display==='none')return;
     chk.checked=checked;
     const cod=chk.getAttribute('data-cod');
     if(checked) tallerSeleccionados.add(cod); else tallerSeleccionados.delete(cod);
@@ -11753,16 +11793,11 @@ async function tallerGenerarPDF(html,nombre){
   try{ return await tallerHTMLaPDF(html,nombre); }
   catch(e){ console.warn('PDF en el navegador falló, se usa el método anterior:',e); return await cotGenerarPDFViaAppsScript(html,nombre); }
 }
-async function generarReportesTaller(){
-  const codigos=[...tallerSeleccionados].sort((a,b)=>(parseInt(a)||0)-(parseInt(b)||0));
-  if(!codigos.length) return;
-  const btn=document.getElementById('taller-btn-generar');
-  const resWrap=document.getElementById('taller-resultado');
-  const resLinks=document.getElementById('taller-resultado-links');
-  btn.disabled=true;
-  const txtOriginal=btn.textContent;
-  resWrap.style.display='none';
-  try{
+/* Núcleo de los reportes de Taller (Cortador, Estampador, DXF de vinil, hoja DTF). Lo usan Taller y la ventana «Procesar todos los pedidos».
+   prog(texto) informa el avance; devuelve el HTML con los enlaces de descarga. */
+async function tallerReportesCore(codigos, prog){
+  const btn={set textContent(v){ try{prog&&prog(v)}catch(e){} }};
+  let _salida=''; const resLinks={set innerHTML(v){ _salida=v; }};
     btn.textContent='⏳ Generando Cortador...';
     const htmlCortador=await tallerConstruirCortadorHTML(codigos);
     const infoCortador=await tallerGenerarPDF(htmlCortador, 'Taller_Cortador_'+Date.now());
@@ -11829,6 +11864,19 @@ async function generarReportesTaller(){
       ${dxfResumenHtml}
       ${dtfResumenHtml}
     `;
+  return _salida;
+}
+async function generarReportesTaller(){
+  const codigos=[...tallerSeleccionados].sort((a,b)=>(parseInt(a)||0)-(parseInt(b)||0));
+  if(!codigos.length) return;
+  const btn=document.getElementById('taller-btn-generar');
+  const resWrap=document.getElementById('taller-resultado');
+  const resLinks=document.getElementById('taller-resultado-links');
+  btn.disabled=true;
+  const txtOriginal=btn.textContent;
+  resWrap.style.display='none';
+  try{
+    resLinks.innerHTML=await tallerReportesCore(codigos, t=>{ btn.textContent=t; });
     resWrap.style.display='block';
   }catch(e){
     alert('Error generando reportes: '+e.message);
@@ -17851,6 +17899,29 @@ async function casheaNotifCambiar(base,cb,sug){
     var cont=cb.parentElement; cont.outerHTML=casheaNotifHTML(base,sug);
   }catch(e){ cb.checked=!marcar; cb.disabled=false; alert('✗ No se pudo guardar: '+e.message); }
 }
+/* ===== BUSCADOR (Taller y Producción): por nombre, cédula o COD; todas las palabras deben coincidir ===== */
+(function(){ var st=document.createElement('style'); st.textContent='.busq-oculto{display:none!important}'; document.head.appendChild(st); })();
+function busqNorm(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(); }
+function busqCoincide(txt,q){ var t=busqNorm(txt), w=busqNorm(q).split(/\s+/).filter(Boolean); return w.every(function(x){ return t.indexOf(x)>=0; }); }
+function tallerBuscar(){
+  var q=(document.getElementById('taller-busq')||{}).value||'', n=0, tot=0;
+  document.querySelectorAll('#taller-lista .taller-check-item').forEach(function(chk){
+    var cod=chk.getAttribute('data-cod'), g=(typeof tallerGrupos!=='undefined'&&tallerGrupos[cod])||{}, c=chk.closest('label'); if(!c) return; tot++;
+    var ok=!q.trim()||busqCoincide([cod,g.nombre,g.cedula,(g.packs||[]).map(function(p){return p.codigoS}).join(' ')].join(' '),q);
+    c.classList.toggle('busq-oculto',!ok); if(ok) n++; else if(chk.checked){ chk.checked=false; if(typeof tallerSeleccionados!=='undefined') tallerSeleccionados.delete(cod); }
+  });
+  var e=document.getElementById('taller-busq-n'); if(e) e.textContent=q.trim()?(n+' de '+tot+' pedido(s)'+(n?'':' · sin resultados')):'';
+  if(typeof tallerActualizarContador==='function') tallerActualizarContador();
+}
+function prodBuscar(){
+  var q=(document.getElementById('prod-busq')||{}).value||'', n=0, tot=0;
+  document.querySelectorAll('#produccion-lista .prod-card').forEach(function(c){ tot++; var ok=!q.trim()||busqCoincide(c.dataset.q,q); c.classList.toggle('busq-oculto',!ok); if(ok) n++; });
+  var e=document.getElementById('prod-busq-n'); if(e) e.textContent=q.trim()?(n+' de '+tot+' pedido(s)'+(n?'':' · sin resultados')):'';
+}
+(function(){
+  var t=window.cargarTaller; if(typeof t==='function') window.cargarTaller=async function(){ var r=await t.apply(this,arguments); try{ tallerBuscar(); }catch(e){} return r; };
+  var p=window.cargarProduccion; if(typeof p==='function') window.cargarProduccion=async function(){ var r=await p.apply(this,arguments); try{ prodBuscar(); }catch(e){} return r; };
+})();
 </script>
 </body>
 </html>
